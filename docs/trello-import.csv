@@ -1,0 +1,190 @@
+List,Card Name,Description,Labels
+Phase 0 — Contract & Shells,P0-1 Freeze SLC scope & golden-loop acceptance criteria,"WHAT: Write the 7-step golden loop as concrete, testable acceptance criteria (e.g. 'clinician creates a case in <=3 screens', 'patient logs a dose in <=2 taps'). Put the parked list somewhere visible. Commit as docs/scope.md.
+DONE WHEN: docs/scope.md lists the 7 steps as testable statements + the parked list; all 5 agree.
+TEST: Each member can point to the single screen/endpoint satisfying each of the 7 steps. No step owned by nobody or everybody.",group
+Phase 0 — Contract & Shells,P0-2 Data model / ERD,"WHAT: Draw the ERD for all entities (Clinician, Patient, Case, Medication, ScheduledReminder, DoseLog, Recommendation, SymptomCheckIn, AIConversation, AIMessage). Define fields, types, FKs, enums (dose status taken/missed/skipped; case status open/closed). Commit docs/erd.md (mermaid).
+DONE WHEN: ERD committed; every API response maps to entities here.
+TEST: Pick any endpoint in the contract; trace its response fields back to ERD entities with no gaps. P1 signs off.","P1,P5,Backend"
+Phase 0 — Contract & Shells,P0-3 Author the OpenAPI contract,"WHAT: Write openapi.yaml for every endpoint (/auth/*, /patients, /cases, /cases/{id}/medications, /adherence/log, /patients/{id}/adherence, /cases/{id}/recommendations, /symptoms/checkin, /patients/{id}/symptoms, /ai/chat, /fda/drug/{name}). Include request bodies, response schemas, status codes, shared error envelope.
+DONE WHEN: openapi.yaml validates with no errors and is committed.
+TEST: 'npx @redocly/cli lint openapi.yaml' exits 0; in Swagger UI every golden-loop step has its endpoint(s).","P1,P5,Backend"
+Phase 0 — Contract & Shells,P0-4 Stand up the mock server,"WHAT: Generate a mock server from openapi.yaml returning realistic fake JSON for every endpoint (Prism 'prism mock openapi.yaml', or MSW, or a FastAPI stub). Add it to docker-compose.
+DONE WHEN: 'docker-compose up mock' serves all endpoints with example data.
+TEST: curl localhost:4010/cases/1 returns a valid Case JSON matching the schema; frontends can hit the mock without the real backend.","P1,Backend,DevOps"
+Phase 0 — Contract & Shells,P0-5 Define provider interfaces,"WHAT: Create abstract interfaces so app code never calls boto3 directly: AuthProvider (issue/verify token, current user), LLMProvider (chat -> reply+sources), FDAProvider (get_drug -> safety). Factory picks impl from .env (AUTH_PROVIDER, LLM_PROVIDER, FDA_PROVIDER).
+DONE WHEN: Interfaces + factory exist; a mock/local impl of each returns canned data; no AWS code yet.
+TEST: pytest sets LLM_PROVIDER=mock and asserts factory returns mock and chat() returns the canned reply; same for AUTH_PROVIDER=local.","P1,Backend"
+Phase 0 — Contract & Shells,P0-6 docker-compose skeleton,"WHAT: docker-compose.yml brings up Postgres + FastAPI (uvicorn --reload) + mock server. Add .env.example with local defaults (AUTH_PROVIDER=local, LLM_PROVIDER=openrouter...). Add /health endpoint.
+DONE WHEN: Fresh clone + cp .env.example .env + docker-compose up brings the stack up with no manual steps.
+TEST: On a clean machine, docker-compose up then curl localhost:8000/health returns {status:ok} and Postgres accepts a connection.","P1,P5,DevOps"
+Phase 0 — Contract & Shells,P0-7 GitHub repo / branches / CI skeleton,"WHAT: Finalize repo + folder structure, PR template, branch naming (p2/feature-x), CI workflow stub: ruff + mypy + pytest (backend), build/lint (frontends).
+DONE WHEN: A PR triggers CI; merge requires green CI + 1 review.
+TEST: Open a trivial PR -> CI runs lint/type/test stages; a failing lint blocks merge.","P1,DevOps"
+Phase 0 — Contract & Shells,P0-8 Figma design system & tokens,"WHAT: One shared token set (color, type scale, spacing, radius, semantic states: taken=green/missed=red/skipped=amber) in two expressions (dense web, calm mobile). Components: buttons, inputs, selects, pickers, cards, tables, tabs, modals, toasts, status pills, badges, charts, skeletons. AA contrast + 44-48px targets.
+DONE WHEN: Figma file with tokens + components shared; tokens exported as JSON/Dart/CSS source of truth.
+TEST: Contrast checker passes WCAG AA on every text/bg pair; P2/P3/P4 each find every component they need.","group,Figma"
+Phase 0 — Contract & Shells,P0-9 Create the Trello board + import cards,"WHAT: Create the Remote CarePro board, the lists, the labels, import all cards (this CSV). Assign owners. (AWS Week-3 deliverable: convert design doc into actionable tasks.)
+DONE WHEN: Board exists; every card has owner + phase + layer labels.
+TEST: Each engineer filters by their P# label and sees a coherent, complete column of their own work.","group,DevOps"
+Phase 0 — Contract & Shells,P0-10 Lock the three open decisions,"WHAT: Decide + record in docs/scope.md: (1) patient<->clinician linking (search-by-email + invite, recommended); (2) chatbot history persistent vs per-session (persistent); (3) reminder generation on server at med-create.
+DONE WHEN: All three recorded with a one-line rationale.
+TEST: P5 (patients), P4 (chat history), P1 (/ai/chat) each confirm their work is unblocked by the decision.",group
+Phase 1 — Walking Skeleton,P1S-1 Backend skeleton slice,"WHAT: Minimum real endpoints vs Postgres with AUTH_PROVIDER=local: POST /auth/dev-login, POST /cases, POST /cases/{id}/medications, POST /adherence/log, GET /patients/{id}/adherence. Seed one clinician + one patient.
+DONE WHEN: These endpoints persist to and read from Postgres.
+TEST: Scripted run dev-login -> create case -> add 1 med -> log 1 dose -> GET adherence shows that dose. pytest tests/test_skeleton.py passes end-to-end.","P5,P1,Backend"
+Phase 1 — Walking Skeleton,P1S-2 Web skeleton slice,"WHAT: Minimal React app: login (dev-login), form to create a case + one med, read view showing the dose was logged. Calls the real backend (not the mock).
+DONE WHEN: Clinician logs in, creates case+med, sees adherence update (unstyled OK).
+TEST: Manual: log in -> create case+med -> after a dose is logged, refresh and see '1 dose taken'. Screen-record the flow.","P2,Web"
+Phase 1 — Walking Skeleton,P1S-3 Mobile skeleton slice,"WHAT: Minimal Flutter app: dev-login, fetch the patient case+medications, show the med, 'Log dose' button POSTing /adherence/log.
+DONE WHEN: Patient logs in, sees the prescribed med, logs a dose vs the real backend.
+TEST: On emulator: log in -> see the med from P1S-2 -> tap Taken -> backend records it (verify via P1S-1 GET adherence).","P4,Mobile"
+Phase 1 — Walking Skeleton,P1S-4 Prove the slice end-to-end on Docker,"WHAT: Run web + mobile + backend + Postgres together locally and walk the full thin loop. Document in docs/skeleton-demo.md.
+DONE WHEN: The loop (clinician creates -> patient logs -> clinician sees) works with zero AWS.
+TEST: One recorded screen capture shows the complete loop across both apps hitting one local backend. PHASE-1 GATE.","P1,Integration"
+Phase 2 — Fan Out,P2-P1-1 AuthProvider: local-JWT + Cognito adapters,"WHAT: Flesh out LocalAuthProvider (dev-login issues JWT signed with local secret; middleware verifies) and CognitoAuthProvider (verify vs Cognito JWKS). Identical claim shape (sub, role, email) so frontends/middleware don't change between modes.
+DONE WHEN: Switching AUTH_PROVIDER local<->cognito needs no code change in routers or frontends.
+TEST: pytest: a protected endpoint returns 401 without token, 200 with valid, 403 for wrong role — for BOTH providers (Cognito tested vs a real dev pool).","P1,Backend,AWS"
+Phase 2 — Fan Out,P2-P1-2 Cognito user pool + patient-invite flow,"WHAT: Create the Cognito user pool, two app clients/roles (clinician, patient), and the invite flow (clinician invites patient by email -> patient sets password on first login).
+DONE WHEN: A clinician can invite a patient; the patient receives an invite and logs in via Cognito.
+TEST: End-to-end in a dev pool: invite a test email -> complete sign-up -> token has role=patient -> /patients/{id}/case returns 200 for that patient, 403 for a different patient.","P1,AWS"
+Phase 2 — Fan Out,P2-P1-3 /ai/chat with Mock + OpenRouter + Bedrock adapters,"WHAT: Implement POST /ai/chat. Context-aware prompt grounded in the patient prescriptions + recommendations (from DB), system prompt enforcing 'informational only, never diagnostic, never change a dose'. Three LLMProvider adapters: mock (canned), openrouter (HTTP+API key), bedrock (boto3). Persist conversation + messages.
+DONE WHEN: 'what is my medication for?' returns a grounded in-scope answer; 'should I double my dose?' returns a safe refusal; conversation persists.
+TEST: pytest with LLM_PROVIDER=mock asserts the prompt includes the patient's actual meds and the refusal path triggers on a dose-change question. Manual run with openrouter returns a real on-topic answer; history reloads on a second call (same conversation id).","P1,Backend,AWS"
+Phase 2 — Fan Out,P2-P1-4 Bedrock Guardrails,"WHAT: Configure Bedrock Guardrails to block diagnostic/dose-change content and PII leakage; wire the bedrock adapter to use them. AWS-only safety story for the pitch.
+DONE WHEN: With LLM_PROVIDER=bedrock, an out-of-scope prompt is blocked by the guardrail (not just the system prompt).
+TEST: Send 'diagnose my chest pain' -> response is the guardrail safe fallback. Capture the guardrail trace as pitch evidence.","P1,AWS"
+Phase 2 — Fan Out,P2-P1-5 /fda/drug/{name}: openFDA + LLM summary + fixture mode,"WHAT: Implement GET /fda/drug/{name}: call openFDA (httpx async), extract warnings/recalls, summarize in plain language via LLMProvider, return with a source label. Add FDA_PROVIDER=fixture (cached JSON) for offline/demo.
+DONE WHEN: Querying a real drug returns a plain-language safety summary + source; fixture mode works offline.
+TEST: curl /fda/drug/ibuprofen returns a summary + source URL. With FDA_PROVIDER=fixture and network off, the same call still returns the cached summary.","P1,Backend"
+Phase 2 — Fan Out,P2-P1-6 CI pipeline + AWS provisioning start,"WHAT: Finalize CI (ruff, mypy, pytest, frontend build). In parallel provision the AWS skeleton: RDS, ECR repo, ECS task def + service. Rehearse the deploy early — don't discover it in Week 9.
+DONE WHEN: CI green on main; an ECR push + Fargate run of the current image succeeds vs a throwaway RDS.
+TEST: Push the backend image to ECR, run the task on Fargate, curl <fargate-url>/health returns ok; CloudWatch shows the startup log line.","P1,DevOps,AWS"
+Phase 2 — Fan Out,P2-P1-7 Review cadence & unblock (ongoing),"WHAT: Review PRs within a day, keep the OpenAPI contract authoritative (any change = a contract PR everyone sees + mock updated same day), pair with whoever is blocked.
+DONE WHEN: Ongoing through Phase 2-4.
+TEST: No PR sits in In Review > 24h; contract changes are announced and the mock is updated the same day.",P1
+Phase 2 — Fan Out,P2-P2-1 Web app shell,"WHAT: Scaffold React + Vite + TS. Routing (React Router), responsive desktop layout, top + side nav, protected-route wrapper (redirect to login when unauthenticated), theme from P0-8 tokens. P3 consumes this shell.
+DONE WHEN: Authenticated routes render inside the shell; unauthenticated users are redirected to login.
+TEST: Visiting /cases logged out redirects to /login; after login it renders inside the nav shell. Component test for the protected-route wrapper passes.","P2,Web"
+Phase 2 — Fan Out,P2-P2-2 Login screen,"WHAT: Email/password login via AuthProvider (dev-login local, Cognito prod), token stored, error states for bad credentials, forgot-password stub.
+DONE WHEN: A clinician logs in and lands on the dashboard; bad credentials show a clear error.
+TEST: Manual: correct creds -> redirected in; wrong creds -> inline error, no crash. Against the mock and the real backend.","P2,Web"
+Phase 2 — Fan Out,P2-P2-3 Patient list + filters,"WHAT: Searchable/filterable table (TanStack Table) of the clinician patients (name, surgery, status). Used by the create-case flow.
+DONE WHEN: List loads from GET /patients, filters by name/status, paginates.
+TEST: With seeded data, type a name -> list narrows; clear -> full list returns. Renders an empty state when the clinician has no patients.","P2,Web"
+Phase 2 — Fan Out,P2-P2-4 Create patient,"WHAT: Form to create a patient (name, surname, age, allergies, email for invite) -> POST /patients. Validation (React Hook Form + Zod). Triggers the Cognito invite via backend.
+DONE WHEN: Submitting creates the patient and shows it in the list.
+TEST: Submit valid form -> new patient appears in the list; submit invalid (missing email) -> inline validation blocks it.","P2,Web"
+Phase 2 — Fan Out,P2-P2-5 Create case,"WHAT: Flow to create a case for a selected patient: pick patient -> choose surgery type -> POST /cases. Lands on the case-authoring screen.
+DONE WHEN: A case is created and linked to the patient.
+TEST: Create a case -> GET /cases/{id} returns it with the right patient + surgery type; it appears under the patient.","P2,Web"
+Phase 2 — Fan Out,P2-P2-6 Prescribe medication + schedule builder,"WHAT: Core authoring screen: add medications (drug name free text, dose, frequency, duration, timing) with a schedule builder (e.g. 2x daily 08:00 & 20:00 for 7 days) -> POST /cases/{id}/medications. Med list per case with edit/remove.
+DONE WHEN: Clinician can add/edit/remove meds; schedule captured in a structured shape the backend turns into reminders.
+TEST: Add a med '2x/day for 7 days' -> GET /cases/{id}/medications returns the structured schedule -> backend generates 14 scheduled reminders (verify via P5). Edit the dose -> it updates.","P2,Web"
+Phase 2 — Fan Out,P2-P2-7 Recommendations editor,"WHAT: Editor for structured recovery recommendations (type = activity/wound-care/physio/warning-sign; content; optional target) -> POST /cases/{id}/recommendations.
+DONE WHEN: Clinician can add typed recommendations to a case; they list and edit.
+TEST: Add one of each type -> GET /cases/{id}/recommendations returns all four with correct types; they render in the patient app (P4).","P2,Web"
+Phase 2 — Fan Out,P2-P2-8 Empty / loading / error states (authoring),"WHAT: Apply the shared state components to every authoring screen (empty patient list, loading skeletons, API error toasts).
+DONE WHEN: No authoring screen shows a blank or a raw error.
+TEST: Kill the backend -> every screen shows a friendly error, not a white screen or console crash; empty data -> shows the empty state.","P2,Web"
+Phase 2 — Fan Out,P2-P3-1 Dashboard / triage home,"WHAT: Clinician landing page: exception-driven roster answering 'who needs me now?' — patients with low adherence, symptom flags, or new FDA info; sortable/filterable. Renders inside P2 shell.
+DONE WHEN: Loads patients with computed adherence + flags; sorts worst-first.
+TEST: Seed one patient with missed doses -> they sort to the top with a red badge; a fully-adherent patient shows green and sorts down.","P3,Web"
+Phase 2 — Fan Out,P2-P3-2 Case detail view,"WHAT: Single tabbed pane per case: tabs for Medications, Adherence, Recommendations, Check-ins. Pulls the case + its children (read/monitor; authoring lives in P2 screens).
+DONE WHEN: Opening a case shows all four tabs populated from the API.
+TEST: Open a case with meds + logged doses + a check-in -> each tab shows the right data; an empty case shows empty states per tab.","P3,Web"
+Phase 2 — Fan Out,P2-P3-3 Adherence charts,"WHAT: Visualize adherence over time (Recharts): taken vs missed vs skipped, plus a rate %, from GET /patients/{id}/adherence; a missed-dose breakdown.
+DONE WHEN: The chart reflects real logged doses and updates on new data.
+TEST: Log 8 taken + 2 missed -> chart shows 80% and the right bars; add another missed -> updates to ~73%.","P3,Web"
+Phase 2 — Fan Out,P2-P3-4 Check-in review,"WHAT: Show the patient daily check-ins (feeling rating + flags) over time from GET /patients/{id}/symptoms, with a simple trend.
+DONE WHEN: Check-ins render chronologically with flags highlighted.
+TEST: Patient submits 'feeling worse' (P4) -> it appears in the review with a flag within a refresh.","P3,Web"
+Phase 2 — Fan Out,P2-P3-5 FDA safety panel display,"WHAT: Inline panel per medication calling GET /fda/drug/{name}, showing the plain-language summary + warnings/recalls with a source label. Loading + no-data states.
+DONE WHEN: Viewing a med shows its FDA safety info with attribution.
+TEST: Open a med panel -> summary + source render; an unknown drug shows a graceful 'no FDA data' state, not an error.","P3,Web"
+Phase 2 — Fan Out,P2-P3-6 Alerts list,"WHAT: A simple feed of actionable alerts (low-adherence, symptom flags). Lightweight — no queue/workflow.
+DONE WHEN: Alerts list reflects current flags and links to the relevant case.
+TEST: Create a low-adherence condition -> an alert appears; clicking it opens that case detail.","P3,Web"
+Phase 2 — Fan Out,P2-P3-7 Empty / loading / error states (monitoring),"WHAT: Apply shared state components across all monitoring screens.
+DONE WHEN: Every monitoring screen handles empty/loading/error.
+TEST: Backend down -> friendly errors everywhere; no data -> empty states; slow network -> skeletons.","P3,Web"
+Phase 2 — Fan Out,P2-P4-1 App setup,"WHAT: Scaffold Flutter with Riverpod (state), go_router (nav), Dio (HTTP), json_serializable + build_runner (models), flutter_secure_storage (tokens), theme from P0-8 (calm mobile, 44-48px targets, font scaling).
+DONE WHEN: App boots with theming, navigation, and a Dio client pointed at a configurable base URL (mock -> localhost -> AWS).
+TEST: App runs on emulator; changing the base-URL env switches mock<->local backend with no code change; a model round-trips JSON in a unit test.","P4,Mobile"
+Phase 2 — Fan Out,P2-P4-2 Login / accept-invite onboarding,"WHAT: Login via AuthProvider (dev-login local, Cognito prod); accept-invite/first-run flow (open invite -> set password); consent & privacy notice; token stored securely.
+DONE WHEN: A patient logs in (or accepts invite) and reaches the Today view.
+TEST: Valid login -> Today view; invalid -> clear error; token persists across app restart; invite flow completes vs the Cognito dev pool.","P4,Mobile"
+Phase 2 — Fan Out,P2-P4-3 Today view,"WHAT: Home screen: next dose, today schedule, quick-log shortcut, recovery glance. Reads case + medications + today reminders.
+DONE WHEN: Today doses render with times and quick-log.
+TEST: With a med '2x/day', Today shows both of today's doses; logging one updates the view immediately.","P4,Mobile"
+Phase 2 — Fan Out,P2-P4-4 Medications list + detail (+ FDA display),"WHAT: List of prescribed meds; detail screen with dose/schedule + FDA plain-language safety from /fda/drug/{name} with a source label. Read-only (patient cannot self-prescribe).
+DONE WHEN: All prescribed meds show; detail shows dosing + FDA safety.
+TEST: Open a med -> see dose/schedule + FDA summary + source; there is NO 'add medication' control anywhere (clinician-locked).","P4,Mobile"
+Phase 2 — Fan Out,P2-P4-5 Dose logging,"WHAT: Log each dose taken/missed/skipped in 1-2 taps with an easy undo, via POST /adherence/log. Works from Today and med detail.
+DONE WHEN: Logging is 1-2 taps, reversible, and persists.
+TEST: Tap Taken -> backend records it (verify via clinician adherence); Undo within window -> reverts. Log missed and skipped -> each stored with the right status.","P4,Mobile"
+Phase 2 — Fan Out,P2-P4-6 Local notifications from schedule,"WHAT: Schedule local notifications (flutter_local_notifications) from the medication schedule; permission priming before the OS prompt; offline-capable (reminders fire without network), log syncs when back online; actionable from the notification where possible.
+DONE WHEN: Reminders fire at scheduled times even offline; logging from a reminder syncs later.
+TEST: Set a med for 1 minute ahead, airplane mode -> notification fires on time; log 'taken' offline -> it syncs to the backend when network returns.","P4,Mobile"
+Phase 2 — Fan Out,P2-P4-7 Daily check-in + history,"WHAT: A 1-3 tap 'how do you feel?' check-in (3-4 options) -> POST /symptoms/checkin; a history/trend view (fl_chart).
+DONE WHEN: A patient can check in once a day and see their trend.
+TEST: Submit a check-in -> it appears in the clinician review (P3) and in the patient own trend chart.","P4,Mobile"
+Phase 2 — Fan Out,P2-P4-8 AI chat UI,"WHAT: Chat screen calling POST /ai/chat with guardrail framing ('informational, not a diagnosis'), suggested starter questions, sourced-answer rendering, and an out-of-scope/safety state when the assistant declines. Spec from P1.
+DONE WHEN: A patient can chat, see grounded answers with sources, and see the safe-decline state for out-of-scope questions.
+TEST: Ask 'what is this medication for?' -> grounded answer + source; ask 'should I stop taking it?' -> safe decline state, not a medical instruction; history reloads when reopening the chat.","P4,Mobile"
+Phase 2 — Fan Out,P2-P4-9 Recovery recommendations view + states,"WHAT: Show the clinician recommendations (activity, wound-care, physio, warning signs) grouped by type; apply empty/loading/error/offline states across the app.
+DONE WHEN: Recommendations render grouped; all screens handle no-data/offline.
+TEST: Clinician adds a 'warning-sign' rec -> it shows in the app under warnings; airplane mode -> cached content shows with an offline indicator, not a crash.","P4,Mobile"
+Phase 2 — Fan Out,P2-P5-1 Models + Alembic migrations,"WHAT: SQLAlchemy 2.x models for all entities (P0-2 ERD) with relationships and enums; set up Alembic; generate the first migration.
+DONE WHEN: 'alembic upgrade head' creates the full schema on a clean DB.
+TEST: On empty Postgres: alembic upgrade head succeeds; alembic downgrade base reverses cleanly; tables + FKs match the ERD.","P5,Backend"
+Phase 2 — Fan Out,P2-P5-2 Patients module,"WHAT: POST /patients, GET /patients/{id}, GET /patients/{id}/case; clinician<->patient linking per P0-10; ownership checks (a clinician sees only their patients).
+DONE WHEN: CRUD works with authorization.
+TEST: pytest: create patient -> fetch returns it; a different clinician gets 403; /patients/{id}/case returns the linked case.","P5,Backend"
+Phase 2 — Fan Out,P2-P5-3 Cases module,"WHAT: POST /cases, GET /cases/{id}; status transitions (open/close/reopen); validation that the case belongs to the requesting clinician.
+DONE WHEN: Cases create, read, and transition status.
+TEST: pytest: create -> read -> close -> reopen; reading another clinician case returns 403.","P5,Backend"
+Phase 2 — Fan Out,P2-P5-4 Medications module + schedule trigger,"WHAT: POST /cases/{id}/medications, GET /cases/{id}/medications; on create, generate scheduled_reminders rows from the schedule (frequency x duration), timezone-aware.
+DONE WHEN: Creating a med materializes the correct reminder rows.
+TEST: pytest: a med '2x/day for 7 days' creates exactly 14 reminders at the right times; GET returns the med with its schedule.","P5,Backend"
+Phase 2 — Fan Out,P2-P5-5 Adherence (write + read),"WHAT: POST /adherence/log (taken/missed/skipped + undo, links to a reminder); GET /patients/{id}/adherence (aggregate rate, missed-dose patterns, time series for charts).
+DONE WHEN: Logging writes a DoseLog; the read endpoint returns rates + series.
+TEST: pytest: log 8 taken + 2 missed -> GET adherence returns 80% and a 10-point series; undo a log -> the rate recomputes.","P5,Backend"
+Phase 2 — Fan Out,P2-P5-6 Recommendations module,"WHAT: POST /cases/{id}/recommendations, GET /cases/{id}/recommendations; typed records (activity/wound-care/physio/warning-sign).
+DONE WHEN: Typed recommendations persist and read back grouped by type.
+TEST: pytest: create one of each type -> GET returns four with correct types; invalid type -> 422.","P5,Backend"
+Phase 2 — Fan Out,P2-P5-7 Symptoms module (write + read),"WHAT: POST /symptoms/checkin (feeling rating + answers + computed flags), GET /patients/{id}/symptoms (history for clinician review).
+DONE WHEN: Check-ins persist with flags; history reads back chronologically.
+TEST: pytest: submit 'feeling worse' -> stored with a flag; GET returns it newest-first; a flagged check-in is queryable for the dashboard.","P5,Backend"
+Phase 2 — Fan Out,P2-P5-8 Module tests + schemas,"WHAT: Pydantic v2 schemas matching the OpenAPI contract for every module; pytest coverage for happy + auth + validation paths.
+DONE WHEN: Each module has request/response schemas and passing tests.
+TEST: pytest is green; responses validate against openapi.yaml (contract test); CI runs them on every PR.","P5,Backend"
+Phase 3 — AWS Integration,P3-1 Provision RDS + run migrations,"WHAT: Stand up RDS PostgreSQL (prod), point DATABASE_URL at it, run alembic upgrade head, seed a demo clinician.
+DONE WHEN: The prod schema exists on RDS.
+TEST: Connect to RDS, confirm all tables present; the app starts vs RDS and /health is ok.","P1,AWS"
+Phase 3 — AWS Integration,P3-2 Deploy backend to ECS Fargate,"WHAT: Build + push the image to ECR; run the ECS Fargate service behind an HTTPS load balancer; set prod .env (AUTH_PROVIDER=cognito, LLM_PROVIDER=bedrock, FDA_PROVIDER=live).
+DONE WHEN: The API is reachable over HTTPS on a stable URL.
+TEST: curl https://<lb-url>/health -> ok over TLS; CloudWatch shows request logs; a dev-login is rejected (prod uses Cognito) and a Cognito login works.","P1,AWS,DevOps"
+Phase 3 — AWS Integration,P3-3 Flip provider toggles to AWS,"WHAT: Verify the Cognito + Bedrock + Guardrails adapters work in prod with no code change — only .env differs from local.
+DONE WHEN: Auth = Cognito, AI = Bedrock+Guardrails, all live.
+TEST: Log in via Cognito on the deployed app; ask the chatbot an out-of-scope question -> Guardrails block it. No code changed from local — only env.","P1,AWS"
+Phase 3 — AWS Integration,P3-4 Repoint frontends + end-to-end smoke test,"WHAT: Set web + mobile base URL to the AWS API; build the web app (S3+CloudFront or Amplify Hosting) and the patient APK; walk the full golden loop on AWS.
+DONE WHEN: The 7-step loop runs entirely on AWS.
+TEST: Recorded run on the deployed stack: clinician (web on AWS) creates case+meds -> patient (APK) sees regimen, gets a reminder, logs a dose, asks the chatbot -> clinician sees adherence. PHASE-3 GATE.","P2,P3,P4,P1,Integration"
+Phase 4 — Polish & Submit,P4-1 Lovable polish pass,"WHAT: Each owner polishes their screens: micro-interactions, copy, empty/error states, consistent spacing, loading skeletons, accessibility. Make it feel like v1.0, not v0.1.
+DONE WHEN: No rough edges in the demo path.
+TEST: A fresh user walks the golden loop without confusion or visible errors; AA contrast passes on demo screens.",all
+Phase 4 — Polish & Submit,P4-2 User testing round 2 + survey,"WHAT: Run the survey + test with >=3 users (AWS Week-4 item, finalized here); record findings and the top 3 fixes; apply them.
+DONE WHEN: Findings documented; top fixes shipped.
+TEST: docs/user-testing.md has >=3 sessions + outcomes; each must-fix maps to a merged PR.",all
+Phase 4 — Polish & Submit,P4-3 Record the demo video,"WHAT: Screen-record the full golden loop on AWS (clinician web + patient app), narrated, highlighting Bedrock + Guardrails + FDA + the closed adherence loop.
+DONE WHEN: A clean demo video exists.
+TEST: The video shows all 7 loop steps + the FDA panel + a Guardrails refusal, end-to-end on AWS, in one take.",all
+Phase 4 — Polish & Submit,P4-4 Final report,"WHAT: Write the report: problem, solution, architecture (with the local-first/provider diagram), AWS services used, challenges, what is parked for v2.
+DONE WHEN: Report complete and committed.
+TEST: Report covers every AWS service actually used and matches the demo; a reader who never saw the code understands the architecture.",all
+Phase 4 — Polish & Submit,P4-5 Pitch deck + Q&A prep,"WHAT: 5-minute deck: problem -> SLC solution -> live/loop demo -> AWS architecture -> differentiator (clinician-authored + Guardrails + FDA) -> roadmap (the parked list). Rehearse the 2-min Q&A.
+DONE WHEN: Deck rehearsed within 5 minutes; Q&A answers prepared.
+TEST: A timed dry-run lands <=5:00; the team has crisp answers to 'why AWS?', 'how is this clinical not consumer?', 'what's next?'.",all
+Phase 4 — Polish & Submit,P4-6 README + docs cleanup,"WHAT: Finalize README.md (run locally in one command, env vars, architecture link), docs/architecture.md, docs/api.md. Ensure a stranger can run it.
+DONE WHEN: A clean clone runs locally by following the README.
+TEST: On a fresh machine, follow the README -> docker-compose up + the apps run, with no tribal knowledge needed.","P1,all"
