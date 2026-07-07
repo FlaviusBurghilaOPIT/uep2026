@@ -46,12 +46,26 @@ function PatientsPage() {
             <p style={styles.detail}>
               Allergies: {patient.allergies.length > 0 ? patient.allergies.join(', ') : 'None'}
             </p>
-            <button
-              style={styles.button}
-              onClick={() => window.location.href = '/cases/new'}
-            >
-              Create Case
-            </button>
+            <div style={styles.buttons}>
+              <button
+                style={styles.button}
+                onClick={() => window.location.href = '/cases/new'}
+              >
+                Create Case
+              </button>
+              <button
+                style={styles.secondaryButton}
+                onClick={() => window.location.href = '/cases/case-001/medications/list'}
+              >
+                View Medications
+              </button>
+              <button
+                style={styles.secondaryButton}
+                onClick={() => window.location.href = '/cases/case-001/recommendations/list'}
+              >
+                View Recommendations
+              </button>
+            </div>
           </div>
         ))}
       </div>
@@ -93,14 +107,28 @@ const styles = {
     color: '#6b7280',
     margin: '0 0 4px 0'
   },
-  button: {
+  buttons: {
+    display: 'flex',
+    gap: '8px',
     marginTop: '12px',
+    flexWrap: 'wrap' as const
+  },
+  button: {
     padding: '8px 16px',
     backgroundColor: '#2563eb',
     color: '#ffffff',
     border: 'none',
     borderRadius: '8px',
     fontSize: '13px',
+    cursor: 'pointer'
+  },
+  secondaryButton: {
+    padding: '8px 12px',
+    backgroundColor: '#eff6ff',
+    color: '#2563eb',
+    border: '1px solid #bfdbfe',
+    borderRadius: '8px',
+    fontSize: '12px',
     cursor: 'pointer'
   }
 }

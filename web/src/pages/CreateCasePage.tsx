@@ -44,6 +44,18 @@ function CreateCasePage() {
           <p style={styles.subtitle}>The case has been created successfully.</p>
           <button
             style={styles.button}
+            onClick={() => window.location.href = '/cases/case-001/medications'}
+          >
+            Prescribe Medications
+          </button>
+          <button
+            style={styles.button}
+            onClick={() => window.location.href = '/cases/case-001/recommendations'}
+          >
+            Add Recovery Recommendations
+          </button>
+          <button
+            style={styles.backButton}
             onClick={() => window.location.href = '/patients'}
           >
             Back to Patients
