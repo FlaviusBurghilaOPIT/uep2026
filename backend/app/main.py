@@ -5,15 +5,18 @@ from sqlalchemy import text
 from app.routers import auth
 from app.database import get_db
 from app.routers import cases
-
+from app.routers import medications
 from app.dependencies import get_current_user
 from app import models
-
+from app.routers import reminders
 
 
 
 app = FastAPI(title="Remote CarePro API")
 
+
+app.include_router(reminders.router)
+app.include_router(medications.router)
 app.include_router(cases.router)
 app.include_router(users.router)
 app.include_router(auth.router)

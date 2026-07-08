@@ -133,16 +133,38 @@ class Medication(Base):
 class ScheduledReminder(Base):
     __tablename__ = "scheduled_reminders"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
-    medication_id: Mapped[str] = mapped_column(ForeignKey("medications.id"), nullable=False)
-
-    scheduled_time: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-
-    medication: Mapped["Medication"] = relationship(back_populates="scheduled_reminders")
-    dose_log: Mapped["DoseLog | None"] = relationship(
-        back_populates="scheduled_reminder", uselist=False, cascade="all, delete-orphan"
+    id: Mapped[str] = mapped_column(
+        String,
+        primary_key=True,
+        default=gen_uuid
     )
 
+    medication_id: Mapped[str] = mapped_column(
+        ForeignKey("medications.id"),
+        nullable=False
+    )
+
+    scheduled_time: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False
+    )
+
+    status: Mapped[str] = mapped_column(
+        String,
+        default="pending"
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow
+    )
+
+    medication: Mapped["Medication"] = relationship(
+        back_populates="scheduled_reminders"
+    )
+    dose_log: Mapped["DoseLog"] = relationship(
+    back_populates="scheduled_reminder"
+)
 
 class DoseLog(Base):
     __tablename__ = "dose_logs"

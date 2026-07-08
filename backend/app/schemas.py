@@ -35,3 +35,33 @@ class TokenResponse(BaseModel):
 class CaseCreate(BaseModel):
     patient_id: str
     surgery_type: str
+
+
+
+
+
+
+class MedicationCreate(BaseModel):
+    case_id: str
+    name: str
+    dose: str
+    schedule_text: str
+    duration: str
+    notes: str | None = None
+
+
+
+class ReminderCreate(BaseModel):
+    medication_id: str
+    scheduled_time: datetime
+
+
+class ReminderResponse(BaseModel):
+    id: str
+    medication_id: str
+    scheduled_time: datetime
+    status: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
