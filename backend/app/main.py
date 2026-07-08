@@ -2,13 +2,21 @@ from app.routers import users
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-
+from app.routers import auth
 from app.database import get_db
+from app.routers import cases
+
+from app.dependencies import get_current_user
+from app import models
+
+
 
 
 app = FastAPI(title="Remote CarePro API")
-app.include_router(users.router)
 
+app.include_router(cases.router)
+app.include_router(users.router)
+app.include_router(auth.router)
 @app.get("/")
 def root():
     return {
@@ -29,3 +37,17 @@ def health_db(db: Session = Depends(get_db)):
             "database": "error",
             "detail": str(e)
         }
+
+
+
+
+
+@app.get("/me")
+def read_current_user(
+    current_user: models.User = Depends(get_current_user)
+):
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "role": current_user.role.value
+    }

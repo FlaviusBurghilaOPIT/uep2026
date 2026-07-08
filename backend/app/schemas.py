@@ -18,3 +18,20 @@ class UserResponse(UserBase):
 
     class Config:
         from_attributes = True
+
+
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class CaseCreate(BaseModel):
+    patient_id: str
+    surgery_type: str
