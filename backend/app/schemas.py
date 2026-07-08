@@ -37,7 +37,16 @@ class CaseCreate(BaseModel):
     surgery_type: str
 
 
+class CaseResponse(BaseModel):
+    id: str
+    clinician_id: str
+    patient_id: str
+    surgery_type: str
+    status: str
+    created_at: datetime
 
+    class Config:
+        from_attributes = True
 
 
 
@@ -49,6 +58,19 @@ class MedicationCreate(BaseModel):
     duration: str
     notes: str | None = None
 
+
+class MedicationResponse(BaseModel):
+    id: str
+    case_id: str
+    name: str
+    dose: str
+    schedule_text: str
+    duration: str
+    notes: str | None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 
 class ReminderCreate(BaseModel):

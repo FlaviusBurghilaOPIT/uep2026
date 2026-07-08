@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -33,3 +33,28 @@ def create_medication(
     db.refresh(new_medication)
 
     return new_medication
+
+
+@router.delete("/{medication_id}")
+def delete_medication(
+    medication_id: str,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+
+    medication = db.query(models.Medication).filter(
+        models.Medication.id == medication_id
+    ).first()
+
+    if not medication:
+        raise HTTPException(
+            status_code=404,
+            detail="Medication not found"
+        )
+
+    db.delete(medication)
+    db.commit()
+
+    return {
+        "message": "Medication deleted"
+    }
