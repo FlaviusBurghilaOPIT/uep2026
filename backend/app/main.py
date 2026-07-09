@@ -1,3 +1,8 @@
+from app.routers import fda
+from app.routers import ai
+from app.routers import checkins
+from app.routers import recommendations
+from app.routers import adherence
 from app.routers import users
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
@@ -5,21 +10,25 @@ from sqlalchemy import text
 from app.routers import auth
 from app.database import get_db
 from app.routers import cases
-from app.routers import medications
 from app.dependencies import get_current_user
 from app import models
 from app.routers import reminders
-
+from app.routers import patients
 
 
 app = FastAPI(title="Remote CarePro API")
 
-
+app.include_router(fda.router)
+app.include_router(ai.router)
+app.include_router(checkins.router)
+app.include_router(recommendations.router)
+app.include_router(adherence.router)
 app.include_router(reminders.router)
-app.include_router(medications.router)
 app.include_router(cases.router)
+app.include_router(patients.router)
 app.include_router(users.router)
 app.include_router(auth.router)
+
 @app.get("/")
 def root():
     return {

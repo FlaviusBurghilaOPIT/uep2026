@@ -5,6 +5,7 @@ from app import models, schemas
 from app.database import get_db
 from app.dependencies import get_current_user
 
+
 router = APIRouter(
     prefix="/reminders",
     tags=["reminders"]
@@ -18,6 +19,16 @@ def create_reminder(
     current_user: models.User = Depends(get_current_user)
 ):
 
+    medication = db.query(models.Medication).filter(
+        models.Medication.id == reminder.medication_id
+    ).first()
+
+    if not medication:
+        raise HTTPException(
+            status_code=404,
+            detail="Medication not found"
+        )
+
     db_reminder = models.ScheduledReminder(
         medication_id=reminder.medication_id,
         scheduled_time=reminder.scheduled_time
@@ -28,6 +39,7 @@ def create_reminder(
     db.refresh(db_reminder)
 
     return db_reminder
+
 
 @router.get("/", response_model=list[schemas.ReminderResponse])
 def list_reminders(

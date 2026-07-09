@@ -106,3 +106,37 @@ def get_case_medications(
     ).all()
 
     return medications
+
+@router.post("/{case_id}/medications", response_model=schemas.MedicationResponse)
+def create_case_medication(
+    case_id: str,
+    medication: schemas.MedicationCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+
+    case = db.query(models.Case).filter(
+        models.Case.id == case_id,
+        models.Case.clinician_id == current_user.id
+    ).first()
+
+    if not case:
+        raise HTTPException(
+            status_code=404,
+            detail="Case not found"
+        )
+
+    new_medication = models.Medication(
+        case_id=case_id,
+        name=medication.name,
+        dose=medication.dose,
+        schedule_text=medication.schedule_text,
+        duration=medication.duration,
+        notes=medication.notes
+    )
+
+    db.add(new_medication)
+    db.commit()
+    db.refresh(new_medication)
+
+    return new_medication

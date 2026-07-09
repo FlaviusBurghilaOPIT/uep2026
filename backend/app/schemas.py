@@ -2,23 +2,21 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
-class UserBase(BaseModel):
+class UserCreate(BaseModel):
     email: str
     full_name: str
-    role: str
-
-
-class UserCreate(UserBase):
     password: str
 
 
-class UserResponse(UserBase):
+class UserResponse(BaseModel):
     id: str
+    email: str
+    full_name: str
+    role: str
     created_at: datetime
 
     class Config:
         from_attributes = True
-
 
 
 
@@ -51,7 +49,6 @@ class CaseResponse(BaseModel):
 
 
 class MedicationCreate(BaseModel):
-    case_id: str
     name: str
     dose: str
     schedule_text: str
@@ -87,3 +84,10 @@ class ReminderResponse(BaseModel):
 
     class Config:
         from_attributes = True
+class ChatRequest(BaseModel):
+    case_id: str
+    message: str
+
+
+class ChatResponse(BaseModel):
+    reply: str
