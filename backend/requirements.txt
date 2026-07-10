@@ -6,4 +6,10 @@ alembic
 python-dotenv
 pydantic
 python-jose[cryptography]
+pyjwt[crypto]
 passlib[bcrypt]
+bcrypt<4.1
+pytest
+httpx
+black
+ruff

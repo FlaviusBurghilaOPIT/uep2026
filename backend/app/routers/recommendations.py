@@ -1,14 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.database import get_db
-from app import models, schemas
-from app.dependencies import get_current_user
-
+from app import models
+from app.dependencies import get_current_user, get_db_for_user
 
 router = APIRouter(
     prefix="/cases",
-    tags=["recommendations"]
+    tags=["recommendations"],
 )
 
 
@@ -16,25 +14,20 @@ router = APIRouter(
 def create_recommendation(
     case_id: str,
     text: str,
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    db: Session = Depends(get_db_for_user),
+    current_user: models.User = Depends(get_current_user),
 ):
 
-    case = db.query(models.Case).filter(
-        models.Case.id == case_id,
-        models.Case.clinician_id == current_user.id
-    ).first()
+    case = (
+        db.query(models.Case)
+        .filter(models.Case.id == case_id, models.Case.clinician_id == current_user.id)
+        .first()
+    )
 
     if not case:
-        raise HTTPException(
-            status_code=404,
-            detail="Case not found"
-        )
+        raise HTTPException(status_code=404, detail="Case not found")
 
-    recommendation = models.Recommendation(
-        case_id=case_id,
-        text=text
-    )
+    recommendation = models.Recommendation(case_id=case_id, text=text)
 
     db.add(recommendation)
     db.commit()
@@ -43,16 +36,15 @@ def create_recommendation(
     return recommendation
 
 
-
 @router.get("/{case_id}/recommendations")
 def get_recommendations(
     case_id: str,
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    db: Session = Depends(get_db_for_user),
+    current_user: models.User = Depends(get_current_user),
 ):
 
-    recommendations = db.query(models.Recommendation).filter(
-        models.Recommendation.case_id == case_id
-    ).all()
+    recommendations = (
+        db.query(models.Recommendation).filter(models.Recommendation.case_id == case_id).all()
+    )
 
     return recommendations
