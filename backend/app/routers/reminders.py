@@ -2,36 +2,30 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app import models, schemas
-from app.database import get_db
-from app.dependencies import get_current_user
-
+from app.dependencies import get_current_user, get_db_for_user
 
 router = APIRouter(
     prefix="/reminders",
-    tags=["reminders"]
+    tags=["reminders"],
 )
 
 
 @router.post("/", response_model=schemas.ReminderResponse)
 def create_reminder(
     reminder: schemas.ReminderCreate,
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    db: Session = Depends(get_db_for_user),
+    current_user: models.User = Depends(get_current_user),
 ):
 
-    medication = db.query(models.Medication).filter(
-        models.Medication.id == reminder.medication_id
-    ).first()
+    medication = (
+        db.query(models.Medication).filter(models.Medication.id == reminder.medication_id).first()
+    )
 
     if not medication:
-        raise HTTPException(
-            status_code=404,
-            detail="Medication not found"
-        )
+        raise HTTPException(status_code=404, detail="Medication not found")
 
     db_reminder = models.ScheduledReminder(
-        medication_id=reminder.medication_id,
-        scheduled_time=reminder.scheduled_time
+        medication_id=reminder.medication_id, scheduled_time=reminder.scheduled_time
     )
 
     db.add(db_reminder)
@@ -43,8 +37,7 @@ def create_reminder(
 
 @router.get("/", response_model=list[schemas.ReminderResponse])
 def list_reminders(
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    db: Session = Depends(get_db_for_user), current_user: models.User = Depends(get_current_user)
 ):
 
     reminders = db.query(models.ScheduledReminder).all()
@@ -56,19 +49,18 @@ def list_reminders(
 def update_reminder(
     reminder_id: str,
     status: str,
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    db: Session = Depends(get_db_for_user),
+    current_user: models.User = Depends(get_current_user),
 ):
 
-    reminder = db.query(models.ScheduledReminder).filter(
-        models.ScheduledReminder.id == reminder_id
-    ).first()
+    reminder = (
+        db.query(models.ScheduledReminder)
+        .filter(models.ScheduledReminder.id == reminder_id)
+        .first()
+    )
 
     if not reminder:
-        raise HTTPException(
-            status_code=404,
-            detail="Reminder not found"
-        )
+        raise HTTPException(status_code=404, detail="Reminder not found")
 
     reminder.status = status
 
