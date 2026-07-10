@@ -20,7 +20,7 @@ def create_user(
     db_user = models.User(
         email=user.email,
         full_name=user.full_name,
-        role=user.role,
+        role=models.UserRole.clinician,
         password_hash=hash_password(user.password)
     )
 
