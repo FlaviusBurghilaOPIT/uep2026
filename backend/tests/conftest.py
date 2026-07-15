@@ -17,8 +17,10 @@ os.environ.setdefault(
 os.environ.setdefault("POSTGRES_APP_PASSWORD", "dev-only-change-in-prod")
 
 # Tests must never export traces, even if the developer's .env enables Phoenix
-# for local runs — setup_tracing() is gated on this var being absent.
-os.environ.pop("PHOENIX_COLLECTOR_ENDPOINT", None)
+# for local runs. Preset to empty rather than pop: app.database's load_dotenv()
+# (override=False) re-populates absent keys from .env, but won't overwrite an
+# existing one — and setup_tracing() treats "" as disabled.
+os.environ["PHOENIX_COLLECTOR_ENDPOINT"] = ""
 
 from app.database import get_db
 from app.main import app
