@@ -709,9 +709,6 @@ paths:
           content:
             application/json:
               example:
-                drug: "ibuprofen"
-                warnings:
-                  - "May increase risk of heart attack or stroke with long-term use"
-                  - "Can cause stomach bleeding especially in people over 60"
-                source: "openFDA"
-                retrieved_at: "2026-06-29T10:00:00Z"
+                drug_name: "ibuprofen"
+                summary: "Ibuprofen may increase the risk of heart attack or stroke and can cause stomach bleeding, especially with long-term use or in people over 60."
+                source: "fixture"

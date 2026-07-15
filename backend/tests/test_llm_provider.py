@@ -43,3 +43,21 @@ def test_chat_sends_system_first_and_returns_content(monkeypatch):
             {"role": "user", "content": "hi"},
         ],
     )
+
+
+def test_chat_returns_empty_string_when_content_is_none(monkeypatch):
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+    monkeypatch.setenv("OPENROUTER_MODEL", "test/model")
+
+    provider = OpenRouterProvider()
+    create_mock = AsyncMock(return_value=_fake_completion(None))
+    monkeypatch.setattr(provider._client.chat.completions, "create", create_mock)
+
+    reply = asyncio.run(
+        provider.chat(
+            messages=[{"role": "user", "content": "hi"}],
+            system="system prompt",
+        )
+    )
+
+    assert reply == ""

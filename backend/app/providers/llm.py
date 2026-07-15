@@ -28,7 +28,7 @@ class OpenRouterProvider(LLMProvider):
             model=self._model,
             messages=[{"role": "system", "content": system}, *messages],
         )
-        return response.choices[0].message.content
+        return response.choices[0].message.content or ""
 
 
 def get_llm_provider() -> LLMProvider:

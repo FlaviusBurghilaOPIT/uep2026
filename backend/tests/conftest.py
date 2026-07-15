@@ -16,6 +16,10 @@ os.environ.setdefault(
 )
 os.environ.setdefault("POSTGRES_APP_PASSWORD", "dev-only-change-in-prod")
 
+# Tests must never export traces, even if the developer's .env enables Phoenix
+# for local runs — setup_tracing() is gated on this var being absent.
+os.environ.pop("PHOENIX_COLLECTOR_ENDPOINT", None)
+
 from app.database import get_db
 from app.main import app
 from app.models import Base
