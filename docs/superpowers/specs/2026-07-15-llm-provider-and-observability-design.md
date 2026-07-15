@@ -219,7 +219,7 @@ implementation rather than assumed from memory, since these are fast-moving libr
 
   backend:
     environment:
-      PHOENIX_COLLECTOR_ENDPOINT: http://phoenix:4317
+      PHOENIX_COLLECTOR_ENDPOINT: http://phoenix:6006
     depends_on:
       - phoenix
 ```

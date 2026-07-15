@@ -17,15 +17,28 @@ services:
       timeout: 5s
       retries: 10
 
+  # LLM observability — traces prompts, outputs, and token usage from the backend
+  phoenix:
+    image: arizephoenix/phoenix:latest
+    ports:
+      - "6006:6006" # UI + OTLP http
+      - "4317:4317" # OTLP grpc
+    volumes:
+      - phoenix_data:/mnt/data
+
   # The real backend — FastAPI
   backend:
     build: ./backend
     ports:
       - "8000:8000"
     env_file: .env
+    environment:
+      PHOENIX_COLLECTOR_ENDPOINT: http://phoenix:6006
     depends_on:
       db:
         condition: service_healthy
+      phoenix:
+        condition: service_started
     volumes:
       - ./backend:/app
     command: sh -c "DATABASE_URL=$$MIGRATION_DATABASE_URL alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
@@ -42,3 +55,4 @@ services:
 
 volumes:
   pgdata:
+  phoenix_data:
