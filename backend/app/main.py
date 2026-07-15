@@ -79,7 +79,8 @@ app = FastAPI(
         {
             "name": "fda",
             "description": (
-                "Provides openFDA drug safety lookup for medications (live implementation pending)."
+                "openFDA drug safety lookup with plain-language LLM summaries, "
+                "plus the clinician warnings review queue."
             ),
         },
         {

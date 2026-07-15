@@ -164,3 +164,17 @@ def test_approve_does_not_duplicate_case_link_for_multiple_matching_medications(
     assert response.status_code == 200
     links = db_session.query(models.CaseFDAWarning).filter_by(case_id=case.id).all()
     assert len(links) == 1
+
+
+def test_drug_info_returns_llm_summary_with_source(client, db_session, monkeypatch):
+    monkeypatch.setenv("FDA_PROVIDER", "fixture")
+    monkeypatch.setenv("LLM_PROVIDER", "mock")
+    clinician = _make_clinician(db_session)
+
+    response = client.get("/fda/drug/aspirin", headers=_auth_headers(clinician))
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["drug_name"] == "aspirin"
+    assert body["summary"] == "This is a mock AI response. The real AI will answer here."
+    assert body["source"] == "fixture"

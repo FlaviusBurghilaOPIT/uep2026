@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -7,14 +8,30 @@ from app import models, schemas
 from app.database import get_db
 from app.dependencies import get_current_user, require_clinician
 from app.providers.fda import get_fda_provider
+from app.providers.llm import get_llm_provider
 
 router = APIRouter(prefix="/fda", tags=["fda"])
 
+FDA_SUMMARY_SYSTEM_PROMPT = (
+    "You are a patient-facing drug safety summarizer. Given raw openFDA label data, "
+    "produce a short, plain-language summary of key warnings and safety information. "
+    "You are strictly informational: never advise changing a dose, never diagnose. "
+    "If the data is sparse or missing, say so plainly rather than guessing."
+)
 
-@router.get("/drug/{name}")
+
+@router.get("/drug/{name}", response_model=schemas.FDADrugInfoResponse)
 async def get_drug_info(name: str, current_user: models.User = Depends(get_current_user)):
     provider = get_fda_provider()
-    return await provider.get_drug_info(name)
+    raw = await provider.get_drug_info(name)
+
+    llm = get_llm_provider()
+    summary = await llm.chat(
+        messages=[{"role": "user", "content": json.dumps(raw)[:4000]}],
+        system=FDA_SUMMARY_SYSTEM_PROMPT,
+    )
+
+    return schemas.FDADrugInfoResponse(drug_name=name, summary=summary, source=provider.source)
 
 
 @router.get("/warnings", response_model=list[schemas.FDAWarningResponse])

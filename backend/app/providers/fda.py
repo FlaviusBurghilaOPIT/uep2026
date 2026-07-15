@@ -3,12 +3,16 @@ from abc import ABC, abstractmethod
 
 
 class FDAProvider(ABC):
+    source: str
+
     @abstractmethod
     async def get_drug_info(self, drug_name: str) -> dict:
         pass
 
 
 class LiveFDAProvider(FDAProvider):
+    source = "live"
+
     async def get_drug_info(self, drug_name: str) -> dict:
         # calls the real openFDA public API
         import httpx
@@ -20,6 +24,8 @@ class LiveFDAProvider(FDAProvider):
 
 
 class FixtureFDAProvider(FDAProvider):
+    source = "fixture"
+
     async def get_drug_info(self, drug_name: str) -> dict:
         # returns fake FDA data — used for testing
         return {

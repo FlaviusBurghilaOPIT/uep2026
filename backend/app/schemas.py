@@ -100,6 +100,12 @@ class ChatResponse(BaseModel):
     escalate: bool = False
 
 
+class FDADrugInfoResponse(BaseModel):
+    drug_name: str
+    summary: str
+    source: str
+
+
 class FDAWarningResponse(BaseModel):
     id: str
     drug_name: str
