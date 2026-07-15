@@ -36,7 +36,6 @@ def test_get_llm_provider_openrouter(monkeypatch):
     assert isinstance(get_llm_provider(), OpenRouterProvider)
 
 
-
 def test_get_current_user_via_local_provider(client, db_session, monkeypatch):
     monkeypatch.delenv("AUTH_PROVIDER", raising=False)
 

@@ -10,9 +10,7 @@ from sqlalchemy.pool import StaticPool
 # service hostname, which only resolves inside the compose network. Running
 # `pytest` directly on the host (outside docker) needs the same Postgres
 # reached via localhost instead, since docker-compose publishes 5432:5432.
-os.environ.setdefault(
-    "DATABASE_URL", "postgresql://caredev:caredev@localhost:5432/remotecare"
-)
+os.environ.setdefault("DATABASE_URL", "postgresql://caredev:caredev@localhost:5432/remotecare")
 os.environ.setdefault(
     "MIGRATION_DATABASE_URL", "postgresql://caredev:caredev@localhost:5432/remotecare"
 )
