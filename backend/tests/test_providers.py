@@ -1,7 +1,7 @@
 from app import models
 from app.providers.auth import CognitoAuthProvider, LocalAuthProvider, get_auth_provider
 from app.providers.fda import FixtureFDAProvider, LiveFDAProvider, get_fda_provider
-from app.providers.llm import BedrockProvider, MockLLMProvider, OpenRouterProvider, get_llm_provider
+from app.providers.llm import MockLLMProvider, OpenRouterProvider, get_llm_provider
 from app.security import create_access_token, hash_password
 
 
@@ -32,12 +32,9 @@ def test_get_llm_provider_defaults_to_mock(monkeypatch):
 
 def test_get_llm_provider_openrouter(monkeypatch):
     monkeypatch.setenv("LLM_PROVIDER", "openrouter")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
     assert isinstance(get_llm_provider(), OpenRouterProvider)
 
-
-def test_get_llm_provider_bedrock(monkeypatch):
-    monkeypatch.setenv("LLM_PROVIDER", "bedrock")
-    assert isinstance(get_llm_provider(), BedrockProvider)
 
 
 def test_get_current_user_via_local_provider(client, db_session, monkeypatch):

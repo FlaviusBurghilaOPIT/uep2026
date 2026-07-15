@@ -1,6 +1,8 @@
 import os
 from abc import ABC, abstractmethod
 
+from openai import AsyncOpenAI
+
 
 class LLMProvider(ABC):
     @abstractmethod
@@ -14,21 +16,23 @@ class MockLLMProvider(LLMProvider):
 
 
 class OpenRouterProvider(LLMProvider):
-    async def chat(self, messages, system):
-        # real OpenRouter API call — built in Phase 2
-        pass
+    def __init__(self):
+        self._client = AsyncOpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=os.getenv("OPENROUTER_API_KEY"),
+        )
+        self._model = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini")
 
-
-class BedrockProvider(LLMProvider):
     async def chat(self, messages, system):
-        # real AWS Bedrock call — built in Phase 3
-        pass
+        response = await self._client.chat.completions.create(
+            model=self._model,
+            messages=[{"role": "system", "content": system}, *messages],
+        )
+        return response.choices[0].message.content
 
 
 def get_llm_provider() -> LLMProvider:
     p = os.getenv("LLM_PROVIDER", "mock")
     if p == "openrouter":
         return OpenRouterProvider()
-    if p == "bedrock":
-        return BedrockProvider()
     return MockLLMProvider()

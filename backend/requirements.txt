@@ -9,6 +9,9 @@ python-jose[cryptography]
 pyjwt[crypto]
 passlib[bcrypt]
 bcrypt<4.1
+openai
+arize-phoenix-otel
+openinference-instrumentation-openai
 pytest
 httpx
 black
