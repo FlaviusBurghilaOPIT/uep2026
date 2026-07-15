@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from openinference.instrumentation import using_attributes
 from sqlalchemy.orm import Session
 
 from app import models, schemas
@@ -78,10 +79,11 @@ async def chat(
     else:
         provider = get_llm_provider()
         system_prompt = _build_system_prompt(case)
-        reply = await provider.chat(
-            messages=[{"role": "user", "content": request.message}],
-            system=system_prompt,
-        )
+        with using_attributes(session_id=case.id, metadata={"endpoint": "ai.chat"}):
+            reply = await provider.chat(
+                messages=[{"role": "user", "content": request.message}],
+                system=system_prompt,
+            )
 
     db.add(
         models.ChatMessage(

@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app import models
 from app.database import get_db
 from app.dependencies import get_current_user
+from app.observability import setup_tracing
 from app.routers import (
     adherence,
     ai,
@@ -89,6 +90,8 @@ app = FastAPI(
         },
     ],
 )
+
+setup_tracing()
 
 app.include_router(fda.router)
 app.include_router(ai.router)

@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
+from openinference.instrumentation import using_attributes
 from sqlalchemy.orm import Session
 
 from app import models, schemas
@@ -26,10 +27,11 @@ async def get_drug_info(name: str, current_user: models.User = Depends(get_curre
     raw = await provider.get_drug_info(name)
 
     llm = get_llm_provider()
-    summary = await llm.chat(
-        messages=[{"role": "user", "content": json.dumps(raw)[:4000]}],
-        system=FDA_SUMMARY_SYSTEM_PROMPT,
-    )
+    with using_attributes(metadata={"endpoint": "fda.summarize", "drug_name": name}):
+        summary = await llm.chat(
+            messages=[{"role": "user", "content": json.dumps(raw)[:4000]}],
+            system=FDA_SUMMARY_SYSTEM_PROMPT,
+        )
 
     return schemas.FDADrugInfoResponse(drug_name=name, summary=summary, source=provider.source)
 
