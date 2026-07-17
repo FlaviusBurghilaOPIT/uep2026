@@ -18,12 +18,11 @@ function MedicationsPage() {
       setError('Please fill in all required fields')
       return
     }
-
     setLoading(true)
     try {
       const token = localStorage.getItem('token') || 'faketoken'
       await axios.post(
-        `${API_URL}/cases/case-001/medications`,
+        API_URL + '/cases/case-001/medications',
         {
           name,
           dose,
@@ -31,9 +30,7 @@ function MedicationsPage() {
           duration_days: parseInt(durationDays),
           notes
         },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
+        { headers: { Authorization: 'Bearer ' + token } }
       )
       setSuccess(true)
     } catch (err) {
@@ -43,11 +40,19 @@ function MedicationsPage() {
     }
   }
 
+  const openFDA = () => {
+    window.open('/fda?drug=' + name.toLowerCase(), '_blank')
+  }
+
+  const openFDAWebsite = () => {
+    window.open('https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=BasicSearch.process&query=' + name.toLowerCase(), '_blank')
+  }
+
   if (success) {
     return (
       <div style={styles.container}>
         <div style={styles.card}>
-          <h1 style={styles.title}>Medication Added ✓</h1>
+          <h1 style={styles.title}>Medication Added</h1>
           <p style={styles.subtitle}>The medication has been prescribed successfully.</p>
           <button
             style={styles.button}
@@ -70,18 +75,31 @@ function MedicationsPage() {
     <div style={styles.container}>
       <div style={styles.card}>
         <h1 style={styles.title}>Prescribe Medication</h1>
-        <p style={styles.subtitle}>Case: Knee Replacement — Maria Rossi</p>
+        <p style={styles.subtitle}>Case: Knee Replacement</p>
 
-        <label style={styles.label}>Drug Name *</label>
-        <input
-          style={styles.input}
-          type="text"
-          placeholder="e.g. Ibuprofen"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
+        <label style={styles.label}>Drug Name</label>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <input
+            style={{ ...styles.input, flex: 1 }}
+            type="text"
+            placeholder="e.g. Ibuprofen"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          {name && (
+            <button style={styles.fdaButton} onClick={openFDA}>
+              FDA Check
+            </button>
+          )}
+        </div>
 
-        <label style={styles.label}>Dose *</label>
+        {name && (
+          <button style={styles.fdaExternalLink} onClick={openFDAWebsite}>
+            View on FDA Website
+          </button>
+        )}
+
+        <label style={styles.label}>Dose</label>
         <input
           style={styles.input}
           type="text"
@@ -90,7 +108,7 @@ function MedicationsPage() {
           onChange={(e) => setDose(e.target.value)}
         />
 
-        <label style={styles.label}>Frequency *</label>
+        <label style={styles.label}>Frequency</label>
         <input
           style={styles.input}
           type="text"
@@ -99,7 +117,7 @@ function MedicationsPage() {
           onChange={(e) => setFrequency(e.target.value)}
         />
 
-        <label style={styles.label}>Duration (days) *</label>
+        <label style={styles.label}>Duration (days)</label>
         <input
           style={styles.input}
           type="number"
@@ -118,18 +136,11 @@ function MedicationsPage() {
 
         {error && <p style={styles.error}>{error}</p>}
 
-        <button
-          style={styles.button}
-          onClick={handleSubmit}
-          disabled={loading}
-        >
+        <button style={styles.button} onClick={handleSubmit} disabled={loading}>
           {loading ? 'Adding...' : 'Add Medication'}
         </button>
 
-        <button
-          style={styles.backButton}
-          onClick={() => window.location.href = '/patients'}
-        >
+        <button style={styles.backButton} onClick={() => window.location.href = '/patients'}>
           Cancel
         </button>
       </div>
@@ -204,6 +215,27 @@ const styles = {
     borderRadius: '8px',
     fontSize: '15px',
     cursor: 'pointer'
+  },
+  fdaButton: {
+    padding: '8px 12px',
+    backgroundColor: '#fef9f0',
+    color: '#d97706',
+    border: '1px solid #fde68a',
+    borderRadius: '8px',
+    fontSize: '13px',
+    cursor: 'pointer',
+    fontWeight: '500' as const
+  },
+  fdaExternalLink: {
+    padding: '6px 12px',
+    backgroundColor: '#f0fdf4',
+    color: '#16a34a',
+    border: '1px solid #bbf7d0',
+    borderRadius: '8px',
+    fontSize: '12px',
+    cursor: 'pointer',
+    fontWeight: '500' as const,
+    textAlign: 'left' as const
   },
   error: {
     color: '#dc2626',

@@ -8,6 +8,8 @@ import MedicationsPage from './pages/MedicationsPage'
 import MedicationsListPage from './pages/MedicationsListPage'
 import RecommendationsPage from './pages/RecommendationsPage'
 import RecommendationsListPage from './pages/RecommendationsListPage'
+import FDAPage from './pages/FDAPage'
+
 
 function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation()
@@ -37,6 +39,7 @@ function App() {
           <Route path="/cases/:caseId/recommendations" element={<RecommendationsPage />} />
           <Route path="/patients/new" element={<CreatePatientPage />} />
           <Route path="/cases/:caseId/recommendations/list" element={<RecommendationsListPage />} />
+          <Route path="/fda" element={<FDAPage />} />
         </Routes>
       </Layout>
     </BrowserRouter>

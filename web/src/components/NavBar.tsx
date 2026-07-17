@@ -17,12 +17,10 @@ function NavBar() {
 
   return (
     <div style={styles.sidebar}>
-      {/* Brand */}
       <div style={styles.brand}>
         <span style={styles.brandPlus}>+</span> CarePro
       </div>
 
-      {/* Nav links */}
       <div style={styles.nav}>
         <a href="/patients" style={linkStyle(path === '/patients')}>
           <span>👤</span> Patients
@@ -36,9 +34,11 @@ function NavBar() {
         <a href="/cases/case-001/recommendations/list" style={linkStyle(path.includes('recommendations'))}>
           <span>📝</span> Recommendations
         </a>
+        <a href="/fda" style={linkStyle(path.includes('fda'))}>
+          <span>⚕️</span> FDA Safety
+        </a>
       </div>
 
-      {/* Bottom section */}
       <div style={styles.bottom}>
         <div style={styles.divider} />
         <button

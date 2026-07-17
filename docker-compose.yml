@@ -4,7 +4,7 @@ services:
 
   # The database — stores all patients, cases, medications etc.
   db:
-    image: postgres:16
+    image: pgvector/pgvector:pg16
     environment:
       POSTGRES_USER: caredev
       POSTGRES_PASSWORD: caredev
