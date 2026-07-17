@@ -1,39 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import axios from 'axios'
 
 const API_URL = 'http://localhost:8001'
 
-type Patient = {
-  id: string
-  full_name: string
-}
-
-function CreateCasePage() {
-  const [patients, setPatients] = useState<Patient[]>([])
-  const [patientId, setPatientId] = useState('')
-  const [surgeryType, setSurgeryType] = useState('')
+function CreatePatientPage() {
+  const [fullName, setFullName] = useState('')
+  const [dateOfBirth, setDateOfBirth] = useState('')
+  const [allergies, setAllergies] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    const fetchPatients = async () => {
-      try {
-        const token = localStorage.getItem('token') || 'faketoken'
-        const response = await axios.get(`${API_URL}/patients`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        setPatients(response.data)
-      } catch (err) {
-        console.error('Failed to fetch patients', err)
-      }
-    }
-    fetchPatients()
-  }, [])
-
-  const handleCreateCase = async () => {
-    if (!patientId || !surgeryType) {
-      setError('Please select a patient and enter a surgery type')
+  const handleSubmit = async () => {
+    if (!fullName || !dateOfBirth) {
+      setError('Please fill in name and date of birth')
       return
     }
 
@@ -41,18 +21,19 @@ function CreateCasePage() {
     try {
       const token = localStorage.getItem('token') || 'faketoken'
       await axios.post(
-        `${API_URL}/cases`,
+        `${API_URL}/patients`,
         {
-          patient_id: patientId,
-          surgery_type: surgeryType
+          full_name: fullName,
+          date_of_birth: dateOfBirth,
+          allergies: allergies
+            ? allergies.split(',').map((a) => a.trim())
+            : []
         },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       )
       setSuccess(true)
     } catch (err) {
-      setError('Failed to create case. Please try again.')
+      setError('Failed to create patient. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -62,19 +43,13 @@ function CreateCasePage() {
     return (
       <div style={styles.container}>
         <div style={styles.card}>
-          <h1 style={styles.title}>Case Created ✓</h1>
-          <p style={styles.subtitle}>The case has been created successfully.</p>
+          <h1 style={styles.title}>Patient Created ✓</h1>
+          <p style={styles.subtitle}>The patient profile has been created.</p>
           <button
             style={styles.button}
-            onClick={() => window.location.href = '/cases/case-001/medications'}
+            onClick={() => window.location.href = '/cases/new'}
           >
-            Prescribe Medications
-          </button>
-          <button
-            style={styles.button}
-            onClick={() => window.location.href = '/cases/case-001/recommendations'}
-          >
-            Add Recovery Recommendations
+            Create Case for this Patient
           </button>
           <button
             style={styles.backButton}
@@ -90,39 +65,42 @@ function CreateCasePage() {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>New Case</h1>
+        <h1 style={styles.title}>New Patient</h1>
 
-        <label style={styles.label}>Select Patient</label>
-        <select
-          style={styles.input}
-          value={patientId}
-          onChange={(e) => setPatientId(e.target.value)}
-        >
-          <option value="">-- Select a patient --</option>
-          {patients.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.full_name}
-            </option>
-          ))}
-        </select>
-
-        <label style={styles.label}>Surgery Type</label>
+        <label style={styles.label}>Full Name *</label>
         <input
           style={styles.input}
           type="text"
-          placeholder="e.g. knee replacement"
-          value={surgeryType}
-          onChange={(e) => setSurgeryType(e.target.value)}
+          placeholder="e.g. Maria Rossi"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+        />
+
+        <label style={styles.label}>Date of Birth *</label>
+        <input
+          style={styles.input}
+          type="date"
+          value={dateOfBirth}
+          onChange={(e) => setDateOfBirth(e.target.value)}
+        />
+
+        <label style={styles.label}>Allergies (comma separated)</label>
+        <input
+          style={styles.input}
+          type="text"
+          placeholder="e.g. penicillin, aspirin"
+          value={allergies}
+          onChange={(e) => setAllergies(e.target.value)}
         />
 
         {error && <p style={styles.error}>{error}</p>}
 
         <button
           style={styles.button}
-          onClick={handleCreateCase}
+          onClick={handleSubmit}
           disabled={loading}
         >
-          {loading ? 'Creating...' : 'Create Case'}
+          {loading ? 'Creating...' : 'Create Patient'}
         </button>
 
         <button
@@ -203,4 +181,4 @@ const styles = {
   }
 }
 
-export default CreateCasePage
+export default CreatePatientPage

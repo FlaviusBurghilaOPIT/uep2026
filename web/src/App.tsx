@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import NavBar from './components/NavBar'
-
+import CreatePatientPage from './pages/CreatePatientPage'
 import LoginPage from './pages/LoginPage'
 import PatientsPage from './pages/PatientsPage'
 import CreateCasePage from './pages/CreateCasePage'
@@ -14,10 +14,12 @@ function Layout({ children }: { children: React.ReactNode }) {
   const hideNav = location.pathname === '/login'
 
   return (
-    <>
+    <div style={{ display: 'flex' }}>
       {!hideNav && <NavBar />}
-      {children}
-    </>
+      <div style={{ marginLeft: hideNav ? '0' : '220px', flex: 1 }}>
+        {children}
+      </div>
+    </div>
   )
 }
 
@@ -33,6 +35,7 @@ function App() {
           <Route path="/cases/:caseId/medications" element={<MedicationsPage />} />
           <Route path="/cases/:caseId/medications/list" element={<MedicationsListPage />} />
           <Route path="/cases/:caseId/recommendations" element={<RecommendationsPage />} />
+          <Route path="/patients/new" element={<CreatePatientPage />} />
           <Route path="/cases/:caseId/recommendations/list" element={<RecommendationsListPage />} />
         </Routes>
       </Layout>

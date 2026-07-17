@@ -10,9 +10,9 @@ function LoginPage() {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, {
+      const response = await axios.post(`${API_URL}/auth/dev-login`, {
         email,
-        password
+        role: 'clinician'
       })
       // save the token
       localStorage.setItem('token', response.data.token)
