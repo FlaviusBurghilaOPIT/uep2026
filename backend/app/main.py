@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import init_db
 from app.api.ai import router as ai_router
 from app.api.fda import router as fda_router
+from app.routers.auth import router as auth_router
 
 app = FastAPI(
     title="Remote CarePro API",
@@ -28,4 +29,6 @@ def health():
 
 # Routes
 app.include_router(ai_router) 
+app.include_router(fda_router)
+app.include_router(auth_router)
 app.include_router(fda_router)
