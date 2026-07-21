@@ -18,7 +18,7 @@ class LiveFDAProvider(FDAProvider):
         import httpx
 
         url = f"https://api.fda.gov/drug/label.json?search=openfda.brand_name:{drug_name}&limit=1"
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=20.0) as client:
             response = await client.get(url)
             return response.json()
 
