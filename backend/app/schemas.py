@@ -1,6 +1,16 @@
 from datetime import datetime
+import enum
 
 from pydantic import BaseModel
+
+
+class FrequencyCode(str, enum.Enum):
+    QD  = "QD"
+    BID = "BID"
+    TID = "TID"
+    QID = "QID"
+    PRN = "PRN"
+
 
 
 class UserCreate(BaseModel):
@@ -89,28 +99,6 @@ class CaseResponse(BaseModel):
         from_attributes = True
 
 
-class MedicationCreate(BaseModel):
-    name: str
-    dose: str
-    schedule_text: str
-    duration: str
-    notes: str | None = None
-
-
-class MedicationResponse(BaseModel):
-    id: str
-    case_id: str
-    name: str
-    dose: str
-    schedule_text: str
-    duration: str
-    notes: str | None
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
 class ReminderCreate(BaseModel):
     medication_id: str
     scheduled_time: datetime
@@ -122,6 +110,30 @@ class ReminderResponse(BaseModel):
     scheduled_time: datetime
     status: str
     created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class MedicationCreate(BaseModel):
+    name:      str
+    dose:      str
+    frequency: FrequencyCode
+    duration:  str
+    notes:     str | None = None
+
+
+class MedicationResponse(BaseModel):
+    id:             str
+    case_id:        str
+    name:           str
+    dose:           str
+    frequency:      FrequencyCode
+    schedule_times: list[str] = []
+    duration:       str
+    notes:          str | None
+    created_at:     datetime
+    scheduled_reminders: list[ReminderResponse] = []
 
     class Config:
         from_attributes = True
@@ -190,4 +202,29 @@ class RecommendationResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class DeviceTokenRegisterRequest(BaseModel):
+    token: str
+    platform: str = "ios"
+
+
+class DeviceTokenResponse(BaseModel):
+    id: int
+    user_id: str
+    token: str
+    platform: str
+    is_active: bool
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class SendTestPushRequest(BaseModel):
+    user_id: str
+    title: str
+    body: str
+    data_payload: dict | None = None
+
 
