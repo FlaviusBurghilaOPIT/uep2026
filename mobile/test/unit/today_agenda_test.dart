@@ -14,9 +14,7 @@ void main() {
   setUp(() {
     fakeApi = FakeApiService();
     container = ProviderContainer(
-      overrides: [
-        apiServiceProvider.overrideWithValue(fakeApi),
-      ],
+      overrides: [apiServiceProvider.overrideWithValue(fakeApi)],
     );
   });
 
@@ -32,7 +30,7 @@ void main() {
             'id': 'med_1',
             'name': 'Amoxicillin',
             'dose': '500mg',
-            'schedule_text': 'Every 8 hours',
+            'frequency': 'TID',
             'duration': '7 days',
             'notes': 'Take with food',
           },
@@ -40,7 +38,7 @@ void main() {
             'id': 'med_2',
             'name': 'Ibuprofen',
             'dose': '400mg',
-            'schedule_text': 'As needed',
+            'frequency': 'PRN',
             'duration': '5 days',
             'notes': null,
           },
@@ -60,7 +58,7 @@ void main() {
     expect(medications[0].id, 'med_1');
     expect(medications[0].name, 'Amoxicillin');
     expect(medications[0].dose, '500mg');
-    expect(medications[0].scheduleText, 'Every 8 hours');
+    expect(medications[0].scheduleText, 'TID');
     expect(medications[0].duration, '7 days');
     expect(medications[0].notes, 'Take with food');
   });
@@ -81,35 +79,44 @@ void main() {
     expect(agendaState!.doseStatuses['rem_123'], DoseStatus.taken);
   });
 
-  test('loadAgenda when ApiService returns error -> medications becomes AsyncError', () async {
-    fakeApi.getHandlers['/cases/case_bad/medications'] = () {
-      return http.Response(jsonEncode({'detail': 'Server error'}), 500);
-    };
+  test(
+    'loadAgenda when ApiService returns error -> medications becomes AsyncError',
+    () async {
+      fakeApi.getHandlers['/cases/case_bad/medications'] = () {
+        return http.Response(jsonEncode({'detail': 'Server error'}), 500);
+      };
 
-    final notifier = container.read(todayAgendaNotifierProvider.notifier);
-    await notifier.loadAgenda('case_bad');
+      final notifier = container.read(todayAgendaNotifierProvider.notifier);
+      await notifier.loadAgenda('case_bad');
 
-    final agendaState = container.read(todayAgendaNotifierProvider).value;
-    expect(agendaState, isNotNull);
-    expect(agendaState!.medications.hasError, isTrue);
-  });
+      final agendaState = container.read(todayAgendaNotifierProvider).value;
+      expect(agendaState, isNotNull);
+      expect(agendaState!.medications.hasError, isTrue);
+    },
+  );
 
-  test('stageDoseLog -> undoDoseLog within window reverts state to pending', () async {
-    final notifier = container.read(todayAgendaNotifierProvider.notifier);
-    notifier.stageDoseLog(
-      reminderId: 'rem_undo_1',
-      status: DoseStatus.taken,
-      window: const Duration(seconds: 5),
-    );
+  test(
+    'stageDoseLog -> undoDoseLog within window reverts state to pending',
+    () async {
+      final notifier = container.read(todayAgendaNotifierProvider.notifier);
+      notifier.stageDoseLog(
+        reminderId: 'rem_undo_1',
+        status: DoseStatus.taken,
+        window: const Duration(seconds: 5),
+      );
 
-    var agendaState = container.read(todayAgendaNotifierProvider).value;
-    expect(agendaState!.doseStatuses['rem_undo_1'], DoseStatus.taken);
+      var agendaState = container.read(todayAgendaNotifierProvider).value;
+      expect(agendaState!.doseStatuses['rem_undo_1'], DoseStatus.taken);
 
-    notifier.undoDoseLog(reminderId: 'rem_undo_1', previousStatus: DoseStatus.pending);
+      notifier.undoDoseLog(
+        reminderId: 'rem_undo_1',
+        previousStatus: DoseStatus.pending,
+      );
 
-    agendaState = container.read(todayAgendaNotifierProvider).value;
-    expect(agendaState!.doseStatuses['rem_undo_1'], DoseStatus.pending);
-  });
+      agendaState = container.read(todayAgendaNotifierProvider).value;
+      expect(agendaState!.doseStatuses['rem_undo_1'], DoseStatus.pending);
+    },
+  );
 
   test('stageDoseLog -> wait-past-window commits dose log', () async {
     fakeApi.postHandlers['/adherence/log'] = (body) {
@@ -129,26 +136,32 @@ void main() {
     expect(agendaState!.doseStatuses['rem_commit_1'], DoseStatus.skipped);
   });
 
-  test('offline log -> offlineQueue non-empty -> flushOfflineQueue clears queue', () async {
-    fakeApi.postHandlers['/adherence/log'] = (body) {
-      return http.Response(jsonEncode({'detail': 'Network error'}), 500);
-    };
+  test(
+    'offline log -> offlineQueue non-empty -> flushOfflineQueue clears queue',
+    () async {
+      fakeApi.postHandlers['/adherence/log'] = (body) {
+        return http.Response(jsonEncode({'detail': 'Network error'}), 500);
+      };
 
-    final notifier = container.read(todayAgendaNotifierProvider.notifier);
-    await notifier.commitDoseLog(reminderId: 'rem_off_1', status: DoseStatus.taken);
+      final notifier = container.read(todayAgendaNotifierProvider.notifier);
+      await notifier.commitDoseLog(
+        reminderId: 'rem_off_1',
+        status: DoseStatus.taken,
+      );
 
-    var agendaState = container.read(todayAgendaNotifierProvider).value;
-    expect(agendaState!.offlineQueue.length, 1);
-    expect(agendaState.offlineQueue.first.reminderId, 'rem_off_1');
+      var agendaState = container.read(todayAgendaNotifierProvider).value;
+      expect(agendaState!.offlineQueue.length, 1);
+      expect(agendaState.offlineQueue.first.reminderId, 'rem_off_1');
 
-    // Simulate reconnect / online success
-    fakeApi.postHandlers['/adherence/log'] = (body) {
-      return http.Response(jsonEncode({'status': 'ok'}), 200);
-    };
+      // Simulate reconnect / online success
+      fakeApi.postHandlers['/adherence/log'] = (body) {
+        return http.Response(jsonEncode({'status': 'ok'}), 200);
+      };
 
-    await notifier.flushOfflineQueue();
+      await notifier.flushOfflineQueue();
 
-    agendaState = container.read(todayAgendaNotifierProvider).value;
-    expect(agendaState!.offlineQueue.isEmpty, isTrue);
-  });
+      agendaState = container.read(todayAgendaNotifierProvider).value;
+      expect(agendaState!.offlineQueue.isEmpty, isTrue);
+    },
+  );
 }

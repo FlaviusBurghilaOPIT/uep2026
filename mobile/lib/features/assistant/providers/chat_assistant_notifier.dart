@@ -7,6 +7,50 @@ import '../../../core/telemetry/telemetry_service.dart';
 
 part 'chat_assistant_notifier.freezed.dart';
 
+// Client-side intent pre-classification keyword lists per locale-agnostic pattern.
+// These tags are sent to the backend as the `intent_category` field.
+// The backend enum check is the authoritative guardrail; this is a UX pre-classification only.
+const List<String> _doseChangeKeywords = [
+  // English
+  'double dose',
+  'extra dose',
+  'stop taking',
+  'change dose',
+  'increase dose',
+  'decrease dose',
+  // Spanish
+  'doble dosis',
+  'dosis extra',
+  'dejar de tomar',
+  'cambiar dosis',
+  'aumentar dosis',
+  // Italian
+  'doppia dose', 'dose extra', 'smettere di prendere', 'cambiare dose',
+  // German
+  'doppelte dosis', 'extra dosis', 'aufhören zu nehmen',
+  // French
+  'double dose', 'arrêter de prendre', 'changer la dose',
+];
+
+const List<String> _diagnosisKeywords = [
+  'diagnose',
+  'do i have',
+  'what disease',
+  'is this cancer',
+  'diagnosticar',
+  'tengo',
+  'ho una',
+  'habe ich',
+  'j\'ai',
+];
+
+String _classifyIntent(String message) {
+  final lower = message.toLowerCase();
+  if (_doseChangeKeywords.any(lower.contains)) return 'dose_change_request';
+  if (_diagnosisKeywords.any(lower.contains)) return 'diagnosis_request';
+  return 'general_question';
+}
+
 @freezed
 class ChatMessage with _$ChatMessage {
   const factory ChatMessage({
@@ -57,9 +101,11 @@ class ChatAssistantNotifier extends Notifier<ChatState> {
     );
 
     try {
+      final intentCategory = _classifyIntent(trimmed);
       final res = await _api.post('/ai/chat', {
         'case_id': caseId,
         'message': trimmed,
+        'intent_category': intentCategory,
       });
 
       if (res.statusCode == 200) {
@@ -77,9 +123,12 @@ class ChatAssistantNotifier extends Notifier<ChatState> {
           });
 
           try {
-            final contactRes = await _api.get('/cases/$caseId/emergency-contact');
+            final contactRes = await _api.get(
+              '/cases/$caseId/emergency-contact',
+            );
             if (contactRes.statusCode == 200) {
-              final contactData = jsonDecode(contactRes.body) as Map<String, dynamic>;
+              final contactData =
+                  jsonDecode(contactRes.body) as Map<String, dynamic>;
               emergencyPhone = contactData['phone'] as String?;
             }
           } catch (_) {}
@@ -144,5 +193,5 @@ class ChatAssistantNotifier extends Notifier<ChatState> {
 
 final chatAssistantNotifierProvider =
     NotifierProvider<ChatAssistantNotifier, ChatState>(
-  ChatAssistantNotifier.new,
-);
+      ChatAssistantNotifier.new,
+    );

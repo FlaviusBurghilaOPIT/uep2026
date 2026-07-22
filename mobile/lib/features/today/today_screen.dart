@@ -183,7 +183,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                     (m) => {
                       'id': m['id'],
                       'name': m['name'],
-                      'dosage': '${m['dose']} · ${_localizedFrequency(context, (m['frequency'] ?? m['schedule_text'] ?? 'QD') as String)}',
+                      'dosage':
+                          '${m['dose']} · ${_localizedFrequency(context, (m['frequency'] ?? m['schedule_text'] ?? 'QD') as String)}',
                       'time': '08:00',
                       'status': 'pending',
                       'hasWarning': false,
@@ -202,14 +203,19 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
 
   String _localizedFrequency(BuildContext context, String code) {
     final l10n = AppLocalizations.of(context);
-    if (l10n == null) return code;
     switch (code.toUpperCase()) {
-      case 'QD':  return l10n.frequencyQD;
-      case 'BID': return l10n.frequencyBID;
-      case 'TID': return l10n.frequencyTID;
-      case 'QID': return l10n.frequencyQID;
-      case 'PRN': return l10n.frequencyPRN;
-      default:    return code;
+      case 'QD':
+        return l10n.frequencyQD;
+      case 'BID':
+        return l10n.frequencyBID;
+      case 'TID':
+        return l10n.frequencyTID;
+      case 'QID':
+        return l10n.frequencyQID;
+      case 'PRN':
+        return l10n.frequencyPRN;
+      default:
+        return code;
     }
   }
 
@@ -243,7 +249,9 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
 
     final String statusDisplay = newStatus == 'taken'
         ? l10n.doseStatusTaken
-        : (newStatus == 'skipped' ? l10n.doseStatusSkipped : l10n.doseStatusMissed);
+        : (newStatus == 'skipped'
+              ? l10n.doseStatusSkipped
+              : l10n.doseStatusMissed);
 
     messenger.hideCurrentSnackBar();
 
@@ -268,7 +276,9 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             }
             final medId = _medications[index]['id']?.toString() ?? 'med_$index';
             try {
-              ref.read(todayAgendaNotifierProvider.notifier).undoDoseLog(
+              ref
+                  .read(todayAgendaNotifierProvider.notifier)
+                  .undoDoseLog(
                     reminderId: medId,
                     previousStatus: DoseStatus.values.firstWhere(
                       (e) => e.name == previousStatus,
@@ -323,10 +333,9 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           (e) => e.name == newStatus,
           orElse: () => DoseStatus.taken,
         );
-        ref.read(todayAgendaNotifierProvider.notifier).commitDoseLog(
-              reminderId: reminderId,
-              status: statusEnum,
-            );
+        ref
+            .read(todayAgendaNotifierProvider.notifier)
+            .commitDoseLog(reminderId: reminderId, status: statusEnum);
       } catch (_) {}
     });
   }
@@ -334,7 +343,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
-    final agendaState = ref.watch(todayAgendaNotifierProvider).valueOrNull ??
+    final agendaState =
+        ref.watch(todayAgendaNotifierProvider).valueOrNull ??
         const AgendaState(
           medications: AsyncValue.data([]),
           doseStatuses: {},
@@ -433,7 +443,9 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   }
 
   Widget _buildOfflineSyncBanner(
-      BuildContext context, AgendaState agendaState) {
+    BuildContext context,
+    AgendaState agendaState,
+  ) {
     if (agendaState.offlineQueue.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -443,8 +455,11 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
       child: Row(
         children: [
-          Icon(Icons.wifi_off_rounded,
-              color: AppColors.warningAmber, size: 18.sp),
+          Icon(
+            Icons.wifi_off_rounded,
+            color: AppColors.warningAmber,
+            size: 18.sp,
+          ),
           SizedBox(width: 8.w),
           Expanded(
             child: Text(
@@ -475,8 +490,11 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
         ),
         child: Row(
           children: [
-            Icon(Icons.stars_rounded,
-                color: AppColors.primaryGreen, size: 24.sp),
+            Icon(
+              Icons.stars_rounded,
+              color: AppColors.primaryGreen,
+              size: 24.sp,
+            ),
             SizedBox(width: 10.w),
             Expanded(
               child: Text(
@@ -488,8 +506,11 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               ),
             ),
             IconButton(
-              icon:
-                  Icon(Icons.close, size: 18.sp, color: AppColors.primaryGreen),
+              icon: Icon(
+                Icons.close,
+                size: 18.sp,
+                color: AppColors.primaryGreen,
+              ),
               onPressed: () {
                 setState(() {
                   _dismissedCelebration = true;

@@ -32,7 +32,8 @@ void main() {
               'id': 'med_1',
               'name': 'Amoxicillin',
               'dose': '500mg',
-              'schedule_text': 'Every 8 hours',
+              'frequency': 'TID',
+              'schedule_times': ['08:00', '14:00', '20:00'],
               'duration': '7 days',
               'notes': 'Take with food',
             },
@@ -40,7 +41,8 @@ void main() {
               'id': 'med_2',
               'name': 'Ibuprofen',
               'dose': '400mg',
-              'schedule_text': 'As needed',
+              'frequency': 'PRN',
+              'schedule_times': [],
               'duration': '5 days',
               'notes': null,
             },
@@ -58,7 +60,8 @@ void main() {
       expect(medications[0].id, 'med_1');
       expect(medications[0].name, 'Amoxicillin');
       expect(medications[0].dose, '500mg');
-      expect(medications[0].scheduleText, 'Every 8 hours');
+      expect(medications[0].frequency, 'TID');
+      expect(medications[0].scheduleTimes, ['08:00', '14:00', '20:00']);
       expect(medications[0].duration, '7 days');
       expect(medications[0].notes, 'Take with food');
       expect(medications[1].notes, isNull);
