@@ -6,6 +6,8 @@ type Patient = {
   full_name: string
   date_of_birth?: string | null
   allergies?: string[]
+  status?: string | null
+  invite_code?: string | null
 }
 
 type Case = {
@@ -20,6 +22,13 @@ function PatientsPage() {
   const [patients, setPatients] = useState<Patient[]>([])
   const [cases, setCases] = useState<Case[]>([])
   const [loading, setLoading] = useState(true)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+
+  const handleCopyCode = (patientId: string, code: string) => {
+    navigator.clipboard.writeText(code)
+    setCopiedId(patientId)
+    setTimeout(() => setCopiedId((current) => (current === patientId ? null : current)), 2000)
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -78,6 +87,19 @@ function PatientsPage() {
                   + New Case
                 </button>
               </div>
+
+              {patient.status === 'pending_onboarding' && patient.invite_code && (
+                <div style={styles.inviteBox}>
+                  <p style={styles.inviteLabel}>Pending onboarding &mdash; 6-Digit Invite Code:</p>
+                  <p style={styles.inviteCode}>{patient.invite_code}</p>
+                  <button
+                    style={styles.copyButton}
+                    onClick={() => handleCopyCode(patient.id, patient.invite_code as string)}
+                  >
+                    {copiedId === patient.id ? 'Copied!' : 'Copy Code'}
+                  </button>
+                </div>
+              )}
 
               {patientCases.length > 0 && (
                 <div style={styles.casesSection}>
@@ -236,6 +258,37 @@ const styles = {
     color: '#9ca3af',
     marginTop: '12px',
     fontStyle: 'italic'
+  },
+  inviteBox: {
+    marginTop: '16px',
+    backgroundColor: '#eff6ff',
+    padding: '16px',
+    borderRadius: '8px',
+    textAlign: 'center' as const,
+    border: '1px solid #bfdbfe'
+  },
+  inviteLabel: {
+    margin: '0 0 4px 0',
+    fontSize: '13px',
+    color: '#1e40af',
+    fontWeight: '500' as const
+  },
+  inviteCode: {
+    margin: '0 0 8px 0',
+    fontSize: '24px',
+    fontWeight: 'bold' as const,
+    letterSpacing: '3px',
+    color: '#1e3a8a'
+  },
+  copyButton: {
+    padding: '6px 14px',
+    backgroundColor: '#2563eb',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '12px',
+    fontWeight: '500' as const,
+    cursor: 'pointer'
   }
 }
 
