@@ -51,23 +51,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeroSection(),
-            SizedBox(height: AppSpacing.xl),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              _buildHeroSection(),
+              SizedBox(height: AppSpacing.md),
 
-            _buildCarousel(),
-            SizedBox(height: AppSpacing.lg),
+              _buildCarousel(),
+              SizedBox(height: AppSpacing.md),
 
-            _buildDotIndicators(),
-            SizedBox(height: AppSpacing.xl),
+              _buildDotIndicators(),
+              SizedBox(height: AppSpacing.md),
 
-            _buildTrustBadges(),
+              _buildTrustBadges(),
+              SizedBox(height: AppSpacing.lg),
 
-            const Spacer(),
-
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
               child: Column(
                 children: [
                   AppButton(
@@ -114,8 +114,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildHeroSection() {
     return Container(
