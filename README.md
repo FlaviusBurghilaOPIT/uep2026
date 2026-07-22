@@ -39,3 +39,6 @@ http://localhost:5173
 ## API
 - Mock server runs at http://localhost:8001
 - Real backend runs at http://localhost:8000
+
+## Mobile App (Flutter)
+For detailed Flutter mobile app setup (Android, iOS, local backend seeding, demo credentials, debugging), see **[mobile/README.md](mobile/README.md)**.
