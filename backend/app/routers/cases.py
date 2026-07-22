@@ -5,7 +5,7 @@ from app import models, schemas
 from app.dependencies import get_current_user, get_db_for_user
 from app.services.schedule_parser import (
     create_scheduled_reminders_for_medication,
-    FREQUENCY_TIMES,
+    times_for_frequency,
 )
 
 router = APIRouter(
@@ -98,7 +98,7 @@ def get_case_medications(
 
     result = []
     for m in medications:
-        times = FREQUENCY_TIMES.get(m.schedule_text, [])
+        times = times_for_frequency(m.schedule_text)
         freq = (
             schemas.FrequencyCode(m.schedule_text)
             if m.schedule_text in schemas.FrequencyCode.__members__
@@ -164,7 +164,7 @@ def create_case_medication(
     db.commit()
     db.refresh(new_medication)
 
-    times = FREQUENCY_TIMES.get(new_medication.schedule_text, [])
+    times = times_for_frequency(new_medication.schedule_text)
     schedule_times_str = [t.strftime("%H:%M") for t in times]
 
     return schemas.MedicationResponse(

@@ -3,10 +3,6 @@ from sqlalchemy.orm import Session
 
 from app import models
 from app.dependencies import get_current_user, get_db_for_user
-from app.services.schedule_parser import (
-    create_scheduled_reminders_for_medication,
-    parse_duration_days,
-)
 
 router = APIRouter(
     prefix="/medications",
