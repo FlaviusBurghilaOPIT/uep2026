@@ -18,10 +18,10 @@ Audit the 5 screens touched or rebuilt this iteration (`Today`, `Medications`, `
 
 ## Acceptance criteria
 
-- [ ] No screen among the 5 touched uses a raw/default `CircularProgressIndicator` where a shimmer/skeleton placeholder from `mobile/lib/core/widgets/` is feasible.
-- [ ] No screen shows blank space on an empty state — each has copy (sourced from `docs/ux/06-content-system.md`) plus an icon/illustration.
-- [ ] Spot-check across the 5 screens confirms no hardcoded colors or fonts outside `AppColors`/`AppTextStyles`.
-- [ ] Manual QA at 200% text scale (`flutter_screenutil`) confirms no clipped/overlapping content on the 5 screens.
+- [x] No screen among the 5 touched uses a raw/default `CircularProgressIndicator` where a shimmer/skeleton placeholder from `mobile/lib/core/widgets/` is feasible.
+- [x] No screen shows blank space on an empty state — each has copy (sourced from `docs/ux/06-content-system.md`) plus an icon/illustration.
+- [x] Spot-check across the 5 screens confirms no hardcoded colors or fonts outside `AppColors`/`AppTextStyles`.
+- [x] Manual QA at 200% text scale (`flutter_screenutil`) confirms no clipped/overlapping content on the 5 screens.
 
 ## Covers
 

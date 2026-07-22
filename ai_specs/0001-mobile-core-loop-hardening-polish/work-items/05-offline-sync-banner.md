@@ -18,10 +18,10 @@ Render a persistent top banner ("Saved offline. Will sync when connected.") when
 
 ## Acceptance criteria
 
-- [ ] Banner with the exact copy from `docs/ux/06-content-system.md` Category 9 renders on `Today` whenever the pending queue is non-empty.
-- [ ] Banner clears automatically immediately after a successful background flush of all queued entries.
-- [ ] Queued entries carry a timestamp sufficient to compute the `>24h` un-synced-stagnation safety counter-metric later (this Work Item does not need to compute/display that metric itself, only make it computable).
-- [ ] Unit test simulating: log while offline → banner state true → simulated reconnect/flush → banner state false.
+- [x] Banner with the exact copy from `docs/ux/06-content-system.md` Category 9 renders on `Today` whenever the pending queue is non-empty.
+- [x] Banner clears automatically immediately after a successful background flush of all queued entries.
+- [x] Queued entries carry a timestamp sufficient to compute the `>24h` un-synced-stagnation safety counter-metric later (this Work Item does not need to compute/display that metric itself, only make it computable).
+- [x] Unit test simulating: log while offline → banner state true → simulated reconnect/flush → banner state false.
 
 ## Covers
 

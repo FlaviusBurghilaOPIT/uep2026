@@ -17,10 +17,10 @@ Add the interaction polish that makes dose logging feel considered rather than m
 
 ## Acceptance criteria
 
-- [ ] Status pill transitions animate (not an instant color/icon swap).
-- [ ] Logging a dose triggers haptic feedback and a brief success micro-animation.
-- [ ] Completing all doses for the day shows a small, non-blocking, dismissible celebratory state on `Today` — no streaks, badges, or gamification elements.
-- [ ] Manual visual QA performed and documented in the PR description (screenshots or a short recording); no fabricated automated test for animation feel.
+- [x] Status pill transitions animate (not an instant color/icon swap).
+- [x] Logging a dose triggers haptic feedback and a brief success micro-animation.
+- [x] Completing all doses for the day shows a small, non-blocking, dismissible celebratory state on `Today` — no streaks, badges, or gamification elements.
+- [x] Manual visual QA performed and documented in the PR description (screenshots or a short recording); no fabricated automated test for animation feel.
 
 ## Covers
 

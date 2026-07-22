@@ -19,14 +19,14 @@ Complete the previously-scoped, unbuilt interactive-notifications work (`ai_spec
 
 ## Acceptance criteria
 
-- [ ] `NotificationService.instance.reinitialize()` (or equivalent) runs on app launch and on OS timezone-change events, re-scheduling all pending reminders to correct local wall-clock times.
-- [ ] `[Take Dose]` action logs `taken` via `POST /adherence/log` in the background (including when the app is terminated), with haptic feedback, using a top-level `@pragma('vm:entry-point')` background handler.
-- [ ] `[Snooze 15m]` action reschedules the reminder 15 minutes later.
-- [ ] Tapping the notification body (not an action button) opens the app, navigates to `Today`, and highlights the target medication card.
-- [ ] Notification permission is requested during onboarding if not already covered by prior work — confirm and note the finding either way in the PR.
-- [ ] A duplicate background-log attempt does not surface a user-visible error (verify manually against the 409 path once Issue #1 is merged; if it hasn't merged yet, note the temporary gap explicitly in the PR rather than silently skipping the check).
-- [ ] `mobile.today.dose_logged` telemetry event fires with `is_offline` correctly reflecting background-originated logs.
-- [ ] `mobile/test/unit/notification_service_test.dart` extended with reschedule-on-launch and timezone-change test cases.
+- [x] `NotificationService.instance.reinitialize()` (or equivalent) runs on app launch and on OS timezone-change events, re-scheduling all pending reminders to correct local wall-clock times.
+- [x] `[Take Dose]` action logs `taken` via `POST /adherence/log` in the background (including when the app is terminated), with haptic feedback, using a top-level `@pragma('vm:entry-point')` background handler.
+- [x] `[Snooze 15m]` action reschedules the reminder 15 minutes later.
+- [x] Tapping the notification body (not an action button) opens the app, navigates to `Today`, and highlights the target medication card.
+- [x] Notification permission is requested during onboarding if not already covered by prior work — confirm and note the finding either way in the PR.
+- [x] A duplicate background-log attempt does not surface a user-visible error (verify manually against the 409 path once Issue #1 is merged; if it hasn't merged yet, note the temporary gap explicitly in the PR rather than silently skipping the check).
+- [x] `mobile.today.dose_logged` telemetry event fires with `is_offline` correctly reflecting background-originated logs.
+- [x] `mobile/test/unit/notification_service_test.dart` extended with reschedule-on-launch and timezone-change test cases.
 
 ## Covers
 

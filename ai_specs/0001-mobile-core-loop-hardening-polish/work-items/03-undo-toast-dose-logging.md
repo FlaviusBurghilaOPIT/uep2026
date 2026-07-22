@@ -18,11 +18,11 @@ Show a 5-second undo snackbar ("Logged as Taken. Undo") whenever a patient taps 
 
 ## Acceptance criteria
 
-- [ ] Tapping any status button (`Taken`/`Skipped`/`Missed`) shows a 5-second snackbar with the exact copy from `docs/ux/06-content-system.md` Category 6 and an `Undo` action.
-- [ ] Tapping `Undo` within the 5-second window reverts the card to `pending` locally and reconciles with the API (no orphaned log record left behind).
-- [ ] Letting the toast expire without tapping `Undo` commits the log as normal.
-- [ ] `mobile.today.dose_log_undone` telemetry event fires on undo, per `docs/product/09-measurement-plan.md` §3.1 event schema conventions (hashed IDs only, no PHI/PII).
-- [ ] New test case in `mobile/test/unit/today_agenda_test.dart` covering: log → undo-within-window → state reverts to pending; log → wait-past-window → state commits.
+- [x] Tapping any status button (`Taken`/`Skipped`/`Missed`) shows a 5-second snackbar with the exact copy from `docs/ux/06-content-system.md` Category 6 and an `Undo` action.
+- [x] Tapping `Undo` within the 5-second window reverts the card to `pending` locally and reconciles with the API (no orphaned log record left behind).
+- [x] Letting the toast expire without tapping `Undo` commits the log as normal.
+- [x] `mobile.today.dose_log_undone` telemetry event fires on undo, per `docs/product/09-measurement-plan.md` §3.1 event schema conventions (hashed IDs only, no PHI/PII).
+- [x] New test case in `mobile/test/unit/today_agenda_test.dart` covering: log → undo-within-window → state reverts to pending; log → wait-past-window → state commits.
 
 ## Covers
 
