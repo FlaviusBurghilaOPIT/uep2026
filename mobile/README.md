@@ -13,6 +13,7 @@ A cross-platform Flutter application for post-surgery patient companion, medicat
 4. [Running the Mobile App](#running-the-mobile-app)
    - [Android Emulator](#android-emulator)
    - [iOS Simulator](#ios-simulator)
+   - [Demo Environment Injection (`--dart-define`)](#demo-environment-injection---dart-define)
 5. [Demo Credentials & Testing Flows](#demo-credentials--testing-flows)
    - [Patient Account (Existing User)](#patient-account-existing-user)
    - [Clinician Account](#clinician-account)
@@ -22,6 +23,7 @@ A cross-platform Flutter application for post-surgery patient companion, medicat
    - [Static Analysis](#static-analysis)
    - [Flutter DevTools & Logging](#flutter-devtools--logging)
 7. [Architecture & Network Configuration](#architecture--network-configuration)
+   - [Why `10.0.2.2` on Android vs `localhost` on iOS](#why-10022-on-android-vs-localhost-on-ios)
 
 ---
 
@@ -104,7 +106,6 @@ flutter pub get
    ```bash
    flutter run -d android
    ```
-   *(Android automatically maps `http://10.0.2.2:8000` to the host machine backend).*
 
 ### iOS Simulator
 1. Launch the iOS Simulator:
@@ -114,8 +115,23 @@ flutter pub get
 2. Launch Flutter app on iOS:
    ```bash
    flutter run -d iphonesimulator
+   # or specify exact device ID
+   flutter run -d CD6BF108-E362-4D7E-B0CE-80F94C407F98
    ```
-   *(iOS Simulator uses `http://localhost:8000` to reach the backend).*
+
+### Demo Environment Injection (`--dart-define`)
+To point the app at a custom remote API URL for demo presentations (overriding local defaults):
+
+```bash
+# Live demo run:
+flutter run --dart-define=API_BASE_URL=https://api.remotecare-demo.org
+
+# Build standalone Android APK for demo:
+flutter build apk --release --dart-define=API_BASE_URL=https://api.remotecare-demo.org
+
+# Build standalone iOS IPA for demo:
+flutter build ipa --release --dart-define=API_BASE_URL=https://api.remotecare-demo.org
+```
 
 ---
 
@@ -191,6 +207,12 @@ flutter analyze
 - **State Management**: Riverpod (`flutter_riverpod`, `freezed`, `AsyncNotifier`, `Notifier`).
 - **Local Storage**: `SharedPreferences` for auth JWT token persistence.
 - **Network Layer**: `ApiService` abstract class with `HttpApiService` (production) and `FakeApiService` (unit & widget tests).
-- **Backend Base URL Routing**:
-  - Android Emulator: `http://10.0.2.2:8000`
-  - iOS Simulator & Web: `http://localhost:8000`
+- **Environment Resolution**: [AppConfig](file:///Users/flavius/OPIT/uep2026/mobile/lib/core/config/app_config.dart) resolves `API_BASE_URL` dynamically.
+
+### Why `10.0.2.2` on Android vs `localhost` on iOS
+
+| Target | Resolved URL | Network Explanation |
+| :--- | :--- | :--- |
+| **Android Emulator** | `http://10.0.2.2:8000` | The Android Emulator runs inside a QEMU Virtual Machine. To the VM, `localhost` means the Android OS itself. `10.0.2.2` is the special virtual loopback alias that bridges to your host Mac/PC `localhost`. |
+| **iOS Simulator** | `http://localhost:8000` | The iOS Simulator is a native macOS process, not a VM. It shares your Mac's network stack directly. |
+| **Demo / Staging** | Overridden via `--dart-define` | Inject custom remote API URL at compile or runtime without code modifications. |
