@@ -1,16 +1,7 @@
 import os
-import re
 from abc import ABC, abstractmethod
 
 from openai import AsyncOpenAI
-
-OUT_OF_SCOPE_REGEX = re.compile(
-    r"\b(double|extra|triple)\s+dose\b"
-    r"|\bstop\s+taking\b"
-    r"|\b(change|increase|decrease)\s+(your\s+|the\s+)?dose\b"
-    r"|\bdiagnose\b",
-    re.IGNORECASE,
-)
 
 FALLBACK_REFUSAL_RESPONSE = (
     "I can't help with changing medication doses or schedules — that's a "
@@ -69,23 +60,7 @@ class BedrockProvider(LLMProvider):
         )
         self.region_name = region_name or os.getenv("AWS_REGION", "us-east-1")
 
-    def _check_local_regex_guardrail(self, messages: list[dict]) -> bool:
-        """
-        High-speed pre-LLM fallback layer: check if any message matches regex patterns.
-        Returns True if flagged (unsafe/out-of-scope), False if clean.
-        """
-        for msg in messages:
-            content = msg.get("content", "")
-            if isinstance(content, str) and OUT_OF_SCOPE_REGEX.search(content):
-                return True
-        return False
-
     async def chat(self, messages: list[dict], system: str) -> str:
-        # Step 1: Pre-LLM high-speed local regex guardrail layer
-        if self._check_local_regex_guardrail(messages):
-            return FALLBACK_REFUSAL_RESPONSE
-
-        # Step 2: Native Bedrock call with native Bedrock Guardrail parameters
         try:
             import boto3
 

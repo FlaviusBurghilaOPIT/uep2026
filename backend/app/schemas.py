@@ -12,6 +12,13 @@ class FrequencyCode(str, enum.Enum):
     PRN = "PRN"
 
 
+class IntentCategory(str, enum.Enum):
+    general_question    = "general_question"
+    medication_query    = "medication_query"
+    dose_change_request = "dose_change_request"
+    diagnosis_request   = "diagnosis_request"
+
+
 
 class UserCreate(BaseModel):
     email: str
@@ -140,8 +147,9 @@ class MedicationResponse(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    case_id: str
-    message: str
+    case_id:         str
+    message:         str
+    intent_category: IntentCategory = IntentCategory.general_question
 
 
 class ChatResponse(BaseModel):

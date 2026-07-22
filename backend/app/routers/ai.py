@@ -16,15 +16,10 @@ GUARDRAIL_PREAMBLE = (
     "and suggest contacting the clinician or emergency contact."
 )
 
-OUT_OF_SCOPE_MARKERS = [
-    "double dose",
-    "extra dose",
-    "stop taking",
-    "change your dose",
-    "increase your dose",
-    "decrease your dose",
-    "diagnose",
-]
+BLOCKED_INTENTS = {
+    schemas.IntentCategory.dose_change_request,
+    schemas.IntentCategory.diagnosis_request,
+}
 
 
 def _build_system_prompt(case: models.Case) -> str:
@@ -43,10 +38,11 @@ def _build_system_prompt(case: models.Case) -> str:
     )
 
 
-def _check_guardrail(user_message: str) -> tuple[bool, bool]:
-    lowered = user_message.lower()
-    flagged = any(marker in lowered for marker in OUT_OF_SCOPE_MARKERS)
-    return (not flagged, flagged)
+def _check_guardrail(request: schemas.ChatRequest) -> tuple[bool, bool]:
+    """Language-agnostic: blocks by intent_category enum, not English text."""
+    if request.intent_category in BLOCKED_INTENTS:
+        return False, True   # in_scope=False, escalate=True
+    return True, False
 
 
 @router.post("/chat", response_model=schemas.ChatResponse)
@@ -59,7 +55,7 @@ async def chat(
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
 
-    in_scope, escalate = _check_guardrail(request.message)
+    in_scope, escalate = _check_guardrail(request)
 
     db.add(
         models.ChatMessage(

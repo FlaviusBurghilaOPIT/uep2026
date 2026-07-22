@@ -73,16 +73,10 @@ def test_bedrock_provider_init_env_vars(monkeypatch):
     assert provider.guardrail_version == "2"
 
 
-def test_bedrock_provider_local_regex_fallback():
-    from app.providers.llm import BedrockProvider, FALLBACK_REFUSAL_RESPONSE
-
+def test_bedrock_provider_has_no_local_regex_guardrail():
+    from app.providers.llm import BedrockProvider
     provider = BedrockProvider()
-    reply = asyncio.run(
-        provider.chat(
-            messages=[{"role": "user", "content": "Should I take a double dose of medication?"}],
-            system="system prompt",
-        )
+    assert not hasattr(provider, "_check_local_regex_guardrail"), (
+        "Local regex guardrail was deleted — the intent_category enum is now the guardrail"
     )
-
-    assert reply == FALLBACK_REFUSAL_RESPONSE
 
