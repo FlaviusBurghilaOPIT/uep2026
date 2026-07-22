@@ -1,0 +1,90 @@
+{
+  "@@locale": "de",
+
+  "appTitle": "Remote CarePro",
+  "loginTitle": "Willkommen zurück",
+  "loginEmailLabel": "E-Mail-Adresse",
+  "loginPasswordLabel": "Passwort",
+  "loginButton": "Anmelden",
+
+  "onboardingTitle": "Sie wurden eingeladen",
+  "onboardingSubtitle": "Geben Sie Ihre E-Mail und den Code Ihres Arztes ein.",
+  "inviteCodeLabel": "Einladungscode",
+  "verifyButton": "Code überprüfen",
+  "completeSetupButton": "Einrichtung abschließen",
+
+  "todayTitle": "Heute",
+  "medicationCardTitle": "Nimm {medicationName}",
+  "@medicationCardTitle": {
+    "placeholders": {
+      "medicationName": {
+        "type": "String"
+      }
+    }
+  },
+  "doseAmount": "{doseAmount} Dosis",
+  "@doseAmount": {
+    "placeholders": {
+      "doseAmount": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduledAt": "Geplant um {scheduledTime}",
+  "@scheduledAt": {
+    "placeholders": {
+      "scheduledTime": {
+        "type": "String"
+      }
+    }
+  },
+  "doseStatusTaken": "Eingenommen",
+  "doseStatusMissed": "Verpasst",
+  "doseStatusSkipped": "Übersprungen",
+  "takeDoseButton": "Dosis einnehmen",
+  "skipDoseButton": "Überspringen",
+  "missedDoseButton": "Verpasst",
+
+  "checkinTitle": "Täglicher Check-in",
+  "symptomQuestion": "Wie fühlen Sie sich heute?",
+  "severityMild": "Leicht",
+  "severityModerate": "Mäßig",
+  "severitySevere": "Schwer",
+  "submitCheckinButton": "Absenden",
+
+  "assistantTitle": "KI-Assistent",
+  "assistantGuardrailBanner": "KI-Assistent • Nur zur Information, nie diagnostisch",
+  "typeMessagePlaceholder": "Schreiben Sie Ihre Frage...",
+  "chipMedicationSideEffects": "Nebenwirkungen von Medikamenten",
+  "chipWoundCareTips": "Tipps zur Wundversorgung",
+  "chipPhysioTargets": "Physiotherapie-Ziele",
+  "chipEmergencyContact": "Notfallkontakt",
+
+  "profileTitle": "Profil",
+  "languageSectionTitle": "Sprache",
+  "languageEnglish": "Englisch",
+  "languageItalian": "Italienisch",
+  "languageSpanish": "Spanisch",
+  "languageFrench": "Französisch",
+  "languageGerman": "Deutsch",
+  "signOutButton": "Abmelden",
+
+  "notificationReminderTitle": "Medikamentenerinnerung",
+  "notificationReminderBody": "Zeit für {medicationName} — {doseAmount}",
+  "@notificationReminderBody": {
+    "placeholders": {
+      "medicationName": {
+        "type": "String"
+      },
+      "doseAmount": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationActionTake": "Dosis einnehmen",
+  "notificationActionSnooze": "15 Min. schlummern",
+
+  "errorGeneric": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+  "errorNetwork": "Keine Verbindung. Bitte überprüfen Sie Ihr Internet.",
+  "loadingLabel": "Wird geladen..."
+}

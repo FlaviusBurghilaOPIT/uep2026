@@ -1,0 +1,90 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Remote CarePro",
+  "loginTitle": "Welcome Back",
+  "loginEmailLabel": "Email address",
+  "loginPasswordLabel": "Password",
+  "loginButton": "Sign In",
+
+  "onboardingTitle": "You've been invited",
+  "onboardingSubtitle": "Enter your email and the code your clinician sent you.",
+  "inviteCodeLabel": "Invitation code",
+  "verifyButton": "Verify Code",
+  "completeSetupButton": "Complete Setup",
+
+  "todayTitle": "Today",
+  "medicationCardTitle": "Take {medicationName}",
+  "@medicationCardTitle": {
+    "placeholders": {
+      "medicationName": {
+        "type": "String"
+      }
+    }
+  },
+  "doseAmount": "{doseAmount} dose",
+  "@doseAmount": {
+    "placeholders": {
+      "doseAmount": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduledAt": "Scheduled at {scheduledTime}",
+  "@scheduledAt": {
+    "placeholders": {
+      "scheduledTime": {
+        "type": "String"
+      }
+    }
+  },
+  "doseStatusTaken": "Taken",
+  "doseStatusMissed": "Missed",
+  "doseStatusSkipped": "Skipped",
+  "takeDoseButton": "Take Dose",
+  "skipDoseButton": "Skip",
+  "missedDoseButton": "Missed",
+
+  "checkinTitle": "Daily Check-in",
+  "symptomQuestion": "How are you feeling today?",
+  "severityMild": "Mild",
+  "severityModerate": "Moderate",
+  "severitySevere": "Severe",
+  "submitCheckinButton": "Submit",
+
+  "assistantTitle": "AI Assistant",
+  "assistantGuardrailBanner": "AI Assistant • Informational only, never diagnostic",
+  "typeMessagePlaceholder": "Type your question...",
+  "chipMedicationSideEffects": "Medication side effects",
+  "chipWoundCareTips": "Wound care tips",
+  "chipPhysioTargets": "Physio targets",
+  "chipEmergencyContact": "Emergency contact",
+
+  "profileTitle": "Profile",
+  "languageSectionTitle": "Language",
+  "languageEnglish": "English",
+  "languageItalian": "Italian",
+  "languageSpanish": "Spanish",
+  "languageFrench": "French",
+  "languageGerman": "German",
+  "signOutButton": "Sign Out",
+
+  "notificationReminderTitle": "Medication Reminder",
+  "notificationReminderBody": "Time to take {medicationName} — {doseAmount}",
+  "@notificationReminderBody": {
+    "placeholders": {
+      "medicationName": {
+        "type": "String"
+      },
+      "doseAmount": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationActionTake": "Take Dose",
+  "notificationActionSnooze": "Snooze 15 min",
+
+  "errorGeneric": "Something went wrong. Please try again.",
+  "errorNetwork": "No connection. Please check your internet.",
+  "loadingLabel": "Loading..."
+}

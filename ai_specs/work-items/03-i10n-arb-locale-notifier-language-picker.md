@@ -154,15 +154,15 @@ Run `flutter gen-l10n` before tests to ensure generated `AppLocalizations` class
 
 ## Acceptance criteria
 
-- [ ] `mobile/l10n.yaml` exists with the exact configuration above.
-- [ ] All 5 ARB files exist under `lib/core/l10n/` with every key from the template translated.
-- [ ] Parameterized keys (`medicationCardTitle`, `doseAmount`, `scheduledAt`, `notificationReminderBody`) work with `AppLocalizations.of(context).medicationCardTitle('Ibuprofen')` syntax.
-- [ ] `localeNotifierProvider` persists selected locale to `SharedPreferences` key `user_locale` and loads it on startup.
-- [ ] `MaterialApp` is configured with `supportedLocales` and `localizationsDelegates` from `AppLocalizations`.
-- [ ] Profile screen renders 5 language options; tapping one switches the app locale instantly without restart.
-- [ ] No hardcoded UI text strings remain in any widget — all sourced from `AppLocalizations.of(context)`.
-- [ ] `flutter test test/widget/language_picker_test.dart` passes.
-- [ ] `flutter analyze` reports zero errors.
+- [x] `mobile/l10n.yaml` exists with the exact configuration above.
+- [x] All 5 ARB files exist under `lib/core/l10n/` with every key from the template translated.
+- [x] Parameterized keys (`medicationCardTitle`, `doseAmount`, `scheduledAt`, `notificationReminderBody`) work with `AppLocalizations.of(context).medicationCardTitle('Ibuprofen')` syntax.
+- [x] `localeNotifierProvider` persists selected locale to `SharedPreferences` key `user_locale` and loads it on startup.
+- [x] `MaterialApp` is configured with `supportedLocales` and `localizationsDelegates` from `AppLocalizations`.
+- [x] Profile screen renders 5 language options; tapping one switches the app locale instantly without restart.
+- [x] No hardcoded UI text strings remain in any widget — all sourced from `AppLocalizations.of(context)`.
+- [x] `flutter test test/widget/language_picker_test.dart` passes.
+- [x] `flutter analyze` reports zero errors.
 
 ## Covers
 

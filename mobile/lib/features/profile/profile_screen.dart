@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../core/l10n/app_localizations.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/providers/app_providers.dart';
+import '../../core/l10n/locale_notifier.dart';
 import '../../core/navigation/app_routes.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -23,6 +25,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
+    final currentLocale = ref.watch(localeNotifierProvider);
+    final l10n = AppLocalizations.of(context);
     final name = auth.fullName ?? 'Sarah Mitchell';
     final email = auth.email ?? 'sarah.mitchell@email.com';
     final initials = name.split(' ').map((w) => w[0]).take(2).join().toUpperCase();
@@ -34,7 +38,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildTopBar(),
-              _buildHeader(),
+              _buildHeader(l10n),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
                 child: Column(
@@ -42,6 +46,49 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   children: [
                     SizedBox(height: AppSpacing.xl),
                     _buildProfileHeader(initials, name, email),
+                    SizedBox(height: AppSpacing.xl),
+                    _buildSection(l10n.languageSectionTitle.toUpperCase(), [
+                      _languageRow(
+                        label: l10n.languageEnglish,
+                        localeCode: 'en',
+                        currentLocale: currentLocale,
+                        onTap: () => ref
+                            .read(localeNotifierProvider.notifier)
+                            .setLocale(const Locale('en')),
+                      ),
+                      _languageRow(
+                        label: l10n.languageItalian,
+                        localeCode: 'it',
+                        currentLocale: currentLocale,
+                        onTap: () => ref
+                            .read(localeNotifierProvider.notifier)
+                            .setLocale(const Locale('it')),
+                      ),
+                      _languageRow(
+                        label: l10n.languageSpanish,
+                        localeCode: 'es',
+                        currentLocale: currentLocale,
+                        onTap: () => ref
+                            .read(localeNotifierProvider.notifier)
+                            .setLocale(const Locale('es')),
+                      ),
+                      _languageRow(
+                        label: l10n.languageFrench,
+                        localeCode: 'fr',
+                        currentLocale: currentLocale,
+                        onTap: () => ref
+                            .read(localeNotifierProvider.notifier)
+                            .setLocale(const Locale('fr')),
+                      ),
+                      _languageRow(
+                        label: l10n.languageGerman,
+                        localeCode: 'de',
+                        currentLocale: currentLocale,
+                        onTap: () => ref
+                            .read(localeNotifierProvider.notifier)
+                            .setLocale(const Locale('de')),
+                      ),
+                    ]),
                     SizedBox(height: AppSpacing.xl),
                     _buildSection('PERSONAL INFORMATION', [
                       _infoRow('Full name', name),
@@ -70,7 +117,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       _arrowRow('Connected devices', Icons.devices_outlined),
                     ]),
                     SizedBox(height: AppSpacing.xl),
-                    _buildSignOutButton(),
+                    _buildSignOutButton(l10n),
                     SizedBox(height: 100.h),
                   ],
                 ),
@@ -143,7 +190,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(AppLocalizations l10n) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         AppSpacing.screenPaddingH,
@@ -166,7 +213,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
           ),
           SizedBox(width: AppSpacing.hMd),
-          Text('Profile & Settings', style: AppTextStyles.heading3),
+          Text(l10n.profileTitle, style: AppTextStyles.heading3),
         ],
       ),
     );
@@ -270,6 +317,30 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
+  Widget _languageRow({
+    required String label,
+    required String localeCode,
+    required Locale currentLocale,
+    required VoidCallback onTap,
+  }) {
+    final isSelected = currentLocale.languageCode == localeCode;
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(label, style: AppTextStyles.bodyMedium),
+            ),
+            if (isSelected)
+              Icon(Icons.check, color: AppColors.deepTeal, size: AppSpacing.iconMd),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _infoRow(String label, String value) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
@@ -278,9 +349,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           Expanded(
             child: Text(label, style: AppTextStyles.bodyMedium),
           ),
-          Text(
-            value,
-            style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w500),
+          SizedBox(width: 8.w),
+          Flexible(
+            child: Text(
+              value,
+              style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w500),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
@@ -324,7 +399,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildSignOutButton() {
+  Widget _buildSignOutButton(AppLocalizations l10n) {
     return SizedBox(
       width: double.infinity,
       height: AppSpacing.buttonHeight,
@@ -344,10 +419,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.logout, size: AppSpacing.iconMd),
             SizedBox(width: AppSpacing.hSm),
-            Text('Sign Out', style: AppTextStyles.buttonTextOutlined.copyWith(color: AppColors.errorRed)),
+            Flexible(
+              child: Text(
+                l10n.signOutButton,
+                style: AppTextStyles.buttonTextOutlined.copyWith(color: AppColors.errorRed),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
       ),

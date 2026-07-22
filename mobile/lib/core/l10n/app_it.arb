@@ -1,0 +1,90 @@
+{
+  "@@locale": "it",
+
+  "appTitle": "Remote CarePro",
+  "loginTitle": "Bentornato",
+  "loginEmailLabel": "Indirizzo e-mail",
+  "loginPasswordLabel": "Password",
+  "loginButton": "Accedi",
+
+  "onboardingTitle": "Sei stato invitato",
+  "onboardingSubtitle": "Inserisci la tua e-mail e il codice inviato dal tuo medico.",
+  "inviteCodeLabel": "Codice di invito",
+  "verifyButton": "Verifica codice",
+  "completeSetupButton": "Completa configurazione",
+
+  "todayTitle": "Oggi",
+  "medicationCardTitle": "Prendi {medicationName}",
+  "@medicationCardTitle": {
+    "placeholders": {
+      "medicationName": {
+        "type": "String"
+      }
+    }
+  },
+  "doseAmount": "Dose {doseAmount}",
+  "@doseAmount": {
+    "placeholders": {
+      "doseAmount": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduledAt": "Programmato alle {scheduledTime}",
+  "@scheduledAt": {
+    "placeholders": {
+      "scheduledTime": {
+        "type": "String"
+      }
+    }
+  },
+  "doseStatusTaken": "Assunto",
+  "doseStatusMissed": "Mancato",
+  "doseStatusSkipped": "Saltato",
+  "takeDoseButton": "Prendi dose",
+  "skipDoseButton": "Salta",
+  "missedDoseButton": "Mancato",
+
+  "checkinTitle": "Check-in giornaliero",
+  "symptomQuestion": "Come ti senti oggi?",
+  "severityMild": "Lieve",
+  "severityModerate": "Moderato",
+  "severitySevere": "Grave",
+  "submitCheckinButton": "Invia",
+
+  "assistantTitle": "Assistente AI",
+  "assistantGuardrailBanner": "Assistente AI • Solo informativo, mai diagnostico",
+  "typeMessagePlaceholder": "Scrivi la tua domanda...",
+  "chipMedicationSideEffects": "Effetti collaterali dei farmaci",
+  "chipWoundCareTips": "Consigli per la cura delle ferite",
+  "chipPhysioTargets": "Obiettivi di fisioterapia",
+  "chipEmergencyContact": "Contatto di emergenza",
+
+  "profileTitle": "Profilo",
+  "languageSectionTitle": "Lingua",
+  "languageEnglish": "Inglese",
+  "languageItalian": "Italiano",
+  "languageSpanish": "Spagnolo",
+  "languageFrench": "Francese",
+  "languageGerman": "Tedesco",
+  "signOutButton": "Disconnetti",
+
+  "notificationReminderTitle": "Reminder del farmaco",
+  "notificationReminderBody": "Ora di prendere {medicationName} — {doseAmount}",
+  "@notificationReminderBody": {
+    "placeholders": {
+      "medicationName": {
+        "type": "String"
+      },
+      "doseAmount": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationActionTake": "Prendi dose",
+  "notificationActionSnooze": "Posponi 15 min",
+
+  "errorGeneric": "Si è verificato un errore. Riprova.",
+  "errorNetwork": "Nessuna connessione. Controlla internet.",
+  "loadingLabel": "Caricamento..."
+}

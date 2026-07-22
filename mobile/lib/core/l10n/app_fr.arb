@@ -1,0 +1,90 @@
+{
+  "@@locale": "fr",
+
+  "appTitle": "Remote CarePro",
+  "loginTitle": "Bon retour",
+  "loginEmailLabel": "Adresse e-mail",
+  "loginPasswordLabel": "Mot de passe",
+  "loginButton": "Se connecter",
+
+  "onboardingTitle": "Vous avez été invité(e)",
+  "onboardingSubtitle": "Entrez votre e-mail et le code envoyé par votre médecin.",
+  "inviteCodeLabel": "Code d'invitation",
+  "verifyButton": "Vérifier le code",
+  "completeSetupButton": "Terminer la configuration",
+
+  "todayTitle": "Aujourd'hui",
+  "medicationCardTitle": "Prendre {medicationName}",
+  "@medicationCardTitle": {
+    "placeholders": {
+      "medicationName": {
+        "type": "String"
+      }
+    }
+  },
+  "doseAmount": "Dose {doseAmount}",
+  "@doseAmount": {
+    "placeholders": {
+      "doseAmount": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduledAt": "Prévu à {scheduledTime}",
+  "@scheduledAt": {
+    "placeholders": {
+      "scheduledTime": {
+        "type": "String"
+      }
+    }
+  },
+  "doseStatusTaken": "Pris",
+  "doseStatusMissed": "Manqué",
+  "doseStatusSkipped": "Ignoré",
+  "takeDoseButton": "Prendre la dose",
+  "skipDoseButton": "Ignorer",
+  "missedDoseButton": "Manqué",
+
+  "checkinTitle": "Suivi quotidien",
+  "symptomQuestion": "Comment vous sentez-vous aujourd'hui ?",
+  "severityMild": "Léger",
+  "severityModerate": "Modéré",
+  "severitySevere": "Sévère",
+  "submitCheckinButton": "Soumettre",
+
+  "assistantTitle": "Assistant IA",
+  "assistantGuardrailBanner": "Assistant IA • Informations uniquement, jamais de diagnostic",
+  "typeMessagePlaceholder": "Écrivez votre question...",
+  "chipMedicationSideEffects": "Effets secondaires des médicaments",
+  "chipWoundCareTips": "Conseils de soins des plaies",
+  "chipPhysioTargets": "Objectifs de physiothérapie",
+  "chipEmergencyContact": "Contact d'urgence",
+
+  "profileTitle": "Profil",
+  "languageSectionTitle": "Langue",
+  "languageEnglish": "Anglais",
+  "languageItalian": "Italien",
+  "languageSpanish": "Espagnol",
+  "languageFrench": "Français",
+  "languageGerman": "Allemand",
+  "signOutButton": "Se déconnecter",
+
+  "notificationReminderTitle": "Rappel de médicament",
+  "notificationReminderBody": "Heure de prendre {medicationName} — {doseAmount}",
+  "@notificationReminderBody": {
+    "placeholders": {
+      "medicationName": {
+        "type": "String"
+      },
+      "doseAmount": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationActionTake": "Prendre la dose",
+  "notificationActionSnooze": "Répéter 15 min",
+
+  "errorGeneric": "Un problème est survenu. Veuillez réessayer.",
+  "errorNetwork": "Pas de connexion. Vérifiez votre accès internet.",
+  "loadingLabel": "Chargement..."
+}
