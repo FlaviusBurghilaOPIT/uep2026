@@ -24,7 +24,8 @@ class SymptomCheckinNotifier extends AsyncNotifier<bool> {
       final res = await _api.post('/checkins', {
         'case_id': caseId,
         'severity': severity,
-        'notes': ?notes,
+        // ignore: use_null_aware_elements
+        if (notes != null) 'notes': notes,
         'checked_in_at': DateTime.now().toIso8601String(),
       });
       if (res.statusCode == 200) {
