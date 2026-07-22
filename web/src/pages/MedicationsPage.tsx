@@ -1,20 +1,32 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { apiFetch } from '../api/client'
+import { useTranslation } from '../i18n/useTranslation'
+
+const FREQUENCY_TIMES: Record<string, string[]> = {
+  QD:  ['08:00'],
+  BID: ['08:00', '20:00'],
+  TID: ['08:00', '13:00', '20:00'],
+  QID: ['08:00', '12:00', '16:00', '20:00'],
+  PRN: [],
+}
 
 function MedicationsPage() {
   const { caseId = 'case-001' } = useParams<{ caseId: string }>()
+  const { translations: t } = useTranslation()
   const [name, setName] = useState('')
   const [dose, setDose] = useState('')
-  const [frequency, setFrequency] = useState('')
+  const [frequency, setFrequency] = useState<'QD'|'BID'|'TID'|'QID'|'PRN'>('QD')
   const [durationDays, setDurationDays] = useState('')
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
 
+  const reminderTimes = FREQUENCY_TIMES[frequency] ?? []
+
   const handleSubmit = async () => {
-    if (!name || !dose || !frequency || !durationDays) {
+    if (!name || !dose || !durationDays) {
       setError('Please fill in all required fields')
       return
     }
@@ -26,21 +38,21 @@ function MedicationsPage() {
         body: JSON.stringify({
           name,
           dose,
-          schedule_text: frequency,
+          frequency,
           duration: `${durationDays} days`,
-          notes
-        })
+          notes,
+        }),
       })
       setSuccess(true)
-    } catch (err: any) {
-      setError(err.message || 'Failed to add medication. Please try again.')
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Failed to add medication. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
   const openFDA = () => {
-    window.open('/fda?drug=' + name.toLowerCase(), '_blank')
+    window.location.href = '/fda?drug=' + encodeURIComponent(name.toLowerCase())
   }
 
   const openFDAWebsite = () => {
@@ -77,29 +89,33 @@ function MedicationsPage() {
         <p style={styles.subtitle}>Case: Knee Replacement</p>
 
         <label style={styles.label} htmlFor="drug-name">Drug Name</label>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <input
-            id="drug-name"
-            style={{ ...styles.input, flex: 1 }}
-            type="text"
-            placeholder="e.g. Ibuprofen"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            aria-invalid={!!error}
-            aria-describedby={error ? 'form-error' : undefined}
-          />
+        <div style={{ display: 'flex', gap: '8px', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <input
+              id="drug-name"
+              style={{ ...styles.input, flex: 1 }}
+              type="text"
+              placeholder="e.g. Ibuprofen"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              aria-invalid={!!error}
+              aria-describedby={error ? 'form-error' : undefined}
+            />
+            {name && (
+              <button style={styles.fdaWarningButton} onClick={openFDA}>
+                [View FDA Safety Warnings]
+              </button>
+            )}
+          </div>
           {name && (
-            <button style={styles.fdaButton} onClick={openFDA}>
-              FDA Check
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span style={styles.fdaBadge}>📋 openFDA Regulatory Warning Available</span>
+              <button style={styles.fdaExternalLink} onClick={openFDAWebsite}>
+                View on FDA Website
+              </button>
+            </div>
           )}
         </div>
-
-        {name && (
-          <button style={styles.fdaExternalLink} onClick={openFDAWebsite}>
-            View on FDA Website
-          </button>
-        )}
 
         <label style={styles.label} htmlFor="dose">Dose</label>
         <input
@@ -113,17 +129,25 @@ function MedicationsPage() {
           aria-describedby={error ? 'form-error' : undefined}
         />
 
-        <label style={styles.label} htmlFor="frequency">Frequency</label>
-        <input
+        <label style={styles.label} htmlFor="frequency">{t.medication.frequencyLabel}</label>
+        <select
           id="frequency"
           style={styles.input}
-          type="text"
-          placeholder="e.g. 3x daily"
           value={frequency}
-          onChange={(e) => setFrequency(e.target.value)}
-          aria-invalid={!!error}
-          aria-describedby={error ? 'form-error' : undefined}
-        />
+          onChange={(e) => setFrequency(e.target.value as 'QD'|'BID'|'TID'|'QID'|'PRN')}
+          aria-describedby={error ? 'form-error' : 'frequency-hint'}
+        >
+          <option value="QD">{t.medication.frequencyQD}</option>
+          <option value="BID">{t.medication.frequencyBID}</option>
+          <option value="TID">{t.medication.frequencyTID}</option>
+          <option value="QID">{t.medication.frequencyQID}</option>
+          <option value="PRN">{t.medication.frequencyPRN}</option>
+        </select>
+        <p id="frequency-hint" style={{ fontSize: '0.8rem', color: '#64748b', margin: '4px 0 12px' }}>
+          {reminderTimes.length > 0
+            ? `${t.medication.remindersAt} ${reminderTimes.join(', ')}`
+            : t.medication.noReminders}
+        </p>
 
         <label style={styles.label} htmlFor="duration-days">Duration (days)</label>
         <input
@@ -228,15 +252,27 @@ const styles = {
     fontSize: '15px',
     cursor: 'pointer'
   },
-  fdaButton: {
+  fdaWarningButton: {
     padding: '8px 12px',
-    backgroundColor: '#fef9f0',
+    backgroundColor: '#fffbe6',
     color: '#d97706',
     border: '1px solid #fde68a',
     borderRadius: '8px',
     fontSize: '13px',
     cursor: 'pointer',
     fontWeight: '500' as const
+  },
+  fdaBadge: {
+    backgroundColor: '#fffbe6',
+    color: '#d97706',
+    border: '1px solid #fde68a',
+    padding: '2px 10px',
+    borderRadius: '20px',
+    fontSize: '12px',
+    fontWeight: '500' as const,
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px'
   },
   fdaExternalLink: {
     padding: '6px 12px',
