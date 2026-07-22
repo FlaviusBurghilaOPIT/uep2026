@@ -1,9 +1,9 @@
 import 'dart:convert';
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../config/app_config.dart';
 
 // ---------------------------------------------------------------------------
 // Abstract interface — lets FakeApiService replace the real one in tests.
@@ -22,12 +22,7 @@ abstract class ApiService {
 // ---------------------------------------------------------------------------
 
 class HttpApiService implements ApiService {
-  static String get _baseUrl {
-    if (!kIsWeb && Platform.isAndroid) {
-      return 'http://10.0.2.2:8000';
-    }
-    return 'http://localhost:8000';
-  }
+  static String get _baseUrl => AppConfig.baseUrl;
 
   @override
   Future<String?> getToken() async {
