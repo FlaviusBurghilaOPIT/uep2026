@@ -3,8 +3,31 @@
 **Document ID:** `docs/product/10-implementation-plan.md`
 **Generated Date:** 2026-07-22
 **Role:** Lead Product, UX, and Technical-Design Agent
-**Status:** Approved Delivery Plan
+**Status:** In progress — Foundation backend/web fixes merged, mobile Work Items and Triage Dashboard pending
 **Inputs:** `docs/ux/08-prioritized-ux-backlog.md`, `docs/product/09-measurement-plan.md`, `docs/product/00-04`, `docs/ux/05-07`, `ai_specs/2026-07-22-flutter-mobile-enhancements-{spec,ledger}.md`, `ai_specs/work-items/01-05`, current repository state.
+
+### Progress (updated 2026-07-22)
+
+GitHub issue numbers differ from this plan's issue numbers (GitHub started numbering after 4 pre-existing PRs). Mobile issues are tracked as ACT Work Items, not GitHub issues — see `ai_specs/0001-mobile-core-loop-hardening-polish/`.
+
+| Plan # | GitHub # | Title | Status |
+|---|---|---|---|
+| 1 | [#5](https://github.com/FlaviusBurghilaOPIT/uep2026/issues/5) | Backend 409 on duplicate dose log | ✅ Merged |
+| 2 | [#6](https://github.com/FlaviusBurghilaOPIT/uep2026/issues/6) | Persist `in_scope`/`escalate` | ✅ Merged (migration not verified against live Postgres — no Docker in dev sandbox; verify before relying on it) |
+| 3 | [#7](https://github.com/FlaviusBurghilaOPIT/uep2026/issues/7) | Web invite code display | ✅ Merged |
+| 4 | [#8](https://github.com/FlaviusBurghilaOPIT/uep2026/issues/8) | Web form labels/ARIA | ✅ Merged |
+| 5 | [#9](https://github.com/FlaviusBurghilaOPIT/uep2026/issues/9) | Web focus rings | ✅ Merged |
+| 6 | — | Mobile 5-tab shell + Medications screen | ⬜ Not started — `ai_specs/0001-.../work-items/01-*.md` |
+| 7 | — | Mobile undo toast | ⬜ Not started — `work-items/03-*.md` |
+| 8 | — | Mobile status pill icons | ⬜ Not started — `work-items/02-*.md` |
+| 9 | — | Mobile interactive notifications + timezone | ⬜ Not started — `work-items/04-*.md` |
+| 10 | [#10](https://github.com/FlaviusBurghilaOPIT/uep2026/issues/10) | Web Triage & Exceptions Dashboard | ⬜ Not started — depends on #6 (merged, unblocked) |
+| 11 | — | Mobile AI guardrail + emergency CTA | ⬜ Not started — `work-items/06-*.md` |
+| 12 | — | Mobile offline sync banner | ⬜ Not started — `work-items/05-*.md` |
+| 13 | — | Mobile FDA source badge | ⬜ Not started — `work-items/07-*.md` |
+| 14 | — | Mobile micro-interactions polish | ⬜ Not started — `work-items/08-*.md` |
+| 15 | — | Mobile design-token consistency pass | ⬜ Not started — `work-items/09-*.md` |
+| 16 | [#11](https://github.com/FlaviusBurghilaOPIT/uep2026/issues/11) | Verification / golden-loop QA | ⬜ Not started — blocked on everything above |
 
 ---
 
@@ -71,7 +94,7 @@ Each issue lists its backlog/work-item origin for traceability. Effort estimates
 ---
 
 **Issue #1 — [Backend] Return HTTP 409 Conflict on Duplicate Dose Log POSTs**
-*Origin: FIND-B01. Labels: `backend`, `p0-critical`, `resilience`, `api`.*
+*Origin: FIND-B01. Labels: `backend`, `p0-critical`, `resilience`, `api`.* — ✅ **Merged**, [GitHub #5](https://github.com/FlaviusBurghilaOPIT/uep2026/issues/5), [PR #13](https://github.com/FlaviusBurghilaOPIT/uep2026/pull/13)
 
 **Description:** `POST /adherence/log` (`backend/app/routers/adherence.py:15`) inserts a `DoseLog` with a `unique=True` FK on `scheduled_reminder_id` and does not catch the resulting `IntegrityError`. A duplicate submission (e.g. a retried offline-queue flush, or a double-tap on a lock-screen notification action once WI-04 ships) currently 500s instead of resolving cleanly.
 
@@ -80,16 +103,16 @@ Each issue lists its backlog/work-item origin for traceability. Effort estimates
 **Dependencies:** None. Should land first — Issue #9 (interactive notification actions) depends on this returning a clean, parseable conflict response rather than a 500.
 
 **Definition of Done:**
-- [ ] Catch `sqlalchemy.exc.IntegrityError` on the `db.commit()` in `log_dose`, roll back, and return `HTTPException(409, ...)` with the existing `DoseLog` payload for that `scheduled_reminder_id`.
-- [ ] Response body matches the shape a client can use to reconcile local state (same shape as a successful log).
-- [ ] `backend.adherence.duplicate_conflict_returned` telemetry event emitted per `09-measurement-plan.md` §3.1.
+- [x] Catch `sqlalchemy.exc.IntegrityError` on the `db.commit()` in `log_dose`, roll back, and return `HTTPException(409, ...)` with the existing `DoseLog` payload for that `scheduled_reminder_id`.
+- [x] Response body matches the shape a client can use to reconcile local state (same shape as a successful log).
+- [ ] `backend.adherence.duplicate_conflict_returned` telemetry event emitted per `09-measurement-plan.md` §3.1. — **not implemented**; no existing lightweight telemetry-emission seam was found in `backend/app/observability.py` to hook into without building new infrastructure. Follow-up.
 
 **Test Plan:** New `pytest` cases in `backend/tests/test_adherence_router.py`: (1) first POST for a `scheduled_reminder_id` succeeds; (2) second POST for the same ID returns 409 with the original log's data, not a 500; (3) two different `scheduled_reminder_id`s both succeed. Run via `pytest backend/tests`.
 
 ---
 
 **Issue #2 — [Backend] Persist `in_scope`/`escalate` on AI Guardrail Intercepts**
-*Origin: FIND-B02. Labels: `backend`, `p0-critical`, `safety`, `ai`, `migration`.*
+*Origin: FIND-B02. Labels: `backend`, `p0-critical`, `safety`, `ai`, `migration`.* — ✅ **Merged**, [GitHub #6](https://github.com/FlaviusBurghilaOPIT/uep2026/issues/6), [PR #14](https://github.com/FlaviusBurghilaOPIT/uep2026/pull/14). ⚠️ Migration not verified against a live Postgres (no Docker in the dev sandbox that implemented it) — run `alembic upgrade head` for real before relying on it in a demo.
 
 **Description:** `POST /ai/chat` (`backend/app/routers/ai.py:52`) computes `in_scope`/`escalate` via `_check_guardrail` and returns them in `ChatResponse`, but `models.ChatMessage` (`backend/app/models.py:196`) has **no `in_scope` or `escalate` columns at all** — the flag is never written to the database. A clinician has no way to know a patient asked the AI something out-of-scope or urgent.
 
@@ -98,17 +121,17 @@ Each issue lists its backlog/work-item origin for traceability. Effort estimates
 **Dependencies:** None to start. Issue #10 (Triage Dashboard) depends on this — the Red/Amber alert criteria in `09-measurement-plan.md` §4.1 explicitly include "AI emergency flags," which cannot exist without this fix.
 
 **Definition of Done:**
-- [ ] Alembic migration adds `in_scope` (bool, default `true`) and `escalate` (bool, default `false`) to `chat_messages`.
-- [ ] The user-turn `ChatMessage` insert in `chat()` sets both columns from `_check_guardrail`'s result.
-- [ ] A way exists for the web client to query escalated messages per patient/case (either exposed via an existing endpoint or a minimal addition — do not build a new dashboard-shaped endpoint here, keep this backend-only and data-shaped).
-- [ ] `backend.ai.guardrail_intercepted` telemetry event emitted with `escalate_flag_set` per the existing example in `09-measurement-plan.md` §3.2.
+- [x] Alembic migration adds `in_scope` (bool, default `true`) and `escalate` (bool, default `false`) to `chat_messages`.
+- [x] The user-turn `ChatMessage` insert in `chat()` sets both columns from `_check_guardrail`'s result.
+- [ ] A way exists for the web client to query escalated messages per patient/case — **not yet built**; Issue #10 (Triage Dashboard) still needs to expose this when implemented.
+- [ ] `backend.ai.guardrail_intercepted` telemetry event emitted with `escalate_flag_set` per the existing example in `09-measurement-plan.md` §3.2. — **not implemented**, same telemetry-seam gap as Issue #1.
 
 **Test Plan:** Extend `backend/tests/test_ai_router.py`: assert an out-of-scope message (e.g. containing "increase your dose") persists `in_scope=False, escalate=True` on the stored `ChatMessage`, and an in-scope message persists `in_scope=True, escalate=False`. Run `alembic upgrade head` against a scratch DB as part of CI/test setup to confirm the migration applies cleanly.
 
 ---
 
 **Issue #3 — [Web] Display 6-Digit Invite Code on Pending Patient Cards**
-*Origin: FIND-W02. Labels: `web`, `p1-major`, `ux`, `clinician-speed`.*
+*Origin: FIND-W02. Labels: `web`, `p1-major`, `ux`, `clinician-speed`.* — ✅ **Merged**, [GitHub #7](https://github.com/FlaviusBurghilaOPIT/uep2026/issues/7), [PR #15](https://github.com/FlaviusBurghilaOPIT/uep2026/pull/15). Turned out backend-free: `GET /patients` already returned `status`/`invite_code`.
 
 **Description:** `PatientsPage.tsx` shows a pending-status label for `status="invited"` patients but never surfaces the 6-digit code generated by `POST /patients/invite`. This is the literal first step of the E2E loop — a clinician cannot onboard a patient without it.
 
@@ -117,16 +140,16 @@ Each issue lists its backlog/work-item origin for traceability. Effort estimates
 **Dependencies:** None.
 
 **Definition of Done:**
-- [ ] Pending patient cards render the 6-digit code in bold 24px text, per `docs/ux/06-content-system.md` Category 1.
-- [ ] A "Copy Code" button copies it to the clipboard with a brief confirmation state.
-- [ ] `web.patient.invited` telemetry event fires on successful invite creation (if not already firing).
+- [x] Pending patient cards render the 6-digit code in bold 24px text, per `docs/ux/06-content-system.md` Category 1.
+- [x] A "Copy Code" button copies it to the clipboard with a brief confirmation state.
+- [ ] `web.patient.invited` telemetry event fires on successful invite creation — **not implemented**, no telemetry seam in the web client yet.
 
 **Test Plan:** Manual QA (no web test runner exists): create a patient, confirm the code renders and Copy works via `document.execCommand`/`navigator.clipboard`, confirm it disappears once the patient completes onboarding (status flips away from `invited`).
 
 ---
 
 **Issue #4 — [Web] Bind Form Labels & ARIA Error Attributes**
-*Origin: FIND-W03. Labels: `web`, `p1-major`, `accessibility`, `a11y`.*
+*Origin: FIND-W03. Labels: `web`, `p1-major`, `accessibility`, `a11y`.* — ✅ **Merged**, [GitHub #8](https://github.com/FlaviusBurghilaOPIT/uep2026/issues/8), [PR #16](https://github.com/FlaviusBurghilaOPIT/uep2026/pull/16). Also covered `CreateCasePage.tsx`, which turned out to have the same issue.
 
 **Description:** Inputs in `CreatePatientPage.tsx` and `MedicationsPage.tsx` use floating labels with no `htmlFor`/`id` binding and no `aria-invalid`/`aria-describedby` on validation errors, per `docs/ux/07-accessibility-spec.md` Standard W-02.
 
@@ -135,16 +158,16 @@ Each issue lists its backlog/work-item origin for traceability. Effort estimates
 **Dependencies:** None. Independent of #3 (different files), can run in parallel.
 
 **Definition of Done:**
-- [ ] Every input has an explicit `<label htmlFor="...">` bound to a matching `id`.
-- [ ] Validation errors set `aria-invalid="true"` and `aria-describedby` pointing to a visible error `<span>`.
-- [ ] Zero label/error-binding violations on a manual `axe-core` scan (see Issue #16).
+- [x] Every input has an explicit `<label htmlFor="...">` bound to a matching `id`.
+- [x] Validation errors set `aria-invalid="true"` and `aria-describedby` pointing to a visible error `<span>`.
+- [ ] Zero label/error-binding violations on a manual `axe-core` scan (see Issue #16) — **not run yet**; no axe-core install in this repo, deferred to the Issue #16 verification pass.
 
 **Test Plan:** Manual QA with a screen reader (VoiceOver/NVDA) tabbing through both forms, confirming field names and error announcements. One-off `npx @axe-core/cli http://localhost:5173/patients/new` (and `/cases/:id/medications`) as an automated spot-check.
 
 ---
 
 **Issue #5 — [Web] Add Visible `:focus-visible` Rings Across Web**
-*Origin: FIND-W04. Labels: `web`, `p1-major`, `accessibility`, `a11y`.*
+*Origin: FIND-W04. Labels: `web`, `p1-major`, `accessibility`, `a11y`.* — ✅ **Merged**, [GitHub #9](https://github.com/FlaviusBurghilaOPIT/uep2026/issues/9), [PR #12](https://github.com/FlaviusBurghilaOPIT/uep2026/pull/12). Rule added with `!important` to override inline `outline: 'none'` present on several inputs.
 
 **Description:** CSS strips the default outline in `NavBar.tsx` (and likely other interactive elements) without a replacement, per `docs/ux/07-accessibility-spec.md` Standard W-01. Keyboard-only clinicians cannot see focus location.
 
@@ -153,8 +176,8 @@ Each issue lists its backlog/work-item origin for traceability. Effort estimates
 **Dependencies:** None. Independent of #3/#4.
 
 **Definition of Done:**
-- [ ] `:focus-visible { outline: 2px solid #4338ca; outline-offset: 2px; }` (or the styling mechanism's equivalent) applied globally to interactive elements — links, buttons, inputs, cards.
-- [ ] Tabbing through `NavBar` and both list pages shows a clear, consistent focus indicator.
+- [x] `:focus-visible { outline: 2px solid #4338ca; outline-offset: 2px; }` (or the styling mechanism's equivalent) applied globally to interactive elements — links, buttons, inputs, cards.
+- [ ] Tabbing through `NavBar` and both list pages shows a clear, consistent focus indicator. — build-verified only; **manual keyboard walkthrough still needed**, fold into Issue #16.
 
 **Test Plan:** Manual keyboard-only pass (Tab/Shift+Tab) through NavBar, PatientsPage, and CreatePatientPage confirming every focusable element shows the ring.
 
