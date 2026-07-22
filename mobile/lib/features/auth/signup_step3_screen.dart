@@ -8,7 +8,6 @@ import '../../core/constants/app_strings.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../core/shared_widgets/app_button.dart';
 import '../../core/shared_widgets/step_progress_bar.dart';
-import '../../core/shared_widgets/condition_chip.dart';
 import '../../core/shared_widgets/security_badge.dart';
 import '../../core/navigation/app_routes.dart';
 
@@ -21,7 +20,6 @@ class SignupStep3Screen extends StatefulWidget {
 
 class _SignupStep3ScreenState extends State<SignupStep3Screen> {
   DateTime? _selectedDate;
-  String? _selectedCondition;
 
   Future<void> _pickDate() async {
     final now = DateTime.now();
@@ -46,10 +44,16 @@ class _SignupStep3ScreenState extends State<SignupStep3Screen> {
     }
   }
 
-  String get _formattedDate {
+  String get _formattedDateDisplay {
     if (_selectedDate == null) return AppStrings.dateHint;
     final d = _selectedDate!;
     return '${d.month.toString().padLeft(2, '0')} / ${d.day.toString().padLeft(2, '0')} / ${d.year}';
+  }
+
+  String get _formattedIsoDate {
+    if (_selectedDate == null) return '';
+    final d = _selectedDate!;
+    return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
   }
 
   Future<void> _handleComplete() async {
@@ -59,21 +63,22 @@ class _SignupStep3ScreenState extends State<SignupStep3Screen> {
       );
       return;
     }
-    if (_selectedCondition == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a primary condition')),
-      );
-      return;
-    }
 
     final auth = context.read<AuthProvider>();
-    final success = await auth.completeSetup(
-      dateOfBirth: _formattedDate,
-      primaryCondition: _selectedCondition!,
+    final success = await auth.completeOnboarding(
+      email: auth.email ?? '',
+      inviteCode: auth.inviteCode ?? '',
+      password: auth.tempPassword ?? 'password123',
+      dateOfBirth: _formattedIsoDate,
+      phone: auth.phone ?? '',
     );
 
     if (success && mounted) {
       AppRoutes.navigateAndClearStack(context, AppRoutes.main);
+    } else if (mounted && auth.errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(auth.errorMessage!)),
+      );
     }
   }
 
@@ -89,13 +94,12 @@ class _SignupStep3ScreenState extends State<SignupStep3Screen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: AppSpacing.lg),
-
               const StepProgressBar(currentStep: 3),
               SizedBox(height: AppSpacing.xxl),
 
               Text(AppStrings.yourHealthProfile, style: AppTextStyles.heading1),
               SizedBox(height: AppSpacing.sm),
-              Text(AppStrings.personalizeExperience, style: AppTextStyles.subtitle),
+              Text('Complete your patient profile setup', style: AppTextStyles.subtitle),
               SizedBox(height: AppSpacing.xxl),
 
               Text(AppStrings.dateOfBirth, style: AppTextStyles.label),
@@ -119,7 +123,7 @@ class _SignupStep3ScreenState extends State<SignupStep3Screen> {
                       ),
                       SizedBox(width: AppSpacing.hMd),
                       Text(
-                        _formattedDate,
+                        _formattedDateDisplay,
                         style: _selectedDate != null
                             ? AppTextStyles.inputText
                             : AppTextStyles.inputHint,
@@ -127,23 +131,6 @@ class _SignupStep3ScreenState extends State<SignupStep3Screen> {
                     ],
                   ),
                 ),
-              ),
-              SizedBox(height: AppSpacing.xl),
-
-              Text(AppStrings.primaryCondition, style: AppTextStyles.label),
-              SizedBox(height: AppSpacing.lg),
-              Wrap(
-                spacing: 8.w,
-                runSpacing: 8.h,
-                children: AppStrings.conditions.map((condition) {
-                  return ConditionChip(
-                    label: condition,
-                    isSelected: _selectedCondition == condition,
-                    onTap: () {
-                      setState(() => _selectedCondition = condition);
-                    },
-                  );
-                }).toList(),
               ),
               SizedBox(height: AppSpacing.xxl),
 

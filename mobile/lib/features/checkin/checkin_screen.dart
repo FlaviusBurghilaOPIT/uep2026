@@ -1,10 +1,13 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_strings.dart';
-import '../../core/navigation/app_routes.dart';
+import '../../core/providers/auth_provider.dart';
+import '../../core/services/api_service.dart';
 
 class CheckInScreen extends StatefulWidget {
   const CheckInScreen({super.key});
@@ -19,12 +22,13 @@ class _CheckInScreenState extends State<CheckInScreen> {
   String? _selectedMood;
   final Set<String> _selectedEffects = {};
   bool _submitted = false;
+  bool _isSubmitting = false;
 
   final List<Map<String, String>> _moods = const [
-    {'label': 'Good', 'emoji': '😊'},
-    {'label': 'Okay', 'emoji': '🙂'},
-    {'label': 'Low', 'emoji': '🙁'},
-    {'label': 'Rough', 'emoji': '😣'},
+    {'label': 'Good', 'emoji': '😊', 'value': 'great'},
+    {'label': 'Okay', 'emoji': '🙂', 'value': 'ok'},
+    {'label': 'Low', 'emoji': '🙁', 'value': 'not_great'},
+    {'label': 'Rough', 'emoji': '😣', 'value': 'bad'},
   ];
 
   final List<String> _sideEffects = [
@@ -33,9 +37,40 @@ class _CheckInScreenState extends State<CheckInScreen> {
 
   bool get _isComplete => _painLevel != null && _energyLevel != null && _selectedMood != null;
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_isComplete) return;
-    setState(() => _submitted = true);
+
+    setState(() => _isSubmitting = true);
+
+    final auth = context.read<AuthProvider>();
+    String? caseId = auth.caseId;
+    if (caseId == null && auth.patientId != null) {
+      try {
+        final caseRes = await ApiService.get('/patients/${auth.patientId}/case');
+        if (caseRes.statusCode == 200) {
+          caseId = jsonDecode(caseRes.body)['id'];
+        }
+      } catch (_) {}
+    }
+
+    final selectedMoodMap = _moods.firstWhere(
+      (m) => m['label'] == _selectedMood,
+      orElse: () => {'value': 'ok'},
+    );
+    final feeling = selectedMoodMap['value']!;
+
+    if (caseId != null) {
+      try {
+        await ApiService.post('/symptoms/checkin?case_id=$caseId&feeling=$feeling', {});
+      } catch (_) {}
+    }
+
+    if (mounted) {
+      setState(() {
+        _isSubmitting = false;
+        _submitted = true;
+      });
+    }
   }
 
   void _reset() {
@@ -45,6 +80,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
       _selectedMood = null;
       _selectedEffects.clear();
       _submitted = false;
+      _isSubmitting = false;
     });
   }
 
@@ -52,13 +88,15 @@ class _CheckInScreenState extends State<CheckInScreen> {
   Widget build(BuildContext context) {
     if (_submitted) return _buildSuccessView();
 
+    final auth = context.watch<AuthProvider>();
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildTopBar(),
+              _buildTopBar(auth),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
                 child: Column(
@@ -100,7 +138,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                       width: double.infinity,
                       height: AppSpacing.buttonHeight,
                       child: ElevatedButton(
-                        onPressed: _isComplete ? _submit : null,
+                        onPressed: (_isComplete && !_isSubmitting) ? _submit : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _isComplete
                               ? AppColors.primaryGreen
@@ -115,14 +153,20 @@ class _CheckInScreenState extends State<CheckInScreen> {
                           ),
                           elevation: 0,
                         ),
-                        child: Text(
-                          'Submit Check-In',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w600,
-                            color: _isComplete ? AppColors.white : AppColors.greyLight,
-                          ),
-                        ),
+                        child: _isSubmitting
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                              )
+                            : Text(
+                                'Submit Check-In',
+                                style: TextStyle(
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: _isComplete ? AppColors.white : AppColors.greyLight,
+                                ),
+                              ),
                       ),
                     ),
                     SizedBox(height: 100.h),
@@ -136,7 +180,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
     );
   }
 
-  Widget _buildTopBar() {
+  Widget _buildTopBar(AuthProvider auth) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         AppSpacing.screenPaddingH,
@@ -151,7 +195,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(AppStrings.remotecare, style: AppTextStyles.heading3),
-                Text('${AppStrings.checkInSubtitle.split(' ')[0]} Mitchell \u00B7 Post-op',
+                Text('${auth.fullName ?? 'User'} \u00B7 Post-op',
                     style: AppTextStyles.bodySmall),
               ],
             ),
@@ -400,7 +444,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                 Text('Check-in Complete', style: AppTextStyles.heading2),
                 SizedBox(height: AppSpacing.md),
                 Text(
-                  'Your responses have been sent to Dr. Moreau. See you tomorrow!',
+                  'Your responses have been recorded and sent to your clinician. See you tomorrow!',
                   style: AppTextStyles.bodyMedium,
                   textAlign: TextAlign.center,
                 ),

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +8,7 @@ import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/navigation/app_routes.dart';
 import '../../core/providers/auth_provider.dart';
+import '../../core/services/api_service.dart';
 
 class TodayScreen extends StatefulWidget {
   const TodayScreen({super.key});
@@ -16,8 +18,10 @@ class TodayScreen extends StatefulWidget {
 }
 
 class _TodayScreenState extends State<TodayScreen> {
-  final List<Map<String, dynamic>> _medications = [
+  bool _isLoading = false;
+  List<Map<String, dynamic>> _medications = [
     {
+      'id': null,
       'name': 'Ibuprofen',
       'dosage': '400 mg · 3× daily',
       'time': '08:00',
@@ -25,6 +29,7 @@ class _TodayScreenState extends State<TodayScreen> {
       'hasWarning': false,
     },
     {
+      'id': null,
       'name': 'Amoxicillin',
       'dosage': '500 mg · 2× daily',
       'time': '13:00',
@@ -32,6 +37,7 @@ class _TodayScreenState extends State<TodayScreen> {
       'hasWarning': true,
     },
     {
+      'id': null,
       'name': 'Metoprolol',
       'dosage': '25 mg · 1× daily',
       'time': '20:00',
@@ -40,12 +46,87 @@ class _TodayScreenState extends State<TodayScreen> {
     },
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
+  }
+
+  Future<void> _loadData() async {
+    final auth = context.read<AuthProvider>();
+    String? caseId = auth.caseId;
+    if (caseId == null && auth.patientId != null) {
+      try {
+        final caseRes = await ApiService.get('/patients/${auth.patientId}/case');
+        if (caseRes.statusCode == 200) {
+          caseId = jsonDecode(caseRes.body)['id'];
+        }
+      } catch (_) {}
+    }
+
+    if (caseId != null) {
+      setState(() => _isLoading = true);
+      try {
+        final res = await ApiService.get('/cases/$caseId/medications');
+        if (res.statusCode == 200) {
+          final List list = jsonDecode(res.body);
+          if (list.isNotEmpty) {
+            setState(() {
+              _medications = list.map<Map<String, dynamic>>((m) => {
+                'id': m['id'],
+                'name': m['name'],
+                'dosage': '${m['dose']} · ${m['schedule_text']}',
+                'time': '08:00',
+                'status': 'pending',
+                'hasWarning': false,
+              }).toList();
+            });
+          }
+        }
+      } catch (_) {} finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    }
+  }
+
   int get _takenCount => _medications.where((m) => m['status'] == 'taken').length;
 
-  void _updateStatus(int index, String status) {
+  Future<void> _updateStatus(int index, String status) async {
     setState(() {
       _medications[index]['status'] = status;
     });
+
+    final medId = _medications[index]['id'];
+    if (medId != null) {
+      try {
+        final remindersRes = await ApiService.get('/reminders');
+        String? reminderId;
+        if (remindersRes.statusCode == 200) {
+          final List reminders = jsonDecode(remindersRes.body);
+          final match = reminders.firstWhere(
+            (r) => r['medication_id'] == medId,
+            orElse: () => null,
+          );
+          if (match != null) {
+            reminderId = match['id'];
+          }
+        }
+        if (reminderId == null) {
+          final createRes = await ApiService.post('/reminders', {
+            'medication_id': medId,
+            'scheduled_time': DateTime.now().toIso8601String(),
+          });
+          if (createRes.statusCode == 200) {
+            reminderId = jsonDecode(createRes.body)['id'];
+          }
+        }
+        if (reminderId != null) {
+          await ApiService.post('/adherence/log?scheduled_reminder_id=$reminderId&status=$status', {});
+        }
+      } catch (_) {}
+    }
   }
 
   @override
@@ -59,40 +140,55 @@ class _TodayScreenState extends State<TodayScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildTopBar(context, auth),
-              _buildGreetingCard(greeting, firstName),
-              SizedBox(height: AppSpacing.lg),
-              _buildFdaAlert(context),
-              SizedBox(height: AppSpacing.xl),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
-                child: Text(AppStrings.todaysMedications, style: AppTextStyles.label),
-              ),
-              SizedBox(height: AppSpacing.md),
-              for (int i = 0; i < _medications.length; i++) ...[
-                _buildMedCard(context, index: i),
-                if (i < _medications.length - 1) SizedBox(height: AppSpacing.md),
-              ],
-              SizedBox(height: AppSpacing.lg),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
-                child: Row(
-                  children: [
-                    Icon(Icons.access_time_rounded, size: 16.sp, color: AppColors.greyLight),
-                    SizedBox(width: 6.w),
-                    Text(
-                      'Next reminder: ${_medications.firstWhere((m) => m['status'] == 'pending', orElse: () => _medications.last)['name']} at ${_medications.firstWhere((m) => m['status'] == 'pending', orElse: () => _medications.last)['time']}',
-                      style: AppTextStyles.bodySmall,
-                    ),
-                  ],
+        child: RefreshIndicator(
+          onRefresh: _loadData,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildTopBar(context, auth),
+                _buildGreetingCard(greeting, firstName),
+                SizedBox(height: AppSpacing.lg),
+                _buildFdaAlert(context),
+                SizedBox(height: AppSpacing.xl),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(AppStrings.todaysMedications, style: AppTextStyles.label),
+                      if (_isLoading)
+                        SizedBox(
+                          width: 14.w,
+                          height: 14.w,
+                          child: const CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-              SizedBox(height: 100.h),
-            ],
+                SizedBox(height: AppSpacing.md),
+                for (int i = 0; i < _medications.length; i++) ...[
+                  _buildMedCard(context, index: i),
+                  if (i < _medications.length - 1) SizedBox(height: AppSpacing.md),
+                ],
+                SizedBox(height: AppSpacing.lg),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
+                  child: Row(
+                    children: [
+                      Icon(Icons.access_time_rounded, size: 16.sp, color: AppColors.greyLight),
+                      SizedBox(width: 6.w),
+                      Text(
+                        'Next reminder: ${_medications.firstWhere((m) => m['status'] == 'pending', orElse: () => _medications.last)['name']} at ${_medications.firstWhere((m) => m['status'] == 'pending', orElse: () => _medications.last)['time']}',
+                        style: AppTextStyles.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 100.h),
+              ],
+            ),
           ),
         ),
       ),

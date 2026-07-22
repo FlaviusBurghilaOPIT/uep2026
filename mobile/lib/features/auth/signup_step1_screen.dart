@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_strings.dart';
@@ -20,35 +18,38 @@ class SignupStep1Screen extends StatefulWidget {
 
 class _SignupStep1ScreenState extends State<SignupStep1Screen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _inviteCodeController = TextEditingController();
 
   @override
   void dispose() {
-    _nameController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
-    _passwordController.dispose();
+    _inviteCodeController.dispose();
     super.dispose();
   }
 
-  void _handleContinue() {
+  Future<void> _handleVerify() async {
     if (!_formKey.currentState!.validate()) return;
 
-    context.read<AuthProvider>().setSignUpInfo(
-      fullName: _nameController.text.trim(),
+    final auth = context.read<AuthProvider>();
+    final success = await auth.verifyInvite(
       email: _emailController.text.trim(),
-      phone: _phoneController.text.trim(),
-      password: _passwordController.text,
+      inviteCode: _inviteCodeController.text.trim(),
     );
 
-    AppRoutes.navigateTo(context, AppRoutes.signupStep2);
+    if (success && mounted) {
+      AppRoutes.navigateTo(context, AppRoutes.signupStep2);
+    } else if (mounted && auth.errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(auth.errorMessage!)),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -59,29 +60,13 @@ class _SignupStep1ScreenState extends State<SignupStep1Screen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: AppSpacing.lg),
-
                 const StepProgressBar(currentStep: 1),
                 SizedBox(height: AppSpacing.xxl),
 
-                Text(AppStrings.createYourAccount, style: AppTextStyles.heading1),
+                Text('Verify Invitation', style: AppTextStyles.heading1),
                 SizedBox(height: AppSpacing.sm),
-                Text(AppStrings.setupCredentials, style: AppTextStyles.subtitle),
+                Text('Enter the email and 6-digit invite code provided by your clinician', style: AppTextStyles.subtitle),
                 SizedBox(height: AppSpacing.xxl),
-
-                AppTextField(
-                  label: AppStrings.fullName,
-                  hintText: AppStrings.fullNameHint,
-                  prefixIcon: Icons.person_outline,
-                  controller: _nameController,
-                  keyboardType: TextInputType.name,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter your full name';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: AppSpacing.xl),
 
                 AppTextField(
                   label: AppStrings.emailAddress,
@@ -102,32 +87,17 @@ class _SignupStep1ScreenState extends State<SignupStep1Screen> {
                 SizedBox(height: AppSpacing.xl),
 
                 AppTextField(
-                  label: AppStrings.phoneNumber,
-                  hintText: AppStrings.phoneHint,
-                  prefixIcon: Icons.phone_outlined,
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
+                  label: '6-Digit Invite Code',
+                  hintText: 'e.g. 123456',
+                  prefixIcon: Icons.vpn_key_outlined,
+                  controller: _inviteCodeController,
+                  keyboardType: TextInputType.number,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Please enter your phone number';
+                      return 'Please enter your invite code';
                     }
-                    return null;
-                  },
-                ),
-                SizedBox(height: AppSpacing.xl),
-
-                AppTextField(
-                  label: AppStrings.password,
-                  hintText: AppStrings.passwordMinHint,
-                  prefixIcon: Icons.lock_outline,
-                  isPassword: true,
-                  controller: _passwordController,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a password';
-                    }
-                    if (value.length < 8) {
-                      return 'Password must be at least 8 characters';
+                    if (value.trim().length < 6) {
+                      return 'Invite code must be 6 digits';
                     }
                     return null;
                   },
@@ -135,8 +105,9 @@ class _SignupStep1ScreenState extends State<SignupStep1Screen> {
                 SizedBox(height: AppSpacing.xxxl),
 
                 AppButton(
-                  text: AppStrings.continueText,
-                  onPressed: _handleContinue,
+                  text: 'Verify & Continue',
+                  isLoading: auth.isLoading,
+                  onPressed: _handleVerify,
                 ),
                 SizedBox(height: AppSpacing.xxl),
               ],

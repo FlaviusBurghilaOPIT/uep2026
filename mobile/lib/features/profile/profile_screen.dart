@@ -298,7 +298,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppColors.primaryGreen,
+            activeTrackColor: AppColors.primaryGreen,
           ),
         ],
       ),
@@ -331,7 +331,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: OutlinedButton(
         onPressed: () async {
           await context.read<AuthProvider>().signOut();
-          if (context.mounted) {
+          if (mounted) {
             AppRoutes.navigateAndClearStack(context, AppRoutes.onboarding);
           }
         },

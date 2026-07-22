@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/providers/auth_provider.dart';
+import '../../core/shared_widgets/app_text_field.dart';
 import '../../core/shared_widgets/app_button.dart';
 import '../../core/shared_widgets/step_progress_bar.dart';
 import '../../core/navigation/app_routes.dart';
@@ -19,43 +17,29 @@ class SignupStep2Screen extends StatefulWidget {
 }
 
 class _SignupStep2ScreenState extends State<SignupStep2Screen> {
-  final List<TextEditingController> _controllers =
-      List.generate(6, (_) => TextEditingController());
-  final List<FocusNode> _focusNodes =
-      List.generate(6, (_) => FocusNode());
+  final _formKey = GlobalKey<FormState>();
+  final _phoneController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   @override
   void dispose() {
-    for (final c in _controllers) {
-      c.dispose();
-    }
-    for (final f in _focusNodes) {
-      f.dispose();
-    }
+    _phoneController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
-  String get _code => _controllers.map((c) => c.text).join();
-
-  Future<void> _handleVerify() async {
-    final code = _code;
-    if (code.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter the full 6-digit code')),
-      );
-      return;
-    }
+  void _handleContinue() {
+    if (!_formKey.currentState!.validate()) return;
 
     final auth = context.read<AuthProvider>();
-    final success = await auth.verifyCode(code);
+    auth.setSignUpInfo(
+      fullName: auth.fullName ?? '',
+      email: auth.email ?? '',
+      phone: _phoneController.text.trim(),
+      password: _passwordController.text,
+    );
 
-    if (success && mounted) {
-      AppRoutes.navigateTo(context, AppRoutes.signupStep3);
-    } else if (mounted && auth.errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(auth.errorMessage!)),
-      );
-    }
+    AppRoutes.navigateTo(context, AppRoutes.signupStep3);
   }
 
   @override
@@ -64,102 +48,62 @@ class _SignupStep2ScreenState extends State<SignupStep2Screen> {
 
     return Scaffold(
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: AppSpacing.lg),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: AppSpacing.lg),
+                const StepProgressBar(currentStep: 2),
+                SizedBox(height: AppSpacing.xxl),
 
-              const StepProgressBar(currentStep: 2),
-              SizedBox(height: AppSpacing.xxl),
+                Text('Welcome, ${auth.fullName ?? 'Patient'}!', style: AppTextStyles.heading1),
+                SizedBox(height: AppSpacing.sm),
+                Text('Set up your contact details and account password', style: AppTextStyles.subtitle),
+                SizedBox(height: AppSpacing.xxl),
 
-              Text(AppStrings.verifyEmail, style: AppTextStyles.heading1),
-              SizedBox(height: AppSpacing.sm),
-              Text(AppStrings.verificationSent, style: AppTextStyles.subtitle),
-              SizedBox(height: AppSpacing.xxxl),
-
-              Text(AppStrings.enterCode, style: AppTextStyles.label),
-              SizedBox(height: AppSpacing.lg),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: List.generate(6, (index) {
-                  return SizedBox(
-                    width: 48.w,
-                    height: 56.h,
-                    child: TextFormField(
-                      controller: _controllers[index],
-                      focusNode: _focusNodes[index],
-                      textAlign: TextAlign.center,
-                      keyboardType: TextInputType.number,
-                      maxLength: 1,
-                      style: AppTextStyles.heading3,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
-                      decoration: InputDecoration(
-                        counterText: '',
-                        filled: true,
-                        fillColor: AppColors.inputFill,
-                        contentPadding: EdgeInsets.zero,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                          borderSide: const BorderSide(
-                            color: AppColors.primaryGreen,
-                            width: 1.5,
-                          ),
-                        ),
-                      ),
-                      onChanged: (value) {
-                        if (value.isNotEmpty && index < 5) {
-                          _focusNodes[index + 1].requestFocus();
-                        }
-                        if (value.isEmpty && index > 0) {
-                          _focusNodes[index - 1].requestFocus();
-                        }
-                      },
-                    ),
-                  );
-                }),
-              ),
-              SizedBox(height: AppSpacing.xl),
-
-              Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      AppStrings.didntReceiveCode,
-                      style: AppTextStyles.bodyMedium,
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Code resent!')),
-                        );
-                      },
-                      child: Text(
-                        AppStrings.resendCode,
-                        style: AppTextStyles.linkText,
-                      ),
-                    ),
-                  ],
+                AppTextField(
+                  label: AppStrings.phoneNumber,
+                  hintText: AppStrings.phoneHint,
+                  prefixIcon: Icons.phone_outlined,
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter your phone number';
+                    }
+                    return null;
+                  },
                 ),
-              ),
+                SizedBox(height: AppSpacing.xl),
 
-              const Spacer(),
+                AppTextField(
+                  label: AppStrings.password,
+                  hintText: AppStrings.passwordMinHint,
+                  prefixIcon: Icons.lock_outline,
+                  isPassword: true,
+                  controller: _passwordController,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a password';
+                    }
+                    if (value.length < 8) {
+                      return 'Password must be at least 8 characters';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: AppSpacing.xxxl),
 
-              AppButton(
-                text: AppStrings.verifyAndContinue,
-                isLoading: auth.isLoading,
-                onPressed: _handleVerify,
-              ),
-              SizedBox(height: AppSpacing.xxl),
-            ],
+                AppButton(
+                  text: AppStrings.continueText,
+                  onPressed: _handleContinue,
+                ),
+                SizedBox(height: AppSpacing.xxl),
+              ],
+            ),
           ),
         ),
       ),

@@ -1,9 +1,13 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_strings.dart';
+import '../../core/providers/auth_provider.dart';
+import '../../core/services/api_service.dart';
 
 class AssistantScreen extends StatefulWidget {
   const AssistantScreen({super.key});
@@ -16,6 +20,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
   bool _hasStartedChat = false;
+  bool _isSending = false;
 
   final List<Map<String, dynamic>> _messages = [];
 
@@ -24,15 +29,6 @@ class _AssistantScreenState extends State<AssistantScreen> {
     'What are the side effects of Amoxicillin?',
     'Is it safe to exercise today?',
   ];
-
-  final Map<String, String> _responses = {
-    'Can I take ibuprofen with food?':
-        'Yes \u2014 Ibuprofen prescribed by Dr. Moreau should be taken with food or milk to protect your stomach lining. This is noted in your treatment plan.',
-    'What are the side effects of Amoxicillin?':
-        'Common side effects include nausea, diarrhea, and mild skin rash. If you experience difficulty breathing or severe rash, contact Dr. Moreau immediately.',
-    'Is it safe to exercise today?':
-        'Light walking is encouraged at this stage. Avoid strenuous activity until your next follow-up. Listen to your body and rest if you feel pain.',
-  };
 
   @override
   void dispose() {
@@ -46,13 +42,14 @@ class _AssistantScreenState extends State<AssistantScreen> {
     return '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
   }
 
-  void _send(String text) {
-    if (text.trim().isEmpty) return;
+  Future<void> _send(String text) async {
+    if (text.trim().isEmpty || _isSending) return;
     final question = text.trim();
     _messageController.clear();
 
     setState(() {
       _hasStartedChat = true;
+      _isSending = true;
       _messages.add({
         'role': 'user',
         'content': question,
@@ -61,19 +58,47 @@ class _AssistantScreenState extends State<AssistantScreen> {
     });
     _scrollToBottom();
 
-    Future.delayed(const Duration(milliseconds: 900), () {
-      if (!mounted) return;
-      final response = _responses[question] ??
-          'Thank you for your question. In the full version, I would use Amazon Bedrock to provide a detailed, personalized response. For now, please consult Dr. Moreau for medical advice.';
+    final auth = context.read<AuthProvider>();
+    String? caseId = auth.caseId;
+    if (caseId == null && auth.patientId != null) {
+      try {
+        final caseRes = await ApiService.get('/patients/${auth.patientId}/case');
+        if (caseRes.statusCode == 200) {
+          caseId = jsonDecode(caseRes.body)['id'];
+        }
+      } catch (_) {}
+    }
+
+    String replyText = 'Sorry, I am unable to connect to the assistant server right now.';
+    if (caseId != null) {
+      try {
+        final res = await ApiService.post('/ai/chat', {
+          'case_id': caseId,
+          'message': question,
+        });
+        if (res.statusCode == 200) {
+          final data = jsonDecode(res.body);
+          replyText = data['reply'] ?? replyText;
+        } else {
+          final data = jsonDecode(res.body);
+          replyText = data['detail'] ?? replyText;
+        }
+      } catch (e) {
+        replyText = 'Error sending message: ${e.toString()}';
+      }
+    }
+
+    if (mounted) {
       setState(() {
+        _isSending = false;
         _messages.add({
           'role': 'assistant',
-          'content': response,
+          'content': replyText,
           'time': _timeNow(),
         });
       });
       _scrollToBottom();
-    });
+    }
   }
 
   void _scrollToBottom() {
@@ -90,11 +115,13 @@ class _AssistantScreenState extends State<AssistantScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            _buildTopBar(),
+            _buildTopBar(auth),
             _buildHeader(),
             const Divider(height: 1),
             Expanded(
@@ -107,7 +134,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
     );
   }
 
-  Widget _buildTopBar() {
+  Widget _buildTopBar(AuthProvider auth) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         AppSpacing.screenPaddingH,
@@ -123,7 +150,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
               children: [
                 Text(AppStrings.remotecare, style: AppTextStyles.heading3),
                 Text(
-                  '${AppStrings.checkInSubtitle.split(' ')[0]} Mitchell \u00B7 Post-op',
+                  '${auth.fullName ?? 'User'} · Post-op',
                   style: AppTextStyles.bodySmall,
                 ),
               ],
@@ -238,9 +265,9 @@ class _AssistantScreenState extends State<AssistantScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildAssistantBubble(
-            'Hello! I\'m your RemoteCare recovery assistant, powered by Amazon Bedrock. '
+            'Hello! I\'m your RemoteCare recovery assistant. '
             'I can answer questions about your prescribed medications and recovery plan. '
-            'I never provide diagnoses \u2014 always consult Dr. Moreau for medical decisions.',
+            'I never provide diagnoses — always consult your clinician for medical decisions.',
             '09:08',
           ),
           SizedBox(height: AppSpacing.xl),
@@ -274,7 +301,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
               SizedBox(width: 4.w),
               Flexible(
                 child: Text(
-                  'Informational only \u00B7 Not a diagnosis \u00B7 Bedrock Guardrails active',
+                  'Informational only · Not a diagnosis · Bedrock Guardrails active',
                   style: AppTextStyles.labelSmall.copyWith(fontSize: 10.sp),
                 ),
               ),
@@ -289,8 +316,26 @@ class _AssistantScreenState extends State<AssistantScreen> {
     return ListView.builder(
       controller: _scrollController,
       padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH, vertical: AppSpacing.lg),
-      itemCount: _messages.length,
+      itemCount: _messages.length + (_isSending ? 1 : 0),
       itemBuilder: (context, index) {
+        if (index == _messages.length && _isSending) {
+          return Padding(
+            padding: EdgeInsets.only(bottom: AppSpacing.lg),
+            child: Row(
+              children: [
+                Container(
+                  width: 28.w,
+                  height: 28.w,
+                  decoration: const BoxDecoration(color: AppColors.lightGreen, shape: BoxShape.circle),
+                  child: Icon(Icons.chat_bubble_outline, color: AppColors.primaryGreen, size: 14.sp),
+                ),
+                SizedBox(width: AppSpacing.hSm),
+                Text('Thinking...', style: AppTextStyles.bodySmall),
+              ],
+            ),
+          );
+        }
+
         final msg = _messages[index];
         final isUser = msg['role'] == 'user';
         final time = msg['time'] as String;
