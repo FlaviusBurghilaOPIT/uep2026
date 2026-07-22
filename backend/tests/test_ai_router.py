@@ -59,6 +59,8 @@ def test_chat_persists_both_turns(client, db_session, monkeypatch):
     assert len(messages) == 2
     assert messages[0].role == models.ChatRole.user
     assert messages[1].role == models.ChatRole.assistant
+    assert messages[0].in_scope is True
+    assert messages[0].escalate is False
 
 
 def test_chat_flags_dosage_change_language_as_out_of_scope(client, db_session, monkeypatch):
@@ -74,3 +76,11 @@ def test_chat_flags_dosage_change_language_as_out_of_scope(client, db_session, m
     body = response.json()
     assert body["in_scope"] is False
     assert body["escalate"] is True
+
+    user_message = (
+        db_session.query(models.ChatMessage)
+        .filter_by(case_id=case.id, role=models.ChatRole.user)
+        .first()
+    )
+    assert user_message.in_scope is False
+    assert user_message.escalate is True

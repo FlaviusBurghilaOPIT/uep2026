@@ -9,6 +9,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
+    Boolean,
     Date,
     DateTime,
     Enum,
@@ -201,6 +202,8 @@ class ChatMessage(Base):
 
     role: Mapped[ChatRole] = mapped_column(Enum(ChatRole), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
+    in_scope: Mapped[bool] = mapped_column(Boolean, default=True)
+    escalate: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     case: Mapped["Case"] = relationship(back_populates="chat_messages")
