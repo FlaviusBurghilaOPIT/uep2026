@@ -90,11 +90,14 @@ function CreateCasePage() {
       <div style={styles.card}>
         <h1 style={styles.title}>New Case</h1>
 
-        <label style={styles.label}>Select Patient</label>
+        <label style={styles.label} htmlFor="patient-select">Select Patient</label>
         <select
+          id="patient-select"
           style={styles.input}
           value={patientId}
           onChange={(e) => setPatientId(e.target.value)}
+          aria-invalid={!!error}
+          aria-describedby={error ? 'form-error' : undefined}
         >
           <option value="">-- Select a patient --</option>
           {patients.map((p) => (
@@ -104,16 +107,19 @@ function CreateCasePage() {
           ))}
         </select>
 
-        <label style={styles.label}>Surgery Type</label>
+        <label style={styles.label} htmlFor="surgery-type">Surgery Type</label>
         <input
+          id="surgery-type"
           style={styles.input}
           type="text"
           placeholder="e.g. Knee Replacement"
           value={surgeryType}
           onChange={(e) => setSurgeryType(e.target.value)}
+          aria-invalid={!!error}
+          aria-describedby={error ? 'form-error' : undefined}
         />
 
-        {error && <p style={styles.error}>{error}</p>}
+        {error && <p id="form-error" role="alert" style={styles.error}>{error}</p>}
 
         <button
           style={styles.button}
