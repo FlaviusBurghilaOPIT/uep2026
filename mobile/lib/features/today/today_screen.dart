@@ -59,7 +59,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     String? caseId = auth.caseId;
     if (caseId == null && auth.patientId != null) {
       try {
-        final caseRes = await ApiService.get('/patients/${auth.patientId}/case');
+        final caseRes = await HttpApiService().get('/patients/${auth.patientId}/case');
         if (caseRes.statusCode == 200) {
           caseId = jsonDecode(caseRes.body)['id'];
         }
@@ -69,7 +69,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     if (caseId != null) {
       setState(() => _isLoading = true);
       try {
-        final res = await ApiService.get('/cases/$caseId/medications');
+        final res = await HttpApiService().get('/cases/$caseId/medications');
         if (res.statusCode == 200) {
           final List list = jsonDecode(res.body);
           if (list.isNotEmpty) {
@@ -101,7 +101,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     final medId = _medications[index]['id'];
     if (medId != null) {
       try {
-        final remindersRes = await ApiService.get('/reminders');
+        final remindersRes = await HttpApiService().get('/reminders');
         String? reminderId;
         if (remindersRes.statusCode == 200) {
           final List reminders = jsonDecode(remindersRes.body);
@@ -114,7 +114,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           }
         }
         if (reminderId == null) {
-          final createRes = await ApiService.post('/reminders', {
+          final createRes = await HttpApiService().post('/reminders', {
             'medication_id': medId,
             'scheduled_time': DateTime.now().toIso8601String(),
           });
@@ -123,7 +123,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           }
         }
         if (reminderId != null) {
-          await ApiService.post('/adherence/log?scheduled_reminder_id=$reminderId&status=$status', {});
+          await HttpApiService().post('/adherence/log?scheduled_reminder_id=$reminderId&status=$status', {});
         }
       } catch (_) {}
     }

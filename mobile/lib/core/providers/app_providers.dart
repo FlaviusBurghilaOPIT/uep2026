@@ -7,6 +7,12 @@ import '../network/api_service.dart';
 /// (converted to [ConsumerWidget]) can continue calling the same
 /// public API (signIn, signOut, verifyInvite, etc.).
 class AuthNotifier extends ChangeNotifier {
+  AuthNotifier(this._api) {
+    checkAuthStatus();
+  }
+
+  final HttpApiService _api;
+
   bool _isSignedIn = false;
   bool _isLoading = false;
   String? _errorMessage;
@@ -34,16 +40,12 @@ class AuthNotifier extends ChangeNotifier {
   String? get inviteCode => _inviteCode;
   String? get tempPassword => _tempPassword;
 
-  AuthNotifier() {
-    checkAuthStatus();
-  }
-
   Future<void> checkAuthStatus() async {
-    final token = await ApiService.getToken();
+    final token = await _api.getToken();
     if (token != null && token.isNotEmpty) {
       final success = await fetchProfile();
       if (!success) {
-        await ApiService.clearToken();
+        await _api.clearToken();
         _isSignedIn = false;
       }
     }
@@ -51,7 +53,7 @@ class AuthNotifier extends ChangeNotifier {
 
   Future<bool> fetchProfile() async {
     try {
-      final res = await ApiService.get('/auth/me');
+      final res = await _api.get('/auth/me');
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         _patientId = data['id'];
@@ -62,7 +64,7 @@ class AuthNotifier extends ChangeNotifier {
         _isSignedIn = true;
 
         if (_patientId != null) {
-          final caseRes = await ApiService.get('/patients/$_patientId/case');
+          final caseRes = await _api.get('/patients/$_patientId/case');
           if (caseRes.statusCode == 200) {
             final caseData = jsonDecode(caseRes.body);
             _caseId = caseData['id'];
@@ -83,7 +85,7 @@ class AuthNotifier extends ChangeNotifier {
     _setLoading(true);
     _errorMessage = null;
     try {
-      final res = await ApiService.post('/auth/login', {
+      final res = await _api.post('/auth/login', {
         'email': email,
         'password': password,
       });
@@ -91,7 +93,7 @@ class AuthNotifier extends ChangeNotifier {
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         final token = data['access_token'];
-        await ApiService.setToken(token);
+        await _api.setToken(token);
         await fetchProfile();
         _setLoading(false);
         return true;
@@ -114,7 +116,7 @@ class AuthNotifier extends ChangeNotifier {
     _setLoading(true);
     _errorMessage = null;
     try {
-      final res = await ApiService.post('/auth/verify-invite', {
+      final res = await _api.post('/auth/verify-invite', {
         'email': email,
         'invite_code': inviteCode,
       });
@@ -148,7 +150,7 @@ class AuthNotifier extends ChangeNotifier {
     _setLoading(true);
     _errorMessage = null;
     try {
-      final res = await ApiService.post('/auth/complete-onboarding', {
+      final res = await _api.post('/auth/complete-onboarding', {
         'email': email,
         'invite_code': inviteCode,
         'password': password,
@@ -159,7 +161,7 @@ class AuthNotifier extends ChangeNotifier {
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         final token = data['access_token'];
-        await ApiService.setToken(token);
+        await _api.setToken(token);
         await fetchProfile();
         _setLoading(false);
         return true;
@@ -188,7 +190,7 @@ class AuthNotifier extends ChangeNotifier {
   }
 
   Future<void> signOut() async {
-    await ApiService.clearToken();
+    await _api.clearToken();
     _isSignedIn = false;
     _patientId = null;
     _caseId = null;
@@ -225,7 +227,7 @@ class NavigationNotifier extends ChangeNotifier {
 // ---------------------------------------------------------------------------
 
 final authProvider = ChangeNotifierProvider<AuthNotifier>((ref) {
-  return AuthNotifier();
+  return AuthNotifier(HttpApiService());
 });
 
 final navigationProvider = ChangeNotifierProvider<NavigationNotifier>((ref) {

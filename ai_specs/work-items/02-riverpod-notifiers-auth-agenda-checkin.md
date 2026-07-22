@@ -120,13 +120,13 @@ Add `freezed: ^2.5.2`, `freezed_annotation: ^2.4.4`, `json_annotation: ^4.9.0` t
 
 ## Acceptance criteria
 
-- [ ] `authNotifierProvider`, `todayAgendaNotifierProvider`, `symptomCheckinNotifierProvider` exist as `AsyncNotifier` classes in their feature directories.
-- [ ] `AuthState`, `AgendaState`, `MedicationItem` are immutable `freezed` union types.
-- [ ] `verifyInvite` transitions to `AuthState.onboarding` on HTTP 200 and `AuthState.error` on non-200.
-- [ ] `logDose` updates `doseStatuses` map immediately (optimistic) and POSTs to `/adherence/log`.
-- [ ] `symptomCheckinNotifierProvider.submit` POSTs to `/checkins` and resolves `AsyncData(true)`.
-- [ ] All unit tests in `test/unit/` pass with `flutter test test/unit/` using `FakeApiService` only.
-- [ ] `flutter analyze` reports zero errors.
+- [x] `authNotifierProvider`, `todayAgendaNotifierProvider`, `symptomCheckinNotifierProvider` exist as `AsyncNotifier` classes in their feature directories.
+- [x] `AuthState`, `AgendaState`, `MedicationItem` are immutable `freezed` union types.
+- [x] `verifyInvite` transitions to `AuthState.onboarding` on HTTP 200 and `AuthState.error` on non-200.
+- [x] `logDose` updates `doseStatuses` map immediately (optimistic) and POSTs to `/adherence/log`.
+- [x] `symptomCheckinNotifierProvider.submit` POSTs to `/checkins` and resolves `AsyncData(true)`.
+- [x] All unit tests in `test/unit/` pass with `flutter test test/unit/` using `FakeApiService` only.
+- [x] `flutter analyze` reports zero errors.
 
 ## Covers
 

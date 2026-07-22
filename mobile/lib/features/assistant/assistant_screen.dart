@@ -62,7 +62,7 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
     String? caseId = auth.caseId;
     if (caseId == null && auth.patientId != null) {
       try {
-        final caseRes = await ApiService.get('/patients/${auth.patientId}/case');
+        final caseRes = await HttpApiService().get('/patients/${auth.patientId}/case');
         if (caseRes.statusCode == 200) {
           caseId = jsonDecode(caseRes.body)['id'];
         }
@@ -72,7 +72,7 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
     String replyText = 'Sorry, I am unable to connect to the assistant server right now.';
     if (caseId != null) {
       try {
-        final res = await ApiService.post('/ai/chat', {
+        final res = await HttpApiService().post('/ai/chat', {
           'case_id': caseId,
           'message': question,
         });

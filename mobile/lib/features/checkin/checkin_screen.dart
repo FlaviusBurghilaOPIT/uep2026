@@ -46,7 +46,7 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
     String? caseId = auth.caseId;
     if (caseId == null && auth.patientId != null) {
       try {
-        final caseRes = await ApiService.get('/patients/${auth.patientId}/case');
+        final caseRes = await HttpApiService().get('/patients/${auth.patientId}/case');
         if (caseRes.statusCode == 200) {
           caseId = jsonDecode(caseRes.body)['id'];
         }
@@ -61,7 +61,7 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
 
     if (caseId != null) {
       try {
-        await ApiService.post('/symptoms/checkin?case_id=$caseId&feeling=$feeling', {});
+        await HttpApiService().post('/symptoms/checkin?case_id=$caseId&feeling=$feeling', {});
       } catch (_) {}
     }
 
