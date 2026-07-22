@@ -70,35 +70,45 @@ function CreatePatientPage() {
       <div style={styles.card}>
         <h1 style={styles.title}>Invite New Patient</h1>
 
-        <label style={styles.label}>Full Name *</label>
+        <label style={styles.label} htmlFor="full-name">Full Name *</label>
         <input
+          id="full-name"
           style={styles.input}
           type="text"
           placeholder="e.g. Maria Rossi"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
+          aria-invalid={!!error}
+          aria-describedby={error ? 'form-error' : undefined}
         />
 
-        <label style={styles.label}>Patient Email *</label>
+        <label style={styles.label} htmlFor="patient-email">Patient Email *</label>
         <input
+          id="patient-email"
           style={styles.input}
           type="email"
           placeholder="e.g. patient@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          aria-invalid={!!error}
+          aria-describedby={error ? 'form-error' : undefined}
         />
 
-        <label style={styles.label}>Surgery Type *</label>
+        <label style={styles.label} htmlFor="surgery-type">Surgery Type *</label>
         <input
+          id="surgery-type"
           style={styles.input}
           type="text"
           placeholder="e.g. Knee Replacement"
           value={surgeryType}
           onChange={(e) => setSurgeryType(e.target.value)}
+          aria-invalid={!!error}
+          aria-describedby={error ? 'form-error' : undefined}
         />
 
-        <label style={styles.label}>Emergency Contact Phone (optional)</label>
+        <label style={styles.label} htmlFor="emergency-contact-phone">Emergency Contact Phone (optional)</label>
         <input
+          id="emergency-contact-phone"
           style={styles.input}
           type="tel"
           placeholder="e.g. +123456789"
@@ -106,7 +116,7 @@ function CreatePatientPage() {
           onChange={(e) => setEmergencyContactPhone(e.target.value)}
         />
 
-        {error && <p style={styles.error}>{error}</p>}
+        {error && <p id="form-error" role="alert" style={styles.error}>{error}</p>}
 
         <button
           style={styles.button}

@@ -76,14 +76,17 @@ function MedicationsPage() {
         <h1 style={styles.title}>Prescribe Medication</h1>
         <p style={styles.subtitle}>Case: Knee Replacement</p>
 
-        <label style={styles.label}>Drug Name</label>
+        <label style={styles.label} htmlFor="drug-name">Drug Name</label>
         <div style={{ display: 'flex', gap: '8px' }}>
           <input
+            id="drug-name"
             style={{ ...styles.input, flex: 1 }}
             type="text"
             placeholder="e.g. Ibuprofen"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            aria-invalid={!!error}
+            aria-describedby={error ? 'form-error' : undefined}
           />
           {name && (
             <button style={styles.fdaButton} onClick={openFDA}>
@@ -98,42 +101,52 @@ function MedicationsPage() {
           </button>
         )}
 
-        <label style={styles.label}>Dose</label>
+        <label style={styles.label} htmlFor="dose">Dose</label>
         <input
+          id="dose"
           style={styles.input}
           type="text"
           placeholder="e.g. 400mg"
           value={dose}
           onChange={(e) => setDose(e.target.value)}
+          aria-invalid={!!error}
+          aria-describedby={error ? 'form-error' : undefined}
         />
 
-        <label style={styles.label}>Frequency</label>
+        <label style={styles.label} htmlFor="frequency">Frequency</label>
         <input
+          id="frequency"
           style={styles.input}
           type="text"
           placeholder="e.g. 3x daily"
           value={frequency}
           onChange={(e) => setFrequency(e.target.value)}
+          aria-invalid={!!error}
+          aria-describedby={error ? 'form-error' : undefined}
         />
 
-        <label style={styles.label}>Duration (days)</label>
+        <label style={styles.label} htmlFor="duration-days">Duration (days)</label>
         <input
+          id="duration-days"
           style={styles.input}
           type="number"
           placeholder="e.g. 14"
           value={durationDays}
           onChange={(e) => setDurationDays(e.target.value)}
+          aria-invalid={!!error}
+          aria-describedby={error ? 'form-error' : undefined}
         />
 
-        <label style={styles.label}>Notes (optional)</label>
+        <label style={styles.label} htmlFor="notes">Notes (optional)</label>
         <textarea
+          id="notes"
           style={styles.textarea}
           placeholder="e.g. Take with food"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
         />
 
-        {error && <p style={styles.error}>{error}</p>}
+        {error && <p id="form-error" role="alert" style={styles.error}>{error}</p>}
 
         <button style={styles.button} onClick={handleSubmit} disabled={loading}>
           {loading ? 'Adding...' : 'Add Medication'}
