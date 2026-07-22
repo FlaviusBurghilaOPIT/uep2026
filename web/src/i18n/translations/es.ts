@@ -20,6 +20,7 @@ export const es: Translations = {
     quickStats: 'Estadísticas Rápidas',
     emergencyTriage: 'Triaje de Emergencia',
     allPatients: 'Todos los Pacientes',
+    allAlerts: 'Todas las Alertas',
     redAlerts: 'Alertas Críticas',
     amberAlerts: 'Riesgo Moderado',
     searchPlaceholder: 'Buscar pacientes por nombre o correo...',

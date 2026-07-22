@@ -20,6 +20,7 @@ export interface TriageTranslations {
   quickStats: string
   emergencyTriage: string
   allPatients: string
+  allAlerts: string
   redAlerts: string
   amberAlerts: string
   searchPlaceholder: string

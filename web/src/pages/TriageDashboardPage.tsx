@@ -378,7 +378,7 @@ function TriageDashboardPage() {
                 }}
                 onClick={() => setActiveTab('all')}
               >
-                {t('triage.allPatients')}
+                {t('triage.allAlerts')}
                 <span style={styles.tabBadge}>{exceptionQueue.length}</span>
               </button>
               <button
