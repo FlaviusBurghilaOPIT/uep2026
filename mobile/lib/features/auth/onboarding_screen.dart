@@ -168,7 +168,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Widget _buildCarousel() {
     return SizedBox(
-      height: 180.h,
+      height: 220.h,
       child: PageView.builder(
         controller: _pageController,
         onPageChanged: (index) => setState(() => _currentPage = index),
@@ -178,7 +178,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           return Padding(
             padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
             child: Container(
-              padding: EdgeInsets.all(20.w),
+              padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
                 color: AppColors.cardBg,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
