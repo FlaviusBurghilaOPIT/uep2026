@@ -68,6 +68,11 @@ class User(Base):
     password_hash: Mapped[str | None] = mapped_column(String, nullable=True)
     cognito_sub: Mapped[str | None] = mapped_column(String, unique=True, nullable=True)
 
+    invite_code: Mapped[str | None] = mapped_column(String, nullable=True)
+    status: Mapped[str] = mapped_column(String, default="active")
+    phone: Mapped[str | None] = mapped_column(String, nullable=True)
+    date_of_birth: Mapped[str | None] = mapped_column(String, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     cases_as_clinician: Mapped[list["Case"]] = relationship(

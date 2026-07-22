@@ -6,7 +6,9 @@ from sqlalchemy.orm import Session, sessionmaker
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv(
+    "DATABASE_URL", "postgresql://caredev:caredev@localhost:5432/remotecare"
+)
 
 engine = create_engine(DATABASE_URL)
 

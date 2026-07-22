@@ -14,6 +14,10 @@ class UserResponse(BaseModel):
     email: str
     full_name: str
     role: str
+    status: str | None = None
+    phone: str | None = None
+    date_of_birth: str | None = None
+    invite_code: str | None = None
     created_at: datetime
 
     class Config:
@@ -28,6 +32,40 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class PatientInviteRequest(BaseModel):
+    email: str
+    full_name: str
+    surgery_type: str
+    emergency_contact_phone: str | None = None
+
+
+class PatientInviteResponse(BaseModel):
+    patient_id: str
+    invite_code: str
+    email: str
+    full_name: str
+
+
+class VerifyInviteRequest(BaseModel):
+    email: str
+    invite_code: str
+
+
+class VerifyInviteResponse(BaseModel):
+    email: str
+    full_name: str
+    invite_code: str
+    status: str
+
+
+class CompleteOnboardingRequest(BaseModel):
+    email: str
+    invite_code: str
+    password: str
+    date_of_birth: str
+    phone: str
 
 
 class CaseCreate(BaseModel):
