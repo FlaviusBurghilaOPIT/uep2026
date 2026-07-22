@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app import models
@@ -34,7 +35,26 @@ def log_dose(
     )
 
     db.add(dose_log)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        existing = (
+            db.query(models.DoseLog)
+            .filter(models.DoseLog.scheduled_reminder_id == scheduled_reminder_id)
+            .first()
+        )
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "message": "Dose already logged for this reminder",
+                "id": existing.id,
+                "scheduled_reminder_id": existing.scheduled_reminder_id,
+                "status": existing.status,
+                "logged_at": existing.logged_at.isoformat() if existing.logged_at else None,
+            },
+        )
+
     db.refresh(dose_log)
 
     return dose_log
