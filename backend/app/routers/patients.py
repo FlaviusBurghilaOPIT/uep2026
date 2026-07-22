@@ -55,6 +55,15 @@ def invite_patient(
     )
 
 
+@router.get("/", response_model=list[schemas.UserResponse])
+def list_patients(
+    db: Session = Depends(get_db_for_user),
+    current_user: models.User = Depends(get_current_user),
+):
+    patients = db.query(models.User).filter(models.User.role == models.UserRole.patient).all()
+    return patients
+
+
 @router.post("/", response_model=schemas.UserResponse)
 def create_patient(user: schemas.UserCreate, db: Session = Depends(get_db_for_user)):
 

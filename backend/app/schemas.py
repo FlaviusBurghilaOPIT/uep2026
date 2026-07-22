@@ -174,3 +174,20 @@ class WikiArticleResponse(BaseModel):
 class WikiArticleUpdate(BaseModel):
     content_md: str | None = None
     status: str | None = None
+
+
+class RecommendationCreate(BaseModel):
+    text: str | None = None
+    content: str | None = None
+
+
+class RecommendationResponse(BaseModel):
+    id: str
+    case_id: str
+    text: str
+    content: str | None = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+

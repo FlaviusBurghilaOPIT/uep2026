@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react'
-import axios from 'axios'
-
-const API_URL = 'http://localhost:8001'
+import { apiFetch } from '../api/client'
 
 type Patient = {
   id: string
   full_name: string
-  date_of_birth: string
-  allergies: string[]
+  date_of_birth?: string | null
+  allergies?: string[]
 }
 
 type Case = {
@@ -26,16 +24,13 @@ function PatientsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('token') || 'faketoken'
-        const headers = { Authorization: `Bearer ${token}` }
-
         const [patientsRes, casesRes] = await Promise.all([
-          axios.get(`${API_URL}/patients`, { headers }),
-          axios.get(`${API_URL}/cases`, { headers })
+          apiFetch<Patient[]>('/patients'),
+          apiFetch<Case[]>('/cases')
         ])
 
-        setPatients(patientsRes.data)
-        setCases(casesRes.data)
+        setPatients(patientsRes)
+        setCases(casesRes)
       } catch (err) {
         console.error('Failed to fetch data', err)
       } finally {
@@ -73,7 +68,7 @@ function PatientsPage() {
                   <p style={styles.name}>{patient.full_name}</p>
                   <p style={styles.detail}>DOB: {patient.date_of_birth}</p>
                   <p style={styles.detail}>
-                    Allergies: {patient.allergies.length > 0 ? patient.allergies.join(', ') : 'None'}
+                    Allergies: {patient.allergies && patient.allergies.length > 0 ? patient.allergies.join(', ') : 'None'}
                   </p>
                 </div>
                 <button

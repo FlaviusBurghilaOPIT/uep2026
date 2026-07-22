@@ -1,8 +1,6 @@
 import { useState } from 'react'
-import axios from 'axios'
-
-const API_URL = 'http://localhost:8001'
-const AI_URL = 'http://localhost:8000'
+import { useParams } from 'react-router-dom'
+import { apiFetch } from '../api/client'
 
 type Message = {
   role: 'user' | 'assistant'
@@ -10,6 +8,7 @@ type Message = {
 }
 
 function RecommendationsPage() {
+  const { caseId = 'case-001' } = useParams<{ caseId: string }>()
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -30,16 +29,15 @@ function RecommendationsPage() {
       return
     }
     setLoading(true)
+    setError('')
     try {
-      const token = localStorage.getItem('token') || 'faketoken'
-      await axios.post(
-        `${API_URL}/cases/case-001/recommendations`,
-        { content },
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
+      await apiFetch(`/cases/${caseId}/recommendations`, {
+        method: 'POST',
+        body: JSON.stringify({ content, text: content })
+      })
       setSuccess(true)
-    } catch (err) {
-      setError('Failed to save. Please try again.')
+    } catch (err: any) {
+      setError(err.message || 'Failed to save. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -49,18 +47,17 @@ function RecommendationsPage() {
     if (!chatInput.trim()) return
     const userMessage: Message = { role: 'user', content: chatInput }
     setMessages((prev) => [...prev, userMessage])
+    const currentInput = chatInput
     setChatInput('')
     setChatLoading(true)
     try {
-      const token = localStorage.getItem('token') || 'faketoken'
-      const response = await axios.post(
-        `${AI_URL}/ai/chat`,
-        { case_id: 'case-001', message: chatInput, surgery_type: 'knee replacement' },
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
+      const response = await apiFetch<{ reply: string }>('/ai/chat', {
+        method: 'POST',
+        body: JSON.stringify({ case_id: caseId, message: currentInput })
+      })
       const assistantMessage: Message = {
         role: 'assistant',
-        content: response.data.reply
+        content: response.reply
       }
       setMessages((prev) => [...prev, assistantMessage])
     } catch (err) {
@@ -85,7 +82,7 @@ function RecommendationsPage() {
         <div style={styles.card}>
           <h1 style={styles.title}>Recommendations Saved</h1>
           <p style={styles.subtitle}>Recovery instructions saved successfully.</p>
-          <button style={styles.button} onClick={() => window.location.href = '/cases/case-001/recommendations/list'}>
+          <button style={styles.button} onClick={() => window.location.href = `/cases/${caseId}/recommendations/list`}>
             View All Recommendations
           </button>
           <button style={styles.backButton} onClick={() => window.location.href = '/patients'}>

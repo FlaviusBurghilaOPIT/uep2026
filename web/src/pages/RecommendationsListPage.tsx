@@ -1,26 +1,24 @@
 import { useEffect, useState } from 'react'
-import axios from 'axios'
-
-const API_URL = 'http://localhost:8001'
+import { useParams } from 'react-router-dom'
+import { apiFetch } from '../api/client'
 
 type Recommendation = {
   id: string
-  content: string
+  content?: string
+  text?: string
   created_at: string
 }
 
 function RecommendationsListPage() {
+  const { caseId = 'case-001' } = useParams<{ caseId: string }>()
   const [recommendations, setRecommendations] = useState<Recommendation[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchRecommendations = async () => {
       try {
-        const token = localStorage.getItem('token') || 'faketoken'
-        const response = await axios.get(`${API_URL}/cases/case-001/recommendations`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        setRecommendations(response.data)
+        const data = await apiFetch<Recommendation[]>(`/cases/${caseId}/recommendations`)
+        setRecommendations(data)
       } catch (err) {
         console.error('Failed to fetch recommendations', err)
       } finally {
@@ -29,18 +27,18 @@ function RecommendationsListPage() {
     }
 
     fetchRecommendations()
-  }, [])
+  }, [caseId])
 
   return (
     <div style={styles.container}>
       <div style={styles.header}>
         <h1 style={styles.title}>Recovery Recommendations</h1>
-        <p style={styles.subtitle}>Case: Knee Replacement — Maria Rossi</p>
+        <p style={styles.subtitle}>Case: {caseId}</p>
       </div>
 
       <button
         style={styles.addButton}
-        onClick={() => window.location.href = '/cases/case-001/recommendations'}
+        onClick={() => window.location.href = `/cases/${caseId}/recommendations`}
       >
         + Add Recommendation
       </button>
@@ -50,7 +48,7 @@ function RecommendationsListPage() {
       <div style={styles.list}>
         {recommendations.map((rec) => (
           <div key={rec.id} style={styles.card}>
-            <p style={styles.content}>{rec.content}</p>
+            <p style={styles.content}>{rec.content || rec.text || ''}</p>
             <p style={styles.date}>
               Added: {new Date(rec.created_at).toLocaleDateString()}
             </p>

@@ -1,7 +1,5 @@
 import { useState } from 'react'
-import axios from 'axios'
-
-const API_URL = 'http://localhost:8001'
+import { apiFetch } from '../api/client'
 
 function LoginPage() {
   const [email, setEmail] = useState('')
@@ -10,17 +8,17 @@ function LoginPage() {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post(`${API_URL}/auth/dev-login`, {
-        email,
-        role: 'clinician'
+      const data = await apiFetch<{ access_token: string }>('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password })
       })
       // save the token
-      localStorage.setItem('token', response.data.token)
-      localStorage.setItem('role', response.data.role)
+      localStorage.setItem('token', data.access_token)
+      localStorage.setItem('role', 'clinician')
       // go to patients page
       window.location.href = '/patients'
-    } catch (err) {
-      setError('Invalid email or password')
+    } catch (err: any) {
+      setError(err.message || 'Invalid email or password')
     }
   }
 

@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
-
-const API_URL = 'http://localhost:8001'
+import { apiFetch } from '../api/client'
 
 type Patient = {
   id: string
   full_name: string
+}
+
+type CreatedCase = {
+  id: string
+  patient_id: string
+  surgery_type: string
 }
 
 function CreateCasePage() {
@@ -13,17 +17,14 @@ function CreateCasePage() {
   const [patientId, setPatientId] = useState('')
   const [surgeryType, setSurgeryType] = useState('')
   const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
+  const [createdCaseId, setCreatedCaseId] = useState<string | null>(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
     const fetchPatients = async () => {
       try {
-        const token = localStorage.getItem('token') || 'faketoken'
-        const response = await axios.get(`${API_URL}/patients`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        setPatients(response.data)
+        const data = await apiFetch<Patient[]>('/patients')
+        setPatients(data)
       } catch (err) {
         console.error('Failed to fetch patients', err)
       }
@@ -38,27 +39,24 @@ function CreateCasePage() {
     }
 
     setLoading(true)
+    setError('')
     try {
-      const token = localStorage.getItem('token') || 'faketoken'
-      await axios.post(
-        `${API_URL}/cases`,
-        {
+      const res = await apiFetch<CreatedCase>('/cases', {
+        method: 'POST',
+        body: JSON.stringify({
           patient_id: patientId,
           surgery_type: surgeryType
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      )
-      setSuccess(true)
-    } catch (err) {
-      setError('Failed to create case. Please try again.')
+        })
+      })
+      setCreatedCaseId(res.id)
+    } catch (err: any) {
+      setError(err.message || 'Failed to create case. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
-  if (success) {
+  if (createdCaseId) {
     return (
       <div style={styles.container}>
         <div style={styles.card}>
@@ -66,13 +64,13 @@ function CreateCasePage() {
           <p style={styles.subtitle}>The case has been created successfully.</p>
           <button
             style={styles.button}
-            onClick={() => window.location.href = '/cases/case-001/medications'}
+            onClick={() => window.location.href = `/cases/${createdCaseId}/medications`}
           >
             Prescribe Medications
           </button>
           <button
             style={styles.button}
-            onClick={() => window.location.href = '/cases/case-001/recommendations'}
+            onClick={() => window.location.href = `/cases/${createdCaseId}/recommendations`}
           >
             Add Recovery Recommendations
           </button>
@@ -110,7 +108,7 @@ function CreateCasePage() {
         <input
           style={styles.input}
           type="text"
-          placeholder="e.g. knee replacement"
+          placeholder="e.g. Knee Replacement"
           value={surgeryType}
           onChange={(e) => setSurgeryType(e.target.value)}
         />

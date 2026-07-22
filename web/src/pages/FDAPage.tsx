@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
-
-const AI_URL = 'http://localhost:8000'
+import { apiFetch } from '../api/client'
 
 type FDAResult = {
   drug: string
@@ -28,12 +26,18 @@ function FDAPage() {
     setResult(null)
     setLoading(true)
     try {
-      const response = await axios.get(
-        AI_URL + '/fda/drug/' + term.toLowerCase().trim()
-      )
-      setResult(response.data)
-    } catch (err) {
-      setError('Could not fetch FDA data. Please try again.')
+      const data = await apiFetch<any>(`/fda/drug/${encodeURIComponent(term.toLowerCase().trim())}`)
+      const name = data.drug || data.drug_name || term
+      const warnings = data.warnings || (data.summary ? data.summary.split('\n').filter(Boolean) : ['No specific warnings found.'])
+      const retrieved_at = data.retrieved_at || new Date().toISOString()
+      setResult({
+        drug: name,
+        warnings,
+        source: data.source || 'openFDA',
+        retrieved_at
+      })
+    } catch (err: any) {
+      setError(err.message || 'Could not fetch FDA data. Please try again.')
     } finally {
       setLoading(false)
     }

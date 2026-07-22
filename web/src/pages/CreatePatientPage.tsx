@@ -1,58 +1,61 @@
 import { useState } from 'react'
-import axios from 'axios'
+import { apiFetch } from '../api/client'
 
-const API_URL = 'http://localhost:8001'
+type PatientInviteResponse = {
+  patient_id: string
+  invite_code: string
+  email: string
+  full_name: string
+}
 
 function CreatePatientPage() {
   const [fullName, setFullName] = useState('')
-  const [dateOfBirth, setDateOfBirth] = useState('')
-  const [allergies, setAllergies] = useState('')
+  const [email, setEmail] = useState('')
+  const [surgeryType, setSurgeryType] = useState('')
+  const [emergencyContactPhone, setEmergencyContactPhone] = useState('')
   const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
+  const [inviteCode, setInviteCode] = useState<string | null>(null)
   const [error, setError] = useState('')
 
   const handleSubmit = async () => {
-    if (!fullName || !dateOfBirth) {
-      setError('Please fill in name and date of birth')
+    if (!fullName || !email || !surgeryType) {
+      setError('Please fill in name, email, and surgery type')
       return
     }
 
     setLoading(true)
+    setError('')
     try {
-      const token = localStorage.getItem('token') || 'faketoken'
-      await axios.post(
-        `${API_URL}/patients`,
-        {
+      const res = await apiFetch<PatientInviteResponse>('/patients/invite', {
+        method: 'POST',
+        body: JSON.stringify({
           full_name: fullName,
-          date_of_birth: dateOfBirth,
-          allergies: allergies
-            ? allergies.split(',').map((a) => a.trim())
-            : []
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-      setSuccess(true)
-    } catch (err) {
-      setError('Failed to create patient. Please try again.')
+          email,
+          surgery_type: surgeryType,
+          emergency_contact_phone: emergencyContactPhone || null
+        })
+      })
+      setInviteCode(res.invite_code)
+    } catch (err: any) {
+      setError(err.message || 'Failed to invite patient. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
-  if (success) {
+  if (inviteCode) {
     return (
       <div style={styles.container}>
         <div style={styles.card}>
-          <h1 style={styles.title}>Patient Created ✓</h1>
-          <p style={styles.subtitle}>The patient profile has been created.</p>
+          <h1 style={styles.title}>Patient Invited ✓</h1>
+          <p style={styles.subtitle}>Patient invitation generated for {fullName}.</p>
+          <div style={styles.inviteBox}>
+            <p style={styles.inviteLabel}>6-Digit Invite Code:</p>
+            <p style={styles.inviteCode}>{inviteCode}</p>
+            <p style={styles.inviteSubtext}>Provide this code to the patient to complete onboarding in the mobile app.</p>
+          </div>
           <button
             style={styles.button}
-            onClick={() => window.location.href = '/cases/new'}
-          >
-            Create Case for this Patient
-          </button>
-          <button
-            style={styles.backButton}
             onClick={() => window.location.href = '/patients'}
           >
             Back to Patients
@@ -65,7 +68,7 @@ function CreatePatientPage() {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>New Patient</h1>
+        <h1 style={styles.title}>Invite New Patient</h1>
 
         <label style={styles.label}>Full Name *</label>
         <input
@@ -76,21 +79,31 @@ function CreatePatientPage() {
           onChange={(e) => setFullName(e.target.value)}
         />
 
-        <label style={styles.label}>Date of Birth *</label>
+        <label style={styles.label}>Patient Email *</label>
         <input
           style={styles.input}
-          type="date"
-          value={dateOfBirth}
-          onChange={(e) => setDateOfBirth(e.target.value)}
+          type="email"
+          placeholder="e.g. patient@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
         />
 
-        <label style={styles.label}>Allergies (comma separated)</label>
+        <label style={styles.label}>Surgery Type *</label>
         <input
           style={styles.input}
           type="text"
-          placeholder="e.g. penicillin, aspirin"
-          value={allergies}
-          onChange={(e) => setAllergies(e.target.value)}
+          placeholder="e.g. Knee Replacement"
+          value={surgeryType}
+          onChange={(e) => setSurgeryType(e.target.value)}
+        />
+
+        <label style={styles.label}>Emergency Contact Phone (optional)</label>
+        <input
+          style={styles.input}
+          type="tel"
+          placeholder="e.g. +123456789"
+          value={emergencyContactPhone}
+          onChange={(e) => setEmergencyContactPhone(e.target.value)}
         />
 
         {error && <p style={styles.error}>{error}</p>}
@@ -100,7 +113,7 @@ function CreatePatientPage() {
           onClick={handleSubmit}
           disabled={loading}
         >
-          {loading ? 'Creating...' : 'Create Patient'}
+          {loading ? 'Inviting...' : 'Invite Patient'}
         </button>
 
         <button
@@ -142,6 +155,31 @@ const styles = {
     fontSize: '13px',
     color: '#6b7280',
     margin: 0
+  },
+  inviteBox: {
+    backgroundColor: '#eff6ff',
+    padding: '20px',
+    borderRadius: '8px',
+    textAlign: 'center' as const,
+    border: '1px solid #bfdbfe'
+  },
+  inviteLabel: {
+    margin: '0 0 4px 0',
+    fontSize: '13px',
+    color: '#1e40af',
+    fontWeight: '500' as const
+  },
+  inviteCode: {
+    margin: 0,
+    fontSize: '32px',
+    fontWeight: 'bold' as const,
+    letterSpacing: '4px',
+    color: '#1e3a8a'
+  },
+  inviteSubtext: {
+    margin: '8px 0 0 0',
+    fontSize: '12px',
+    color: '#3b82f6'
   },
   label: {
     fontSize: '13px',

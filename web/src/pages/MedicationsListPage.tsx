@@ -1,29 +1,28 @@
 import { useEffect, useState } from 'react'
-import axios from 'axios'
-
-const API_URL = 'http://localhost:8001'
+import { useParams } from 'react-router-dom'
+import { apiFetch } from '../api/client'
 
 type Medication = {
   id: string
   name: string
   dose: string
-  frequency: string
-  duration_days: number
-  notes: string
+  schedule_text?: string
+  frequency?: string
+  duration?: string
+  duration_days?: number
+  notes?: string
 }
 
 function MedicationsListPage() {
+  const { caseId = 'case-001' } = useParams<{ caseId: string }>()
   const [medications, setMedications] = useState<Medication[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchMedications = async () => {
       try {
-        const token = localStorage.getItem('token') || 'faketoken'
-        const response = await axios.get(`${API_URL}/cases/case-001/medications`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        setMedications(response.data)
+        const data = await apiFetch<Medication[]>(`/cases/${caseId}/medications`)
+        setMedications(data)
       } catch (err) {
         console.error('Failed to fetch medications', err)
       } finally {
@@ -32,18 +31,18 @@ function MedicationsListPage() {
     }
 
     fetchMedications()
-  }, [])
+  }, [caseId])
 
   return (
     <div style={styles.container}>
       <div style={styles.header}>
         <h1 style={styles.title}>Medications</h1>
-        <p style={styles.subtitle}>Case: Knee Replacement — Maria Rossi</p>
+        <p style={styles.subtitle}>Case: {caseId}</p>
       </div>
 
       <button
         style={styles.addButton}
-        onClick={() => window.location.href = '/cases/case-001/medications'}
+        onClick={() => window.location.href = `/cases/${caseId}/medications`}
       >
         + Add Medication
       </button>
@@ -55,10 +54,10 @@ function MedicationsListPage() {
           <div key={med.id} style={styles.card}>
             <div style={styles.cardHeader}>
               <p style={styles.medName}>{med.name}</p>
-              <span style={styles.badge}>{med.frequency}</span>
+              <span style={styles.badge}>{med.schedule_text || med.frequency || ''}</span>
             </div>
             <p style={styles.detail}>Dose: {med.dose}</p>
-            <p style={styles.detail}>Duration: {med.duration_days} days</p>
+            <p style={styles.detail}>Duration: {med.duration || (med.duration_days ? `${med.duration_days} days` : '')}</p>
             {med.notes && <p style={styles.notes}>{med.notes}</p>}
           </div>
         ))}
