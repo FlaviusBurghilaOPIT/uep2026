@@ -51,6 +51,11 @@
   "severityModerate": "Moderado",
   "severitySevere": "Grave",
   "submitCheckinButton": "Enviar",
+  "checkinGreatOption": "Me siento genial 🙂",
+  "checkinOkOption": "Me siento bien 😐",
+  "checkinNotGreatOption": "No me siento muy bien 😟",
+  "checkinBadOption": "Me siento mal 😣",
+  "checkinSuccessBanner": "Control diario registrado. Gracias por actualizar a tu equipo médico.",
 
   "assistantTitle": "Asistente IA",
   "assistantGuardrailBanner": "Asistente IA • Solo informativo, nunca diagnóstico",
@@ -87,5 +92,40 @@
 
   "errorGeneric": "Algo salió mal. Inténtalo de nuevo.",
   "errorNetwork": "Sin conexión. Comprueba tu internet.",
-  "loadingLabel": "Cargando..."
+  "loadingLabel": "Cargando...",
+
+  "navTabToday": "Hoy",
+  "navTabMedications": "Medicamentos",
+  "navTabRecovery": "Recuperación",
+  "navTabAssistant": "Asistente",
+  "navTabProfile": "Perfil",
+
+  "medicationsScreenTitle": "Medicamentos",
+  "medCardDoseLabel": "Dosis: {dose}",
+  "@medCardDoseLabel": {
+    "placeholders": {
+      "dose": {
+        "type": "String"
+      }
+    }
+  },
+  "medCardScheduleLabel": "Horario: {schedule}",
+  "@medCardScheduleLabel": {
+    "placeholders": {
+      "schedule": {
+        "type": "String"
+      }
+    }
+  },
+  "medCardDurationLabel": "Duración: {duration}",
+  "@medCardDurationLabel": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "medCardNotesHeader": "Instrucciones del médico:",
+  "medCardReadOnlyBadge": "🔒 Recetado por el equipo médico — Solo lectura",
+  "medicationsEmptyState": "Aún no hay medicamentos activos en tu plan de cuidado."
 }

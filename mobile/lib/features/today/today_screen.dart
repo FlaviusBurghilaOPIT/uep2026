@@ -13,6 +13,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/notifications/notification_service.dart';
 import '../../core/network/api_service.dart';
+import '../checkin/checkin_card.dart';
 
 class TodayScreen extends ConsumerStatefulWidget {
   const TodayScreen({super.key});
@@ -60,9 +61,12 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();
     });
-    _notificationSubscription = NotificationService.instance.notificationResponseStream.listen((response) {
-      _handleNotificationResponse(response);
-    });
+    _notificationSubscription = NotificationService
+        .instance
+        .notificationResponseStream
+        .listen((response) {
+          _handleNotificationResponse(response);
+        });
   }
 
   @override
@@ -73,7 +77,9 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   }
 
   void _handleNotificationResponse(NotificationResponse response) {
-    final reminderId = NotificationService.parseReminderId(response.payload ?? '');
+    final reminderId = NotificationService.parseReminderId(
+      response.payload ?? '',
+    );
     if (reminderId != null) {
       final key = _cardKeys[reminderId];
       if (key != null && key.currentContext != null) {
@@ -101,7 +107,10 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                 SizedBox(width: 8.w),
                 Text(
                   l10n.doseStatusTaken,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -116,7 +125,9 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     String? caseId = auth.caseId;
     if (caseId == null && auth.patientId != null) {
       try {
-        final caseRes = await HttpApiService().get('/patients/${auth.patientId}/case');
+        final caseRes = await HttpApiService().get(
+          '/patients/${auth.patientId}/case',
+        );
         if (caseRes.statusCode == 200) {
           caseId = jsonDecode(caseRes.body)['id'];
         }
@@ -131,24 +142,30 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           final List list = jsonDecode(res.body);
           if (list.isNotEmpty) {
             setState(() {
-              _medications = list.map<Map<String, dynamic>>((m) => {
-                'id': m['id'],
-                'name': m['name'],
-                'dosage': '${m['dose']} · ${m['schedule_text']}',
-                'time': '08:00',
-                'status': 'pending',
-                'hasWarning': false,
-              }).toList();
+              _medications = list
+                  .map<Map<String, dynamic>>(
+                    (m) => {
+                      'id': m['id'],
+                      'name': m['name'],
+                      'dosage': '${m['dose']} · ${m['schedule_text']}',
+                      'time': '08:00',
+                      'status': 'pending',
+                      'hasWarning': false,
+                    },
+                  )
+                  .toList();
             });
           }
         }
-      } catch (_) {} finally {
+      } catch (_) {
+      } finally {
         if (mounted) setState(() => _isLoading = false);
       }
     }
   }
 
-  int get _takenCount => _medications.where((m) => m['status'] == 'taken').length;
+  int get _takenCount =>
+      _medications.where((m) => m['status'] == 'taken').length;
 
   Future<void> _updateStatus(int index, String status) async {
     setState(() {
@@ -180,7 +197,10 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           }
         }
         if (reminderId != null) {
-          await HttpApiService().post('/adherence/log?scheduled_reminder_id=$reminderId&status=$status', {});
+          await HttpApiService().post(
+            '/adherence/log?scheduled_reminder_id=$reminderId&status=$status',
+            {},
+          );
         }
       } catch (_) {}
     }
@@ -208,19 +228,33 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                 _buildTopBar(context, auth),
                 _buildGreetingCard(greeting, firstName),
                 SizedBox(height: AppSpacing.lg),
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppSpacing.screenPaddingH,
+                  ),
+                  child: const CheckInCard(),
+                ),
+                SizedBox(height: AppSpacing.lg),
                 _buildFdaAlert(context),
                 SizedBox(height: AppSpacing.xl),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppSpacing.screenPaddingH,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(AppStrings.todaysMedications, style: AppTextStyles.label),
+                      Text(
+                        AppStrings.todaysMedications,
+                        style: AppTextStyles.label,
+                      ),
                       if (_isLoading)
                         SizedBox(
                           width: 14.w,
                           height: 14.w,
-                          child: const CircularProgressIndicator(strokeWidth: 2),
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
                         ),
                     ],
                   ),
@@ -228,18 +262,28 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                 SizedBox(height: AppSpacing.md),
                 for (int i = 0; i < _medications.length; i++) ...[
                   _buildMedCard(context, index: i),
-                  if (i < _medications.length - 1) SizedBox(height: AppSpacing.md),
+                  if (i < _medications.length - 1)
+                    SizedBox(height: AppSpacing.md),
                 ],
                 SizedBox(height: AppSpacing.lg),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppSpacing.screenPaddingH,
+                  ),
                   child: Row(
                     children: [
-                      Icon(Icons.access_time_rounded, size: 16.sp, color: AppColors.greyLight),
+                      Icon(
+                        Icons.access_time_rounded,
+                        size: 16.sp,
+                        color: AppColors.greyLight,
+                      ),
                       SizedBox(width: 6.w),
-                      Text(
-                        'Next reminder: ${_medications.firstWhere((m) => m['status'] == 'pending', orElse: () => _medications.last)['name']} at ${_medications.firstWhere((m) => m['status'] == 'pending', orElse: () => _medications.last)['time']}',
-                        style: AppTextStyles.bodySmall,
+                      Expanded(
+                        child: Text(
+                          'Next reminder: ${_medications.firstWhere((m) => m['status'] == 'pending', orElse: () => _medications.last)['name']} at ${_medications.firstWhere((m) => m['status'] == 'pending', orElse: () => _medications.last)['time']}',
+                          style: AppTextStyles.bodySmall,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),
@@ -268,7 +312,10 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(AppStrings.remotecare, style: AppTextStyles.heading3),
-                Text('${auth.fullName ?? 'User'} · Post-op', style: AppTextStyles.bodySmall),
+                Text(
+                  '${auth.fullName ?? 'User'} · Post-op',
+                  style: AppTextStyles.bodySmall,
+                ),
               ],
             ),
           ),
@@ -285,14 +332,21 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  Icon(Icons.notifications_outlined, color: AppColors.black, size: AppSpacing.iconLg),
+                  Icon(
+                    Icons.notifications_outlined,
+                    color: AppColors.black,
+                    size: AppSpacing.iconLg,
+                  ),
                   Positioned(
                     right: 8.w,
                     top: 8.h,
                     child: Container(
                       width: 8.w,
                       height: 8.w,
-                      decoration: const BoxDecoration(color: AppColors.errorRed, shape: BoxShape.circle),
+                      decoration: const BoxDecoration(
+                        color: AppColors.errorRed,
+                        shape: BoxShape.circle,
+                      ),
                     ),
                   ),
                 ],
@@ -310,7 +364,11 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(color: AppColors.primaryGreen, width: 1.5),
               ),
-              child: Icon(Icons.person_outline, color: AppColors.primaryGreen, size: AppSpacing.iconMd),
+              child: Icon(
+                Icons.person_outline,
+                color: AppColors.primaryGreen,
+                size: AppSpacing.iconMd,
+              ),
             ),
           ),
         ],
@@ -355,7 +413,9 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                     child: LinearProgressIndicator(
                       value: progress,
                       backgroundColor: AppColors.white.withValues(alpha: 0.2),
-                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.white),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        AppColors.white,
+                      ),
                       minHeight: 8.h,
                     ),
                   ),
@@ -398,12 +458,18 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           decoration: BoxDecoration(
             color: const Color(0xFFFFF8E1),
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            border: Border.all(color: AppColors.warningAmber.withValues(alpha: 0.3)),
+            border: Border.all(
+              color: AppColors.warningAmber.withValues(alpha: 0.3),
+            ),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.warning_amber_rounded, color: AppColors.warningAmber, size: AppSpacing.iconLg),
+              Icon(
+                Icons.warning_amber_rounded,
+                color: AppColors.warningAmber,
+                size: AppSpacing.iconLg,
+              ),
               SizedBox(width: AppSpacing.hMd),
               Expanded(
                 child: Column(
@@ -411,7 +477,10 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                   children: [
                     Text(
                       AppStrings.fdaSafetyAlert,
-                      style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w700, fontSize: 14.sp),
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14.sp,
+                      ),
                     ),
                     SizedBox(height: 2.h),
                     Text(
@@ -469,7 +538,9 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
         width: double.infinity,
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
-          color: status == 'taken' ? AppColors.takenBg.withValues(alpha: 0.3) : AppColors.white,
+          color: status == 'taken'
+              ? AppColors.takenBg.withValues(alpha: 0.3)
+              : AppColors.white,
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           border: Border.all(
             color: status == 'taken'
@@ -500,7 +571,9 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                     borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                   ),
                   child: Icon(
-                    status == 'taken' ? Icons.check_circle_outline : Icons.medication_outlined,
+                    status == 'taken'
+                        ? Icons.check_circle_outline
+                        : Icons.medication_outlined,
                     color: AppColors.primaryGreen,
                     size: AppSpacing.iconLg,
                   ),
@@ -515,27 +588,42 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                           Flexible(
                             child: Text(
                               med['name'],
-                              style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600),
+                              style: AppTextStyles.bodyLarge.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           SizedBox(width: AppSpacing.hSm),
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8.w,
+                              vertical: 2.h,
+                            ),
                             decoration: BoxDecoration(
                               color: badgeBg,
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusRound),
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusRound,
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
                                   badgeLabel,
-                                  style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.w600, color: badgeText),
+                                  style: TextStyle(
+                                    fontSize: 11.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: badgeText,
+                                  ),
                                 ),
                                 if (med['hasWarning'] == true) ...[
                                   SizedBox(width: 4.w),
-                                  Icon(Icons.warning_amber_rounded, color: AppColors.warningAmber, size: 12.sp),
+                                  Icon(
+                                    Icons.warning_amber_rounded,
+                                    color: AppColors.warningAmber,
+                                    size: 12.sp,
+                                  ),
                                 ],
                               ],
                             ),
@@ -547,7 +635,11 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                       SizedBox(height: 2.h),
                       Row(
                         children: [
-                          Icon(Icons.access_time_rounded, size: 14.sp, color: AppColors.greyLight),
+                          Icon(
+                            Icons.access_time_rounded,
+                            size: 14.sp,
+                            color: AppColors.greyLight,
+                          ),
                           SizedBox(width: 4.w),
                           Text(med['time'], style: AppTextStyles.bodySmall),
                         ],
@@ -555,7 +647,11 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                     ],
                   ),
                 ),
-                Icon(Icons.info_outline, color: AppColors.greyLight, size: AppSpacing.iconMd),
+                Icon(
+                  Icons.info_outline,
+                  color: AppColors.greyLight,
+                  size: AppSpacing.iconMd,
+                ),
               ],
             ),
             SizedBox(height: AppSpacing.md),
@@ -564,26 +660,41 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _MedAction(
-                  icon: Icons.check_circle_outline,
-                  label: AppStrings.taken,
-                  color: AppColors.primaryGreen,
-                  isActive: status == 'taken',
-                  onTap: () => _updateStatus(index, status == 'taken' ? 'pending' : 'taken'),
+                Expanded(
+                  child: _MedAction(
+                    icon: Icons.check_circle_outline,
+                    label: AppStrings.taken,
+                    color: AppColors.primaryGreen,
+                    isActive: status == 'taken',
+                    onTap: () => _updateStatus(
+                      index,
+                      status == 'taken' ? 'pending' : 'taken',
+                    ),
+                  ),
                 ),
-                _MedAction(
-                  icon: Icons.cancel_outlined,
-                  label: AppStrings.missed,
-                  color: AppColors.errorRed,
-                  isActive: status == 'missed',
-                  onTap: () => _updateStatus(index, status == 'missed' ? 'pending' : 'missed'),
+                Expanded(
+                  child: _MedAction(
+                    icon: Icons.cancel_outlined,
+                    label: AppStrings.missed,
+                    color: AppColors.errorRed,
+                    isActive: status == 'missed',
+                    onTap: () => _updateStatus(
+                      index,
+                      status == 'missed' ? 'pending' : 'missed',
+                    ),
+                  ),
                 ),
-                _MedAction(
-                  icon: Icons.skip_next_outlined,
-                  label: AppStrings.skip,
-                  color: AppColors.greyText,
-                  isActive: status == 'skipped',
-                  onTap: () => _updateStatus(index, status == 'skipped' ? 'pending' : 'skipped'),
+                Expanded(
+                  child: _MedAction(
+                    icon: Icons.skip_next_outlined,
+                    label: AppStrings.skip,
+                    color: AppColors.greyText,
+                    isActive: status == 'skipped',
+                    onTap: () => _updateStatus(
+                      index,
+                      status == 'skipped' ? 'pending' : 'skipped',
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -620,15 +731,20 @@ class _MedAction extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
         ),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, color: color, size: 18.sp),
             SizedBox(width: 4.w),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13.sp,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-                color: color,
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13.sp,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                  color: color,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],

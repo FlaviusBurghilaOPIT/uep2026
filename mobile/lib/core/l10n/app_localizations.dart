@@ -260,6 +260,36 @@ abstract class AppLocalizations {
   /// **'Submit'**
   String get submitCheckinButton;
 
+  /// No description provided for @checkinGreatOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Feeling Great 🙂'**
+  String get checkinGreatOption;
+
+  /// No description provided for @checkinOkOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Feeling Ok 😐'**
+  String get checkinOkOption;
+
+  /// No description provided for @checkinNotGreatOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Not Feeling Great 😟'**
+  String get checkinNotGreatOption;
+
+  /// No description provided for @checkinBadOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Feeling Unwell 😣'**
+  String get checkinBadOption;
+
+  /// No description provided for @checkinSuccessBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily check-in logged. Thank you for updating your care team.'**
+  String get checkinSuccessBanner;
+
   /// No description provided for @assistantTitle.
   ///
   /// In en, this message translates to:
@@ -397,6 +427,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Loading...'**
   String get loadingLabel;
+
+  /// No description provided for @navTabToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get navTabToday;
+
+  /// No description provided for @navTabMedications.
+  ///
+  /// In en, this message translates to:
+  /// **'Medications'**
+  String get navTabMedications;
+
+  /// No description provided for @navTabRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery'**
+  String get navTabRecovery;
+
+  /// No description provided for @navTabAssistant.
+  ///
+  /// In en, this message translates to:
+  /// **'Assistant'**
+  String get navTabAssistant;
+
+  /// No description provided for @navTabProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get navTabProfile;
+
+  /// No description provided for @medicationsScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Medications'**
+  String get medicationsScreenTitle;
+
+  /// No description provided for @medCardDoseLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Dose: {dose}'**
+  String medCardDoseLabel(String dose);
+
+  /// No description provided for @medCardScheduleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule: {schedule}'**
+  String medCardScheduleLabel(String schedule);
+
+  /// No description provided for @medCardDurationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration: {duration}'**
+  String medCardDurationLabel(String duration);
+
+  /// No description provided for @medCardNotesHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Clinician Instructions:'**
+  String get medCardNotesHeader;
+
+  /// No description provided for @medCardReadOnlyBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'🔒 Prescribed by Care Team — Read Only'**
+  String get medCardReadOnlyBadge;
+
+  /// No description provided for @medicationsEmptyState.
+  ///
+  /// In en, this message translates to:
+  /// **'No active medications on your care plan yet.'**
+  String get medicationsEmptyState;
 }
 
 class _AppLocalizationsDelegate

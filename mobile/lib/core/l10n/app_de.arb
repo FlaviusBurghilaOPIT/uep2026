@@ -51,6 +51,11 @@
   "severityModerate": "Mäßig",
   "severitySevere": "Schwer",
   "submitCheckinButton": "Absenden",
+  "checkinGreatOption": "Fühle mich großartig 🙂",
+  "checkinOkOption": "Fühle mich okay 😐",
+  "checkinNotGreatOption": "Fühle mich nicht gut 😟",
+  "checkinBadOption": "Fühle mich schlecht 😣",
+  "checkinSuccessBanner": "Täglicher Check-in gespeichert. Danke, dass Sie Ihr Behandlungsteam informiert haben.",
 
   "assistantTitle": "KI-Assistent",
   "assistantGuardrailBanner": "KI-Assistent • Nur zur Information, nie diagnostisch",
@@ -87,5 +92,40 @@
 
   "errorGeneric": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
   "errorNetwork": "Keine Verbindung. Bitte überprüfen Sie Ihr Internet.",
-  "loadingLabel": "Wird geladen..."
+  "loadingLabel": "Wird geladen...",
+
+  "navTabToday": "Heute",
+  "navTabMedications": "Medikamente",
+  "navTabRecovery": "Genesung",
+  "navTabAssistant": "Assistent",
+  "navTabProfile": "Profil",
+
+  "medicationsScreenTitle": "Medikamente",
+  "medCardDoseLabel": "Dosis: {dose}",
+  "@medCardDoseLabel": {
+    "placeholders": {
+      "dose": {
+        "type": "String"
+      }
+    }
+  },
+  "medCardScheduleLabel": "Zeitplan: {schedule}",
+  "@medCardScheduleLabel": {
+    "placeholders": {
+      "schedule": {
+        "type": "String"
+      }
+    }
+  },
+  "medCardDurationLabel": "Dauer: {duration}",
+  "@medCardDurationLabel": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "medCardNotesHeader": "Anweisungen des Arztes:",
+  "medCardReadOnlyBadge": "🔒 Verschrieben vom Behandlungsteam — Nur lesen",
+  "medicationsEmptyState": "Noch keine aktiven Medikamente in Ihrem Behandlungsplan."
 }

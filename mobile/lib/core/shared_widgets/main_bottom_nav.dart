@@ -2,7 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../constants/app_colors.dart';
+import '../l10n/app_localizations.dart';
 import '../providers/app_providers.dart';
+
+class _NavItem {
+  const _NavItem({
+    required this.key,
+    required this.label,
+    required this.icon,
+    required this.activeIcon,
+  });
+
+  final String key;
+  final String label;
+  final IconData icon;
+  final IconData activeIcon;
+}
 
 class MainBottomNav extends ConsumerWidget {
   const MainBottomNav({super.key});
@@ -10,28 +25,39 @@ class MainBottomNav extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentIndex = ref.watch(navigationProvider).currentIndex;
+    final l10n = AppLocalizations.of(context);
 
-    final List<Map<String, String>> navItems = [
-      {
-        'label': 'Today',
-        'icon': 'assets/images/Home.png',
-        'icon_active': 'assets/images/HomeGreen.png',
-      },
-      {
-        'label': 'Check-In',
-        'icon': 'assets/images/CheckIn.png',
-        'icon_active': 'assets/images/CheckIngreen.png',
-      },
-      {
-        'label': 'Assistant',
-        'icon': 'assets/images/Assistant.png',
-        'icon_active': 'assets/images/AssistantGreen.png',
-      },
-      {
-        'label': 'Recovery',
-        'icon': 'assets/images/Recovery.png',
-        'icon_active': 'assets/images/RecoveryGreen.png',
-      },
+    final List<_NavItem> navItems = [
+      _NavItem(
+        key: 'today',
+        label: l10n.navTabToday,
+        icon: Icons.home_outlined,
+        activeIcon: Icons.home_rounded,
+      ),
+      _NavItem(
+        key: 'medications',
+        label: l10n.navTabMedications,
+        icon: Icons.medication_outlined,
+        activeIcon: Icons.medication_rounded,
+      ),
+      _NavItem(
+        key: 'recovery',
+        label: l10n.navTabRecovery,
+        icon: Icons.favorite_outline,
+        activeIcon: Icons.favorite_rounded,
+      ),
+      _NavItem(
+        key: 'assistant',
+        label: l10n.navTabAssistant,
+        icon: Icons.chat_bubble_outline_rounded,
+        activeIcon: Icons.chat_bubble_rounded,
+      ),
+      _NavItem(
+        key: 'profile',
+        label: l10n.navTabProfile,
+        icon: Icons.person_outline,
+        activeIcon: Icons.person_rounded,
+      ),
     ];
 
     return Container(
@@ -58,6 +84,7 @@ class MainBottomNav extends ConsumerWidget {
 
               return Expanded(
                 child: GestureDetector(
+                  key: Key('navTab_${item.key}'),
                   behavior: HitTestBehavior.opaque,
                   onTap: () {
                     ref.read(navigationProvider).setTab(index);
@@ -67,17 +94,18 @@ class MainBottomNav extends ConsumerWidget {
                     children: [
                       AnimatedSwitcher(
                         duration: const Duration(milliseconds: 200),
-                        child: Image.asset(
-                          isActive ? item['icon_active']! : item['icon']!,
-                          key: ValueKey('${item['label']}_$isActive'),
-                          width: 24.w,
-                          height: 24.h,
-                          fit: BoxFit.contain,
+                        child: Icon(
+                          isActive ? item.activeIcon : item.icon,
+                          key: ValueKey('${item.key}_$isActive'),
+                          color: isActive
+                              ? AppColors.primaryGreen
+                              : AppColors.greyLight,
+                          size: 24.sp,
                         ),
                       ),
                       SizedBox(height: 4.h),
                       Text(
-                        item['label']!,
+                        item.label,
                         style: TextStyle(
                           color: isActive
                               ? AppColors.primaryGreen

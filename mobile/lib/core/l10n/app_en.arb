@@ -51,6 +51,11 @@
   "severityModerate": "Moderate",
   "severitySevere": "Severe",
   "submitCheckinButton": "Submit",
+  "checkinGreatOption": "Feeling Great 🙂",
+  "checkinOkOption": "Feeling Ok 😐",
+  "checkinNotGreatOption": "Not Feeling Great 😟",
+  "checkinBadOption": "Feeling Unwell 😣",
+  "checkinSuccessBanner": "Daily check-in logged. Thank you for updating your care team.",
 
   "assistantTitle": "AI Assistant",
   "assistantGuardrailBanner": "AI Assistant • Informational only, never diagnostic",
@@ -87,5 +92,40 @@
 
   "errorGeneric": "Something went wrong. Please try again.",
   "errorNetwork": "No connection. Please check your internet.",
-  "loadingLabel": "Loading..."
+  "loadingLabel": "Loading...",
+
+  "navTabToday": "Today",
+  "navTabMedications": "Medications",
+  "navTabRecovery": "Recovery",
+  "navTabAssistant": "Assistant",
+  "navTabProfile": "Profile",
+
+  "medicationsScreenTitle": "Medications",
+  "medCardDoseLabel": "Dose: {dose}",
+  "@medCardDoseLabel": {
+    "placeholders": {
+      "dose": {
+        "type": "String"
+      }
+    }
+  },
+  "medCardScheduleLabel": "Schedule: {schedule}",
+  "@medCardScheduleLabel": {
+    "placeholders": {
+      "schedule": {
+        "type": "String"
+      }
+    }
+  },
+  "medCardDurationLabel": "Duration: {duration}",
+  "@medCardDurationLabel": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "medCardNotesHeader": "Clinician Instructions:",
+  "medCardReadOnlyBadge": "🔒 Prescribed by Care Team — Read Only",
+  "medicationsEmptyState": "No active medications on your care plan yet."
 }

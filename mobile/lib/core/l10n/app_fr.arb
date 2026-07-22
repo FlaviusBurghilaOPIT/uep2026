@@ -51,6 +51,11 @@
   "severityModerate": "Modéré",
   "severitySevere": "Sévère",
   "submitCheckinButton": "Soumettre",
+  "checkinGreatOption": "Je me sens très bien 🙂",
+  "checkinOkOption": "Je me sens correct 😐",
+  "checkinNotGreatOption": "Je ne me sens pas très bien 😟",
+  "checkinBadOption": "Je me sens mal 😣",
+  "checkinSuccessBanner": "Suivi quotidien enregistré. Merci d'avoir informé votre équipe soignante.",
 
   "assistantTitle": "Assistant IA",
   "assistantGuardrailBanner": "Assistant IA • Informations uniquement, jamais de diagnostic",
@@ -87,5 +92,40 @@
 
   "errorGeneric": "Un problème est survenu. Veuillez réessayer.",
   "errorNetwork": "Pas de connexion. Vérifiez votre accès internet.",
-  "loadingLabel": "Chargement..."
+  "loadingLabel": "Chargement...",
+
+  "navTabToday": "Aujourd'hui",
+  "navTabMedications": "Médicaments",
+  "navTabRecovery": "Rétablissement",
+  "navTabAssistant": "Assistant",
+  "navTabProfile": "Profil",
+
+  "medicationsScreenTitle": "Médicaments",
+  "medCardDoseLabel": "Dose : {dose}",
+  "@medCardDoseLabel": {
+    "placeholders": {
+      "dose": {
+        "type": "String"
+      }
+    }
+  },
+  "medCardScheduleLabel": "Horaire : {schedule}",
+  "@medCardScheduleLabel": {
+    "placeholders": {
+      "schedule": {
+        "type": "String"
+      }
+    }
+  },
+  "medCardDurationLabel": "Durée : {duration}",
+  "@medCardDurationLabel": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "medCardNotesHeader": "Instructions du médecin :",
+  "medCardReadOnlyBadge": "🔒 Prescrit par l'équipe soignante — Lecture seule",
+  "medicationsEmptyState": "Aucun médicament actif dans votre plan de soins pour le moment."
 }

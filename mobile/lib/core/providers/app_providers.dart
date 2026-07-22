@@ -78,10 +78,7 @@ class AuthNotifier extends ChangeNotifier {
     return false;
   }
 
-  Future<bool> signIn({
-    required String email,
-    required String password,
-  }) async {
+  Future<bool> signIn({required String email, required String password}) async {
     _setLoading(true);
     _errorMessage = null;
     try {
@@ -216,7 +213,7 @@ class NavigationNotifier extends ChangeNotifier {
   int get currentIndex => _currentIndex;
 
   void setTab(int index, {bool notify = true}) {
-    if (index < 0 || index > 3 || _currentIndex == index) return;
+    if (index < 0 || index > 4 || _currentIndex == index) return;
     _currentIndex = index;
     if (notify) notifyListeners();
   }

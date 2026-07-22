@@ -94,6 +94,22 @@ class AppLocalizationsDe extends AppLocalizations {
   String get submitCheckinButton => 'Absenden';
 
   @override
+  String get checkinGreatOption => 'Fühle mich großartig 🙂';
+
+  @override
+  String get checkinOkOption => 'Fühle mich okay 😐';
+
+  @override
+  String get checkinNotGreatOption => 'Fühle mich nicht gut 😟';
+
+  @override
+  String get checkinBadOption => 'Fühle mich schlecht 😣';
+
+  @override
+  String get checkinSuccessBanner =>
+      'Täglicher Check-in gespeichert. Danke, dass Sie Ihr Behandlungsteam informiert haben.';
+
+  @override
   String get assistantTitle => 'KI-Assistent';
 
   @override
@@ -167,4 +183,48 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get loadingLabel => 'Wird geladen...';
+
+  @override
+  String get navTabToday => 'Heute';
+
+  @override
+  String get navTabMedications => 'Medikamente';
+
+  @override
+  String get navTabRecovery => 'Genesung';
+
+  @override
+  String get navTabAssistant => 'Assistent';
+
+  @override
+  String get navTabProfile => 'Profil';
+
+  @override
+  String get medicationsScreenTitle => 'Medikamente';
+
+  @override
+  String medCardDoseLabel(String dose) {
+    return 'Dosis: $dose';
+  }
+
+  @override
+  String medCardScheduleLabel(String schedule) {
+    return 'Zeitplan: $schedule';
+  }
+
+  @override
+  String medCardDurationLabel(String duration) {
+    return 'Dauer: $duration';
+  }
+
+  @override
+  String get medCardNotesHeader => 'Anweisungen des Arztes:';
+
+  @override
+  String get medCardReadOnlyBadge =>
+      '🔒 Verschrieben vom Behandlungsteam — Nur lesen';
+
+  @override
+  String get medicationsEmptyState =>
+      'Noch keine aktiven Medikamente in Ihrem Behandlungsplan.';
 }
