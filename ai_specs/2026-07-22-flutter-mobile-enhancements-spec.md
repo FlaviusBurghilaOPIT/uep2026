@@ -35,8 +35,10 @@ Refactor the Flutter mobile companion application into a feature-first clean arc
 
 ### Internationalization (i10n)
 1. Add ARB files under `lib/l10n/`: `app_en.arb`, `app_it.arb`, `app_es.arb`, `app_fr.arb`, `app_de.arb`. [L2]
-2. Implement dynamic language switching in Profile screen, persisting `user_locale` in `SharedPreferences`. [L2]
-3. Require all UI text to source exclusively from `AppLocalizations.of(context)`. [L2]
+2. Configure `mobile/l10n.yaml` with `arb-dir: lib/l10n`, `template-arb-file: app_en.arb`, and `output-localization-file: app_localizations.dart` to support standard `flutter gen-l10n` code generation. [L2]
+3. Support parameterized ARB placeholders (`{medicationName}`, `{doseAmount}`, `{scheduledTime}`) across all 5 target languages. [L2]
+4. Implement dynamic language switching in Profile screen, persisting `user_locale` in `SharedPreferences`. [L2]
+5. Require all UI text to source exclusively from `AppLocalizations.of(context)`. [L2]
 
 ### Interactive Notifications & Dose Adherence
 1. Integrate `flutter_local_notifications` to schedule local reminders for prescribed dose times (e.g. 08:00, 14:00, 20:00). [L3]
@@ -54,6 +56,7 @@ Refactor the Flutter mobile companion application into a feature-first clean arc
 1. **State Injection**: Use Riverpod `ref.watch` for reactive widget rebuilds and `ref.read` for event handler callbacks. [L1]
 2. **Network Client**: Use central `ApiService` with dynamic base URL (`http://10.0.2.2:8000` on Android emulator, `http://localhost:8000` on iOS/Web/Desktop) and automatic `Authorization: Bearer <token>` injection. [L1, L4]
 3. **Locale Persistence**: Store selected ISO language code (`en`, `it`, `es`, `fr`, `de`) in `SharedPreferences` and load on app startup. [L2]
+4. **Background Notification Entry Point**: Define top-level `@pragma('vm:entry-point') void notificationTapBackground(NotificationResponse details)` handler to execute background `[Take Dose]` API posts when the app is terminated or in the background. [L3]
 
 ## Testing Strategy
 
