@@ -8,3 +8,15 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background-color: #f9fafb;
 }
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  /* !important overrides the inline `outline: 'none'` several pages set on
+     inputs — inline styles otherwise always beat an external stylesheet. */
+  outline: 2px solid #4338ca !important;
+  outline-offset: 2px;
+}
