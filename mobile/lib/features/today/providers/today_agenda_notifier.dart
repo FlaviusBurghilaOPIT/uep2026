@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../../core/network/api_service.dart';
 import '../../../core/notifications/notification_service.dart';
+import '../../../core/telemetry/telemetry_service.dart';
 
 part 'today_agenda_notifier.freezed.dart';
 
@@ -12,6 +14,15 @@ part 'today_agenda_notifier.freezed.dart';
 // ---------------------------------------------------------------------------
 
 enum DoseStatus { pending, taken, missed, skipped }
+
+@freezed
+class PendingDoseQueueItem with _$PendingDoseQueueItem {
+  const factory PendingDoseQueueItem({
+    required String reminderId,
+    required DoseStatus status,
+    required DateTime timestamp,
+  }) = _PendingDoseQueueItem;
+}
 
 @freezed
 class MedicationItem with _$MedicationItem {
@@ -34,6 +45,7 @@ class AgendaState with _$AgendaState {
   const factory AgendaState({
     required AsyncValue<List<MedicationItem>> medications,
     required Map<String, DoseStatus> doseStatuses,
+    @Default([]) List<PendingDoseQueueItem> offlineQueue,
   }) = _AgendaState;
 }
 
@@ -42,20 +54,33 @@ class AgendaState with _$AgendaState {
 // ---------------------------------------------------------------------------
 
 class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
+  final Map<String, Timer> _pendingUndoTimers = {};
+
   @override
-  AgendaState build() => const AgendaState(
-        medications: AsyncValue.data([]),
-        doseStatuses: {},
-      );
+  AgendaState build() {
+    ref.onDispose(() {
+      for (final timer in _pendingUndoTimers.values) {
+        timer.cancel();
+      }
+      _pendingUndoTimers.clear();
+    });
+
+    return const AgendaState(
+      medications: AsyncValue.data([]),
+      doseStatuses: {},
+      offlineQueue: [],
+    );
+  }
 
   ApiService get _api => ref.read(apiServiceProvider);
 
   /// GET /cases/{caseId}/medications → populates [AgendaState.medications].
   Future<void> loadAgenda(String caseId) async {
     final current = state.valueOrNull ??
-        AgendaState(
-          medications: const AsyncValue.loading(),
-          doseStatuses: const {},
+        const AgendaState(
+          medications: AsyncValue.loading(),
+          doseStatuses: {},
+          offlineQueue: [],
         );
 
     state = AsyncValue.data(
@@ -83,6 +108,7 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
           updated.copyWith(medications: AsyncValue.data(items)),
         );
         await _scheduleNotificationsForMedications(items);
+        await flushOfflineQueue();
       } else {
         final updated = state.valueOrNull ?? current;
         state = AsyncValue.data(
@@ -102,13 +128,71 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
     }
   }
 
+  /// Stage a dose status change with a 5-second undo window.
+  void stageDoseLog({
+    required String reminderId,
+    required DoseStatus status,
+    Duration window = const Duration(seconds: 5),
+    DoseStatus previousStatus = DoseStatus.pending,
+  }) {
+    _pendingUndoTimers[reminderId]?.cancel();
+
+    final current = state.valueOrNull;
+    if (current != null) {
+      state = AsyncValue.data(
+        current.copyWith(
+          doseStatuses: {...current.doseStatuses, reminderId: status},
+        ),
+      );
+    }
+
+    _pendingUndoTimers[reminderId] = Timer(window, () {
+      _pendingUndoTimers.remove(reminderId);
+      commitDoseLog(reminderId: reminderId, status: status);
+    });
+  }
+
+  /// Reverts a staged dose log back to previous status or pending.
+  void undoDoseLog({
+    required String reminderId,
+    DoseStatus previousStatus = DoseStatus.pending,
+  }) {
+    _pendingUndoTimers[reminderId]?.cancel();
+    _pendingUndoTimers.remove(reminderId);
+
+    final current = state.valueOrNull;
+    if (current != null) {
+      final updatedStatuses = Map<String, DoseStatus>.from(current.doseStatuses);
+      updatedStatuses[reminderId] = previousStatus;
+      state = AsyncValue.data(
+        current.copyWith(doseStatuses: updatedStatuses),
+      );
+    }
+
+    try {
+      ref.read(telemetryServiceProvider).trackEvent('mobile.today.dose_log_undone', {
+        'reminder_id_hash': reminderId.hashCode.toString(),
+        'status_enum': previousStatus.name,
+      });
+    } catch (_) {}
+  }
+
   /// POST /adherence/log with {reminder_id, status}.
-  /// Optimistically updates [AgendaState.doseStatuses] before the network call.
   Future<void> logDose({
     required String reminderId,
     required DoseStatus status,
   }) async {
-    // Optimistic update
+    return commitDoseLog(reminderId: reminderId, status: status);
+  }
+
+  /// Commits the dose log to backend or queues offline.
+  Future<void> commitDoseLog({
+    required String reminderId,
+    required DoseStatus status,
+  }) async {
+    _pendingUndoTimers[reminderId]?.cancel();
+    _pendingUndoTimers.remove(reminderId);
+
     final current = state.valueOrNull;
     if (current != null) {
       state = AsyncValue.data(
@@ -119,16 +203,79 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
     }
 
     try {
-      await _api.post('/adherence/log', {
+      final res = await _api.post('/adherence/log', {
         'reminder_id': reminderId,
         'status': status.name,
       });
-    } catch (e, st) {
-      // Revert optimistic update on failure
-      if (current != null) {
-        state = AsyncValue.data(current);
+
+      final isSuccess = res.statusCode == 200 || res.statusCode == 201 || res.statusCode == 409;
+      if (!isSuccess) {
+        _queueOfflineLog(reminderId: reminderId, status: status);
       }
-      Error.throwWithStackTrace(e, st);
+
+      try {
+        ref.read(telemetryServiceProvider).trackEvent('mobile.today.dose_logged', {
+          'reminder_id_hash': reminderId.hashCode.toString(),
+          'status_enum': status.name,
+          'is_offline': !isSuccess,
+        });
+      } catch (_) {}
+    } catch (_) {
+      _queueOfflineLog(reminderId: reminderId, status: status);
+      try {
+        ref.read(telemetryServiceProvider).trackEvent('mobile.today.dose_logged', {
+          'reminder_id_hash': reminderId.hashCode.toString(),
+          'status_enum': status.name,
+          'is_offline': true,
+        });
+      } catch (_) {}
+    }
+  }
+
+  void _queueOfflineLog({
+    required String reminderId,
+    required DoseStatus status,
+  }) {
+    final current = state.valueOrNull;
+    if (current != null) {
+      final newQueue = [
+        ...current.offlineQueue.where((item) => item.reminderId != reminderId),
+        PendingDoseQueueItem(
+          reminderId: reminderId,
+          status: status,
+          timestamp: DateTime.now(),
+        ),
+      ];
+      state = AsyncValue.data(current.copyWith(offlineQueue: newQueue));
+    }
+  }
+
+  /// Flushes any pending offline logs to the server.
+  Future<void> flushOfflineQueue() async {
+    final current = state.valueOrNull;
+    if (current == null || current.offlineQueue.isEmpty) return;
+
+    final remaining = <PendingDoseQueueItem>[];
+
+    for (final item in current.offlineQueue) {
+      try {
+        final res = await _api.post('/adherence/log', {
+          'reminder_id': item.reminderId,
+          'status': item.status.name,
+        });
+
+        final isSuccess = res.statusCode == 200 || res.statusCode == 201 || res.statusCode == 409;
+        if (!isSuccess) {
+          remaining.add(item);
+        }
+      } catch (_) {
+        remaining.add(item);
+      }
+    }
+
+    final latest = state.valueOrNull;
+    if (latest != null) {
+      state = AsyncValue.data(latest.copyWith(offlineQueue: remaining));
     }
   }
 

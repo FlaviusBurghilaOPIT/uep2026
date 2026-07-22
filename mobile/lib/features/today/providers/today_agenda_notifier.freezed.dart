@@ -15,6 +15,166 @@ final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
 /// @nodoc
+mixin _$PendingDoseQueueItem {
+  String get reminderId => throw _privateConstructorUsedError;
+  DoseStatus get status => throw _privateConstructorUsedError;
+  DateTime get timestamp => throw _privateConstructorUsedError;
+
+  @JsonKey(ignore: true)
+  $PendingDoseQueueItemCopyWith<PendingDoseQueueItem> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $PendingDoseQueueItemCopyWith<$Res> {
+  factory $PendingDoseQueueItemCopyWith(PendingDoseQueueItem value,
+          $Res Function(PendingDoseQueueItem) then) =
+      _$PendingDoseQueueItemCopyWithImpl<$Res, PendingDoseQueueItem>;
+  @useResult
+  $Res call({String reminderId, DoseStatus status, DateTime timestamp});
+}
+
+/// @nodoc
+class _$PendingDoseQueueItemCopyWithImpl<$Res,
+        $Val extends PendingDoseQueueItem>
+    implements $PendingDoseQueueItemCopyWith<$Res> {
+  _$PendingDoseQueueItemCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? reminderId = null,
+    Object? status = null,
+    Object? timestamp = null,
+  }) {
+    return _then(_value.copyWith(
+      reminderId: null == reminderId
+          ? _value.reminderId
+          : reminderId // ignore: cast_nullable_to_non_nullable
+              as String,
+      status: null == status
+          ? _value.status
+          : status // ignore: cast_nullable_to_non_nullable
+              as DoseStatus,
+      timestamp: null == timestamp
+          ? _value.timestamp
+          : timestamp // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$PendingDoseQueueItemImplCopyWith<$Res>
+    implements $PendingDoseQueueItemCopyWith<$Res> {
+  factory _$$PendingDoseQueueItemImplCopyWith(_$PendingDoseQueueItemImpl value,
+          $Res Function(_$PendingDoseQueueItemImpl) then) =
+      __$$PendingDoseQueueItemImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String reminderId, DoseStatus status, DateTime timestamp});
+}
+
+/// @nodoc
+class __$$PendingDoseQueueItemImplCopyWithImpl<$Res>
+    extends _$PendingDoseQueueItemCopyWithImpl<$Res, _$PendingDoseQueueItemImpl>
+    implements _$$PendingDoseQueueItemImplCopyWith<$Res> {
+  __$$PendingDoseQueueItemImplCopyWithImpl(_$PendingDoseQueueItemImpl _value,
+      $Res Function(_$PendingDoseQueueItemImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? reminderId = null,
+    Object? status = null,
+    Object? timestamp = null,
+  }) {
+    return _then(_$PendingDoseQueueItemImpl(
+      reminderId: null == reminderId
+          ? _value.reminderId
+          : reminderId // ignore: cast_nullable_to_non_nullable
+              as String,
+      status: null == status
+          ? _value.status
+          : status // ignore: cast_nullable_to_non_nullable
+              as DoseStatus,
+      timestamp: null == timestamp
+          ? _value.timestamp
+          : timestamp // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$PendingDoseQueueItemImpl implements _PendingDoseQueueItem {
+  const _$PendingDoseQueueItemImpl(
+      {required this.reminderId,
+      required this.status,
+      required this.timestamp});
+
+  @override
+  final String reminderId;
+  @override
+  final DoseStatus status;
+  @override
+  final DateTime timestamp;
+
+  @override
+  String toString() {
+    return 'PendingDoseQueueItem(reminderId: $reminderId, status: $status, timestamp: $timestamp)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$PendingDoseQueueItemImpl &&
+            (identical(other.reminderId, reminderId) ||
+                other.reminderId == reminderId) &&
+            (identical(other.status, status) || other.status == status) &&
+            (identical(other.timestamp, timestamp) ||
+                other.timestamp == timestamp));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, reminderId, status, timestamp);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$PendingDoseQueueItemImplCopyWith<_$PendingDoseQueueItemImpl>
+      get copyWith =>
+          __$$PendingDoseQueueItemImplCopyWithImpl<_$PendingDoseQueueItemImpl>(
+              this, _$identity);
+}
+
+abstract class _PendingDoseQueueItem implements PendingDoseQueueItem {
+  const factory _PendingDoseQueueItem(
+      {required final String reminderId,
+      required final DoseStatus status,
+      required final DateTime timestamp}) = _$PendingDoseQueueItemImpl;
+
+  @override
+  String get reminderId;
+  @override
+  DoseStatus get status;
+  @override
+  DateTime get timestamp;
+  @override
+  @JsonKey(ignore: true)
+  _$$PendingDoseQueueItemImplCopyWith<_$PendingDoseQueueItemImpl>
+      get copyWith => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
 mixin _$MedicationItem {
   String get id => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
@@ -245,6 +405,8 @@ mixin _$AgendaState {
       throw _privateConstructorUsedError;
   Map<String, DoseStatus> get doseStatuses =>
       throw _privateConstructorUsedError;
+  List<PendingDoseQueueItem> get offlineQueue =>
+      throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $AgendaStateCopyWith<AgendaState> get copyWith =>
@@ -259,7 +421,8 @@ abstract class $AgendaStateCopyWith<$Res> {
   @useResult
   $Res call(
       {AsyncValue<List<MedicationItem>> medications,
-      Map<String, DoseStatus> doseStatuses});
+      Map<String, DoseStatus> doseStatuses,
+      List<PendingDoseQueueItem> offlineQueue});
 }
 
 /// @nodoc
@@ -277,6 +440,7 @@ class _$AgendaStateCopyWithImpl<$Res, $Val extends AgendaState>
   $Res call({
     Object? medications = null,
     Object? doseStatuses = null,
+    Object? offlineQueue = null,
   }) {
     return _then(_value.copyWith(
       medications: null == medications
@@ -287,6 +451,10 @@ class _$AgendaStateCopyWithImpl<$Res, $Val extends AgendaState>
           ? _value.doseStatuses
           : doseStatuses // ignore: cast_nullable_to_non_nullable
               as Map<String, DoseStatus>,
+      offlineQueue: null == offlineQueue
+          ? _value.offlineQueue
+          : offlineQueue // ignore: cast_nullable_to_non_nullable
+              as List<PendingDoseQueueItem>,
     ) as $Val);
   }
 }
@@ -301,7 +469,8 @@ abstract class _$$AgendaStateImplCopyWith<$Res>
   @useResult
   $Res call(
       {AsyncValue<List<MedicationItem>> medications,
-      Map<String, DoseStatus> doseStatuses});
+      Map<String, DoseStatus> doseStatuses,
+      List<PendingDoseQueueItem> offlineQueue});
 }
 
 /// @nodoc
@@ -317,6 +486,7 @@ class __$$AgendaStateImplCopyWithImpl<$Res>
   $Res call({
     Object? medications = null,
     Object? doseStatuses = null,
+    Object? offlineQueue = null,
   }) {
     return _then(_$AgendaStateImpl(
       medications: null == medications
@@ -327,6 +497,10 @@ class __$$AgendaStateImplCopyWithImpl<$Res>
           ? _value._doseStatuses
           : doseStatuses // ignore: cast_nullable_to_non_nullable
               as Map<String, DoseStatus>,
+      offlineQueue: null == offlineQueue
+          ? _value._offlineQueue
+          : offlineQueue // ignore: cast_nullable_to_non_nullable
+              as List<PendingDoseQueueItem>,
     ));
   }
 }
@@ -336,8 +510,10 @@ class __$$AgendaStateImplCopyWithImpl<$Res>
 class _$AgendaStateImpl implements _AgendaState {
   const _$AgendaStateImpl(
       {required this.medications,
-      required final Map<String, DoseStatus> doseStatuses})
-      : _doseStatuses = doseStatuses;
+      required final Map<String, DoseStatus> doseStatuses,
+      final List<PendingDoseQueueItem> offlineQueue = const []})
+      : _doseStatuses = doseStatuses,
+        _offlineQueue = offlineQueue;
 
   @override
   final AsyncValue<List<MedicationItem>> medications;
@@ -349,9 +525,18 @@ class _$AgendaStateImpl implements _AgendaState {
     return EqualUnmodifiableMapView(_doseStatuses);
   }
 
+  final List<PendingDoseQueueItem> _offlineQueue;
+  @override
+  @JsonKey()
+  List<PendingDoseQueueItem> get offlineQueue {
+    if (_offlineQueue is EqualUnmodifiableListView) return _offlineQueue;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_offlineQueue);
+  }
+
   @override
   String toString() {
-    return 'AgendaState(medications: $medications, doseStatuses: $doseStatuses)';
+    return 'AgendaState(medications: $medications, doseStatuses: $doseStatuses, offlineQueue: $offlineQueue)';
   }
 
   @override
@@ -362,12 +547,17 @@ class _$AgendaStateImpl implements _AgendaState {
             (identical(other.medications, medications) ||
                 other.medications == medications) &&
             const DeepCollectionEquality()
-                .equals(other._doseStatuses, _doseStatuses));
+                .equals(other._doseStatuses, _doseStatuses) &&
+            const DeepCollectionEquality()
+                .equals(other._offlineQueue, _offlineQueue));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, medications,
-      const DeepCollectionEquality().hash(_doseStatuses));
+  int get hashCode => Object.hash(
+      runtimeType,
+      medications,
+      const DeepCollectionEquality().hash(_doseStatuses),
+      const DeepCollectionEquality().hash(_offlineQueue));
 
   @JsonKey(ignore: true)
   @override
@@ -379,12 +569,15 @@ class _$AgendaStateImpl implements _AgendaState {
 abstract class _AgendaState implements AgendaState {
   const factory _AgendaState(
       {required final AsyncValue<List<MedicationItem>> medications,
-      required final Map<String, DoseStatus> doseStatuses}) = _$AgendaStateImpl;
+      required final Map<String, DoseStatus> doseStatuses,
+      final List<PendingDoseQueueItem> offlineQueue}) = _$AgendaStateImpl;
 
   @override
   AsyncValue<List<MedicationItem>> get medications;
   @override
   Map<String, DoseStatus> get doseStatuses;
+  @override
+  List<PendingDoseQueueItem> get offlineQueue;
   @override
   @JsonKey(ignore: true)
   _$$AgendaStateImplCopyWith<_$AgendaStateImpl> get copyWith =>

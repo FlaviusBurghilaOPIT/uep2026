@@ -93,4 +93,62 @@ void main() {
     expect(agendaState, isNotNull);
     expect(agendaState!.medications.hasError, isTrue);
   });
+
+  test('stageDoseLog -> undoDoseLog within window reverts state to pending', () async {
+    final notifier = container.read(todayAgendaNotifierProvider.notifier);
+    notifier.stageDoseLog(
+      reminderId: 'rem_undo_1',
+      status: DoseStatus.taken,
+      window: const Duration(seconds: 5),
+    );
+
+    var agendaState = container.read(todayAgendaNotifierProvider).value;
+    expect(agendaState!.doseStatuses['rem_undo_1'], DoseStatus.taken);
+
+    notifier.undoDoseLog(reminderId: 'rem_undo_1', previousStatus: DoseStatus.pending);
+
+    agendaState = container.read(todayAgendaNotifierProvider).value;
+    expect(agendaState!.doseStatuses['rem_undo_1'], DoseStatus.pending);
+  });
+
+  test('stageDoseLog -> wait-past-window commits dose log', () async {
+    fakeApi.postHandlers['/adherence/log'] = (body) {
+      return http.Response(jsonEncode({'status': 'ok'}), 200);
+    };
+
+    final notifier = container.read(todayAgendaNotifierProvider.notifier);
+    notifier.stageDoseLog(
+      reminderId: 'rem_commit_1',
+      status: DoseStatus.skipped,
+      window: const Duration(milliseconds: 50),
+    );
+
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    final agendaState = container.read(todayAgendaNotifierProvider).value;
+    expect(agendaState!.doseStatuses['rem_commit_1'], DoseStatus.skipped);
+  });
+
+  test('offline log -> offlineQueue non-empty -> flushOfflineQueue clears queue', () async {
+    fakeApi.postHandlers['/adherence/log'] = (body) {
+      return http.Response(jsonEncode({'detail': 'Network error'}), 500);
+    };
+
+    final notifier = container.read(todayAgendaNotifierProvider.notifier);
+    await notifier.commitDoseLog(reminderId: 'rem_off_1', status: DoseStatus.taken);
+
+    var agendaState = container.read(todayAgendaNotifierProvider).value;
+    expect(agendaState!.offlineQueue.length, 1);
+    expect(agendaState.offlineQueue.first.reminderId, 'rem_off_1');
+
+    // Simulate reconnect / online success
+    fakeApi.postHandlers['/adherence/log'] = (body) {
+      return http.Response(jsonEncode({'status': 'ok'}), 200);
+    };
+
+    await notifier.flushOfflineQueue();
+
+    agendaState = container.read(todayAgendaNotifierProvider).value;
+    expect(agendaState!.offlineQueue.isEmpty, isTrue);
+  });
 }

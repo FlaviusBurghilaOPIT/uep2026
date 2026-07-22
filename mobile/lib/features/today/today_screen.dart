@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/constants/app_colors.dart';
@@ -8,13 +10,13 @@ import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/navigation/app_routes.dart';
 import '../../core/providers/app_providers.dart';
-import 'dart:async';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/notifications/notification_service.dart';
 import '../../core/network/api_service.dart';
 import '../checkin/checkin_card.dart';
 import 'fda_warning_card.dart';
+import 'providers/today_agenda_notifier.dart';
 
 class TodayScreen extends ConsumerStatefulWidget {
   const TodayScreen({super.key});
@@ -25,6 +27,10 @@ class TodayScreen extends ConsumerStatefulWidget {
 
 class _TodayScreenState extends ConsumerState<TodayScreen> {
   bool _isLoading = false;
+  bool _dismissedCelebration = false;
+  final Map<int, Timer> _undoTimers = {};
+  final Map<int, String> _previousStatuses = {};
+
   List<Map<String, dynamic>> _medications = [
     {
       'id': null,
@@ -77,6 +83,9 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
 
   @override
   void dispose() {
+    for (final timer in _undoTimers.values) {
+      timer.cancel();
+    }
     _notificationSubscription?.cancel();
     _scrollController.dispose();
     super.dispose();
@@ -194,49 +203,130 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   int get _takenCount =>
       _medications.where((m) => m['status'] == 'taken').length;
 
-  Future<void> _updateStatus(int index, String status) async {
+  bool get _allDosesCompleted =>
+      _medications.isNotEmpty &&
+      _medications.every((m) => m['status'] != 'pending');
+
+  Future<void> _updateStatus(int index, String newStatus) async {
+    final previousStatus = _medications[index]['status'] as String;
+    _undoTimers[index]?.cancel();
+    _undoTimers.remove(index);
+
     setState(() {
-      _medications[index]['status'] = status;
+      _medications[index]['status'] = newStatus;
+      _previousStatuses[index] = previousStatus;
     });
 
-    final medId = _medications[index]['id'];
-    if (medId != null) {
-      try {
-        final api = ref.read(apiServiceProvider);
-        final remindersRes = await api.get('/reminders');
-        String? reminderId;
-        if (remindersRes.statusCode == 200) {
-          final List reminders = jsonDecode(remindersRes.body);
-          final match = reminders.firstWhere(
-            (r) => r['medication_id'] == medId,
-            orElse: () => null,
-          );
-          if (match != null) {
-            reminderId = match['id'];
-          }
-        }
-        if (reminderId == null) {
-          final createRes = await api.post('/reminders', {
-            'medication_id': medId,
-            'scheduled_time': DateTime.now().toIso8601String(),
-          });
-          if (createRes.statusCode == 200) {
-            reminderId = jsonDecode(createRes.body)['id'];
-          }
-        }
-        if (reminderId != null) {
-          await api.post(
-            '/adherence/log?scheduled_reminder_id=$reminderId&status=$status',
-            {},
-          );
-        }
-      } catch (_) {}
+    try {
+      HapticFeedback.mediumImpact();
+    } catch (_) {}
+
+    if (newStatus == 'pending') {
+      return;
     }
+
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+
+    final String statusDisplay = newStatus == 'taken'
+        ? l10n.doseStatusTaken
+        : (newStatus == 'skipped' ? l10n.doseStatusSkipped : l10n.doseStatusMissed);
+
+    messenger.hideCurrentSnackBar();
+
+    messenger.showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 5),
+        backgroundColor: AppColors.slateDark,
+        content: Text(
+          'Logged as $statusDisplay.',
+          style: const TextStyle(color: Colors.white),
+        ),
+        action: SnackBarAction(
+          label: 'Undo',
+          textColor: AppColors.primaryGreen,
+          onPressed: () {
+            _undoTimers[index]?.cancel();
+            _undoTimers.remove(index);
+            if (mounted) {
+              setState(() {
+                _medications[index]['status'] = previousStatus;
+              });
+            }
+            final medId = _medications[index]['id']?.toString() ?? 'med_$index';
+            try {
+              ref.read(todayAgendaNotifierProvider.notifier).undoDoseLog(
+                    reminderId: medId,
+                    previousStatus: DoseStatus.values.firstWhere(
+                      (e) => e.name == previousStatus,
+                      orElse: () => DoseStatus.pending,
+                    ),
+                  );
+            } catch (_) {}
+          },
+        ),
+      ),
+    );
+
+    _undoTimers[index] = Timer(const Duration(seconds: 5), () async {
+      _undoTimers.remove(index);
+      final medId = _medications[index]['id'];
+      if (medId != null) {
+        try {
+          final api = ref.read(apiServiceProvider);
+          final remindersRes = await api.get('/reminders');
+          String? reminderId;
+          if (remindersRes.statusCode == 200) {
+            final List reminders = jsonDecode(remindersRes.body);
+            final match = reminders.firstWhere(
+              (r) => r['medication_id'] == medId,
+              orElse: () => null,
+            );
+            if (match != null) {
+              reminderId = match['id'];
+            }
+          }
+          if (reminderId == null) {
+            final createRes = await api.post('/reminders', {
+              'medication_id': medId,
+              'scheduled_time': DateTime.now().toIso8601String(),
+            });
+            if (createRes.statusCode == 200) {
+              reminderId = jsonDecode(createRes.body)['id'];
+            }
+          }
+          if (reminderId != null) {
+            await api.post(
+              '/adherence/log?scheduled_reminder_id=$reminderId&status=$newStatus',
+              {},
+            );
+          }
+        } catch (_) {}
+      }
+
+      try {
+        final reminderId = medId?.toString() ?? 'med_$index';
+        final statusEnum = DoseStatus.values.firstWhere(
+          (e) => e.name == newStatus,
+          orElse: () => DoseStatus.taken,
+        );
+        ref.read(todayAgendaNotifierProvider.notifier).commitDoseLog(
+              reminderId: reminderId,
+              status: statusEnum,
+            );
+      } catch (_) {}
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
+    final agendaState = ref.watch(todayAgendaNotifierProvider).valueOrNull ??
+        const AgendaState(
+          medications: AsyncValue.data([]),
+          doseStatuses: {},
+          offlineQueue: [],
+        );
     final firstName = auth.fullName?.split(' ').first ?? 'User';
     final now = DateTime.now();
     final greeting = now.hour < 12
@@ -253,8 +343,11 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                _buildOfflineSyncBanner(context, agendaState),
                 _buildTopBar(context, auth),
                 _buildGreetingCard(greeting, firstName),
+                if (_allDosesCompleted && !_dismissedCelebration)
+                  _buildCelebratoryCard(),
                 SizedBox(height: AppSpacing.lg),
                 Padding(
                   padding: EdgeInsets.symmetric(
@@ -320,6 +413,76 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOfflineSyncBanner(
+      BuildContext context, AgendaState agendaState) {
+    if (agendaState.offlineQueue.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return Container(
+      width: double.infinity,
+      color: AppColors.warningAmber.withValues(alpha: 0.15),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+      child: Row(
+        children: [
+          Icon(Icons.wifi_off_rounded,
+              color: AppColors.warningAmber, size: 18.sp),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: Text(
+              'Saved on your device. Will update care team when online.',
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.black,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCelebratoryCard() {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.screenPaddingH,
+        vertical: AppSpacing.sm,
+      ),
+      child: Container(
+        padding: EdgeInsets.all(14.w),
+        decoration: BoxDecoration(
+          color: AppColors.lightGreen.withValues(alpha: 0.8),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          border: Border.all(color: AppColors.primaryGreen, width: 1),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.stars_rounded,
+                color: AppColors.primaryGreen, size: 24.sp),
+            SizedBox(width: 10.w),
+            Expanded(
+              child: Text(
+                'All doses for today completed! Thank you for updating your care team.',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.primaryGreen,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            IconButton(
+              icon:
+                  Icon(Icons.close, size: 18.sp, color: AppColors.primaryGreen),
+              onPressed: () {
+                setState(() {
+                  _dismissedCelebration = true;
+                });
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -588,7 +751,9 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                             ),
                           ),
                           SizedBox(width: AppSpacing.hSm),
-                          Container(
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
                             key: ValueKey('dose_status_badge_$medId'),
                             padding: EdgeInsets.symmetric(
                               horizontal: 8.w,

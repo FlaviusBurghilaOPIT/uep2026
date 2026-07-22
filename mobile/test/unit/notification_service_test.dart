@@ -8,5 +8,9 @@ void main() {
       expect(NotificationService.parseReminderId('rem_123'), 'rem_123');
       expect(NotificationService.parseReminderId(''), isNull);
     });
+
+    test('reinitialize executes without throwing', () async {
+      await expectLater(NotificationService.instance.reinitialize(), completes);
+    });
   });
 }

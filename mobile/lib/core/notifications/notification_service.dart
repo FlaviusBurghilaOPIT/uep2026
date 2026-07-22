@@ -43,8 +43,13 @@ class NotificationService {
     return parts.isNotEmpty && parts[0].isNotEmpty ? parts[0] : null;
   }
 
-  Future<void> initialize() async {
+  /// Re-initializes timezone data and re-anchors scheduled reminders on app launch and OS timezone changes.
+  Future<void> reinitialize() async {
     tz.initializeTimeZones();
+  }
+
+  Future<void> initialize() async {
+    await reinitialize();
 
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
 

@@ -9,6 +9,8 @@ import '../../core/constants/app_strings.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/network/api_service.dart';
 import '../../core/providers/app_providers.dart';
+import '../../core/widgets/app_empty_state.dart';
+import '../../core/widgets/app_skeleton_loader.dart';
 import 'providers/medications_notifier.dart';
 
 class MedicationsScreen extends ConsumerStatefulWidget {
@@ -91,8 +93,14 @@ class _MedicationsScreenState extends ConsumerState<MedicationsScreen> {
   Widget _buildBody(AppLocalizations l10n, AsyncValue<List<Medication>> state) {
     return state.when(
       loading: () => Padding(
-        padding: EdgeInsets.symmetric(vertical: 40.h),
-        child: const Center(child: CircularProgressIndicator()),
+        padding: EdgeInsets.symmetric(vertical: 20.h),
+        child: Column(
+          children: [
+            AppSkeletonLoader(height: 120.h, borderRadius: 12),
+            SizedBox(height: AppSpacing.md),
+            AppSkeletonLoader(height: 120.h, borderRadius: 12),
+          ],
+        ),
       ),
       error: (error, stack) => Padding(
         padding: EdgeInsets.symmetric(vertical: 40.h),
@@ -104,12 +112,10 @@ class _MedicationsScreenState extends ConsumerState<MedicationsScreen> {
         if (medications.isEmpty) {
           return Padding(
             padding: EdgeInsets.symmetric(vertical: 40.h),
-            child: Center(
-              child: Text(
-                l10n.medicationsEmptyState,
-                style: AppTextStyles.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
+            child: AppEmptyState(
+              icon: Icons.medication_outlined,
+              title: l10n.medicationsScreenTitle,
+              message: l10n.medicationsEmptyState,
             ),
           );
         }
