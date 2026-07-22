@@ -495,27 +495,33 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     final Color badgeBg;
     final Color badgeText;
     final String badgeLabel;
+    final IconData? badgeIcon;
+    final l10n = AppLocalizations.of(context);
 
     switch (status) {
       case 'taken':
         badgeBg = AppColors.takenBg;
         badgeText = AppColors.takenText;
-        badgeLabel = AppStrings.taken;
+        badgeLabel = l10n.doseStatusTaken;
+        badgeIcon = Icons.check_circle;
         break;
       case 'missed':
         badgeBg = AppColors.missedBg;
         badgeText = AppColors.missedText;
-        badgeLabel = AppStrings.missed;
+        badgeLabel = l10n.doseStatusMissed;
+        badgeIcon = Icons.close;
         break;
       case 'skipped':
         badgeBg = AppColors.inputFill;
         badgeText = AppColors.greyText;
-        badgeLabel = AppStrings.skip;
+        badgeLabel = l10n.doseStatusSkipped;
+        badgeIcon = Icons.warning_amber_rounded;
         break;
       default:
         badgeBg = AppColors.pendingBg;
         badgeText = AppColors.pendingText;
         badgeLabel = AppStrings.pending;
+        badgeIcon = null;
     }
 
     return Padding(
@@ -583,6 +589,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                           ),
                           SizedBox(width: AppSpacing.hSm),
                           Container(
+                            key: ValueKey('dose_status_badge_$medId'),
                             padding: EdgeInsets.symmetric(
                               horizontal: 8.w,
                               vertical: 2.h,
@@ -596,6 +603,14 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
+                                if (badgeIcon != null) ...[
+                                  Icon(
+                                    badgeIcon,
+                                    color: badgeText,
+                                    size: 12.sp,
+                                  ),
+                                  SizedBox(width: 4.w),
+                                ],
                                 Text(
                                   badgeLabel,
                                   style: TextStyle(
@@ -607,7 +622,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                                 if (med['hasWarning'] == true) ...[
                                   SizedBox(width: 4.w),
                                   Icon(
-                                    Icons.warning_amber_rounded,
+                                    Icons.error_outline,
                                     color: AppColors.warningAmber,
                                     size: 12.sp,
                                   ),
