@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_strings.dart';
-import '../../core/providers/auth_provider.dart';
+import '../../core/providers/app_providers.dart';
 import '../../core/shared_widgets/app_button.dart';
 import '../../core/shared_widgets/step_progress_bar.dart';
 import '../../core/shared_widgets/security_badge.dart';
 import '../../core/navigation/app_routes.dart';
 
-class SignupStep3Screen extends StatefulWidget {
+class SignupStep3Screen extends ConsumerStatefulWidget {
   const SignupStep3Screen({super.key});
 
   @override
-  State<SignupStep3Screen> createState() => _SignupStep3ScreenState();
+  ConsumerState<SignupStep3Screen> createState() => _SignupStep3ScreenState();
 }
 
-class _SignupStep3ScreenState extends State<SignupStep3Screen> {
+class _SignupStep3ScreenState extends ConsumerState<SignupStep3Screen> {
   DateTime? _selectedDate;
 
   Future<void> _pickDate() async {
@@ -64,7 +64,7 @@ class _SignupStep3ScreenState extends State<SignupStep3Screen> {
       return;
     }
 
-    final auth = context.read<AuthProvider>();
+    final auth = ref.read(authProvider);
     final success = await auth.completeOnboarding(
       email: auth.email ?? '',
       inviteCode: auth.inviteCode ?? '',
@@ -84,7 +84,7 @@ class _SignupStep3ScreenState extends State<SignupStep3Screen> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
+    final auth = ref.watch(authProvider);
 
     return Scaffold(
       body: SafeArea(

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:provider/provider.dart';
 import '../constants/app_colors.dart';
-import '../providers/navigation_provider.dart';
+import '../providers/app_providers.dart';
 
-class MainBottomNav extends StatelessWidget {
+class MainBottomNav extends ConsumerWidget {
   const MainBottomNav({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final currentIndex = context.watch<NavigationProvider>().currentIndex;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentIndex = ref.watch(navigationProvider).currentIndex;
 
     final List<Map<String, String>> navItems = [
       {
@@ -60,7 +60,7 @@ class MainBottomNav extends StatelessWidget {
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () {
-                    context.read<NavigationProvider>().setTab(index);
+                    ref.read(navigationProvider).setTab(index);
                   },
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,

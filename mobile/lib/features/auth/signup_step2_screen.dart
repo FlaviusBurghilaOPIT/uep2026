@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_strings.dart';
-import '../../core/providers/auth_provider.dart';
+import '../../core/providers/app_providers.dart';
 import '../../core/shared_widgets/app_text_field.dart';
 import '../../core/shared_widgets/app_button.dart';
 import '../../core/shared_widgets/step_progress_bar.dart';
 import '../../core/navigation/app_routes.dart';
 
-class SignupStep2Screen extends StatefulWidget {
+class SignupStep2Screen extends ConsumerStatefulWidget {
   const SignupStep2Screen({super.key});
 
   @override
-  State<SignupStep2Screen> createState() => _SignupStep2ScreenState();
+  ConsumerState<SignupStep2Screen> createState() => _SignupStep2ScreenState();
 }
 
-class _SignupStep2ScreenState extends State<SignupStep2Screen> {
+class _SignupStep2ScreenState extends ConsumerState<SignupStep2Screen> {
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -31,7 +31,7 @@ class _SignupStep2ScreenState extends State<SignupStep2Screen> {
   void _handleContinue() {
     if (!_formKey.currentState!.validate()) return;
 
-    final auth = context.read<AuthProvider>();
+    final auth = ref.read(authProvider);
     auth.setSignUpInfo(
       fullName: auth.fullName ?? '',
       email: auth.email ?? '',
@@ -44,7 +44,7 @@ class _SignupStep2ScreenState extends State<SignupStep2Screen> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
+    final auth = ref.watch(authProvider);
 
     return Scaffold(
       body: SafeArea(

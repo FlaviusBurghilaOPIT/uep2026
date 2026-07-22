@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_strings.dart';
-import '../../core/providers/auth_provider.dart';
+import '../../core/providers/app_providers.dart';
 import '../../core/navigation/app_routes.dart';
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _medReminders = true;
   bool _dailyCheckin = true;
   bool _fdaAlerts = false;
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
+    final auth = ref.watch(authProvider);
     final name = auth.fullName ?? 'Sarah Mitchell';
     final email = auth.email ?? 'sarah.mitchell@email.com';
     final initials = name.split(' ').map((w) => w[0]).take(2).join().toUpperCase();
@@ -330,7 +330,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       height: AppSpacing.buttonHeight,
       child: OutlinedButton(
         onPressed: () async {
-          await context.read<AuthProvider>().signOut();
+          await ref.read(authProvider).signOut();
           if (mounted) {
             AppRoutes.navigateAndClearStack(context, AppRoutes.onboarding);
           }

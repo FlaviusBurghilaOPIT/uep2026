@@ -2,19 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../constants/app_colors.dart';
+import 'app_colors.dart';
 
+/// Medical design system theme for RemoteCare Pro.
+///
+/// Usage:
+/// ```dart
+/// MaterialApp(theme: AppTheme.light())
+/// ```
 class AppTheme {
   AppTheme._();
 
-  static ThemeData get lightTheme {
+  /// Light theme seeded from [AppColors.deepTeal].
+  static ThemeData light() {
     return ThemeData(
       useMaterial3: true,
       scaffoldBackgroundColor: AppColors.scaffoldBg,
-      primaryColor: AppColors.primaryGreen,
+      primaryColor: AppColors.deepTeal,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.primaryGreen,
-        primary: AppColors.primaryGreen,
+        seedColor: AppColors.deepTeal,
+        primary: AppColors.deepTeal,
         onPrimary: AppColors.white,
         surface: AppColors.scaffoldBg,
         error: AppColors.errorRed,
@@ -24,40 +31,40 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle.dark,
-        iconTheme: const IconThemeData(color: AppColors.black),
-        titleTextStyle: GoogleFonts.inter(
+        iconTheme: const IconThemeData(color: AppColors.slateDark),
+        titleTextStyle: GoogleFonts.outfit(
           fontSize: 18.sp,
           fontWeight: FontWeight.w600,
-          color: AppColors.black,
+          color: AppColors.slateDark,
         ),
       ),
       textTheme: GoogleFonts.interTextTheme().copyWith(
-        headlineLarge: TextStyle(
+        headlineLarge: GoogleFonts.outfit(
           fontSize: 28.sp,
           fontWeight: FontWeight.w700,
-          color: AppColors.black,
+          color: AppColors.slateDark,
         ),
-        headlineMedium: TextStyle(
+        headlineMedium: GoogleFonts.outfit(
           fontSize: 24.sp,
           fontWeight: FontWeight.w700,
-          color: AppColors.black,
+          color: AppColors.slateDark,
         ),
-        headlineSmall: TextStyle(
+        headlineSmall: GoogleFonts.outfit(
           fontSize: 20.sp,
           fontWeight: FontWeight.w600,
-          color: AppColors.black,
+          color: AppColors.slateDark,
         ),
-        bodyLarge: TextStyle(
+        bodyLarge: GoogleFonts.inter(
           fontSize: 16.sp,
           fontWeight: FontWeight.w400,
-          color: AppColors.black,
+          color: AppColors.slateDark,
         ),
-        bodyMedium: TextStyle(
+        bodyMedium: GoogleFonts.inter(
           fontSize: 14.sp,
           fontWeight: FontWeight.w400,
           color: AppColors.greyText,
         ),
-        bodySmall: TextStyle(
+        bodySmall: GoogleFonts.inter(
           fontSize: 12.sp,
           fontWeight: FontWeight.w400,
           color: AppColors.greyText,
@@ -65,7 +72,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryGreen,
+          backgroundColor: AppColors.deepTeal,
           foregroundColor: AppColors.white,
           minimumSize: Size(double.infinity, 56.h),
           shape: RoundedRectangleBorder(
@@ -80,12 +87,12 @@ class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.primaryGreen,
+          foregroundColor: AppColors.deepTeal,
           minimumSize: Size(double.infinity, 56.h),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.r),
           ),
-          side: const BorderSide(color: AppColors.primaryGreen, width: 1.5),
+          side: const BorderSide(color: AppColors.deepTeal, width: 1.5),
           textStyle: GoogleFonts.inter(
             fontSize: 16.sp,
             fontWeight: FontWeight.w600,
@@ -110,7 +117,7 @@ class AppTheme {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
           borderSide: const BorderSide(
-            color: AppColors.primaryGreen,
+            color: AppColors.deepTeal,
             width: 1.5,
           ),
         ),
@@ -132,4 +139,8 @@ class AppTheme {
       ),
     );
   }
+
+  /// Legacy alias — prefer [AppTheme.light()].
+  @Deprecated('Use AppTheme.light() instead')
+  static ThemeData get lightTheme => light();
 }

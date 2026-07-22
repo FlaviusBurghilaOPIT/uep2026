@@ -1,22 +1,22 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_strings.dart';
-import '../../core/providers/auth_provider.dart';
-import '../../core/services/api_service.dart';
+import '../../core/providers/app_providers.dart';
+import '../../core/network/api_service.dart';
 
-class AssistantScreen extends StatefulWidget {
+class AssistantScreen extends ConsumerStatefulWidget {
   const AssistantScreen({super.key});
 
   @override
-  State<AssistantScreen> createState() => _AssistantScreenState();
+  ConsumerState<AssistantScreen> createState() => _AssistantScreenState();
 }
 
-class _AssistantScreenState extends State<AssistantScreen> {
+class _AssistantScreenState extends ConsumerState<AssistantScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
   bool _hasStartedChat = false;
@@ -58,7 +58,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
     });
     _scrollToBottom();
 
-    final auth = context.read<AuthProvider>();
+    final auth = ref.read(authProvider);
     String? caseId = auth.caseId;
     if (caseId == null && auth.patientId != null) {
       try {
@@ -115,7 +115,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
+    final auth = ref.watch(authProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -134,7 +134,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
     );
   }
 
-  Widget _buildTopBar(AuthProvider auth) {
+  Widget _buildTopBar(AuthNotifier auth) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         AppSpacing.screenPaddingH,

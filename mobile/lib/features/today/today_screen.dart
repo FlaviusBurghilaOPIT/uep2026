@@ -1,23 +1,23 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/navigation/app_routes.dart';
-import '../../core/providers/auth_provider.dart';
-import '../../core/services/api_service.dart';
+import '../../core/providers/app_providers.dart';
+import '../../core/network/api_service.dart';
 
-class TodayScreen extends StatefulWidget {
+class TodayScreen extends ConsumerStatefulWidget {
   const TodayScreen({super.key});
 
   @override
-  State<TodayScreen> createState() => _TodayScreenState();
+  ConsumerState<TodayScreen> createState() => _TodayScreenState();
 }
 
-class _TodayScreenState extends State<TodayScreen> {
+class _TodayScreenState extends ConsumerState<TodayScreen> {
   bool _isLoading = false;
   List<Map<String, dynamic>> _medications = [
     {
@@ -55,7 +55,7 @@ class _TodayScreenState extends State<TodayScreen> {
   }
 
   Future<void> _loadData() async {
-    final auth = context.read<AuthProvider>();
+    final auth = ref.read(authProvider);
     String? caseId = auth.caseId;
     if (caseId == null && auth.patientId != null) {
       try {
@@ -131,7 +131,7 @@ class _TodayScreenState extends State<TodayScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
+    final auth = ref.watch(authProvider);
     final firstName = auth.fullName?.split(' ').first ?? 'User';
     final now = DateTime.now();
     final greeting = now.hour < 12
@@ -195,7 +195,7 @@ class _TodayScreenState extends State<TodayScreen> {
     );
   }
 
-  Widget _buildTopBar(BuildContext context, AuthProvider auth) {
+  Widget _buildTopBar(BuildContext context, AuthNotifier auth) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         AppSpacing.screenPaddingH,

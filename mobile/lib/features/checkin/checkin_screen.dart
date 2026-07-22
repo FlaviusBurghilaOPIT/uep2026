@@ -1,22 +1,22 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_strings.dart';
-import '../../core/providers/auth_provider.dart';
-import '../../core/services/api_service.dart';
+import '../../core/providers/app_providers.dart';
+import '../../core/network/api_service.dart';
 
-class CheckInScreen extends StatefulWidget {
+class CheckInScreen extends ConsumerStatefulWidget {
   const CheckInScreen({super.key});
 
   @override
-  State<CheckInScreen> createState() => _CheckInScreenState();
+  ConsumerState<CheckInScreen> createState() => _CheckInScreenState();
 }
 
-class _CheckInScreenState extends State<CheckInScreen> {
+class _CheckInScreenState extends ConsumerState<CheckInScreen> {
   int? _painLevel;
   int? _energyLevel;
   String? _selectedMood;
@@ -42,7 +42,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
 
     setState(() => _isSubmitting = true);
 
-    final auth = context.read<AuthProvider>();
+    final auth = ref.read(authProvider);
     String? caseId = auth.caseId;
     if (caseId == null && auth.patientId != null) {
       try {
@@ -88,7 +88,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
   Widget build(BuildContext context) {
     if (_submitted) return _buildSuccessView();
 
-    final auth = context.watch<AuthProvider>();
+    final auth = ref.watch(authProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -180,7 +180,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
     );
   }
 
-  Widget _buildTopBar(AuthProvider auth) {
+  Widget _buildTopBar(AuthNotifier auth) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         AppSpacing.screenPaddingH,
