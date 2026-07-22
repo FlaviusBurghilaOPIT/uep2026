@@ -80,13 +80,13 @@ riverpod_lint: ^2.3.0
 
 ## Acceptance criteria
 
-- [ ] `pubspec.yaml` contains `flutter_riverpod: ^2.5.1`; `provider` package is fully removed.
-- [ ] `RemoteCareApp` in `main.dart` is wrapped with `ProviderScope`.
-- [ ] `lib/` directory matches the feature-first folder structure above; no Dart files remain at old paths.
-- [ ] `ApiService` is importable from `package:remotecare/core/network/api_service.dart`.
-- [ ] `AppColors`, `AppTextStyles`, `AppTheme` exist and are applied in `main.dart` via `theme: AppTheme.light()`.
-- [ ] `flutter analyze` reports zero errors.
-- [ ] `flutter test` passes (existing tests, even if trivial).
+- [x] `pubspec.yaml` contains `flutter_riverpod: ^2.5.1`; `provider` package is fully removed.
+- [x] `RemoteCareApp` in `main.dart` is wrapped with `ProviderScope`.
+- [x] `lib/` directory matches the feature-first folder structure above; no Dart files remain at old paths.
+- [x] `ApiService` is importable from `package:remotecare/core/network/api_service.dart`.
+- [x] `AppColors`, `AppTextStyles`, `AppTheme` exist and are applied in `main.dart` via `theme: AppTheme.light()`.
+- [x] `flutter analyze` reports zero errors.
+- [x] `flutter test` passes (existing tests, even if trivial).
 
 ## Covers
 

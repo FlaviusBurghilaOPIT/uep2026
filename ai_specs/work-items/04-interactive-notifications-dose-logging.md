@@ -4,6 +4,8 @@ title: Interactive Medication Notifications — flutter_local_notifications, Bac
 parent: ../2026-07-22-flutter-mobile-enhancements-spec.md
 ---
 
+**Status: Superseded.** Remaining scope (0/9 AC met) is completed by `../0001-mobile-core-loop-hardening-polish/work-items/` under the `0001-mobile-core-loop-hardening-polish` Spec, folded together with FIND-M06 (timezone reconciliation). Kept for traceability; do not implement from this file directly.
+
 ## What to build
 
 Implement interactive local medication reminders using `flutter_local_notifications`. Schedule reminders from the patient's prescribed regimen. Provide `[Take Dose]` and `[Snooze 15m]` interactive lock-screen action buttons. Log dose adherence to the Python backend in the background (including when the app is terminated). Wire notification tap to open `TodayScreen` and highlight the target medication card with a celebratory checkmark toast.

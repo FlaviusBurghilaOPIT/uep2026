@@ -4,6 +4,8 @@ title: AI Assistant Chat Screen — Guardrail Banner, Suggestion Chips, Typing I
 parent: ../2026-07-22-flutter-mobile-enhancements-spec.md
 ---
 
+**Status: Superseded.** Remaining scope (0/11 AC met) is completed by `../0001-mobile-core-loop-hardening-polish/work-items/` under the `0001-mobile-core-loop-hardening-polish` Spec, folded together with FIND-M04 (emergency call CTA). Kept for traceability; do not implement from this file directly.
+
 ## What to build
 
 Build the full `AssistantScreen` in `lib/features/assistant/` with a persistent clinical guardrail banner, four one-tap suggestion chips, an animated 3-dot typing indicator, and scrollable chat bubble UI. Implement `chatAssistantNotifierProvider` that posts to `POST /ai/chat` on the Python backend, manages `ChatState` as `AsyncValue`, and appends messages to the conversation. Include unit tests for `chatAssistantNotifierProvider` using a `FakeApiService`.
