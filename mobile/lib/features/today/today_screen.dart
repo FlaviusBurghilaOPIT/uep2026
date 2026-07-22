@@ -14,6 +14,7 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/notifications/notification_service.dart';
 import '../../core/network/api_service.dart';
 import '../checkin/checkin_card.dart';
+import 'fda_warning_card.dart';
 
 class TodayScreen extends ConsumerStatefulWidget {
   const TodayScreen({super.key});
@@ -50,6 +51,11 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       'hasWarning': false,
     },
   ];
+
+  String _fdaSource = 'openFDA';
+  String? _fdaRetrievedAt;
+  String _fdaMessage =
+      'New drug interaction warning for Amoxicillin. Tap info to learn more.';
 
   final ScrollController _scrollController = ScrollController();
   final Map<String, GlobalKey> _cardKeys = {};
@@ -121,13 +127,34 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   }
 
   Future<void> _loadData() async {
+    final api = ref.read(apiServiceProvider);
+    try {
+      final fdaRes = await api.get('/fda/drug/Amoxicillin');
+      if (fdaRes.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(fdaRes.body);
+        if (mounted) {
+          setState(() {
+            if (data['source'] != null) {
+              _fdaSource = data['source'].toString();
+            }
+            if (data['summary'] != null) {
+              _fdaMessage = data['summary'].toString();
+            }
+            if (data['retrieved_at'] != null) {
+              _fdaRetrievedAt = data['retrieved_at'].toString();
+            } else if (data['timestamp'] != null) {
+              _fdaRetrievedAt = data['timestamp'].toString();
+            }
+          });
+        }
+      }
+    } catch (_) {}
+
     final auth = ref.read(authProvider);
     String? caseId = auth.caseId;
     if (caseId == null && auth.patientId != null) {
       try {
-        final caseRes = await HttpApiService().get(
-          '/patients/${auth.patientId}/case',
-        );
+        final caseRes = await api.get('/patients/${auth.patientId}/case');
         if (caseRes.statusCode == 200) {
           caseId = jsonDecode(caseRes.body)['id'];
         }
@@ -137,7 +164,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     if (caseId != null) {
       setState(() => _isLoading = true);
       try {
-        final res = await HttpApiService().get('/cases/$caseId/medications');
+        final res = await api.get('/cases/$caseId/medications');
         if (res.statusCode == 200) {
           final List list = jsonDecode(res.body);
           if (list.isNotEmpty) {
@@ -175,7 +202,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     final medId = _medications[index]['id'];
     if (medId != null) {
       try {
-        final remindersRes = await HttpApiService().get('/reminders');
+        final api = ref.read(apiServiceProvider);
+        final remindersRes = await api.get('/reminders');
         String? reminderId;
         if (remindersRes.statusCode == 200) {
           final List reminders = jsonDecode(remindersRes.body);
@@ -188,7 +216,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           }
         }
         if (reminderId == null) {
-          final createRes = await HttpApiService().post('/reminders', {
+          final createRes = await api.post('/reminders', {
             'medication_id': medId,
             'scheduled_time': DateTime.now().toIso8601String(),
           });
@@ -197,7 +225,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           }
         }
         if (reminderId != null) {
-          await HttpApiService().post(
+          await api.post(
             '/adherence/log?scheduled_reminder_id=$reminderId&status=$status',
             {},
           );
@@ -444,56 +472,15 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   }
 
   Widget _buildFdaAlert(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
-      child: GestureDetector(
-        onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('FDA detail — coming soon')),
-          );
-        },
-        child: Container(
-          width: double.infinity,
-          padding: EdgeInsets.all(16.w),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFF8E1),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            border: Border.all(
-              color: AppColors.warningAmber.withValues(alpha: 0.3),
-            ),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(
-                Icons.warning_amber_rounded,
-                color: AppColors.warningAmber,
-                size: AppSpacing.iconLg,
-              ),
-              SizedBox(width: AppSpacing.hMd),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppStrings.fdaSafetyAlert,
-                      style: AppTextStyles.bodyLarge.copyWith(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14.sp,
-                      ),
-                    ),
-                    SizedBox(height: 2.h),
-                    Text(
-                      'New drug interaction warning for Amoxicillin. Tap info to learn more.',
-                      style: AppTextStyles.bodySmall,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return FdaWarningCard(
+      source: _fdaSource,
+      retrievedAt: _fdaRetrievedAt,
+      message: _fdaMessage,
+      onTap: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('FDA detail — coming soon')),
+        );
+      },
     );
   }
 

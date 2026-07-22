@@ -94,6 +94,9 @@ class AppStrings {
   static const String missed = 'Missed';
   static const String skip = 'Skip';
   static const String fdaSafetyAlert = 'FDA Safety Alert';
+  static const String fdaSourceLive = '📋 Source: openFDA Live';
+  static const String fdaSourceFixture = '📋 Source: Regulatory Cache';
+  static String fdaRetrievedTimestamp(String date) => 'Retrieved: $date';
 
   static const String navToday = 'Today';
   static const String navCheckIn = 'Check-In';

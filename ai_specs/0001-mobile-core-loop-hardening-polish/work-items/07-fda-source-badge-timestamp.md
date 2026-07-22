@@ -18,9 +18,9 @@ Render an explicit source badge (`📋 Source: openFDA Live` / `Regulatory Cache
 
 ## Acceptance criteria
 
-- [ ] Source badge and `Retrieved: YYYY-MM-DD` timestamp render above FDA warning content.
-- [ ] Badge correctly switches between `openFDA Live` and `Regulatory Cache` states based on the API response's source metadata.
-- [ ] Widget test asserting both badge states render correctly from mocked API responses.
+- [x] Source badge and `Retrieved: YYYY-MM-DD` timestamp render above FDA warning content.
+- [x] Badge correctly switches between `openFDA Live` and `Regulatory Cache` states based on the API response's source metadata.
+- [x] Widget test asserting both badge states render correctly from mocked API responses.
 
 ## Covers
 
