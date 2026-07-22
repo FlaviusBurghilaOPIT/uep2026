@@ -8,6 +8,10 @@ import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/navigation/app_routes.dart';
 import '../../core/providers/app_providers.dart';
+import 'dart:async';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import '../../core/l10n/app_localizations.dart';
+import '../../core/notifications/notification_service.dart';
 import '../../core/network/api_service.dart';
 
 class TodayScreen extends ConsumerStatefulWidget {
@@ -46,12 +50,65 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     },
   ];
 
+  final ScrollController _scrollController = ScrollController();
+  final Map<String, GlobalKey> _cardKeys = {};
+  StreamSubscription<NotificationResponse>? _notificationSubscription;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();
     });
+    _notificationSubscription = NotificationService.instance.notificationResponseStream.listen((response) {
+      _handleNotificationResponse(response);
+    });
+  }
+
+  @override
+  void dispose() {
+    _notificationSubscription?.cancel();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _handleNotificationResponse(NotificationResponse response) {
+    final reminderId = NotificationService.parseReminderId(response.payload ?? '');
+    if (reminderId != null) {
+      final key = _cardKeys[reminderId];
+      if (key != null && key.currentContext != null) {
+        Scrollable.ensureVisible(
+          key.currentContext!,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      }
+      final index = _medications.indexWhere((m) => m['id'] == reminderId);
+      if (index != -1) {
+        setState(() {
+          _medications[index]['status'] = 'taken';
+        });
+      }
+
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: AppColors.primaryGreen,
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8.w),
+                Text(
+                  l10n.doseStatusTaken,
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _loadData() async {
@@ -143,6 +200,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
         child: RefreshIndicator(
           onRefresh: _loadData,
           child: SingleChildScrollView(
+            controller: _scrollController,
             physics: const AlwaysScrollableScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -372,6 +430,11 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
 
   Widget _buildMedCard(BuildContext context, {required int index}) {
     final med = _medications[index];
+    final medId = (med['id'] != null && med['id'].toString().isNotEmpty)
+        ? med['id'].toString()
+        : 'med_$index';
+    final cardKey = _cardKeys.putIfAbsent(medId, () => GlobalKey());
+
     final String status = med['status'];
     final Color badgeBg;
     final Color badgeText;
@@ -402,6 +465,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
       child: Container(
+        key: cardKey,
         width: double.infinity,
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(

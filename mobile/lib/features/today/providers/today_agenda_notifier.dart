@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../../core/network/api_service.dart';
+import '../../../core/notifications/notification_service.dart';
 
 part 'today_agenda_notifier.freezed.dart';
 
@@ -80,6 +82,7 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
         state = AsyncValue.data(
           updated.copyWith(medications: AsyncValue.data(items)),
         );
+        await _scheduleNotificationsForMedications(items);
       } else {
         final updated = state.valueOrNull ?? current;
         state = AsyncValue.data(
@@ -127,6 +130,54 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
       }
       Error.throwWithStackTrace(e, st);
     }
+  }
+
+  Future<void> _scheduleNotificationsForMedications(
+      List<MedicationItem> items) async {
+    try {
+      await NotificationService.instance.cancelAll();
+      final now = DateTime.now();
+      for (final med in items) {
+        final scheduleLower = med.scheduleText.toLowerCase();
+        final List<TimeOfDay> times = [];
+        if (scheduleLower.contains('3x') ||
+            scheduleLower.contains('3 times') ||
+            scheduleLower.contains('every 8 hours')) {
+          times.addAll(const [
+            TimeOfDay(hour: 8, minute: 0),
+            TimeOfDay(hour: 14, minute: 0),
+            TimeOfDay(hour: 20, minute: 0)
+          ]);
+        } else if (scheduleLower.contains('2x') ||
+            scheduleLower.contains('2 times') ||
+            scheduleLower.contains('every 12 hours')) {
+          times.addAll(const [
+            TimeOfDay(hour: 8, minute: 0),
+            TimeOfDay(hour: 20, minute: 0)
+          ]);
+        } else {
+          times.add(const TimeOfDay(hour: 8, minute: 0));
+        }
+
+        for (int i = 0; i < times.length; i++) {
+          final timeOfDay = times[i];
+          final scheduledDateTime = DateTime(
+            now.year,
+            now.month,
+            now.day,
+            timeOfDay.hour,
+            timeOfDay.minute,
+          );
+          await NotificationService.instance.scheduleMedicationReminder(
+            reminderId: med.id,
+            medicationId: med.id,
+            medicationName: med.name,
+            doseAmount: med.dose,
+            scheduledTime: scheduledDateTime,
+          );
+        }
+      }
+    } catch (_) {}
   }
 }
 

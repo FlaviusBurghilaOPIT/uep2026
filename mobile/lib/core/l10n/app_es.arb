@@ -82,7 +82,8 @@
     }
   },
   "notificationActionTake": "Tomar dosis",
-  "notificationActionSnooze": "Pausar 15 min",
+  "notificationActionSnooze": "Posponer 15 min",
+  "notificationPermissionRationale": "Active las notificaciones para recibir recordatorios de medicamentos a tiempo.",
 
   "errorGeneric": "Algo salió mal. Inténtalo de nuevo.",
   "errorNetwork": "Sin conexión. Comprueba tu internet.",

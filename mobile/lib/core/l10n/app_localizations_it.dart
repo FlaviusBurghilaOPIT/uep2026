@@ -151,7 +151,11 @@ class AppLocalizationsIt extends AppLocalizations {
   String get notificationActionTake => 'Prendi dose';
 
   @override
-  String get notificationActionSnooze => 'Posponi 15 min';
+  String get notificationActionSnooze => 'Posticipa 15 min';
+
+  @override
+  String get notificationPermissionRationale =>
+      'Attiva le notifiche per ricevere i promemoria dei farmaci al momento giusto.';
 
   @override
   String get errorGeneric => 'Si è verificato un errore. Riprova.';

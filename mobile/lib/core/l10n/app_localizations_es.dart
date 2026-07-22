@@ -151,7 +151,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get notificationActionTake => 'Tomar dosis';
 
   @override
-  String get notificationActionSnooze => 'Pausar 15 min';
+  String get notificationActionSnooze => 'Posponer 15 min';
+
+  @override
+  String get notificationPermissionRationale =>
+      'Active las notificaciones para recibir recordatorios de medicamentos a tiempo.';
 
   @override
   String get errorGeneric => 'Algo salió mal. Inténtalo de nuevo.';

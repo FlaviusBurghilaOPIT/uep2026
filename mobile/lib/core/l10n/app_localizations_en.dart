@@ -154,6 +154,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationActionSnooze => 'Snooze 15 min';
 
   @override
+  String get notificationPermissionRationale =>
+      'Enable notifications to receive medication reminders at the right time.';
+
+  @override
   String get errorGeneric => 'Something went wrong. Please try again.';
 
   @override

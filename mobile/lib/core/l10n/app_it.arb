@@ -82,7 +82,8 @@
     }
   },
   "notificationActionTake": "Prendi dose",
-  "notificationActionSnooze": "Posponi 15 min",
+  "notificationActionSnooze": "Posticipa 15 min",
+  "notificationPermissionRationale": "Attiva le notifiche per ricevere i promemoria dei farmaci al momento giusto.",
 
   "errorGeneric": "Si è verificato un errore. Riprova.",
   "errorNetwork": "Nessuna connessione. Controlla internet.",

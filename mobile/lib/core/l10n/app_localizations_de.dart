@@ -154,6 +154,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get notificationActionSnooze => '15 Min. schlummern';
 
   @override
+  String get notificationPermissionRationale =>
+      'Aktivieren Sie Benachrichtigungen, um Medikamentenerinnerungen pünktlich zu erhalten.';
+
+  @override
   String get errorGeneric =>
       'Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.';
 

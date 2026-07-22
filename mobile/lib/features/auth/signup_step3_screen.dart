@@ -9,6 +9,8 @@ import '../../core/providers/app_providers.dart';
 import '../../core/shared_widgets/app_button.dart';
 import '../../core/shared_widgets/step_progress_bar.dart';
 import '../../core/shared_widgets/security_badge.dart';
+import '../../core/l10n/app_localizations.dart';
+import '../../core/notifications/notification_service.dart';
 import '../../core/navigation/app_routes.dart';
 
 class SignupStep3Screen extends ConsumerStatefulWidget {
@@ -74,7 +76,25 @@ class _SignupStep3ScreenState extends ConsumerState<SignupStep3Screen> {
     );
 
     if (success && mounted) {
-      AppRoutes.navigateAndClearStack(context, AppRoutes.main);
+      final l10n = AppLocalizations.of(context);
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.notificationReminderTitle),
+          content: Text(l10n.notificationPermissionRationale),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      await NotificationService.instance.requestPermissions();
+      if (mounted) {
+        AppRoutes.navigateAndClearStack(context, AppRoutes.main);
+      }
     } else if (mounted && auth.errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(auth.errorMessage!)),

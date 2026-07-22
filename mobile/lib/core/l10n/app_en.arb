@@ -83,6 +83,7 @@
   },
   "notificationActionTake": "Take Dose",
   "notificationActionSnooze": "Snooze 15 min",
+  "notificationPermissionRationale": "Enable notifications to receive medication reminders at the right time.",
 
   "errorGeneric": "Something went wrong. Please try again.",
   "errorNetwork": "No connection. Please check your internet.",

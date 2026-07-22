@@ -374,6 +374,12 @@ abstract class AppLocalizations {
   /// **'Snooze 15 min'**
   String get notificationActionSnooze;
 
+  /// No description provided for @notificationPermissionRationale.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable notifications to receive medication reminders at the right time.'**
+  String get notificationPermissionRationale;
+
   /// No description provided for @errorGeneric.
   ///
   /// In en, this message translates to:

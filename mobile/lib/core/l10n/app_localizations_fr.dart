@@ -154,6 +154,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get notificationActionSnooze => 'Répéter 15 min';
 
   @override
+  String get notificationPermissionRationale =>
+      'Activez les notifications pour recevoir des rappels de médicaments au bon moment.';
+
+  @override
   String get errorGeneric => 'Un problème est survenu. Veuillez réessayer.';
 
   @override

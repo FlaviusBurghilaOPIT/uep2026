@@ -83,6 +83,7 @@
   },
   "notificationActionTake": "Dosis einnehmen",
   "notificationActionSnooze": "15 Min. schlummern",
+  "notificationPermissionRationale": "Aktivieren Sie Benachrichtigungen, um Medikamentenerinnerungen pünktlich zu erhalten.",
 
   "errorGeneric": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
   "errorNetwork": "Keine Verbindung. Bitte überprüfen Sie Ihr Internet.",

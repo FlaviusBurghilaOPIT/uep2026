@@ -6,8 +6,11 @@ import 'core/l10n/locale_notifier.dart';
 import 'core/navigation/app_routes.dart';
 import 'core/theme/app_theme.dart';
 
-void main() {
+import 'core/notifications/notification_service.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService.instance.initialize();
   runApp(
     const ProviderScope(
       child: RemoteCareApp(),
