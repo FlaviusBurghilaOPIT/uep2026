@@ -43,6 +43,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get todayTitle => 'Oggi';
 
   @override
+  String get greetingMorning => 'Buongiorno';
+
+  @override
+  String get greetingAfternoon => 'Buon pomeriggio';
+
+  @override
+  String get greetingEvening => 'Buona sera';
+
+  @override
   String medicationCardTitle(String medicationName) {
     return 'Prendi $medicationName';
   }
@@ -110,11 +119,11 @@ class AppLocalizationsIt extends AppLocalizations {
       'Check-in giornaliero registrato. Grazie per aver aggiornato il tuo team medico.';
 
   @override
-  String get assistantTitle => 'Assistente AI';
+  String get assistantTitle => 'Assistente del Team Medico';
 
   @override
   String get assistantGuardrailBanner =>
-      'Assistente AI • Solo informativo, mai diagnostico';
+      'Assistente del Team Medico • Solo informativo, mai diagnostico';
 
   @override
   String get typeMessagePlaceholder => 'Scrivi la tua domanda...';
@@ -130,6 +139,37 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get chipEmergencyContact => 'Contatto di emergenza';
+
+  @override
+  String get emergencyCallCta => 'Chiama il contatto di emergenza';
+
+  @override
+  String emergencyCallCtaWithPhone(String phone) {
+    return 'Chiama il contatto di emergenza ($phone)';
+  }
+
+  @override
+  String get emergencyWarningTitle =>
+      'Non posso fornire consulenza su modifiche di dosaggio o sintomi urgenti';
+
+  @override
+  String get fdaSafetyAlertTitle =>
+      'Informazioni ufficiali sulla sicurezza dei farmaci FDA';
+
+  @override
+  String get fdaSourceLive => '📋 Fonte: Informazioni ufficiali FDA';
+
+  @override
+  String get fdaSourceFixture => '📋 Fonte: Cache regolatoria';
+
+  @override
+  String fdaRetrievedTimestamp(String date) {
+    return 'Recuperato: $date';
+  }
+
+  @override
+  String get fdaWarningMessage =>
+      'Nuovo avviso di interazione tra farmaci per Amoxicillina. Tocca per saperne di più.';
 
   @override
   String get profileTitle => 'Profilo';
@@ -225,4 +265,19 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get medicationsEmptyState =>
       'Nessun farmaco attivo nel tuo piano di cura al momento.';
+
+  @override
+  String get frequencyQD => 'Una volta al giorno';
+
+  @override
+  String get frequencyBID => 'Due volte al giorno';
+
+  @override
+  String get frequencyTID => 'Tre volte al giorno';
+
+  @override
+  String get frequencyQID => 'Quattro volte al giorno';
+
+  @override
+  String get frequencyPRN => 'Al bisogno';
 }

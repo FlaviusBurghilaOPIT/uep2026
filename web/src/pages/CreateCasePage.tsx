@@ -49,8 +49,8 @@ function CreateCasePage() {
         })
       })
       setCreatedCaseId(res.id)
-    } catch (err: any) {
-      setError(err.message || 'Failed to create case. Please try again.')
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Failed to create case. Please try again.')
     } finally {
       setLoading(false)
     }

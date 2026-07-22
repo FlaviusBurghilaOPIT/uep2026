@@ -31,7 +31,7 @@ def _make_case_with_meds(db_session):
         case_id=case.id,
         name="Ibuprofen",
         dose="200mg",
-        schedule_text="twice daily",
+        schedule_text="BID",   # now a code
         duration="7 days",
     )
     db_session.add(med)
@@ -40,13 +40,17 @@ def _make_case_with_meds(db_session):
     return patient, case
 
 
-def test_chat_persists_both_turns(client, db_session, monkeypatch):
+def test_chat_general_question_is_in_scope(client, db_session, monkeypatch):
     monkeypatch.setenv("LLM_PROVIDER", "mock")
     patient, case = _make_case_with_meds(db_session)
 
     response = client.post(
         "/ai/chat",
-        json={"case_id": case.id, "message": "How should I take my ibuprofen?"},
+        json={
+            "case_id": case.id,
+            "message": "How should I take my ibuprofen?",
+            "intent_category": "general_question",
+        },
         headers=_auth_headers(patient),
     )
 
@@ -57,19 +61,22 @@ def test_chat_persists_both_turns(client, db_session, monkeypatch):
 
     messages = db_session.query(models.ChatMessage).filter_by(case_id=case.id).all()
     assert len(messages) == 2
-    assert messages[0].role == models.ChatRole.user
-    assert messages[1].role == models.ChatRole.assistant
     assert messages[0].in_scope is True
     assert messages[0].escalate is False
 
 
-def test_chat_flags_dosage_change_language_as_out_of_scope(client, db_session, monkeypatch):
+def test_chat_dose_change_intent_is_blocked(client, db_session, monkeypatch):
+    """Guardrail blocks dose_change_request regardless of message language."""
     monkeypatch.setenv("LLM_PROVIDER", "mock")
     patient, case = _make_case_with_meds(db_session)
 
     response = client.post(
         "/ai/chat",
-        json={"case_id": case.id, "message": "Should I take a double dose today?"},
+        json={
+            "case_id": case.id,
+            "message": "Posso raddoppiare la dose?",   # Italian — English regex would miss this
+            "intent_category": "dose_change_request",
+        },
         headers=_auth_headers(patient),
     )
 
@@ -84,3 +91,53 @@ def test_chat_flags_dosage_change_language_as_out_of_scope(client, db_session, m
     )
     assert user_message.in_scope is False
     assert user_message.escalate is True
+
+
+def test_chat_diagnosis_intent_is_blocked(client, db_session, monkeypatch):
+    monkeypatch.setenv("LLM_PROVIDER", "mock")
+    patient, case = _make_case_with_meds(db_session)
+
+    response = client.post(
+        "/ai/chat",
+        json={
+            "case_id": case.id,
+            "message": "¡Creo que tengo una infección?",   # Spanish
+            "intent_category": "diagnosis_request",
+        },
+        headers=_auth_headers(patient),
+    )
+
+    body = response.json()
+    assert body["in_scope"] is False
+    assert body["escalate"] is True
+
+
+def test_chat_default_intent_is_general_question(client, db_session, monkeypatch):
+    """Omitting intent_category defaults to general_question (in_scope=True)."""
+    monkeypatch.setenv("LLM_PROVIDER", "mock")
+    patient, case = _make_case_with_meds(db_session)
+
+    response = client.post(
+        "/ai/chat",
+        json={"case_id": case.id, "message": "What are my medications?"},
+        headers=_auth_headers(patient),
+    )
+
+    assert response.status_code == 200
+    assert response.json()["in_scope"] is True
+
+
+def test_chat_persists_both_turns(client, db_session, monkeypatch):
+    monkeypatch.setenv("LLM_PROVIDER", "mock")
+    patient, case = _make_case_with_meds(db_session)
+
+    client.post(
+        "/ai/chat",
+        json={"case_id": case.id, "message": "How should I take my ibuprofen?"},
+        headers=_auth_headers(patient),
+    )
+
+    messages = db_session.query(models.ChatMessage).filter_by(case_id=case.id).all()
+    assert len(messages) == 2
+    assert messages[0].role == models.ChatRole.user
+    assert messages[1].role == models.ChatRole.assistant

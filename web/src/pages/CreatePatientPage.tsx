@@ -36,8 +36,9 @@ function CreatePatientPage() {
         })
       })
       setInviteCode(res.invite_code)
-    } catch (err: any) {
-      setError(err.message || 'Failed to invite patient. Please try again.')
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to invite patient. Please try again.'
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -114,9 +115,11 @@ function CreatePatientPage() {
           placeholder="e.g. +123456789"
           value={emergencyContactPhone}
           onChange={(e) => setEmergencyContactPhone(e.target.value)}
+          aria-invalid={!!error}
+          aria-describedby={error ? 'form-error' : undefined}
         />
 
-        {error && <p id="form-error" role="alert" style={styles.error}>{error}</p>}
+        {error && <span id="form-error" role="alert" style={styles.error}>{error}</span>}
 
         <button
           style={styles.button}

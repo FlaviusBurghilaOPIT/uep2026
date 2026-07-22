@@ -11,7 +11,8 @@ class Medication {
     required this.id,
     required this.name,
     required this.dose,
-    required this.scheduleText,
+    required this.frequency,
+    required this.scheduleTimes,
     required this.duration,
     this.notes,
   });
@@ -19,18 +20,20 @@ class Medication {
   final String id;
   final String name;
   final String dose;
-  final String scheduleText;
+  final String frequency; // "QD" | "BID" | "TID" | "QID" | "PRN"
+  final List<String> scheduleTimes; // ["08:00", "13:00", "20:00"]
   final String duration;
   final String? notes;
 
   factory Medication.fromJson(Map<String, dynamic> json) => Medication(
-    id: json['id'] as String,
-    name: json['name'] as String,
-    dose: json['dose'] as String,
-    scheduleText: json['schedule_text'] as String,
-    duration: json['duration'] as String,
-    notes: json['notes'] as String?,
-  );
+        id: json['id'] as String,
+        name: json['name'] as String,
+        dose: json['dose'] as String,
+        frequency: (json['frequency'] ?? json['schedule_text'] ?? 'QD') as String,
+        scheduleTimes: List<String>.from(json['schedule_times'] as List? ?? []),
+        duration: json['duration'] as String,
+        notes: json['notes'] as String?,
+      );
 }
 
 // ---------------------------------------------------------------------------

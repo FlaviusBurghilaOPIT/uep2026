@@ -14,6 +14,9 @@
   "completeSetupButton": "Complete Setup",
 
   "todayTitle": "Today",
+  "greetingMorning": "Good morning",
+  "greetingAfternoon": "Good afternoon",
+  "greetingEvening": "Good evening",
   "medicationCardTitle": "Take {medicationName}",
   "@medicationCardTitle": {
     "placeholders": {
@@ -57,13 +60,36 @@
   "checkinBadOption": "Feeling Unwell 😣",
   "checkinSuccessBanner": "Daily check-in logged. Thank you for updating your care team.",
 
-  "assistantTitle": "AI Assistant",
-  "assistantGuardrailBanner": "AI Assistant • Informational only, never diagnostic",
+  "assistantTitle": "Care Team Assistant",
+  "assistantGuardrailBanner": "Care Team Assistant • Informational only, never diagnostic",
   "typeMessagePlaceholder": "Type your question...",
   "chipMedicationSideEffects": "Medication side effects",
   "chipWoundCareTips": "Wound care tips",
   "chipPhysioTargets": "Physio targets",
   "chipEmergencyContact": "Emergency contact",
+  "emergencyCallCta": "Call Emergency Contact",
+  "emergencyCallCtaWithPhone": "Call Emergency Contact ({phone})",
+  "@emergencyCallCtaWithPhone": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "emergencyWarningTitle": "I Cannot Advise on Dose Changes or Urgent Symptoms",
+
+  "fdaSafetyAlertTitle": "Official FDA Drug Safety Info",
+  "fdaSourceLive": "📋 Source: Official FDA Drug Safety Info",
+  "fdaSourceFixture": "📋 Source: Regulatory Cache",
+  "fdaRetrievedTimestamp": "Retrieved: {date}",
+  "@fdaRetrievedTimestamp": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "fdaWarningMessage": "New drug interaction warning for Amoxicillin. Tap info to learn more.",
 
   "profileTitle": "Profile",
   "languageSectionTitle": "Language",
@@ -127,5 +153,10 @@
   },
   "medCardNotesHeader": "Clinician Instructions:",
   "medCardReadOnlyBadge": "🔒 Prescribed by Care Team — Read Only",
-  "medicationsEmptyState": "No active medications on your care plan yet."
+  "medicationsEmptyState": "No active medications on your care plan yet.",
+  "frequencyQD": "Once daily",
+  "frequencyBID": "Twice daily",
+  "frequencyTID": "Three times daily",
+  "frequencyQID": "Four times daily",
+  "frequencyPRN": "As needed"
 }

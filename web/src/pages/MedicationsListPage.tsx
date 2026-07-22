@@ -53,12 +53,21 @@ function MedicationsListPage() {
         {medications.map((med) => (
           <div key={med.id} style={styles.card}>
             <div style={styles.cardHeader}>
-              <p style={styles.medName}>{med.name}</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <p style={styles.medName}>{med.name}</p>
+                <span style={styles.fdaBadge}>📋 openFDA Regulatory Warning Available</span>
+              </div>
               <span style={styles.badge}>{med.schedule_text || med.frequency || ''}</span>
             </div>
             <p style={styles.detail}>Dose: {med.dose}</p>
             <p style={styles.detail}>Duration: {med.duration || (med.duration_days ? `${med.duration_days} days` : '')}</p>
             {med.notes && <p style={styles.notes}>{med.notes}</p>}
+            <button
+              style={styles.fdaButton}
+              onClick={() => window.location.href = `/fda?drug=${encodeURIComponent(med.name.toLowerCase())}`}
+            >
+              [View FDA Safety Warnings]
+            </button>
           </div>
         ))}
       </div>
@@ -138,6 +147,29 @@ const styles = {
     borderRadius: '20px',
     fontSize: '12px',
     fontWeight: '500'
+  },
+  fdaBadge: {
+    backgroundColor: '#fffbe6',
+    color: '#d97706',
+    border: '1px solid #fde68a',
+    padding: '2px 10px',
+    borderRadius: '20px',
+    fontSize: '12px',
+    fontWeight: '500' as const,
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px'
+  },
+  fdaButton: {
+    padding: '6px 12px',
+    backgroundColor: '#fffbe6',
+    color: '#d97706',
+    border: '1px solid #fde68a',
+    borderRadius: '6px',
+    fontSize: '13px',
+    fontWeight: '500' as const,
+    cursor: 'pointer',
+    marginTop: '8px'
   },
   detail: {
     fontSize: '13px',

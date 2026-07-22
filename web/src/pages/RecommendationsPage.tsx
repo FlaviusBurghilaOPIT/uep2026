@@ -36,8 +36,8 @@ function RecommendationsPage() {
         body: JSON.stringify({ content, text: content })
       })
       setSuccess(true)
-    } catch (err: any) {
-      setError(err.message || 'Failed to save. Please try again.')
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Failed to save. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -60,7 +60,7 @@ function RecommendationsPage() {
         content: response.reply
       }
       setMessages((prev) => [...prev, assistantMessage])
-    } catch (err) {
+    } catch {
       const errorMessage: Message = {
         role: 'assistant',
         content: 'Sorry, could not get a response. Please try again.'
@@ -71,7 +71,7 @@ function RecommendationsPage() {
     }
   }
 
-  const useAISuggestion = (text: string) => {
+  const applyAISuggestion = (text: string) => {
     setContent(text)
     setChatOpen(false)
   }
@@ -128,7 +128,7 @@ function RecommendationsPage() {
                 <div key={i} style={msg.role === 'user' ? styles.userMessage : styles.assistantMessage}>
                   <p style={styles.messageText}>{msg.content}</p>
                   {msg.role === 'assistant' && i > 0 && (
-                    <button style={styles.useButton} onClick={() => useAISuggestion(msg.content)}>
+                    <button style={styles.useButton} onClick={() => applyAISuggestion(msg.content)}>
                       Use this suggestion
                     </button>
                   )}

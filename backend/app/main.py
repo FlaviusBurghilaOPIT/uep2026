@@ -15,6 +15,7 @@ from app.routers import (
     checkins,
     fda,
     medications,
+    notifications,
     patients,
     recommendations,
     reminders,
@@ -77,3 +78,4 @@ app.include_router(fda.router)
 app.include_router(ai.router)
 app.include_router(users.router)
 app.include_router(wiki.router)
+app.include_router(notifications.router)

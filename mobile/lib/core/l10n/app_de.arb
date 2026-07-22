@@ -14,6 +14,9 @@
   "completeSetupButton": "Einrichtung abschließen",
 
   "todayTitle": "Heute",
+  "greetingMorning": "Guten Morgen",
+  "greetingAfternoon": "Guten Tag",
+  "greetingEvening": "Guten Abend",
   "medicationCardTitle": "Nimm {medicationName}",
   "@medicationCardTitle": {
     "placeholders": {
@@ -57,13 +60,36 @@
   "checkinBadOption": "Fühle mich schlecht 😣",
   "checkinSuccessBanner": "Täglicher Check-in gespeichert. Danke, dass Sie Ihr Behandlungsteam informiert haben.",
 
-  "assistantTitle": "KI-Assistent",
-  "assistantGuardrailBanner": "KI-Assistent • Nur zur Information, nie diagnostisch",
+  "assistantTitle": "Pflegeteam-Assistent",
+  "assistantGuardrailBanner": "Pflegeteam-Assistent • Nur zur Information, nie diagnostisch",
   "typeMessagePlaceholder": "Schreiben Sie Ihre Frage...",
   "chipMedicationSideEffects": "Nebenwirkungen von Medikamenten",
   "chipWoundCareTips": "Tipps zur Wundversorgung",
   "chipPhysioTargets": "Physiotherapie-Ziele",
   "chipEmergencyContact": "Notfallkontakt",
+  "emergencyCallCta": "Notfallkontakt anrufen",
+  "emergencyCallCtaWithPhone": "Notfallkontakt anrufen ({phone})",
+  "@emergencyCallCtaWithPhone": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "emergencyWarningTitle": "Ich kann nicht zu Dosisänderungen oder dringenden Symptomen beraten",
+
+  "fdaSafetyAlertTitle": "Offizielle FDA-Arzneimittelsicherheitsinformationen",
+  "fdaSourceLive": "📋 Quelle: Offizielle FDA-Informationen",
+  "fdaSourceFixture": "📋 Quelle: Regulatorischer Cache",
+  "fdaRetrievedTimestamp": "Abgerufen: {date}",
+  "@fdaRetrievedTimestamp": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "fdaWarningMessage": "Neue Warnung zu Wechselwirkungen für Amoxicillin. Tippen Sie auf Info, um mehr zu erfahren.",
 
   "profileTitle": "Profil",
   "languageSectionTitle": "Sprache",
@@ -127,5 +153,10 @@
   },
   "medCardNotesHeader": "Anweisungen des Arztes:",
   "medCardReadOnlyBadge": "🔒 Verschrieben vom Behandlungsteam — Nur lesen",
-  "medicationsEmptyState": "Noch keine aktiven Medikamente in Ihrem Behandlungsplan."
+  "medicationsEmptyState": "Noch keine aktiven Medikamente in Ihrem Behandlungsplan.",
+  "frequencyQD": "Einmal täglich",
+  "frequencyBID": "Zweimal täglich",
+  "frequencyTID": "Dreimal täglich",
+  "frequencyQID": "Viermal täglich",
+  "frequencyPRN": "Bei Bedarf"
 }

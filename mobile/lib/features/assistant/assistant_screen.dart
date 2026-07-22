@@ -339,10 +339,11 @@ class RefusalBox extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final phone = message.emergencyPhone ?? '';
     final buttonText = phone.isNotEmpty
-        ? 'Call Emergency Contact ($phone)'
-        : 'Call Emergency Contact';
+        ? l10n.emergencyCallCtaWithPhone(phone)
+        : l10n.emergencyCallCta;
 
     return Container(
       key: const Key('refusal_box'),
@@ -362,7 +363,7 @@ class RefusalBox extends ConsumerWidget {
               SizedBox(width: 8.w),
               Expanded(
                 child: Text(
-                  'I Cannot Advise on Dose Changes or Urgent Symptoms',
+                  l10n.emergencyWarningTitle,
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.bold,

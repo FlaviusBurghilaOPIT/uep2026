@@ -47,3 +47,4 @@ build/
 .serena/
 agent/
 skills-lock.json
+.superpowers/

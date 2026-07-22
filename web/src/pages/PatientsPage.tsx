@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { apiFetch } from '../api/client'
+import { exportPatientAdherenceCSV, printPatientClinicalPDF } from '../utils/exportUtils'
 
 type Patient = {
   id: string
@@ -80,24 +81,40 @@ function PatientsPage() {
                     Allergies: {patient.allergies && patient.allergies.length > 0 ? patient.allergies.join(', ') : 'None'}
                   </p>
                 </div>
-                <button
-                  style={styles.newCaseButton}
-                  onClick={() => window.location.href = '/cases/new'}
-                >
-                  + New Case
-                </button>
+                <div style={styles.patientActions}>
+                  <button
+                    style={styles.exportCsvButton}
+                    onClick={() => exportPatientAdherenceCSV(patient.id)}
+                  >
+                    📥 Export Adherence CSV
+                  </button>
+                  <button
+                    style={styles.printPdfButton}
+                    onClick={() => printPatientClinicalPDF(patient.id)}
+                  >
+                    📄 Print / Save Clinical PDF
+                  </button>
+                  <button
+                    style={styles.newCaseButton}
+                    onClick={() => window.location.href = '/cases/new'}
+                  >
+                    + New Case
+                  </button>
+                </div>
               </div>
 
-              {patient.status === 'pending_onboarding' && patient.invite_code && (
+              {(patient.status === 'pending_onboarding' || patient.status === 'pending') && (
                 <div style={styles.inviteBox}>
                   <p style={styles.inviteLabel}>Pending onboarding &mdash; 6-Digit Invite Code:</p>
-                  <p style={styles.inviteCode}>{patient.invite_code}</p>
-                  <button
-                    style={styles.copyButton}
-                    onClick={() => handleCopyCode(patient.id, patient.invite_code as string)}
-                  >
-                    {copiedId === patient.id ? 'Copied!' : 'Copy Code'}
-                  </button>
+                  <p style={styles.inviteCode}>{patient.invite_code || 'N/A'}</p>
+                  {patient.invite_code && (
+                    <button
+                      style={styles.copyButton}
+                      onClick={() => handleCopyCode(patient.id, patient.invite_code as string)}
+                    >
+                      {copiedId === patient.id ? 'Copied!' : 'Copy Code'}
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -109,8 +126,8 @@ function PatientsPage() {
                       <span style={styles.caseType}>{c.surgery_type}</span>
                       <span style={{
                         ...styles.caseStatus,
-                        backgroundColor: c.status === 'open' ? '#dcfce7' : '#f1f5f9',
-                        color: c.status === 'open' ? '#16a34a' : '#6b7280'
+                        backgroundColor: c.status === 'open' ? '#f0fdf4' : '#f1f5f9',
+                        color: c.status === 'open' ? '#166534' : '#64748b'
                       }}>
                         {c.status}
                       </span>
@@ -147,7 +164,7 @@ function PatientsPage() {
 const styles = {
   container: {
     padding: '32px',
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#f8fafc',
     minHeight: '100vh'
   },
   header: {
@@ -159,12 +176,12 @@ const styles = {
   title: {
     fontSize: '22px',
     fontWeight: '600',
-    color: '#111827',
+    color: '#0f172a',
     margin: 0
   },
   newButton: {
     padding: '8px 16px',
-    backgroundColor: '#2563eb',
+    backgroundColor: '#0284c7',
     color: '#ffffff',
     border: 'none',
     borderRadius: '8px',
@@ -180,27 +197,55 @@ const styles = {
     backgroundColor: '#ffffff',
     padding: '20px',
     borderRadius: '12px',
-    border: '1px solid #e5e7eb'
+    border: '1px solid #e2e8f0'
   },
   patientHeader: {
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'flex-start'
+    alignItems: 'flex-start',
+    flexWrap: 'wrap' as const,
+    gap: '12px'
+  },
+  patientActions: {
+    display: 'flex',
+    gap: '8px',
+    alignItems: 'center',
+    flexWrap: 'wrap' as const
+  },
+  exportCsvButton: {
+    padding: '6px 12px',
+    backgroundColor: '#f0fdf4',
+    color: '#166534',
+    border: '1px solid #bbf7d0',
+    borderRadius: '8px',
+    fontSize: '12px',
+    fontWeight: '600' as const,
+    cursor: 'pointer'
+  },
+  printPdfButton: {
+    padding: '6px 12px',
+    backgroundColor: '#f0f9ff',
+    color: '#0284c7',
+    border: '1px solid #bae6fd',
+    borderRadius: '8px',
+    fontSize: '12px',
+    fontWeight: '600' as const,
+    cursor: 'pointer'
   },
   name: {
     fontSize: '16px',
     fontWeight: '600',
-    color: '#111827',
+    color: '#0f172a',
     margin: '0 0 4px 0'
   },
   detail: {
     fontSize: '13px',
-    color: '#6b7280',
+    color: '#64748b',
     margin: '0 0 4px 0'
   },
   newCaseButton: {
     padding: '6px 12px',
-    backgroundColor: '#2563eb',
+    backgroundColor: '#0284c7',
     color: '#ffffff',
     border: 'none',
     borderRadius: '8px',
@@ -210,13 +255,13 @@ const styles = {
   },
   casesSection: {
     marginTop: '16px',
-    borderTop: '1px solid #e5e7eb',
+    borderTop: '1px solid #e2e8f0',
     paddingTop: '12px'
   },
   casesTitle: {
     fontSize: '12px',
     fontWeight: '600',
-    color: '#6b7280',
+    color: '#64748b',
     textTransform: 'uppercase' as const,
     letterSpacing: '0.05em',
     margin: '0 0 8px 0'
@@ -230,7 +275,7 @@ const styles = {
   },
   caseType: {
     fontSize: '14px',
-    color: '#111827',
+    color: '#0f172a',
     fontWeight: '500'
   },
   caseStatus: {
@@ -246,31 +291,31 @@ const styles = {
   },
   secondaryButton: {
     padding: '4px 10px',
-    backgroundColor: '#eff6ff',
-    color: '#2563eb',
-    border: '1px solid #bfdbfe',
+    backgroundColor: '#f0f9ff',
+    color: '#0284c7',
+    border: '1px solid #bae6fd',
     borderRadius: '6px',
     fontSize: '12px',
     cursor: 'pointer'
   },
   noCases: {
     fontSize: '13px',
-    color: '#9ca3af',
+    color: '#94a3b8',
     marginTop: '12px',
     fontStyle: 'italic'
   },
   inviteBox: {
     marginTop: '16px',
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#f0f9ff',
     padding: '16px',
     borderRadius: '8px',
     textAlign: 'center' as const,
-    border: '1px solid #bfdbfe'
+    border: '1px solid #bae6fd'
   },
   inviteLabel: {
     margin: '0 0 4px 0',
     fontSize: '13px',
-    color: '#1e40af',
+    color: '#0369a1',
     fontWeight: '500' as const
   },
   inviteCode: {
@@ -278,11 +323,11 @@ const styles = {
     fontSize: '24px',
     fontWeight: 'bold' as const,
     letterSpacing: '3px',
-    color: '#1e3a8a'
+    color: '#0f172a'
   },
   copyButton: {
     padding: '6px 14px',
-    backgroundColor: '#2563eb',
+    backgroundColor: '#0284c7',
     color: '#ffffff',
     border: 'none',
     borderRadius: '6px',

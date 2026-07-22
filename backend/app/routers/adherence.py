@@ -80,3 +80,18 @@ def get_patient_adherence(
     )
 
     return logs
+
+
+@router.get("/patients/{patient_id}/export")
+def export_patient_telemetry_adherence(
+    patient_id: str,
+    format: str = "csv",
+    db: Session = Depends(get_db_for_user),
+    current_user: models.User = Depends(get_current_user),
+):
+    from app.routers.patients import export_patient_telemetry
+
+    return export_patient_telemetry(
+        patient_id=patient_id, format=format, db=db, current_user=current_user
+    )
+

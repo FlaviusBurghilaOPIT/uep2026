@@ -14,6 +14,9 @@
   "completeSetupButton": "Completar configuración",
 
   "todayTitle": "Hoy",
+  "greetingMorning": "Buenos días",
+  "greetingAfternoon": "Buenas tardes",
+  "greetingEvening": "Buenas noches",
   "medicationCardTitle": "Toma {medicationName}",
   "@medicationCardTitle": {
     "placeholders": {
@@ -57,13 +60,36 @@
   "checkinBadOption": "Me siento mal 😣",
   "checkinSuccessBanner": "Control diario registrado. Gracias por actualizar a tu equipo médico.",
 
-  "assistantTitle": "Asistente IA",
-  "assistantGuardrailBanner": "Asistente IA • Solo informativo, nunca diagnóstico",
+  "assistantTitle": "Asistente del Equipo Médico",
+  "assistantGuardrailBanner": "Asistente del Equipo Médico • Solo informativo, nunca diagnóstico",
   "typeMessagePlaceholder": "Escribe tu pregunta...",
   "chipMedicationSideEffects": "Efectos secundarios de medicamentos",
   "chipWoundCareTips": "Consejos para el cuidado de heridas",
   "chipPhysioTargets": "Objetivos de fisioterapia",
   "chipEmergencyContact": "Contacto de emergencia",
+  "emergencyCallCta": "Llamar al contacto de emergencia",
+  "emergencyCallCtaWithPhone": "Llamar al contacto de emergencia ({phone})",
+  "@emergencyCallCtaWithPhone": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "emergencyWarningTitle": "No puedo asesorar sobre cambios de dosis o síntomas urgentes",
+
+  "fdaSafetyAlertTitle": "Información oficial de seguridad de medicamentos de la FDA",
+  "fdaSourceLive": "📋 Fuente: Información oficial de la FDA",
+  "fdaSourceFixture": "📋 Fuente: Caché reglamentario",
+  "fdaRetrievedTimestamp": "Obtenido: {date}",
+  "@fdaRetrievedTimestamp": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "fdaWarningMessage": "Nueva advertencia de interacción de medicamentos para Amoxicilina. Toca para saber más.",
 
   "profileTitle": "Perfil",
   "languageSectionTitle": "Idioma",
@@ -127,5 +153,10 @@
   },
   "medCardNotesHeader": "Instrucciones del médico:",
   "medCardReadOnlyBadge": "🔒 Recetado por el equipo médico — Solo lectura",
-  "medicationsEmptyState": "Aún no hay medicamentos activos en tu plan de cuidado."
+  "medicationsEmptyState": "Aún no hay medicamentos activos en tu plan de cuidado.",
+  "frequencyQD": "Una vez al día",
+  "frequencyBID": "Dos veces al día",
+  "frequencyTID": "Tres veces al día",
+  "frequencyQID": "Cuatro veces al día",
+  "frequencyPRN": "Según sea necesario"
 }

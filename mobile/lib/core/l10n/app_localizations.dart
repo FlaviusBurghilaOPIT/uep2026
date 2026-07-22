@@ -170,6 +170,24 @@ abstract class AppLocalizations {
   /// **'Today'**
   String get todayTitle;
 
+  /// No description provided for @greetingMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Good morning'**
+  String get greetingMorning;
+
+  /// No description provided for @greetingAfternoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Good afternoon'**
+  String get greetingAfternoon;
+
+  /// No description provided for @greetingEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Good evening'**
+  String get greetingEvening;
+
   /// No description provided for @medicationCardTitle.
   ///
   /// In en, this message translates to:
@@ -293,13 +311,13 @@ abstract class AppLocalizations {
   /// No description provided for @assistantTitle.
   ///
   /// In en, this message translates to:
-  /// **'AI Assistant'**
+  /// **'Care Team Assistant'**
   String get assistantTitle;
 
   /// No description provided for @assistantGuardrailBanner.
   ///
   /// In en, this message translates to:
-  /// **'AI Assistant • Informational only, never diagnostic'**
+  /// **'Care Team Assistant • Informational only, never diagnostic'**
   String get assistantGuardrailBanner;
 
   /// No description provided for @typeMessagePlaceholder.
@@ -331,6 +349,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Emergency contact'**
   String get chipEmergencyContact;
+
+  /// No description provided for @emergencyCallCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Call Emergency Contact'**
+  String get emergencyCallCta;
+
+  /// No description provided for @emergencyCallCtaWithPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Call Emergency Contact ({phone})'**
+  String emergencyCallCtaWithPhone(String phone);
+
+  /// No description provided for @emergencyWarningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'I Cannot Advise on Dose Changes or Urgent Symptoms'**
+  String get emergencyWarningTitle;
+
+  /// No description provided for @fdaSafetyAlertTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Official FDA Drug Safety Info'**
+  String get fdaSafetyAlertTitle;
+
+  /// No description provided for @fdaSourceLive.
+  ///
+  /// In en, this message translates to:
+  /// **'📋 Source: Official FDA Drug Safety Info'**
+  String get fdaSourceLive;
+
+  /// No description provided for @fdaSourceFixture.
+  ///
+  /// In en, this message translates to:
+  /// **'📋 Source: Regulatory Cache'**
+  String get fdaSourceFixture;
+
+  /// No description provided for @fdaRetrievedTimestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Retrieved: {date}'**
+  String fdaRetrievedTimestamp(String date);
+
+  /// No description provided for @fdaWarningMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'New drug interaction warning for Amoxicillin. Tap info to learn more.'**
+  String get fdaWarningMessage;
 
   /// No description provided for @profileTitle.
   ///
@@ -499,6 +565,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No active medications on your care plan yet.'**
   String get medicationsEmptyState;
+
+  /// No description provided for @frequencyQD.
+  ///
+  /// In en, this message translates to:
+  /// **'Once daily'**
+  String get frequencyQD;
+
+  /// No description provided for @frequencyBID.
+  ///
+  /// In en, this message translates to:
+  /// **'Twice daily'**
+  String get frequencyBID;
+
+  /// No description provided for @frequencyTID.
+  ///
+  /// In en, this message translates to:
+  /// **'Three times daily'**
+  String get frequencyTID;
+
+  /// No description provided for @frequencyQID.
+  ///
+  /// In en, this message translates to:
+  /// **'Four times daily'**
+  String get frequencyQID;
+
+  /// No description provided for @frequencyPRN.
+  ///
+  /// In en, this message translates to:
+  /// **'As needed'**
+  String get frequencyPRN;
 }
 
 class _AppLocalizationsDelegate

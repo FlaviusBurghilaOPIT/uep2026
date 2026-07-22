@@ -25,9 +25,9 @@ class AppStrings {
   static const String carousel4Body =
       'Track your recovery journey day by day. Your clinician monitors your progress remotely.';
 
-  static const String hipaaAware = 'HIPAA-aware';
-  static const String awsBedrock = 'AWS Bedrock';
-  static const String cognitoAuth = 'Cognito auth';
+  static const String hipaaAware = 'Secure Clinic Account';
+  static const String awsBedrock = 'Care Team Assistant';
+  static const String cognitoAuth = 'Secure Clinic Account';
 
   static const String welcomeBack = 'Welcome back';
   static const String signInSubtitle =
@@ -70,7 +70,7 @@ class AppStrings {
   static const String primaryCondition = 'PRIMARY CONDITION';
   static const String completeSetup = 'Complete Setup';
   static const String healthInfoEncrypted =
-      'Your health information is encrypted and never shared without your consent. Compliant with HIPAA-aware standards.';
+      'Your health information is encrypted and never shared without your consent. Compliant with secure clinic standards.';
 
   static const List<String> conditions = [
     'Post-surgical recovery',
@@ -83,7 +83,7 @@ class AppStrings {
 
   static const String cognitoSecurityPrefix =
       'Authentication secured by ';
-  static const String cognitoSecurityBold = 'Amazon Cognito';
+  static const String cognitoSecurityBold = 'Secure Clinic Account';
   static const String cognitoSecuritySuffix =
       ', your credentials never touch our servers.';
 
@@ -93,8 +93,8 @@ class AppStrings {
   static const String pending = 'Pending';
   static const String missed = 'Missed';
   static const String skip = 'Skip';
-  static const String fdaSafetyAlert = 'FDA Safety Alert';
-  static const String fdaSourceLive = '📋 Source: openFDA Live';
+  static const String fdaSafetyAlert = 'Official FDA Drug Safety Info';
+  static const String fdaSourceLive = '📋 Source: Official FDA Drug Safety Info';
   static const String fdaSourceFixture = '📋 Source: Regulatory Cache';
   static String fdaRetrievedTimestamp(String date) => 'Retrieved: $date';
 

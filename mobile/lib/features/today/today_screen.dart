@@ -58,7 +58,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     },
   ];
 
-  String _fdaSource = 'openFDA';
+  String _fdaSource = 'Official FDA Drug Safety Info';
   String? _fdaRetrievedAt;
   String _fdaMessage =
       'New drug interaction warning for Amoxicillin. Tap info to learn more.';
@@ -183,7 +183,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                     (m) => {
                       'id': m['id'],
                       'name': m['name'],
-                      'dosage': '${m['dose']} · ${m['schedule_text']}',
+                      'dosage': '${m['dose']} · ${_localizedFrequency(context, (m['frequency'] ?? m['schedule_text'] ?? 'QD') as String)}',
                       'time': '08:00',
                       'status': 'pending',
                       'hasWarning': false,
@@ -197,6 +197,19 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       } finally {
         if (mounted) setState(() => _isLoading = false);
       }
+    }
+  }
+
+  String _localizedFrequency(BuildContext context, String code) {
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) return code;
+    switch (code.toUpperCase()) {
+      case 'QD':  return l10n.frequencyQD;
+      case 'BID': return l10n.frequencyBID;
+      case 'TID': return l10n.frequencyTID;
+      case 'QID': return l10n.frequencyQID;
+      case 'PRN': return l10n.frequencyPRN;
+      default:    return code;
     }
   }
 
@@ -329,9 +342,10 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
         );
     final firstName = auth.fullName?.split(' ').first ?? 'User';
     final now = DateTime.now();
+    final l10n = AppLocalizations.of(context);
     final greeting = now.hour < 12
-        ? 'Good morning'
-        : (now.hour < 17 ? 'Good afternoon' : 'Good evening');
+        ? l10n.greetingMorning
+        : (now.hour < 17 ? l10n.greetingAfternoon : l10n.greetingEvening);
 
     return Scaffold(
       body: SafeArea(

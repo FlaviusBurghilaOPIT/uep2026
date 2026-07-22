@@ -43,6 +43,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get todayTitle => 'Heute';
 
   @override
+  String get greetingMorning => 'Guten Morgen';
+
+  @override
+  String get greetingAfternoon => 'Guten Tag';
+
+  @override
+  String get greetingEvening => 'Guten Abend';
+
+  @override
   String medicationCardTitle(String medicationName) {
     return 'Nimm $medicationName';
   }
@@ -110,11 +119,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'Täglicher Check-in gespeichert. Danke, dass Sie Ihr Behandlungsteam informiert haben.';
 
   @override
-  String get assistantTitle => 'KI-Assistent';
+  String get assistantTitle => 'Pflegeteam-Assistent';
 
   @override
   String get assistantGuardrailBanner =>
-      'KI-Assistent • Nur zur Information, nie diagnostisch';
+      'Pflegeteam-Assistent • Nur zur Information, nie diagnostisch';
 
   @override
   String get typeMessagePlaceholder => 'Schreiben Sie Ihre Frage...';
@@ -130,6 +139,37 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chipEmergencyContact => 'Notfallkontakt';
+
+  @override
+  String get emergencyCallCta => 'Notfallkontakt anrufen';
+
+  @override
+  String emergencyCallCtaWithPhone(String phone) {
+    return 'Notfallkontakt anrufen ($phone)';
+  }
+
+  @override
+  String get emergencyWarningTitle =>
+      'Ich kann nicht zu Dosisänderungen oder dringenden Symptomen beraten';
+
+  @override
+  String get fdaSafetyAlertTitle =>
+      'Offizielle FDA-Arzneimittelsicherheitsinformationen';
+
+  @override
+  String get fdaSourceLive => '📋 Quelle: Offizielle FDA-Informationen';
+
+  @override
+  String get fdaSourceFixture => '📋 Quelle: Regulatorischer Cache';
+
+  @override
+  String fdaRetrievedTimestamp(String date) {
+    return 'Abgerufen: $date';
+  }
+
+  @override
+  String get fdaWarningMessage =>
+      'Neue Warnung zu Wechselwirkungen für Amoxicillin. Tippen Sie auf Info, um mehr zu erfahren.';
 
   @override
   String get profileTitle => 'Profil';
@@ -227,4 +267,19 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get medicationsEmptyState =>
       'Noch keine aktiven Medikamente in Ihrem Behandlungsplan.';
+
+  @override
+  String get frequencyQD => 'Einmal täglich';
+
+  @override
+  String get frequencyBID => 'Zweimal täglich';
+
+  @override
+  String get frequencyTID => 'Dreimal täglich';
+
+  @override
+  String get frequencyQID => 'Viermal täglich';
+
+  @override
+  String get frequencyPRN => 'Bei Bedarf';
 }

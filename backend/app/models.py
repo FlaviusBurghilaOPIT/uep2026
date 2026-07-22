@@ -14,6 +14,7 @@ from sqlalchemy import (
     DateTime,
     Enum,
     ForeignKey,
+    Integer,
     String,
     Text,
 )
@@ -81,6 +82,9 @@ class User(Base):
     )
     cases_as_patient: Mapped[list["Case"]] = relationship(
         back_populates="patient", foreign_keys="Case.patient_id"
+    )
+    device_tokens: Mapped[list["DeviceToken"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
     )
 
 
@@ -263,3 +267,19 @@ class WikiArticle(Base):
     source_case_ids: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     approved_by: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+
+
+class DeviceToken(Base):
+    __tablename__ = "device_tokens"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)
+    token: Mapped[str] = mapped_column(String(512), unique=True, index=True, nullable=False)
+    platform: Mapped[str] = mapped_column(String(32), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+    user: Mapped["User"] = relationship(back_populates="device_tokens")
+

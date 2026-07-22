@@ -4,6 +4,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import '../network/api_service.dart';
+import '../../services/push_notification_service.dart';
 
 // Top-level background handler — required for terminated app dose logging
 @pragma('vm:entry-point')
@@ -33,9 +34,34 @@ class NotificationService {
 
   final _plugin = FlutterLocalNotificationsPlugin();
   final _notificationResponseSubject = StreamController<NotificationResponse>.broadcast();
+  PushNotificationService? _pushNotificationService;
 
   Stream<NotificationResponse> get notificationResponseStream =>
       _notificationResponseSubject.stream;
+
+  void setPushNotificationService(PushNotificationService pushService) {
+    _pushNotificationService = pushService;
+  }
+
+  PushNotificationService get pushNotificationService =>
+      _pushNotificationService ?? PushNotificationService(notificationService: this);
+
+  /// Synchronizes remote push fallback when OS local notification permissions are restricted
+  /// or when operating in background.
+  Future<bool> checkAndSyncPushFallback({
+    required String deviceToken,
+    required String platform,
+    required bool isPermissionGranted,
+    bool isAppInBackground = false,
+  }) async {
+    return await pushNotificationService.syncPushFallback(
+      token: deviceToken,
+      platform: platform,
+      isLocalPermissionGranted: isPermissionGranted,
+      isAppInBackground: isAppInBackground,
+    );
+  }
+
 
   static String? parseReminderId(String payload) {
     if (payload.isEmpty) return null;

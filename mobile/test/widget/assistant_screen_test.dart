@@ -54,7 +54,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.text('AI Assistant • Informational only, never diagnostic'),
+      find.text('Care Team Assistant • Informational only, never diagnostic'),
       findsOneWidget,
     );
   });

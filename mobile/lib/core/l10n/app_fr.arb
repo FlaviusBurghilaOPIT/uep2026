@@ -14,6 +14,9 @@
   "completeSetupButton": "Terminer la configuration",
 
   "todayTitle": "Aujourd'hui",
+  "greetingMorning": "Bonjour",
+  "greetingAfternoon": "Bon après-midi",
+  "greetingEvening": "Bonsoir",
   "medicationCardTitle": "Prendre {medicationName}",
   "@medicationCardTitle": {
     "placeholders": {
@@ -57,13 +60,36 @@
   "checkinBadOption": "Je me sens mal 😣",
   "checkinSuccessBanner": "Suivi quotidien enregistré. Merci d'avoir informé votre équipe soignante.",
 
-  "assistantTitle": "Assistant IA",
-  "assistantGuardrailBanner": "Assistant IA • Informations uniquement, jamais de diagnostic",
+  "assistantTitle": "Assistant de l'Équipe Soignante",
+  "assistantGuardrailBanner": "Assistant de l'Équipe Soignante • Informations uniquement, jamais de diagnostic",
   "typeMessagePlaceholder": "Écrivez votre question...",
   "chipMedicationSideEffects": "Effets secondaires des médicaments",
   "chipWoundCareTips": "Conseils de soins des plaies",
   "chipPhysioTargets": "Objectifs de physiothérapie",
   "chipEmergencyContact": "Contact d'urgence",
+  "emergencyCallCta": "Appeler le contact d'urgence",
+  "emergencyCallCtaWithPhone": "Appeler le contact d'urgence ({phone})",
+  "@emergencyCallCtaWithPhone": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "emergencyWarningTitle": "Je ne peux pas donner de conseils sur les changements de dose ou les symptômes urgents",
+
+  "fdaSafetyAlertTitle": "Informations officielles de sécurité des médicaments de la FDA",
+  "fdaSourceLive": "📋 Source : Informations officielles de la FDA",
+  "fdaSourceFixture": "📋 Source : Cache réglementaire",
+  "fdaRetrievedTimestamp": "Récupéré : {date}",
+  "@fdaRetrievedTimestamp": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "fdaWarningMessage": "Nouvelle alerte d'interaction médicamenteuse pour l'Amoxicilline. Appuyez sur info pour en savoir plus.",
 
   "profileTitle": "Profil",
   "languageSectionTitle": "Langue",
@@ -127,5 +153,10 @@
   },
   "medCardNotesHeader": "Instructions du médecin :",
   "medCardReadOnlyBadge": "🔒 Prescrit par l'équipe soignante — Lecture seule",
-  "medicationsEmptyState": "Aucun médicament actif dans votre plan de soins pour le moment."
+  "medicationsEmptyState": "Aucun médicament actif dans votre plan de soins pour le moment.",
+  "frequencyQD": "Une fois par jour",
+  "frequencyBID": "Deux fois par jour",
+  "frequencyTID": "Trois fois par jour",
+  "frequencyQID": "Quatre fois par jour",
+  "frequencyPRN": "Au besoin"
 }

@@ -26,18 +26,20 @@ function FDAPage() {
     setResult(null)
     setLoading(true)
     try {
-      const data = await apiFetch<any>(`/fda/drug/${encodeURIComponent(term.toLowerCase().trim())}`)
-      const name = data.drug || data.drug_name || term
-      const warnings = data.warnings || (data.summary ? data.summary.split('\n').filter(Boolean) : ['No specific warnings found.'])
-      const retrieved_at = data.retrieved_at || new Date().toISOString()
+      const data = await apiFetch<Record<string, unknown>>(`/fda/drug/${encodeURIComponent(term.toLowerCase().trim())}`)
+      const name = (data.drug || data.drug_name || term) as string
+      const rawWarnings = data.warnings as string[] | undefined
+      const summary = data.summary as string | undefined
+      const warnings = rawWarnings || (summary ? summary.split('\n').filter(Boolean) : ['No specific warnings found.'])
+      const retrieved_at = (data.retrieved_at || new Date().toISOString()) as string
       setResult({
         drug: name,
         warnings,
-        source: data.source || 'openFDA',
+        source: (data.source || 'openFDA') as string,
         retrieved_at
       })
-    } catch (err: any) {
-      setError(err.message || 'Could not fetch FDA data. Please try again.')
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Could not fetch FDA data. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -49,8 +51,10 @@ function FDAPage() {
 
   useEffect(() => {
     if (initialDrug) {
-      handleSearch(initialDrug)
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      void handleSearch(initialDrug)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (

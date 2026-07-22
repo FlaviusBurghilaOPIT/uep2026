@@ -61,3 +61,28 @@ def test_chat_returns_empty_string_when_content_is_none(monkeypatch):
     )
 
     assert reply == ""
+
+
+def test_bedrock_provider_init_env_vars(monkeypatch):
+    monkeypatch.setenv("BEDROCK_GUARDRAIL_IDENTIFIER", "gr-123456")
+    monkeypatch.setenv("BEDROCK_GUARDRAIL_VERSION", "2")
+    from app.providers.llm import BedrockProvider
+
+    provider = BedrockProvider()
+    assert provider.guardrail_identifier == "gr-123456"
+    assert provider.guardrail_version == "2"
+
+
+def test_bedrock_provider_local_regex_fallback():
+    from app.providers.llm import BedrockProvider, FALLBACK_REFUSAL_RESPONSE
+
+    provider = BedrockProvider()
+    reply = asyncio.run(
+        provider.chat(
+            messages=[{"role": "user", "content": "Should I take a double dose of medication?"}],
+            system="system prompt",
+        )
+    )
+
+    assert reply == FALLBACK_REFUSAL_RESPONSE
+

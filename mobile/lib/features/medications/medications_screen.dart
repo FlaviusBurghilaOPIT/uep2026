@@ -48,6 +48,19 @@ class _MedicationsScreenState extends ConsumerState<MedicationsScreen> {
     }
   }
 
+  String _localizedFrequency(BuildContext context, String code) {
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) return code;
+    switch (code.toUpperCase()) {
+      case 'QD':  return l10n.frequencyQD;
+      case 'BID': return l10n.frequencyBID;
+      case 'TID': return l10n.frequencyTID;
+      case 'QID': return l10n.frequencyQID;
+      case 'PRN': return l10n.frequencyPRN;
+      default:    return code;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
@@ -184,7 +197,7 @@ class _MedicationsScreenState extends ConsumerState<MedicationsScreen> {
           ),
           SizedBox(height: 4.h),
           Text(
-            l10n.medCardScheduleLabel(medication.scheduleText),
+            l10n.medCardScheduleLabel(_localizedFrequency(context, medication.frequency)),
             style: AppTextStyles.bodySmall,
           ),
           SizedBox(height: 4.h),

@@ -1,5 +1,8 @@
+import { useTranslation, type Language } from '../i18n'
+
 function NavBar() {
   const path = window.location.pathname
+  const { language, setLanguage, t } = useTranslation()
 
   const linkStyle = (active: boolean) => ({
     display: 'flex',
@@ -9,33 +12,51 @@ function NavBar() {
     borderRadius: '8px',
     fontSize: '14px',
     fontWeight: '500' as const,
-    color: active ? '#2563eb' : '#6b7280',
-    backgroundColor: active ? '#eff6ff' : 'transparent',
+    color: active ? '#ffffff' : '#cbd5e1',
+    backgroundColor: active ? '#0284c7' : 'transparent',
     textDecoration: 'none' as const,
     cursor: 'pointer'
   })
 
   return (
     <div style={styles.sidebar}>
-      <div style={styles.brand}>
-        <span style={styles.brandPlus}>+</span> CarePro
+      <div style={styles.brandHeader}>
+        <div style={styles.brand}>
+          <span style={styles.brandPlus}>+</span> CarePro
+        </div>
+        <div style={styles.langSelectorWrapper}>
+          <span style={styles.langIcon}>🌐</span>
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value as Language)}
+            style={styles.langSelect}
+            aria-label="Select Language"
+          >
+            <option value="en">EN</option>
+            <option value="es">ES</option>
+            <option value="it">IT</option>
+          </select>
+        </div>
       </div>
 
       <div style={styles.nav}>
+        <a href="/" style={linkStyle(path === '/' || path === '/triage')}>
+          <span>🩺</span> {t('nav.triageDashboard')}
+        </a>
         <a href="/patients" style={linkStyle(path === '/patients')}>
-          <span>👤</span> Patients
+          <span>👤</span> {t('nav.patients')}
         </a>
         <a href="/cases/new" style={linkStyle(path === '/cases/new')}>
-          <span>📋</span> New Case
+          <span>📋</span> {t('nav.newCase')}
         </a>
         <a href="/cases/case-001/medications/list" style={linkStyle(path.includes('medications'))}>
-          <span>💊</span> Medications
+          <span>💊</span> {t('nav.medications')}
         </a>
         <a href="/cases/case-001/recommendations/list" style={linkStyle(path.includes('recommendations'))}>
-          <span>📝</span> Recommendations
+          <span>📝</span> {t('nav.recommendations')}
         </a>
         <a href="/fda" style={linkStyle(path.includes('fda'))}>
-          <span>⚕️</span> FDA Safety
+          <span>⚕️</span> {t('nav.fdaSafety')}
         </a>
       </div>
 
@@ -49,7 +70,7 @@ function NavBar() {
             window.location.href = '/login'
           }}
         >
-          <span>🚪</span> Log out
+          <span>🚪</span> {t('nav.logout')}
         </button>
         <div style={styles.userCard}>
           <div style={styles.avatar}>DR</div>
@@ -67,8 +88,8 @@ const styles = {
   sidebar: {
     width: '220px',
     minHeight: '100vh',
-    backgroundColor: '#ffffff',
-    borderRight: '1px solid #e5e7eb',
+    backgroundColor: '#0f172a',
+    borderRight: '1px solid #1e293b',
     display: 'flex',
     flexDirection: 'column' as const,
     padding: '24px 16px',
@@ -77,15 +98,42 @@ const styles = {
     left: 0,
     zIndex: 100
   },
+  brandHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '32px',
+    paddingLeft: '4px',
+    paddingRight: '4px'
+  },
   brand: {
     fontSize: '20px',
     fontWeight: '700' as const,
-    color: '#111827',
-    marginBottom: '32px',
-    paddingLeft: '8px'
+    color: '#ffffff'
   },
   brandPlus: {
-    color: '#2563eb'
+    color: '#38bdf8'
+  },
+  langSelectorWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+    backgroundColor: '#1e293b',
+    padding: '4px 6px',
+    borderRadius: '6px',
+    border: '1px solid #334155'
+  },
+  langIcon: {
+    fontSize: '12px'
+  },
+  langSelect: {
+    backgroundColor: 'transparent',
+    color: '#38bdf8',
+    border: 'none',
+    fontSize: '12px',
+    fontWeight: '700' as const,
+    cursor: 'pointer',
+    outline: 'none'
   },
   nav: {
     display: 'flex',
@@ -100,7 +148,7 @@ const styles = {
   },
   divider: {
     height: '1px',
-    backgroundColor: '#e5e7eb',
+    backgroundColor: '#1e293b',
     margin: '8px 0'
   },
   logout: {
@@ -111,7 +159,7 @@ const styles = {
     borderRadius: '8px',
     fontSize: '14px',
     fontWeight: '500' as const,
-    color: '#6b7280',
+    color: '#cbd5e1',
     backgroundColor: 'transparent',
     border: 'none',
     cursor: 'pointer',
@@ -124,13 +172,13 @@ const styles = {
     gap: '10px',
     padding: '10px 8px',
     borderRadius: '8px',
-    backgroundColor: '#f9fafb'
+    backgroundColor: '#1e293b'
   },
   avatar: {
     width: '36px',
     height: '36px',
     borderRadius: '50%',
-    backgroundColor: '#2563eb',
+    backgroundColor: '#0284c7',
     color: '#ffffff',
     display: 'flex',
     alignItems: 'center',
@@ -142,11 +190,11 @@ const styles = {
   userName: {
     fontSize: '13px',
     fontWeight: '500' as const,
-    color: '#111827'
+    color: '#ffffff'
   },
   userRole: {
     fontSize: '11px',
-    color: '#6b7280'
+    color: '#94a3b8'
   }
 }
 

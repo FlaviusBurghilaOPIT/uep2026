@@ -94,3 +94,64 @@ def test_two_different_reminders_both_succeed(client, db_session):
 
     assert response_a.status_code == 200
     assert response_b.status_code == 200
+
+
+def test_export_patient_telemetry_csv(client, db_session):
+    reminder, token = _seed_reminder(db_session)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Log a dose first
+    client.post(
+        "/adherence/log",
+        params={"scheduled_reminder_id": reminder.id, "status": "taken"},
+        headers=headers,
+    )
+
+    patient_id = reminder.medication.case.patient_id
+    response = client.get(f"/patients/{patient_id}/export", headers=headers)
+
+    assert response.status_code == 200
+    assert response.headers["Content-Type"].startswith("text/csv")
+    content_disp = response.headers.get("Content-Disposition", "")
+    assert "attachment;" in content_disp
+    assert f"patient_{patient_id}_telemetry_" in content_disp
+    assert content_disp.endswith('.csv"') or content_disp.endswith(".csv")
+
+    csv_text = response.text
+    lines = [line.strip() for line in csv_text.strip().split("\n") if line.strip()]
+    assert len(lines) >= 2
+    assert lines[0] == "Date,Medication,ScheduledTime,LoggedTime,Status,Notes"
+    assert "Ibuprofen" in lines[1]
+    assert "taken" in lines[1]
+
+
+def test_export_patient_telemetry_json(client, db_session):
+    reminder, token = _seed_reminder(db_session)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    client.post(
+        "/adherence/log",
+        params={"scheduled_reminder_id": reminder.id, "status": "taken"},
+        headers=headers,
+    )
+
+    patient_id = reminder.medication.case.patient_id
+    response = client.get(f"/patients/{patient_id}/export?format=json", headers=headers)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["patient"]["id"] == patient_id
+    assert data["summary"]["total_doses"] == 1
+    assert data["summary"]["taken"] == 1
+    assert data["summary"]["adherence_percentage"] == 100.0
+    assert len(data["dose_logs"]) == 1
+    assert data["dose_logs"][0]["status"] == "taken"
+
+
+def test_export_patient_telemetry_not_found(client, db_session):
+    reminder, token = _seed_reminder(db_session)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    response = client.get("/patients/nonexistent-patient-id/export", headers=headers)
+    assert response.status_code == 404
+

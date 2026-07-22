@@ -43,6 +43,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get todayTitle => 'Today';
 
   @override
+  String get greetingMorning => 'Good morning';
+
+  @override
+  String get greetingAfternoon => 'Good afternoon';
+
+  @override
+  String get greetingEvening => 'Good evening';
+
+  @override
   String medicationCardTitle(String medicationName) {
     return 'Take $medicationName';
   }
@@ -110,11 +119,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Daily check-in logged. Thank you for updating your care team.';
 
   @override
-  String get assistantTitle => 'AI Assistant';
+  String get assistantTitle => 'Care Team Assistant';
 
   @override
   String get assistantGuardrailBanner =>
-      'AI Assistant • Informational only, never diagnostic';
+      'Care Team Assistant • Informational only, never diagnostic';
 
   @override
   String get typeMessagePlaceholder => 'Type your question...';
@@ -130,6 +139,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chipEmergencyContact => 'Emergency contact';
+
+  @override
+  String get emergencyCallCta => 'Call Emergency Contact';
+
+  @override
+  String emergencyCallCtaWithPhone(String phone) {
+    return 'Call Emergency Contact ($phone)';
+  }
+
+  @override
+  String get emergencyWarningTitle =>
+      'I Cannot Advise on Dose Changes or Urgent Symptoms';
+
+  @override
+  String get fdaSafetyAlertTitle => 'Official FDA Drug Safety Info';
+
+  @override
+  String get fdaSourceLive => '📋 Source: Official FDA Drug Safety Info';
+
+  @override
+  String get fdaSourceFixture => '📋 Source: Regulatory Cache';
+
+  @override
+  String fdaRetrievedTimestamp(String date) {
+    return 'Retrieved: $date';
+  }
+
+  @override
+  String get fdaWarningMessage =>
+      'New drug interaction warning for Amoxicillin. Tap info to learn more.';
 
   @override
   String get profileTitle => 'Profile';
@@ -224,4 +263,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get medicationsEmptyState =>
       'No active medications on your care plan yet.';
+
+  @override
+  String get frequencyQD => 'Once daily';
+
+  @override
+  String get frequencyBID => 'Twice daily';
+
+  @override
+  String get frequencyTID => 'Three times daily';
+
+  @override
+  String get frequencyQID => 'Four times daily';
+
+  @override
+  String get frequencyPRN => 'As needed';
 }

@@ -1,3 +1,18 @@
+:root {
+  --nav-bg: #0f172a;
+  --nav-text: #ffffff;
+  --primary-cta: #0284c7;
+  --primary-cta-hover: #0369a1;
+  --page-bg: #f8fafc;
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0;
+  --text-main: #0f172a;
+  --badge-red-bg: #fef2f2;
+  --badge-red-text: #b91c1c;
+  --badge-amber-bg: #fffbe6;
+  --badge-amber-text: #d97706;
+}
+
 .counter {
   font-size: 16px;
   padding: 5px 10px;

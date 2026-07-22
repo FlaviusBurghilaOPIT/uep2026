@@ -36,7 +36,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('FdaWarningCard Widget Tests', () {
-    testWidgets('renders openFDA Live source badge and retrieved timestamp',
+    testWidgets('renders Official FDA Drug Safety Info source badge and retrieved timestamp',
         (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
@@ -47,7 +47,7 @@ void main() {
         buildTestWidget(
           const Scaffold(
             body: FdaWarningCard(
-              source: 'openFDA',
+              source: 'Official FDA Drug Safety Info',
               retrievedAt: '2026-07-22',
               message: 'Live FDA Warning test text',
             ),
@@ -56,7 +56,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('📋 Source: openFDA Live'), findsOneWidget);
+      expect(find.text('📋 Source: Official FDA Drug Safety Info'), findsOneWidget);
       expect(find.text('Retrieved: 2026-07-22'), findsOneWidget);
       expect(find.text('Live FDA Warning test text'), findsOneWidget);
     });
@@ -96,7 +96,7 @@ void main() {
     });
 
     testWidgets(
-        'switches badge to openFDA Live state from mocked API response with source: live',
+        'switches badge to Official FDA Drug Safety Info state from mocked API response with source: live',
         (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
@@ -117,7 +117,7 @@ void main() {
       await tester.pumpWidget(buildTestAppWithApi(fakeApi, const TodayScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('📋 Source: openFDA Live'), findsOneWidget);
+      expect(find.text('📋 Source: Official FDA Drug Safety Info'), findsOneWidget);
       expect(find.text('Retrieved: 2026-07-22'), findsOneWidget);
       expect(find.text('Live warning summary'), findsOneWidget);
     });

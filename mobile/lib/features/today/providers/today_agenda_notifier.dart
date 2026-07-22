@@ -97,7 +97,8 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
             id: map['id'] as String,
             name: map['name'] as String,
             dose: map['dose'] as String,
-            scheduleText: map['schedule_text'] as String,
+            scheduleText: (map['frequency'] as String?) ??
+                (map['schedule_text'] as String? ?? 'QD'),
             duration: map['duration'] as String,
             notes: map['notes'] as String?,
           );

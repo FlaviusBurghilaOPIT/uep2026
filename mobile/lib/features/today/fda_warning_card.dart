@@ -4,6 +4,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/constants/app_text_styles.dart';
+import '../../core/l10n/app_localizations.dart';
 
 class FdaWarningCard extends StatelessWidget {
   final String source;
@@ -14,7 +15,7 @@ class FdaWarningCard extends StatelessWidget {
 
   const FdaWarningCard({
     super.key,
-    this.source = 'openFDA',
+    this.source = 'Official FDA Drug Safety Info',
     this.retrievedAt,
     this.title = AppStrings.fdaSafetyAlert,
     this.message =
@@ -24,7 +25,11 @@ class FdaWarningCard extends StatelessWidget {
 
   bool get isLive {
     final lower = source.trim().toLowerCase();
-    return lower == 'openfda' || lower == 'live' || lower == 'openfda live';
+    return lower.contains('fda') ||
+        lower == 'official fda drug safety info' ||
+        lower == 'openfda' ||
+        lower == 'live' ||
+        lower == 'openfda live';
   }
 
   String get sourceBadgeText =>
@@ -47,6 +52,26 @@ class FdaWarningCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final badgeText = isLive ? l10n.fdaSourceLive : l10n.fdaSourceFixture;
+    final String timestampText;
+    if (retrievedAt != null && retrievedAt!.trim().isNotEmpty) {
+      final clean = retrievedAt!.trim();
+      if (clean.startsWith('Retrieved:') ||
+          clean.startsWith('Obtenido:') ||
+          clean.startsWith('Recuperato:')) {
+        timestampText = clean;
+      } else {
+        timestampText = l10n.fdaRetrievedTimestamp(clean);
+      }
+    } else {
+      final now = DateTime.now();
+      final year = now.year.toString();
+      final month = now.month.toString().padLeft(2, '0');
+      final day = now.day.toString().padLeft(2, '0');
+      timestampText = l10n.fdaRetrievedTimestamp('$year-$month-$day');
+    }
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
       child: GestureDetector(
@@ -85,7 +110,7 @@ class FdaWarningCard extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        sourceBadgeText,
+                        badgeText,
                         style: AppTextStyles.bodySmall.copyWith(
                           fontSize: 11.sp,
                           fontWeight: FontWeight.w600,
@@ -97,7 +122,7 @@ class FdaWarningCard extends StatelessWidget {
                   ),
                   SizedBox(width: 8.w),
                   Text(
-                    formattedTimestamp,
+                    timestampText,
                     key: const Key('fda_retrieval_timestamp'),
                     style: AppTextStyles.bodySmall.copyWith(
                       fontSize: 11.sp,
