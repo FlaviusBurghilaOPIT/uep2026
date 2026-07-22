@@ -66,6 +66,8 @@ async def chat(
             case_id=case.id,
             role=models.ChatRole.user,
             content=request.message,
+            in_scope=in_scope,
+            escalate=escalate,
         )
     )
     db.commit()
