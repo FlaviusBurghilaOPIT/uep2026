@@ -21,14 +21,14 @@ Complete the previously-scoped, unbuilt AI assistant guardrail UX work (`ai_spec
 
 ## Acceptance criteria
 
-- [ ] Top guardrail banner ("Informational only, never diagnostic") is persistently visible on the assistant screen.
-- [ ] Four one-tap suggestion chips render per `docs/ux/06-content-system.md` Category 13.
-- [ ] Animated 3-dot typing indicator shows while awaiting a `POST /ai/chat` response.
-- [ ] When a response has `in_scope: false`, render a prominent red-bordered refusal box containing a bold **Call Emergency Contact ({phone})** button linking to `tel:{phone}`, sourced from `GET /cases/{id}/emergency-contact`.
-- [ ] Tapping the emergency CTA launches the device dialer with the correct number.
-- [ ] `mobile.assistant.guardrail_triggered` and `mobile.assistant.emergency_cta_tapped` telemetry events fire correctly per `docs/product/09-measurement-plan.md` §3.1-3.2.
-- [ ] Duplicate `mobile/lib/features/assistant/screens/assistant_screen.dart` is deleted; `flutter analyze` shows zero orphan-file/unused-import warnings.
-- [ ] `mobile/test/widget/assistant_screen_test.dart` extended: out-of-scope message → refusal box + emergency CTA render, and CTA's `tel:` link matches the case's emergency contact.
+- [x] Top guardrail banner ("Informational only, never diagnostic") is persistently visible on the assistant screen.
+- [x] Four one-tap suggestion chips render per `docs/ux/06-content-system.md` Category 13.
+- [x] Animated 3-dot typing indicator shows while awaiting a `POST /ai/chat` response.
+- [x] When a response has `in_scope: false`, render a prominent red-bordered refusal box containing a bold **Call Emergency Contact ({phone})** button linking to `tel:{phone}`, sourced from `GET /cases/{id}/emergency-contact`.
+- [x] Tapping the emergency CTA launches the device dialer with the correct number.
+- [x] `mobile.assistant.guardrail_triggered` and `mobile.assistant.emergency_cta_tapped` telemetry events fire correctly per `docs/product/09-measurement-plan.md` §3.1-3.2.
+- [x] Duplicate `mobile/lib/features/assistant/screens/assistant_screen.dart` is deleted; `flutter analyze` shows zero orphan-file/unused-import warnings.
+- [x] `mobile/test/widget/assistant_screen_test.dart` extended: out-of-scope message → refusal box + emergency CTA render, and CTA's `tel:` link matches the case's emergency contact.
 
 ## Covers
 

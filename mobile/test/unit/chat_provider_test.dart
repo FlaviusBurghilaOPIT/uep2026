@@ -4,19 +4,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:remotecare/core/network/api_service.dart';
+import 'package:remotecare/core/telemetry/telemetry_service.dart';
 import 'package:remotecare/features/assistant/providers/chat_assistant_notifier.dart';
 
 import 'fake_api_service.dart';
 
 void main() {
   late FakeApiService fakeApi;
+  late TelemetryService telemetryService;
   late ProviderContainer container;
 
   setUp(() {
     fakeApi = FakeApiService();
+    telemetryService = TelemetryService(fakeApi);
     container = ProviderContainer(
       overrides: [
         apiServiceProvider.overrideWithValue(fakeApi),
+        telemetryServiceProvider.overrideWithValue(telemetryService),
       ],
     );
   });
@@ -76,6 +80,46 @@ void main() {
     expect(state.messages[1].isFromUser, false);
     expect(state.isLoading, false);
     expect(state.errorMessage, isNull);
+  });
+
+  test('out-of-scope response fetches emergency contact and emits telemetry', () async {
+    fakeApi.getHandlers['/cases/case_1/emergency-contact'] = () {
+      return http.Response(
+        jsonEncode({'name': 'Dr. Moreau', 'phone': '+1-555-0199'}),
+        200,
+      );
+    };
+    fakeApi.postHandlers['/ai/chat'] = (body) {
+      return http.Response(
+        jsonEncode({
+          'reply': 'I cannot advise on changing medication doses.',
+          'in_scope': false,
+          'escalate': true,
+        }),
+        200,
+      );
+    };
+
+    final notifier = container.read(chatAssistantNotifierProvider.notifier);
+    await notifier.sendMessage(caseId: 'case_1', message: 'Can I double my dose?');
+
+    final state = container.read(chatAssistantNotifierProvider);
+    expect(state.messages.length, 2);
+    final aiMsg = state.messages[1];
+    expect(aiMsg.inScope, false);
+    expect(aiMsg.escalate, true);
+    expect(aiMsg.emergencyPhone, '+1-555-0199');
+
+    expect(
+      telemetryService.events.any((e) => e.name == 'mobile.assistant.guardrail_triggered'),
+      isTrue,
+    );
+
+    await notifier.onEmergencyCtaTapped('case_1', '+1-555-0199');
+    expect(
+      telemetryService.events.any((e) => e.name == 'mobile.assistant.emergency_cta_tapped'),
+      isTrue,
+    );
   });
 
   test('sendMessage on HTTP error sets errorMessage, keeps user message, isLoading: false', () async {

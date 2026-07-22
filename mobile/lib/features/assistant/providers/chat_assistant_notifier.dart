@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/network/api_service.dart';
+import '../../../core/telemetry/telemetry_service.dart';
 
 part 'chat_assistant_notifier.freezed.dart';
 
@@ -12,6 +14,9 @@ class ChatMessage with _$ChatMessage {
     required String text,
     required bool isFromUser,
     required DateTime timestamp,
+    @Default(true) bool inScope,
+    @Default(false) bool escalate,
+    String? emergencyPhone,
   }) = _ChatMessage;
 }
 
@@ -29,6 +34,7 @@ class ChatAssistantNotifier extends Notifier<ChatState> {
   ChatState build() => const ChatState();
 
   ApiService get _api => ref.read(apiServiceProvider);
+  TelemetryService get _telemetry => ref.read(telemetryServiceProvider);
 
   Future<void> sendMessage({
     required String caseId,
@@ -59,12 +65,34 @@ class ChatAssistantNotifier extends Notifier<ChatState> {
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body) as Map<String, dynamic>;
         final replyText = data['reply'] as String? ?? '';
+        final inScope = data['in_scope'] as bool? ?? true;
+        final escalate = data['escalate'] as bool? ?? false;
+        String? emergencyPhone;
+
+        if (!inScope) {
+          _telemetry.trackEvent('mobile.assistant.guardrail_triggered', {
+            'patient_hash': caseId,
+            'guardrail_rule_matched': 'out_of_scope',
+            'escalate_flag_set': escalate,
+          });
+
+          try {
+            final contactRes = await _api.get('/cases/$caseId/emergency-contact');
+            if (contactRes.statusCode == 200) {
+              final contactData = jsonDecode(contactRes.body) as Map<String, dynamic>;
+              emergencyPhone = contactData['phone'] as String?;
+            }
+          } catch (_) {}
+        }
 
         final aiMsg = ChatMessage(
           id: (DateTime.now().microsecondsSinceEpoch + 1).toString(),
           text: replyText,
           isFromUser: false,
           timestamp: DateTime.now(),
+          inScope: inScope,
+          escalate: escalate,
+          emergencyPhone: emergencyPhone,
         );
 
         state = state.copyWith(
@@ -82,6 +110,19 @@ class ChatAssistantNotifier extends Notifier<ChatState> {
         errorMessage: 'Could not reach assistant. Please try again.',
         isLoading: false,
       );
+    }
+  }
+
+  Future<void> onEmergencyCtaTapped(String caseId, String phone) async {
+    _telemetry.trackEvent('mobile.assistant.emergency_cta_tapped', {
+      'patient_hash': caseId,
+      'phone': phone,
+    });
+    if (phone.isNotEmpty) {
+      final uri = Uri.parse('tel:$phone');
+      try {
+        await launchUrl(uri);
+      } catch (_) {}
     }
   }
 

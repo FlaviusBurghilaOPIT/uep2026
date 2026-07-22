@@ -20,6 +20,9 @@ mixin _$ChatMessage {
   String get text => throw _privateConstructorUsedError;
   bool get isFromUser => throw _privateConstructorUsedError;
   DateTime get timestamp => throw _privateConstructorUsedError;
+  bool get inScope => throw _privateConstructorUsedError;
+  bool get escalate => throw _privateConstructorUsedError;
+  String? get emergencyPhone => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $ChatMessageCopyWith<ChatMessage> get copyWith =>
@@ -32,7 +35,14 @@ abstract class $ChatMessageCopyWith<$Res> {
           ChatMessage value, $Res Function(ChatMessage) then) =
       _$ChatMessageCopyWithImpl<$Res, ChatMessage>;
   @useResult
-  $Res call({String id, String text, bool isFromUser, DateTime timestamp});
+  $Res call(
+      {String id,
+      String text,
+      bool isFromUser,
+      DateTime timestamp,
+      bool inScope,
+      bool escalate,
+      String? emergencyPhone});
 }
 
 /// @nodoc
@@ -52,6 +62,9 @@ class _$ChatMessageCopyWithImpl<$Res, $Val extends ChatMessage>
     Object? text = null,
     Object? isFromUser = null,
     Object? timestamp = null,
+    Object? inScope = null,
+    Object? escalate = null,
+    Object? emergencyPhone = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -70,6 +83,18 @@ class _$ChatMessageCopyWithImpl<$Res, $Val extends ChatMessage>
           ? _value.timestamp
           : timestamp // ignore: cast_nullable_to_non_nullable
               as DateTime,
+      inScope: null == inScope
+          ? _value.inScope
+          : inScope // ignore: cast_nullable_to_non_nullable
+              as bool,
+      escalate: null == escalate
+          ? _value.escalate
+          : escalate // ignore: cast_nullable_to_non_nullable
+              as bool,
+      emergencyPhone: freezed == emergencyPhone
+          ? _value.emergencyPhone
+          : emergencyPhone // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 }
@@ -82,7 +107,14 @@ abstract class _$$ChatMessageImplCopyWith<$Res>
       __$$ChatMessageImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String id, String text, bool isFromUser, DateTime timestamp});
+  $Res call(
+      {String id,
+      String text,
+      bool isFromUser,
+      DateTime timestamp,
+      bool inScope,
+      bool escalate,
+      String? emergencyPhone});
 }
 
 /// @nodoc
@@ -100,6 +132,9 @@ class __$$ChatMessageImplCopyWithImpl<$Res>
     Object? text = null,
     Object? isFromUser = null,
     Object? timestamp = null,
+    Object? inScope = null,
+    Object? escalate = null,
+    Object? emergencyPhone = freezed,
   }) {
     return _then(_$ChatMessageImpl(
       id: null == id
@@ -118,6 +153,18 @@ class __$$ChatMessageImplCopyWithImpl<$Res>
           ? _value.timestamp
           : timestamp // ignore: cast_nullable_to_non_nullable
               as DateTime,
+      inScope: null == inScope
+          ? _value.inScope
+          : inScope // ignore: cast_nullable_to_non_nullable
+              as bool,
+      escalate: null == escalate
+          ? _value.escalate
+          : escalate // ignore: cast_nullable_to_non_nullable
+              as bool,
+      emergencyPhone: freezed == emergencyPhone
+          ? _value.emergencyPhone
+          : emergencyPhone // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -129,7 +176,10 @@ class _$ChatMessageImpl implements _ChatMessage {
       {required this.id,
       required this.text,
       required this.isFromUser,
-      required this.timestamp});
+      required this.timestamp,
+      this.inScope = true,
+      this.escalate = false,
+      this.emergencyPhone});
 
   @override
   final String id;
@@ -139,10 +189,18 @@ class _$ChatMessageImpl implements _ChatMessage {
   final bool isFromUser;
   @override
   final DateTime timestamp;
+  @override
+  @JsonKey()
+  final bool inScope;
+  @override
+  @JsonKey()
+  final bool escalate;
+  @override
+  final String? emergencyPhone;
 
   @override
   String toString() {
-    return 'ChatMessage(id: $id, text: $text, isFromUser: $isFromUser, timestamp: $timestamp)';
+    return 'ChatMessage(id: $id, text: $text, isFromUser: $isFromUser, timestamp: $timestamp, inScope: $inScope, escalate: $escalate, emergencyPhone: $emergencyPhone)';
   }
 
   @override
@@ -155,11 +213,17 @@ class _$ChatMessageImpl implements _ChatMessage {
             (identical(other.isFromUser, isFromUser) ||
                 other.isFromUser == isFromUser) &&
             (identical(other.timestamp, timestamp) ||
-                other.timestamp == timestamp));
+                other.timestamp == timestamp) &&
+            (identical(other.inScope, inScope) || other.inScope == inScope) &&
+            (identical(other.escalate, escalate) ||
+                other.escalate == escalate) &&
+            (identical(other.emergencyPhone, emergencyPhone) ||
+                other.emergencyPhone == emergencyPhone));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, id, text, isFromUser, timestamp);
+  int get hashCode => Object.hash(runtimeType, id, text, isFromUser, timestamp,
+      inScope, escalate, emergencyPhone);
 
   @JsonKey(ignore: true)
   @override
@@ -173,7 +237,10 @@ abstract class _ChatMessage implements ChatMessage {
       {required final String id,
       required final String text,
       required final bool isFromUser,
-      required final DateTime timestamp}) = _$ChatMessageImpl;
+      required final DateTime timestamp,
+      final bool inScope,
+      final bool escalate,
+      final String? emergencyPhone}) = _$ChatMessageImpl;
 
   @override
   String get id;
@@ -183,6 +250,12 @@ abstract class _ChatMessage implements ChatMessage {
   bool get isFromUser;
   @override
   DateTime get timestamp;
+  @override
+  bool get inScope;
+  @override
+  bool get escalate;
+  @override
+  String? get emergencyPhone;
   @override
   @JsonKey(ignore: true)
   _$$ChatMessageImplCopyWith<_$ChatMessageImpl> get copyWith =>
