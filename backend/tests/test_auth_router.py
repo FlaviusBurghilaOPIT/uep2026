@@ -115,3 +115,38 @@ def test_complete_onboarding_does_not_accept_or_persist_password(client, db_sess
     patient = db_session.query(models.User).filter(models.User.email == "patient@example.com").first()
     assert patient.password_hash is None
     assert patient.status == "active"
+
+
+from unittest.mock import patch
+
+
+def test_invite_patient_sends_code_via_email(client, db_session):
+    clinician = models.User(
+        email="c@t.com",
+        full_name="Dr. Clinician",
+        role=models.UserRole.clinician,
+    )
+    db_session.add(clinician)
+    db_session.commit()
+
+    from app.security import create_access_token
+
+    token = create_access_token({"sub": clinician.id, "role": "clinician", "email": clinician.email})
+
+    with patch("app.routers.patients.EmailService.send_patient_code") as mock_send:
+        response = client.post(
+            "/patients/invite",
+            json={
+                "email": "newpatient@example.com",
+                "full_name": "New Patient",
+                "surgery_type": "knee",
+            },
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert response.status_code == 200
+    invite_code = response.json()["invite_code"]
+    mock_send.assert_called_once_with("newpatient@example.com", invite_code)
+
+    patient = db_session.query(models.User).filter(models.User.email == "newpatient@example.com").first()
+    assert patient.invite_code_expires_at is not None

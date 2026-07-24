@@ -1,7 +1,7 @@
 import csv
 import io
 import secrets
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.orm import Session
@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app import models, schemas
 from app.dependencies import get_current_user, get_db_for_user, require_clinician
 from app.security import hash_password
+from app.services.email_service import EmailService
 
 router = APIRouter(
     prefix="/patients",
@@ -35,10 +36,13 @@ def invite_patient(
         role=models.UserRole.patient,
         status="pending_onboarding",
         invite_code=invite_code,
+        invite_code_expires_at=datetime.utcnow() + timedelta(minutes=15),
     )
     db.add(patient)
     db.commit()
     db.refresh(patient)
+
+    EmailService().send_patient_code(patient.email, invite_code)
 
     case = models.Case(
         clinician_id=current_user.id,
