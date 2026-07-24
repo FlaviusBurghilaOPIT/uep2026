@@ -72,6 +72,7 @@ class DemoAuthNotifier extends StateNotifier<AsyncValue<DemoAuthState>> {
 
   Future<void> completeOtpLogin() async {
     final prefs = _ref.read(sharedPreferencesProvider);
+    await prefs.setBool('isFirstTime', false);
     await prefs.setBool('hasActiveSession', true);
     final email = prefs.getString('email');
     state = AsyncValue.data(DemoAuthState(

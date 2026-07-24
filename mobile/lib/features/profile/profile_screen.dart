@@ -407,7 +407,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         onPressed: () async {
           await ref.read(authProvider).signOut();
           if (mounted) {
-            AppRoutes.navigateAndClearStack(context, AppRoutes.onboarding);
+            AppRoutes.navigateAndClearStack(context, AppRoutes.boot);
           }
         },
         style: OutlinedButton.styleFrom(
