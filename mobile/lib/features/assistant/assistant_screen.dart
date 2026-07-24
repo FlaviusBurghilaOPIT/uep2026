@@ -4,7 +4,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/providers/app_providers.dart';
-import '../auth/providers/auth_notifier.dart';
 import 'providers/chat_assistant_notifier.dart';
 
 class AssistantScreen extends ConsumerStatefulWidget {
@@ -38,17 +37,6 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
   }
 
   String _getCaseId() {
-    final authAsync = ref.read(authNotifierProvider);
-    final caseIdFromNotifier = authAsync.maybeWhen(
-      data: (state) => state.maybeWhen(
-        authenticated: (userId, caseId, fullName, email, surgeryType) => caseId,
-        orElse: () => null,
-      ),
-      orElse: () => null,
-    );
-    if (caseIdFromNotifier != null && caseIdFromNotifier.isNotEmpty) {
-      return caseIdFromNotifier;
-    }
     final auth = ref.read(authProvider);
     return auth.caseId ?? 'default_case';
   }
@@ -59,10 +47,9 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
 
     final caseId = _getCaseId();
     _inputController.clear();
-    ref.read(chatAssistantNotifierProvider.notifier).sendMessage(
-          caseId: caseId,
-          message: text,
-        );
+    ref
+        .read(chatAssistantNotifierProvider.notifier)
+        .sendMessage(caseId: caseId, message: text);
     _scrollToBottom();
   }
 
@@ -125,7 +112,10 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
                     )
                   : ListView.builder(
                       controller: _scrollController,
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 12.h,
+                      ),
                       itemCount: chatState.messages.length,
                       itemBuilder: (context, index) {
                         final msg = chatState.messages[index];
@@ -163,7 +153,10 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
                         ),
                         filled: true,
                         fillColor: AppColors.inputFill,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16.w,
+                          vertical: 10.h,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24.r),
                           borderSide: BorderSide.none,
@@ -174,7 +167,11 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
                   ),
                   SizedBox(width: 8.w),
                   IconButton(
-                    icon: Icon(Icons.send_rounded, color: AppColors.deepTeal, size: 24.sp),
+                    icon: Icon(
+                      Icons.send_rounded,
+                      color: AppColors.deepTeal,
+                      size: 24.sp,
+                    ),
                     onPressed: chatState.isLoading ? null : _handleSend,
                   ),
                 ],
@@ -201,7 +198,10 @@ class GuardrailBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.softCyan,
         border: Border(
-          bottom: BorderSide(color: AppColors.deepTeal.withValues(alpha: 0.3), width: 1),
+          bottom: BorderSide(
+            color: AppColors.deepTeal.withValues(alpha: 0.3),
+            width: 1,
+          ),
         ),
       ),
       child: Row(
@@ -258,10 +258,9 @@ class SuggestionChips extends ConsumerWidget {
             backgroundColor: AppColors.softCyan,
             side: BorderSide(color: AppColors.deepTeal.withValues(alpha: 0.4)),
             onPressed: () {
-              ref.read(chatAssistantNotifierProvider.notifier).sendSuggestion(
-                    caseId: caseId,
-                    chipText: chipText,
-                  );
+              ref
+                  .read(chatAssistantNotifierProvider.notifier)
+                  .sendSuggestion(caseId: caseId, chipText: chipText);
             },
           );
         }).toList(),
@@ -274,11 +273,7 @@ class ChatBubble extends ConsumerWidget {
   final ChatMessage message;
   final String caseId;
 
-  const ChatBubble({
-    super.key,
-    required this.message,
-    required this.caseId,
-  });
+  const ChatBubble({super.key, required this.message, required this.caseId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -331,11 +326,7 @@ class RefusalBox extends ConsumerWidget {
   final ChatMessage message;
   final String caseId;
 
-  const RefusalBox({
-    super.key,
-    required this.message,
-    required this.caseId,
-  });
+  const RefusalBox({super.key, required this.message, required this.caseId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -359,7 +350,11 @@ class RefusalBox extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.warning_amber_rounded, color: AppColors.errorRed, size: 20.sp),
+              Icon(
+                Icons.warning_amber_rounded,
+                color: AppColors.errorRed,
+                size: 20.sp,
+              ),
               SizedBox(width: 8.w),
               Expanded(
                 child: Text(
@@ -463,8 +458,7 @@ class _TypingIndicatorState extends State<TypingIndicator>
                 builder: (context, child) {
                   final delay = index * 0.2;
                   final value = (_controller.value - delay) % 1.0;
-                  final opacity =
-                      (value < 0.5) ? (value * 2) : (2 - value * 2);
+                  final opacity = (value < 0.5) ? (value * 2) : (2 - value * 2);
                   return Container(
                     margin: EdgeInsets.symmetric(horizontal: 3.w),
                     width: 8.w,
