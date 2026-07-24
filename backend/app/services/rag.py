@@ -1,8 +1,9 @@
 import os
 import asyncio
+import anyio
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from openai import OpenAI
+from openai import OpenAI, AsyncOpenAI
 
 
 # ─────────────────────────────────────────
@@ -86,7 +87,7 @@ def retrieve_relevant_chunks(
 # ─────────────────────────────────────────
 
 async def generate_recommendation_stream(db: Session, doctor_message: str, surgery_type: str | None = None):
-    chunks = retrieve_relevant_chunks(db, doctor_message, surgery_type)
+    chunks = await anyio.to_thread.run_sync(retrieve_relevant_chunks, db, doctor_message, surgery_type)
     context = "\n\n".join([f"[Source: {chunk['source']}]\n{chunk['content']}" for chunk in chunks])
     
     system_prompt = """You are a clinical assistant helping doctors write post-surgery recovery recommendations.
@@ -102,12 +103,12 @@ Always end with: "Please review and adjust based on your clinical judgment."
 """
     user_prompt = f"Context documents:\n{context}\n\nDoctor's request: {doctor_message}\n\nPlease suggest recovery recommendations based on the context above."
 
-    client = OpenAI(
+    client = AsyncOpenAI(
         api_key=os.getenv("OPENROUTER_API_KEY"),
         base_url="https://openrouter.ai/api/v1"
     )
     
-    response = client.chat.completions.create(
+    response = await client.chat.completions.create(
         model=os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3-8b-instruct"),
         messages=[
             {"role": "system", "content": system_prompt},
@@ -116,7 +117,6 @@ Always end with: "Please review and adjust based on your clinical judgment."
         stream=True
     )
     
-    for chunk in response:
+    async for chunk in response:
         if chunk.choices and chunk.choices[0].delta.content:
             yield chunk.choices[0].delta.content
-            await asyncio.sleep(0) # Yield control back to event loop
