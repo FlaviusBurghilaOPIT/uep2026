@@ -80,9 +80,21 @@ class VerifyInviteResponse(BaseModel):
 class CompleteOnboardingRequest(BaseModel):
     email: str
     invite_code: str
-    password: str
     date_of_birth: str
     phone: str
+
+
+class PatientRequestCodeRequest(BaseModel):
+    email: str
+
+
+class PatientRequestCodeResponse(BaseModel):
+    message: str = "If that email exists, a code was sent."
+
+
+class PatientVerifyCodeRequest(BaseModel):
+    email: str
+    code: str
 
 
 class CaseCreate(BaseModel):
