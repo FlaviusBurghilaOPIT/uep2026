@@ -8,8 +8,9 @@ import '../../core/constants/app_strings.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/shared_widgets/app_text_field.dart';
 import '../../core/shared_widgets/app_button.dart';
-import '../../core/shared_widgets/security_badge.dart';
 import '../../core/navigation/app_routes.dart';
+
+enum _AuthStage { email, code }
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -21,27 +22,46 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _codeController = TextEditingController();
+  _AuthStage _stage = _AuthStage.email;
 
   @override
   void dispose() {
     _emailController.dispose();
-    _passwordController.dispose();
+    _codeController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleSignIn() async {
+  Future<void> _handleSendCode() async {
     if (!_formKey.currentState!.validate()) return;
 
     final auth = ref.read(authProvider);
-    final success = await auth.signIn(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-    );
+    final success = await auth.requestCode(email: _emailController.text.trim());
 
     if (success && mounted) {
-      AppRoutes.navigateAndClearStack(context, AppRoutes.main);
+      setState(() => _stage = _AuthStage.code);
     } else if (mounted && auth.errorMessage != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(auth.errorMessage!)));
+    }
+  }
+
+  Future<void> _handleVerifyCode() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final auth = ref.read(authProvider);
+    final result = await auth.verifyCode(
+      email: _emailController.text.trim(),
+      code: _codeController.text.trim(),
+    );
+
+    if (!mounted) return;
+    if (result == 'authenticated') {
+      AppRoutes.navigateAndClearStack(context, AppRoutes.main);
+    } else if (result == 'onboarding') {
+      AppRoutes.navigateTo(context, AppRoutes.signupStep2);
+    } else if (auth.errorMessage != null) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(auth.errorMessage!)));
@@ -51,6 +71,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
+    final isEmailStage = _stage == _AuthStage.email;
 
     return Scaffold(
       body: SafeArea(
@@ -68,7 +89,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: Container(
                     width: 40.w,
                     height: 40.w,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: AppColors.inputFill,
                       shape: BoxShape.circle,
                     ),
@@ -81,93 +102,77 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 SizedBox(height: AppSpacing.xxl),
 
-                Text(AppStrings.welcomeBack, style: AppTextStyles.heading1),
+                Text(
+                  isEmailStage
+                      ? AppStrings.welcomeBack
+                      : AppStrings.verifyEmail,
+                  style: AppTextStyles.heading1,
+                ),
                 SizedBox(height: AppSpacing.sm),
-                Text(AppStrings.signInSubtitle, style: AppTextStyles.subtitle),
+                Text(
+                  isEmailStage
+                      ? AppStrings.signInSubtitle
+                      : AppStrings.verificationSent,
+                  style: AppTextStyles.subtitle,
+                ),
                 SizedBox(height: AppSpacing.xxl),
 
-                AppTextField(
-                  label: AppStrings.email,
-                  hintText: AppStrings.emailHint,
-                  prefixIcon: Icons.email_outlined,
-                  keyboardType: TextInputType.emailAddress,
-                  controller: _emailController,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    if (!value.contains('@')) {
-                      return 'Please enter a valid email';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: AppSpacing.xl),
-
-                AppTextField(
-                  label: AppStrings.password,
-                  hintText: AppStrings.passwordHint,
-                  prefixIcon: Icons.lock_outline,
-                  isPassword: true,
-                  controller: _passwordController,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: AppSpacing.sm),
-
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () =>
-                        AppRoutes.navigateTo(context, AppRoutes.forgotPassword),
-                    child: Text(
-                      AppStrings.forgotPassword,
-                      style: AppTextStyles.linkText.copyWith(
-                        decoration: TextDecoration.none,
+                if (isEmailStage)
+                  AppTextField(
+                    label: AppStrings.email,
+                    hintText: AppStrings.emailHint,
+                    prefixIcon: Icons.email_outlined,
+                    keyboardType: TextInputType.emailAddress,
+                    controller: _emailController,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter your email';
+                      }
+                      if (!value.contains('@')) {
+                        return 'Please enter a valid email';
+                      }
+                      return null;
+                    },
+                  )
+                else ...[
+                  AppTextField(
+                    label: AppStrings.enterCode,
+                    hintText: '000000',
+                    prefixIcon: Icons.vpn_key_outlined,
+                    keyboardType: TextInputType.number,
+                    controller: _codeController,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter your code';
+                      }
+                      if (value.trim().length < 6) {
+                        return 'Code must be 6 digits';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: AppSpacing.sm),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: _handleSendCode,
+                      child: Text(
+                        AppStrings.resendCode,
+                        style: AppTextStyles.linkText.copyWith(
+                          decoration: TextDecoration.none,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                SizedBox(height: AppSpacing.lg),
-
-                SecurityBadge(
-                  text: AppStrings.cognitoSecurityPrefix,
-                  boldText: AppStrings.cognitoSecurityBold,
-                  suffixText: AppStrings.cognitoSecuritySuffix,
-                ),
+                ],
                 SizedBox(height: AppSpacing.xl),
 
                 AppButton(
-                  text: AppStrings.signIn,
+                  text: isEmailStage
+                      ? AppStrings.signIn
+                      : AppStrings.verifyAndContinue,
                   isLoading: auth.isLoading,
-                  onPressed: _handleSignIn,
-                ),
-                SizedBox(height: AppSpacing.lg),
-
-                Center(
-                  child: Wrap(
-                    alignment: WrapAlignment.center,
-                    children: [
-                      Text(
-                        AppStrings.noAccountYet,
-                        style: AppTextStyles.bodyMedium,
-                      ),
-                      GestureDetector(
-                        onTap: () => AppRoutes.navigateTo(
-                          context,
-                          AppRoutes.signupStep1,
-                        ),
-                        child: Text(
-                          AppStrings.createOne,
-                          style: AppTextStyles.linkText,
-                        ),
-                      ),
-                    ],
-                  ),
+                  onPressed: isEmailStage ? _handleSendCode : _handleVerifyCode,
                 ),
                 SizedBox(height: AppSpacing.xxl),
               ],

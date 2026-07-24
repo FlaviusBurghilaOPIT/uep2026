@@ -1,0 +1,55 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:remotecare/core/constants/app_strings.dart';
+import 'package:remotecare/core/network/api_service.dart';
+import 'package:remotecare/features/auth/login_screen.dart';
+
+import '../unit/fake_api_service.dart';
+
+Widget _buildMaterialApp(BuildContext context, Widget? child) {
+  return const MaterialApp(home: LoginScreen());
+}
+
+Widget buildTestApp(FakeApiService fakeApi) {
+  return ProviderScope(
+    overrides: [apiServiceProvider.overrideWithValue(fakeApi)],
+    child: const ScreenUtilInit(
+      designSize: Size(375, 812),
+      minTextAdapt: true,
+      builder: _buildMaterialApp,
+    ),
+  );
+}
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets(
+    'email stage has no password field, sending a code moves to the code stage',
+    (tester) async {
+      final fakeApi = FakeApiService();
+      fakeApi.postHandlers['/auth/patient/request-code'] = (body) {
+        return http.Response(jsonEncode({'message': 'sent'}), 200);
+      };
+
+      await tester.pumpWidget(buildTestApp(fakeApi));
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.password), findsNothing);
+
+      await tester.enterText(
+        find.byType(TextFormField).first,
+        'jane@example.com',
+      );
+      await tester.tap(find.text(AppStrings.signIn));
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.verifyEmail), findsOneWidget);
+      expect(fakeApi.requestsLog.first['path'], '/auth/patient/request-code');
+    },
+  );
+}

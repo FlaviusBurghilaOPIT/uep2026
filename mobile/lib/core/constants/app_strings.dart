@@ -35,16 +35,12 @@ class AppStrings {
   static const String email = 'EMAIL';
   static const String emailHint = 'sarah.mitchell@email.com';
   static const String password = 'PASSWORD';
-  static const String passwordHint = 'Enter your password';
-  static const String forgotPassword = 'Forgot password?';
   static const String signIn = 'Sign In';
-  static const String orSignInWith = 'or sign in with';
   static const String noAccountYet = 'No account yet? ';
   static const String createOne = 'Create one';
 
   static const String createYourAccount = 'Create your account';
-  static const String setupCredentials =
-      'Set up your RemoteCare credentials';
+  static const String setupCredentials = 'Set up your RemoteCare credentials';
   static const String fullName = 'FULL NAME';
   static const String fullNameHint = 'Sarah Mitchell';
   static const String emailAddress = 'EMAIL ADDRESS';
@@ -81,12 +77,6 @@ class AppStrings {
     'Other',
   ];
 
-  static const String cognitoSecurityPrefix =
-      'Authentication secured by ';
-  static const String cognitoSecurityBold = 'Secure Clinic Account';
-  static const String cognitoSecuritySuffix =
-      ', your credentials never touch our servers.';
-
   static const String remotecare = 'RemoteCare';
   static const String todaysMedications = "TODAY'S MEDICATIONS";
   static const String taken = 'Taken';
@@ -94,7 +84,8 @@ class AppStrings {
   static const String missed = 'Missed';
   static const String skip = 'Skip';
   static const String fdaSafetyAlert = 'Official FDA Drug Safety Info';
-  static const String fdaSourceLive = '📋 Source: Official FDA Drug Safety Info';
+  static const String fdaSourceLive =
+      '📋 Source: Official FDA Drug Safety Info';
   static const String fdaSourceFixture = '📋 Source: Regulatory Cache';
   static String fdaRetrievedTimestamp(String date) => 'Retrieved: $date';
 
@@ -104,12 +95,9 @@ class AppStrings {
   static const String navRecovery = 'Recovery';
 
   static const String checkInTitle = 'Daily Check-In';
-  static const String checkInSubtitle =
-      'How are you feeling today?';
+  static const String checkInSubtitle = 'How are you feeling today?';
   static const String assistantTitle = 'Recovery Assistant';
-  static const String assistantSubtitle =
-      'Ask me anything about your recovery';
+  static const String assistantSubtitle = 'Ask me anything about your recovery';
   static const String recoveryTitle = 'Recovery Progress';
-  static const String recoverySubtitle =
-      'Track your journey back to health';
+  static const String recoverySubtitle = 'Track your journey back to health';
 }

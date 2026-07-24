@@ -67,56 +67,60 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               SizedBox(height: AppSpacing.lg),
 
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
-              child: Column(
-                children: [
-                  AppButton(
-                    text: AppStrings.signInToAccount,
-                    onPressed: () => AppRoutes.navigateTo(context, AppRoutes.login),
-                  ),
-                  SizedBox(height: AppSpacing.md),
-                  AppButton(
-                    text: AppStrings.createAccount,
-                    isOutlined: true,
-                    onPressed: () => AppRoutes.navigateTo(context, AppRoutes.signupStep1),
-                  ),
-                  SizedBox(height: AppSpacing.lg),
-                  RichText(
-                    textAlign: TextAlign.center,
-                    text: TextSpan(
-                      style: AppTextStyles.bodySmall,
-                      children: [
-                        const TextSpan(text: AppStrings.termsPrefix),
-                        TextSpan(
-                          text: AppStrings.terms,
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.primaryGreen,
-                            decoration: TextDecoration.underline,
-                            decorationColor: AppColors.primaryGreen,
-                          ),
-                        ),
-                        const TextSpan(text: AppStrings.and),
-                        TextSpan(
-                          text: AppStrings.privacyPolicy,
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.primaryGreen,
-                            decoration: TextDecoration.underline,
-                            decorationColor: AppColors.primaryGreen,
-                          ),
-                        ),
-                      ],
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppSpacing.screenPaddingH,
+                ),
+                child: Column(
+                  children: [
+                    AppButton(
+                      text: AppStrings.signInToAccount,
+                      onPressed: () =>
+                          AppRoutes.navigateTo(context, AppRoutes.login),
                     ),
-                  ),
-                  SizedBox(height: AppSpacing.xl),
-                ],
+                    SizedBox(height: AppSpacing.md),
+                    AppButton(
+                      text: AppStrings.createAccount,
+                      isOutlined: true,
+                      onPressed: () =>
+                          AppRoutes.navigateTo(context, AppRoutes.login),
+                    ),
+                    SizedBox(height: AppSpacing.lg),
+                    RichText(
+                      textAlign: TextAlign.center,
+                      text: TextSpan(
+                        style: AppTextStyles.bodySmall,
+                        children: [
+                          const TextSpan(text: AppStrings.termsPrefix),
+                          TextSpan(
+                            text: AppStrings.terms,
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.primaryGreen,
+                              decoration: TextDecoration.underline,
+                              decorationColor: AppColors.primaryGreen,
+                            ),
+                          ),
+                          const TextSpan(text: AppStrings.and),
+                          TextSpan(
+                            text: AppStrings.privacyPolicy,
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.primaryGreen,
+                              decoration: TextDecoration.underline,
+                              decorationColor: AppColors.primaryGreen,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: AppSpacing.xl),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildHeroSection() {
     return Container(
@@ -147,9 +151,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           SizedBox(height: AppSpacing.lg),
           Text(
             AppStrings.appName,
-            style: AppTextStyles.heading2.copyWith(
-              color: AppColors.white,
-            ),
+            style: AppTextStyles.heading2.copyWith(color: AppColors.white),
           ),
           SizedBox(height: AppSpacing.sm),
           Padding(
@@ -177,7 +179,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         itemBuilder: (context, index) {
           final item = _carouselItems[index];
           return Padding(
-            padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.screenPaddingH,
+            ),
             child: Container(
               padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
@@ -251,8 +255,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       {'icon': Icons.lock_outline, 'text': AppStrings.cognitoAuth},
     ];
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Wrap(
+      alignment: WrapAlignment.center,
+      runSpacing: 4.h,
       children: badges.map((badge) {
         return Padding(
           padding: EdgeInsets.symmetric(horizontal: 8.w),
@@ -265,10 +270,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 color: AppColors.greyLight,
               ),
               SizedBox(width: 4.w),
-              Text(
-                badge['text'] as String,
-                style: AppTextStyles.labelSmall,
-              ),
+              Text(badge['text'] as String, style: AppTextStyles.labelSmall),
             ],
           ),
         );
