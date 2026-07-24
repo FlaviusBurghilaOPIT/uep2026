@@ -1,19 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'core/l10n/app_localizations.dart';
 import 'core/l10n/locale_notifier.dart';
 import 'core/navigation/app_routes.dart';
 import 'core/theme/app_theme.dart';
 
 import 'core/notifications/notification_service.dart';
+import 'features/auth/demo_auth_state.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await NotificationService.instance.initialize();
+  final prefs = await SharedPreferences.getInstance();
+
   runApp(
-    const ProviderScope(
-      child: RemoteCareApp(),
+    ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+      ],
+      child: const RemoteCareApp(),
     ),
   );
 }
@@ -35,7 +42,7 @@ class RemoteCareApp extends ConsumerWidget {
         locale: locale,
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
-        initialRoute: AppRoutes.onboarding,
+        initialRoute: AppRoutes.boot,
         onGenerateRoute: AppRoutes.onGenerateRoute,
       ),
     );

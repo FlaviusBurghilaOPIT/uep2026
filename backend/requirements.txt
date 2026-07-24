@@ -12,3 +12,5 @@ python-dotenv==1.0.1
 openai==1.30.0
 tiktoken==0.7.0
 numpy==1.26.4
+openinference-instrumentation
+openinference-instrumentation-openai

@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -9,7 +10,7 @@ from app import models, schemas
 from app.database import get_db
 from app.dependencies import get_current_user, require_clinician
 from app.providers.fda import get_fda_provider
-from app.providers.llm import get_llm_provider
+from openai import AsyncOpenAI
 
 router = APIRouter(prefix="/fda", tags=["fda"])
 
@@ -20,18 +21,25 @@ FDA_SUMMARY_SYSTEM_PROMPT = (
     "If the data is sparse or missing, say so plainly rather than guessing."
 )
 
+client_async = AsyncOpenAI(
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    base_url="https://openrouter.ai/api/v1"
+)
 
 @router.get("/drug/{name}", response_model=schemas.FDADrugInfoResponse)
 async def get_drug_info(name: str, current_user: models.User = Depends(get_current_user)):
     provider = get_fda_provider()
     raw = await provider.get_drug_info(name)
 
-    llm = get_llm_provider()
     with using_attributes(metadata={"endpoint": "fda.summarize", "drug_name": name}):
-        summary = await llm.chat(
-            messages=[{"role": "user", "content": json.dumps(raw)[:4000]}],
-            system=FDA_SUMMARY_SYSTEM_PROMPT,
+        response = await client_async.chat.completions.create(
+            model=os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3-8b-instruct"),
+            messages=[
+                {"role": "system", "content": FDA_SUMMARY_SYSTEM_PROMPT},
+                {"role": "user", "content": json.dumps(raw)[:4000]}
+            ]
         )
+        summary = response.choices[0].message.content
 
     return schemas.FDADrugInfoResponse(drug_name=name, summary=summary, source=provider.source)
 

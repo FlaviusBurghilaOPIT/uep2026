@@ -1,141 +1,66 @@
-<!-- rtk-instructions v2 -->
-# RTK (Rust Token Killer) - Token-Optimized Commands
+# CLAUDE.md
 
-## Golden Rule
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Always prefix commands with `rtk`**. If RTK has a dedicated filter, it uses it. If not, it passes through unchanged. This means RTK is always safe to use.
+## Project Overview
 
-**Important**: Even in command chains with `&&`, use `rtk`:
+Remote CarePro is a post-surgery care platform with three components sharing one FastAPI + Postgres backend:
+
+- **`backend/`** — FastAPI + SQLAlchemy + Postgres (pgvector), Alembic migrations
+- **`web/`** — React + TypeScript clinician dashboard (Vite)
+- **`mobile/`** — Flutter patient app (Riverpod)
+
+There is no mock server — the backend (with Postgres) is required for the web app, the mobile app, and any integration/e2e test. Unit/widget tests on both backend and mobile are self-contained (in-memory SQLite / fake API client) and need nothing running.
+
+See root `README.md` for full local-stack setup (Docker Compose, seeding, demo credentials, the "golden loop" walkthrough) and `mobile/README.md` for Flutter-specific setup (simulators, `--dart-define` overrides).
+
+## Common Commands
+
+### Backend (`backend/`)
 ```bash
-# ❌ Wrong
-git add . && git commit -m "msg" && git push
+python3 -m pytest tests -q       # full suite — in-memory SQLite, no Docker needed
+python3 -m pytest tests/test_auth_router.py -q -k test_name   # single test
+ruff check .                     # lint (rules: E, F, I)
+black .                          # format (line-length 100)
+alembic upgrade head             # apply migrations (needs real Postgres)
+python app/scripts/seed_data.py  # seed demo clinician + patient (current, tested path)
+```
+Note: `app/scripts/seed.py` also exists but is a separate, older seed script — don't confuse the two; `seed_data.py` is the one documented in the README and exercised by tests.
 
-# ✅ Correct
-rtk git add . && rtk git commit -m "msg" && rtk git push
+### Web (`web/`)
+```bash
+npm run dev      # Vite dev server, http://localhost:5173
+npm run build    # tsc -b && vite build — this IS the type-check step
+npm run lint     # eslint .
+```
+No test suite exists yet (`vitest` is an installed but unused dependency) — `build` + `lint` are the only checks.
+
+### Mobile (`mobile/`)
+```bash
+flutter test                                   # unit/widget tests, fake API client, no backend
+flutter test test/some_test.dart               # single test file
+flutter analyze                                # lints (flutter_lints + riverpod_lint via custom_lint)
+flutter test integration_test/golden_loop_test.dart   # e2e — needs backend + seeded DB + booted simulator
+dart run build_runner build --delete-conflicting-outputs   # regenerate freezed/json_serializable/riverpod code after touching @freezed or @riverpod classes
 ```
 
-## RTK Commands by Workflow
+## Architecture Notes
 
-### Build & Compile (80-90% savings)
-```bash
-rtk cargo build         # Cargo build output
-rtk cargo check         # Cargo check output
-rtk cargo clippy        # Clippy warnings grouped by file (80%)
-rtk tsc                 # TypeScript errors grouped by file/code (83%)
-rtk lint                # ESLint/Biome violations grouped (84%)
-rtk prettier --check    # Files needing format only (70%)
-rtk next build          # Next.js build with route metrics (87%)
-```
+### Backend: two parallel code paths — know which is live
+- `main.py` wires up routers from `app/routers/` only. **`app/api/` (`ai.py`, `fda.py`) and `app/services/rag.py` are dead code** — not imported anywhere, left over from an earlier RAG prototype (mock-only LLM reply, hardcoded OpenRouter client). The live AI chat path is `app/routers/ai.py` → `app/providers/llm.py` (`get_llm_provider()`, switched via `LLM_PROVIDER` env: `mock` / `openrouter` / `bedrock`). Don't extend `app/api/` or `rag.py` by mistake.
+- Similarly, `app/database.py` (used by routers/dependencies) and `app/core/database.py` (used only for `init_db()`'s `CREATE EXTENSION vector` on startup) are two separate SQLAlchemy engine/session setups pointing at the same `DATABASE_URL` — not a shared module. `app/models.py` (the real SQLAlchemy models: User, Case, Medication, DoseLog, etc.) and `app/models/` (a small package with just `Base` and the `Embedding` model used by the dead RAG path) also coexist; new models belong in `app/models.py`.
 
-### Test (60-99% savings)
-```bash
-rtk cargo test          # Cargo test failures only (90%)
-rtk go test             # Go test failures only (90%)
-rtk jest                # Jest failures only (99.5%)
-rtk vitest              # Vitest failures only (99.5%)
-rtk playwright test     # Playwright failures only (94%)
-rtk pytest              # Python test failures only (90%)
-rtk rake test           # Ruby test failures only (90%)
-rtk rspec               # RSpec test failures only (60%)
-rtk test <cmd>          # Generic test wrapper - failures only
-```
+### Backend: auth
+- Clinicians use password + JWT; patients are fully passwordless (emailed/logged one-time code — see `app/providers/auth.py`). Two JWT libraries are used intentionally and are not interchangeable: `pyjwt` (`import jwt`, plus `PyJWKClient` for Cognito RS256/JWKS) verifies tokens in `app/providers/auth.py`; `python-jose` (`from jose import jwt`) creates tokens in `app/security.py`.
+- Row-level security: `app/dependencies.py`'s `get_db_for_user` sets `app.current_user_id` / `app.current_role` as Postgres session variables (`SET LOCAL`) on every request so RLS policies can scope queries — only takes effect against a real Postgres session (a no-op check on SQLite in tests). Use `get_db_for_user`, not the plain `get_db`, in any new router that must respect per-user row scoping.
 
-### Git (59-80% savings)
-```bash
-rtk git status          # Compact status
-rtk git log             # Compact log (works with all git flags)
-rtk git diff            # Compact diff (80%)
-rtk git show            # Compact show (80%)
-rtk git add             # Ultra-compact confirmations (59%)
-rtk git commit          # Ultra-compact confirmations (59%)
-rtk git push            # Ultra-compact confirmations
-rtk git pull            # Ultra-compact confirmations
-rtk git branch          # Compact branch list
-rtk git fetch           # Compact fetch
-rtk git stash           # Compact stash
-rtk git worktree        # Compact worktree
-```
+### Backend: LLM / observability
+- Phoenix tracing (`app/observability.py`) only activates if `PHOENIX_COLLECTOR_ENDPOINT` is set; otherwise `setup_tracing()` is a no-op, so local dev and tests run untraced by default.
 
-Note: Git passthrough works for ALL subcommands, even those not explicitly listed.
-
-### GitHub (26-87% savings)
-```bash
-rtk gh pr view <num>    # Compact PR view (87%)
-rtk gh pr checks        # Compact PR checks (79%)
-rtk gh run list         # Compact workflow runs (82%)
-rtk gh issue list       # Compact issue list (80%)
-rtk gh api              # Compact API responses (26%)
-```
-
-### JavaScript/TypeScript Tooling (70-90% savings)
-```bash
-rtk pnpm list           # Compact dependency tree (70%)
-rtk pnpm outdated       # Compact outdated packages (80%)
-rtk pnpm install        # Compact install output (90%)
-rtk npm run <script>    # Compact npm script output
-rtk npx <cmd>           # Compact npx command output
-rtk prisma              # Prisma without ASCII art (88%)
-```
-
-### Files & Search (60-75% savings)
-```bash
-rtk ls <path>           # Tree format, compact (65%)
-rtk read <file>         # Code reading with filtering (60%)
-rtk grep <pattern>      # Search grouped by file (75%). Format flags (-c, -l, -L, -o, -Z) run raw.
-rtk find <pattern>      # Find grouped by directory (70%)
-```
-
-### Analysis & Debug (70-90% savings)
-```bash
-rtk err <cmd>           # Filter errors only from any command
-rtk log <file>          # Deduplicated logs with counts
-rtk json <file>         # JSON structure without values
-rtk deps                # Dependency overview
-rtk env                 # Environment variables compact
-rtk summary <cmd>       # Smart summary of command output
-rtk diff                # Ultra-compact diffs
-```
-
-### Infrastructure (85% savings)
-```bash
-rtk docker ps           # Compact container list
-rtk docker images       # Compact image list
-rtk docker logs <c>     # Deduplicated logs
-rtk kubectl get         # Compact resource list
-rtk kubectl logs        # Deduplicated pod logs
-```
-
-### Network (65-70% savings)
-```bash
-rtk curl <url>          # Compact HTTP responses (70%)
-rtk wget <url>          # Compact download output (65%)
-```
-
-### Meta Commands
-```bash
-rtk gain                # View token savings statistics
-rtk gain --history      # View command history with savings
-rtk discover            # Analyze Claude Code sessions for missed RTK usage
-rtk proxy <cmd>         # Run command without filtering (for debugging)
-rtk init                # Add RTK instructions to CLAUDE.md
-rtk init --global       # Add RTK to ~/.claude/CLAUDE.md
-```
-
-## Token Savings Overview
-
-| Category | Commands | Typical Savings |
-|----------|----------|-----------------|
-| Tests | vitest, playwright, cargo test | 90-99% |
-| Build | next, tsc, lint, prettier | 70-87% |
-| Git | status, log, diff, add, commit | 59-80% |
-| GitHub | gh pr, gh run, gh issue | 26-87% |
-| Package Managers | pnpm, npm, npx | 70-90% |
-| Files | ls, read, grep, find | 60-75% |
-| Infrastructure | docker, kubectl | 85% |
-| Network | curl, wget | 65-70% |
-
-Overall average: **60-90% token reduction** on common development operations.
-<!-- /rtk-instructions -->
+### Mobile: two auth implementations exist — only one is live
+- Production/runtime state uses a `ChangeNotifier`-based auth flow; a parallel Riverpod `StateNotifier` auth implementation exists only for older tests (`auth_provider_test.dart` still exercises the dead `AuthStateNotifier`). When touching auth, check which one a given screen/test actually depends on before assuming a change propagates to both.
+- `ApiService` (`lib/core/network/api_service.dart`) is an abstract interface with a real `HttpApiService` and a `FakeApiService` used for widget/unit test injection — no backend needed for those tests. Integration tests (`integration_test/`) use the real service against a running backend.
+- Code generation (`freezed`, `json_serializable`, `riverpod_generator`) requires `build_runner`; regenerate after editing any annotated class or the build will silently use stale generated code.
 
 ## ACT Workflow
 
