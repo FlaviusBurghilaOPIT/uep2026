@@ -138,9 +138,11 @@ flutter build ipa --release --dart-define=API_BASE_URL=https://api.remotecare-de
 
 ## Demo Credentials & Testing Flows
 
+Patients don't have passwords — sign-in is always an emailed one-time code, entered on a single merged email → code screen (`LoginScreen`). Clinicians still sign in with email + password on the web dashboard.
+
 ### Patient Account (Existing User)
 - **Email**: `patient@example.com`
-- **Password**: `password123`
+- **Sign-in code**: `424242` (fixed, long-lived, seeded by `seed_data.py` — no password field exists for patients)
 - **Surgery**: Total Knee Arthroplasty (TKA)
 - **Included Data**: 3 active medications (Oxycodone, Amoxicillin, Ibuprofen), check-ins, recommendations.
 
@@ -149,33 +151,19 @@ flutter build ipa --release --dart-define=API_BASE_URL=https://api.remotecare-de
 - **Password**: `password123`
 - **Name**: Dr. Sarah Connor
 
-### Invitation Code / Onboarding Flow
-To test the patient invitation / onboarding flow:
+### Patient Invitation / Sign-In Flow
+The old invite-code-on-login-screen + password-during-onboarding flow is gone. Patients are invited from the web dashboard, and both new and returning patients sign in through the same email → code screen on mobile.
 
-1. **Create a Pending Patient User in DB**:
-   You can run this quick Python snippet or sqlite query to create an invited patient:
-   ```python
-   from app.database import SessionLocal
-   from app import models
-
-   db = SessionLocal()
-   pending_user = models.User(
-       email="newpatient@example.com",
-       full_name="Alex Mercer",
-       role=models.UserRole.patient,
-       invite_code="INVITE123",
-       status="pending_onboarding",
-   )
-   db.add(pending_user)
-   db.commit()
-   ```
-2. **On Mobile App**:
-   - Tap **"Have an invite code?"** on Login screen.
-   - Enter Email: `newpatient@example.com` and Code: `INVITE123`.
-   - Tap **Verify Code** (`POST /auth/verify-invite`).
-   - Enter password, Date of Birth, and Phone number.
-   - Tap **Complete Setup** (`POST /auth/complete-onboarding`).
-   - The app verifies, saves the access token, and navigates straight into the Today Agenda!
+1. **Invite the patient (web dashboard)**:
+   - Log in as the clinician and go to `Patients` → `+ New Patient`.
+   - This creates the patient record and sends them a one-time sign-in code by email (via SES in real deployments; logged to the backend console in local dev when `AWS_REGION` isn't set — the code is also shown on screen as a backup).
+2. **On the mobile app**:
+   - From the onboarding screen, tap either **"Sign in to your account"** (`AppStrings.signInToAccount`) or **"Create account"** — both routes lead to the same `LoginScreen`.
+   - Enter the patient's email and tap **Sign In** (`AppStrings.signIn`). This calls `POST /auth/patient/request-code` with `{"email"}`.
+   - The screen switches to the code-entry stage ("Verify your email" / `AppStrings.verifyEmail`). Enter the 6-digit code and tap **Verify & Continue** (`AppStrings.verifyAndContinue`). This calls `POST /auth/patient/verify-code` with `{"email", "code"}`.
+   - **New patient**: the response comes back as onboarding data (email, full name) and the app continues to the phone/date-of-birth profile step — no password is ever collected.
+   - **Returning patient**: the response comes back with an access token, which the app stores, navigating straight into the Today Agenda.
+   - For the seeded demo patient above, you can skip step 1 and go straight to step 2 using the fixed code `424242` — it's pre-seeded with a long expiry.
 
 ---
 
