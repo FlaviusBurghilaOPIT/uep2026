@@ -20,6 +20,7 @@ A cross-platform Flutter application for post-surgery patient companion, medicat
    - [Invitation Code / Onboarding Flow](#invitation-code--onboarding-flow)
 6. [Local Testing & Debugging](#local-testing--debugging)
    - [Running Unit & Widget Tests](#running-unit--widget-tests)
+   - [Integration / E2E test](#integration--e2e-test)
    - [Static Analysis](#static-analysis)
    - [Flutter DevTools & Logging](#flutter-devtools--logging)
 7. [Architecture & Network Configuration](#architecture--network-configuration)
@@ -189,6 +190,21 @@ flutter test
 flutter test test/unit/chat_provider_test.dart
 flutter test test/widget/assistant_screen_test.dart
 ```
+
+### Integration / E2E test
+
+`integration_test/golden_loop_test.dart` drives the app against a **real, running backend** — unlike unit/widget tests, it needs:
+
+1. The backend running: `docker-compose up backend` (from the repo root).
+2. The database seeded: `docker-compose exec backend python app/scripts/seed_data.py`.
+3. A booted simulator (see device setup above).
+
+Then run:
+```bash
+flutter test integration_test/golden_loop_test.dart
+```
+
+It signs in as the seeded demo patient (`patient@example.com`, code `424242`), asks the AI assistant an in-scope and an out-of-scope question, and logs a dose — verifying the real network path end to end. This is not a substitute for the unit/widget suite (`flutter test`), which runs against a fake API client and needs none of the above.
 
 ### Static Analysis
 ```bash
