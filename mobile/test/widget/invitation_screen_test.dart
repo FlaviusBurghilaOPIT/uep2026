@@ -21,15 +21,32 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Enter Invitation Code'), findsOneWidget);
-    expect(find.byType(TextField), findsOneWidget);
+    expect(find.byType(TextFormField), findsOneWidget);
     expect(find.text('Continue'), findsOneWidget);
 
-    await tester.enterText(find.byType(TextField), 'INV123');
+    await tester.enterText(find.byType(TextFormField), 'INV123');
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
 
-    // Verification that we have navigated (e.g., check that ProfileSetupScreen is present)
-    // Assuming ProfileSetupScreen has some identifying text or you can check for the absence of the InvitationScreen
+    // Verification that we have navigated
     expect(find.text('Enter Invitation Code'), findsNothing);
+  });
+
+  testWidgets('shows validation error when invitation code is empty or whitespace', (tester) async {
+    await tester.pumpWidget(buildTestApp(const InvitationScreen()));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Please enter a valid invitation code'), findsOneWidget);
+    expect(find.text('Enter Invitation Code'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextFormField), '   ');
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Please enter a valid invitation code'), findsOneWidget);
+    expect(find.text('Enter Invitation Code'), findsOneWidget);
   });
 }

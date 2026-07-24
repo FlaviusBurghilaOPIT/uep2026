@@ -10,11 +10,21 @@ class InvitationScreen extends StatefulWidget {
 }
 
 class _InvitationScreenState extends State<InvitationScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _codeController = TextEditingController();
 
+  @override
+  void dispose() {
+    _codeController.dispose();
+    super.dispose();
+  }
+
   void _submitCode() {
-    if (_codeController.text.isNotEmpty) {
-      AppRoutes.navigateAndReplace(context, AppRoutes.profileSetup);
+    if (_formKey.currentState?.validate() ?? false) {
+      final code = _codeController.text.trim();
+      if (code.isNotEmpty) {
+        AppRoutes.navigateAndReplace(context, AppRoutes.profileSetup);
+      }
     }
   }
 
@@ -24,37 +34,46 @@ class _InvitationScreenState extends State<InvitationScreen> {
       appBar: AppBar(title: const Text('Enter Invitation Code')),
       body: Padding(
         padding: EdgeInsets.all(16.w),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Welcome!',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            SizedBox(height: 16.h),
-            Text(
-              'Please enter your invitation code to continue.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            SizedBox(height: 32.h),
-            TextField(
-              controller: _codeController,
-              decoration: const InputDecoration(
-                labelText: 'Invitation Code',
-                border: OutlineInputBorder(),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Welcome!',
+                style: Theme.of(context).textTheme.headlineMedium,
               ),
-              onSubmitted: (_) => _submitCode(),
-            ),
-            SizedBox(height: 32.h),
-            ElevatedButton(
-              onPressed: _submitCode,
-              style: ElevatedButton.styleFrom(
-                minimumSize: Size(double.infinity, 50.h),
+              SizedBox(height: 16.h),
+              Text(
+                'Please enter your invitation code to continue.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyLarge,
               ),
-              child: const Text('Continue'),
-            ),
-          ],
+              SizedBox(height: 32.h),
+              TextFormField(
+                controller: _codeController,
+                decoration: const InputDecoration(
+                  labelText: 'Invitation Code',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter a valid invitation code';
+                  }
+                  return null;
+                },
+                onFieldSubmitted: (_) => _submitCode(),
+              ),
+              SizedBox(height: 32.h),
+              ElevatedButton(
+                onPressed: _submitCode,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: Size(double.infinity, 50.h),
+                ),
+                child: const Text('Continue'),
+              ),
+            ],
+          ),
         ),
       ),
     );
