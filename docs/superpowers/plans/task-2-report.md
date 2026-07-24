@@ -85,3 +85,92 @@ backend/tests/test_ai_router.py::test_chat_stream_guardrail_failure PASSED [100%
 
 ======================== 8 passed, 20 warnings in 3.90s ========================
 ```
+
+## Code Quality Fixes Applied
+- Replaced blocking synchronous SQLAlchemy calls (`db.add()`, `db.commit()`) in async endpoints and generators with `anyio.to_thread.run_sync`.
+- Protected the assistant message persistence from client disconnects by placing the logic in a `try...finally` block within `async for` chunk accumulation, wrapped with `anyio.CancelScope(shield=True)`.
+
+**Verification Output:**
+```bash
+pytest backend/tests/test_ai_router.py -v
+```
+```text
+============================= test session starts ==============================
+platform darwin -- Python 3.11.11, pytest-9.0.3, pluggy-1.6.0 -- /Users/flavius/.pyenv/versions/3.11.11/bin/python3.11
+cachedir: .pytest_cache
+rootdir: /Users/flavius/OPIT/uep2026/backend
+configfile: pyproject.toml
+plugins: anyio-4.12.1, langsmith-0.7.1, cov-7.1.0
+collecting ... collected 8 items
+
+backend/tests/test_ai_router.py::test_chat_general_question_is_in_scope PASSED [ 12%]
+backend/tests/test_ai_router.py::test_chat_dose_change_intent_is_blocked PASSED [ 25%]
+backend/tests/test_ai_router.py::test_chat_diagnosis_intent_is_blocked PASSED [ 37%]
+backend/tests/test_ai_router.py::test_chat_default_intent_is_general_question PASSED [ 50%]
+backend/tests/test_ai_router.py::test_chat_persists_both_turns PASSED    [ 62%]
+backend/tests/test_ai_router.py::test_chat_streaming PASSED              [ 75%]
+backend/tests/test_ai_router.py::test_chat_stream_case_not_found PASSED  [ 87%]
+backend/tests/test_ai_router.py::test_chat_stream_guardrail_failure PASSED [100%]
+
+======================== 8 passed, 20 warnings in 3.93s ========================
+```
+
+## Duplication Fixes Applied (Re-review)
+- Extracted `_save_message_sync` to the module level.
+- Extracted user message persistence logic into a shared async helper `_save_user_message`.
+- Extracted assistant message persistence logic inside the `CancelScope` into a shared async helper `_save_assistant_message_shielded` for `mock_stream` and `stream_and_save`.
+
+**Verification Output:**
+```bash
+pytest backend/tests/test_ai_router.py -v
+```
+```text
+============================= test session starts ==============================
+platform darwin -- Python 3.11.11, pytest-9.0.3, pluggy-1.6.0 -- /Users/flavius/.pyenv/versions/3.11.11/bin/python3.11
+cachedir: .pytest_cache
+rootdir: /Users/flavius/OPIT/uep2026/backend
+configfile: pyproject.toml
+plugins: anyio-4.12.1, langsmith-0.7.1, cov-7.1.0
+collecting ... collected 8 items
+
+backend/tests/test_ai_router.py::test_chat_general_question_is_in_scope PASSED [ 12%]
+backend/tests/test_ai_router.py::test_chat_dose_change_intent_is_blocked PASSED [ 25%]
+backend/tests/test_ai_router.py::test_chat_diagnosis_intent_is_blocked PASSED [ 37%]
+backend/tests/test_ai_router.py::test_chat_default_intent_is_general_question PASSED [ 50%]
+backend/tests/test_ai_router.py::test_chat_persists_both_turns PASSED    [ 62%]
+backend/tests/test_ai_router.py::test_chat_streaming PASSED              [ 75%]
+backend/tests/test_ai_router.py::test_chat_stream_case_not_found PASSED  [ 87%]
+backend/tests/test_ai_router.py::test_chat_stream_guardrail_failure PASSED [100%]
+
+======================== 8 passed, 20 warnings in 3.83s ========================
+```
+
+## Final Code Quality Fixes Applied (Re-review)
+- Fixed the blocking query in `_process_chat_request` by wrapping the execution in `await anyio.to_thread.run_sync`.
+- Fixed the unsafe cross-thread SQLAlchemy Session usage by using a fresh `SessionLocal` for background persistence instead of passing the request's `db` session.
+- Fixed the brittle test assertions in `test_ai_router.py` by adding an `.order_by(...)` clause to deterministic queries.
+
+**Verification Output:**
+```bash
+pytest backend/tests/test_ai_router.py -v
+```
+```text
+============================= test session starts ==============================
+platform darwin -- Python 3.11.11, pytest-9.0.3, pluggy-1.6.0 -- /Users/flavius/.pyenv/versions/3.11.11/bin/python3.11
+cachedir: .pytest_cache
+rootdir: /Users/flavius/OPIT/uep2026/backend
+configfile: pyproject.toml
+plugins: anyio-4.12.1, langsmith-0.7.1, cov-7.1.0
+collecting ... collected 8 items
+
+backend/tests/test_ai_router.py::test_chat_general_question_is_in_scope PASSED [ 12%]
+backend/tests/test_ai_router.py::test_chat_dose_change_intent_is_blocked PASSED [ 25%]
+backend/tests/test_ai_router.py::test_chat_diagnosis_intent_is_blocked PASSED [ 37%]
+backend/tests/test_ai_router.py::test_chat_default_intent_is_general_question PASSED [ 50%]
+backend/tests/test_ai_router.py::test_chat_persists_both_turns PASSED    [ 62%]
+backend/tests/test_ai_router.py::test_chat_streaming PASSED              [ 75%]
+backend/tests/test_ai_router.py::test_chat_stream_case_not_found PASSED  [ 87%]
+backend/tests/test_ai_router.py::test_chat_stream_guardrail_failure PASSED [100%]
+
+======================== 8 passed, 20 warnings in 3.94s ========================
+```
