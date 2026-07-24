@@ -144,7 +144,11 @@ def test_chat_persists_both_turns(client, db_session, monkeypatch):
 
 
 def test_chat_streaming(client, db_session, monkeypatch):
-    monkeypatch.setattr('app.routers.ai.generate_recommendation_stream', lambda *args, **kwargs: (c for c in ["Test", " Chunk"]))
+    async def mock_async_generator(*args, **kwargs):
+        for c in ["Test", " Chunk"]:
+            yield c
+
+    monkeypatch.setattr('app.routers.ai.generate_recommendation_stream', mock_async_generator)
     patient, case = _make_case_with_meds(db_session)
     response = client.post(
         "/ai/chat/stream",
@@ -153,3 +157,42 @@ def test_chat_streaming(client, db_session, monkeypatch):
     )
     assert response.status_code == 200
     assert response.text == "Test Chunk"
+    
+    messages = db_session.query(models.ChatMessage).filter_by(case_id=case.id).all()
+    assert len(messages) == 2
+    assert messages[0].role == models.ChatRole.user
+    assert messages[0].content == "Test"
+    assert messages[1].role == models.ChatRole.assistant
+    assert messages[1].content == "Test Chunk"
+
+
+def test_chat_stream_case_not_found(client, db_session):
+    patient, case = _make_case_with_meds(db_session)
+    response = client.post(
+        "/ai/chat/stream",
+        json={"case_id": "9999", "message": "Hello"},
+        headers=_auth_headers(patient)
+    )
+    assert response.status_code == 404
+
+
+def test_chat_stream_guardrail_failure(client, db_session):
+    patient, case = _make_case_with_meds(db_session)
+    response = client.post(
+        "/ai/chat/stream",
+        json={
+            "case_id": case.id,
+            "message": "I need a diagnosis.",
+            "intent_category": "diagnosis_request"
+        },
+        headers=_auth_headers(patient)
+    )
+    assert response.status_code == 200
+    assert "clinical decision" in response.text
+
+    messages = db_session.query(models.ChatMessage).filter_by(case_id=case.id).all()
+    assert len(messages) == 2
+    assert messages[0].role == models.ChatRole.user
+    assert messages[0].in_scope is False
+    assert messages[1].role == models.ChatRole.assistant
+    assert "clinical decision" in messages[1].content
