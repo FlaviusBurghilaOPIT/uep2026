@@ -20,6 +20,7 @@ class _BootScreenState extends ConsumerState<BootScreen> {
   }
 
   void _checkAuthAndRoute() {
+    if (!mounted) return;
     final authState = ref.read(demoAuthProvider);
 
     authState.when(
