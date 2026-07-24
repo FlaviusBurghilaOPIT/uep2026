@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -20,19 +22,44 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
+  static const int _resendCooldownSeconds = 30;
+
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _codeController = TextEditingController();
   _AuthStage _stage = _AuthStage.email;
+  Timer? _resendTimer;
+  int _secondsRemaining = 0;
 
   @override
   void dispose() {
+    _resendTimer?.cancel();
     _emailController.dispose();
     _codeController.dispose();
     super.dispose();
   }
 
+  void _startResendCooldown() {
+    _resendTimer?.cancel();
+    setState(() => _secondsRemaining = _resendCooldownSeconds);
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      if (_secondsRemaining <= 1) {
+        timer.cancel();
+        setState(() => _secondsRemaining = 0);
+      } else {
+        setState(() => _secondsRemaining--);
+      }
+    });
+  }
+
   Future<void> _handleSendCode() async {
+    // Resend button is disabled while the cooldown is active, but guard here
+    // too in case onPressed is ever wired without the disabled state.
+    if (_stage == _AuthStage.code && _secondsRemaining > 0) return;
     if (!_formKey.currentState!.validate()) return;
 
     final auth = ref.read(authProvider);
@@ -40,6 +67,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     if (success && mounted) {
       setState(() => _stage = _AuthStage.code);
+      _startResendCooldown();
     } else if (mounted && auth.errorMessage != null) {
       ScaffoldMessenger.of(
         context,
@@ -155,9 +183,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: _handleSendCode,
+                      onPressed: _secondsRemaining > 0 ? null : _handleSendCode,
                       child: Text(
-                        AppStrings.resendCode,
+                        _secondsRemaining > 0
+                            ? '${AppStrings.resendCode} (${_secondsRemaining}s)'
+                            : AppStrings.resendCode,
                         style: AppTextStyles.linkText.copyWith(
                           decoration: TextDecoration.none,
                         ),

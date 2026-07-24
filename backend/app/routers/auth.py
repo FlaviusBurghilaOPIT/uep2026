@@ -67,7 +67,11 @@ def complete_onboarding(req: schemas.CompleteOnboardingRequest, db: Session = De
         .first()
     )
 
-    if not user:
+    if (
+        not user
+        or not user.invite_code_expires_at
+        or user.invite_code_expires_at < datetime.utcnow()
+    ):
         raise HTTPException(status_code=400, detail="Invalid email or invite code")
 
     user.date_of_birth = req.date_of_birth

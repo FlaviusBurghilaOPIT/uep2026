@@ -31,11 +31,19 @@ class EmailService:
             logger.info(f"[DRY RUN] Would email code {code} to {email}: {subject}")
             return
 
-        self.ses_client.send_email(
-            Source=self.sender_address,
-            Destination={"ToAddresses": [email]},
-            Message={
-                "Subject": {"Data": subject},
-                "Body": {"Text": {"Data": body}},
-            },
-        )
+        try:
+            self.ses_client.send_email(
+                Source=self.sender_address,
+                Destination={"ToAddresses": [email]},
+                Message={
+                    "Subject": {"Data": subject},
+                    "Body": {"Text": {"Data": body}},
+                },
+            )
+        except Exception as e:
+            # Email delivery is best-effort: the code is also visible via the
+            # web UI display and dry-run/console logging in local dev, and
+            # callers must not leak SES failures as request errors (that would
+            # re-introduce an email-enumeration signal on request-code, or a
+            # crash after the patient row is already committed on invite).
+            logger.warning(f"Failed to send patient code email to {email}: {e}")

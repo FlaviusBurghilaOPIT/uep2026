@@ -117,6 +117,26 @@ def test_complete_onboarding_does_not_accept_or_persist_password(client, db_sess
     assert patient.status == "active"
 
 
+def test_complete_onboarding_with_expired_code_returns_400(client, db_session):
+    _make_patient(db_session, status="pending_onboarding", expires_delta=timedelta(minutes=-1))
+
+    response = client.post(
+        "/auth/complete-onboarding",
+        json={
+            "email": "patient@example.com",
+            "invite_code": "111111",
+            "date_of_birth": "1990-01-01",
+            "phone": "1234567890",
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Invalid email or invite code"
+
+    patient = db_session.query(models.User).filter(models.User.email == "patient@example.com").first()
+    assert patient.status == "pending_onboarding"
+
+
 from unittest.mock import patch
 
 

@@ -35,8 +35,6 @@ class AppStrings {
   static const String email = 'EMAIL';
   static const String emailHint = 'sarah.mitchell@email.com';
   static const String signIn = 'Sign In';
-  static const String noAccountYet = 'No account yet? ';
-  static const String createOne = 'Create one';
 
   static const String createYourAccount = 'Create your account';
   static const String setupCredentials = 'Set up your RemoteCare credentials';

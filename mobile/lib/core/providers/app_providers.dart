@@ -5,7 +5,7 @@ import '../network/api_service.dart';
 
 /// Auth state held in a [ChangeNotifier] so existing screen code
 /// (converted to [ConsumerWidget]) can continue calling the same
-/// public API (signIn, signOut, verifyInvite, etc.).
+/// public API (requestCode, verifyCode, completeOnboarding, signOut, etc.).
 class AuthNotifier extends ChangeNotifier {
   AuthNotifier(this._api) {
     checkAuthStatus();
