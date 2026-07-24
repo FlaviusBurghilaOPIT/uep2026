@@ -1,5 +1,14 @@
 from app import models
 from app.security import create_access_token, hash_password
+import pytest
+import contextlib
+
+@pytest.fixture(autouse=True)
+def _mock_session_local(monkeypatch, db_session):
+    @contextlib.contextmanager
+    def mock():
+        yield db_session
+    monkeypatch.setattr("app.routers.ai.SessionLocal", mock)
 
 
 def _auth_headers(user):
@@ -59,7 +68,7 @@ def test_chat_general_question_is_in_scope(client, db_session, monkeypatch):
     assert body["in_scope"] is True
     assert body["escalate"] is False
 
-    messages = db_session.query(models.ChatMessage).filter_by(case_id=case.id).all()
+    messages = db_session.query(models.ChatMessage).filter_by(case_id=case.id).order_by(models.ChatMessage.created_at).all()
     assert len(messages) == 2
     assert messages[0].in_scope is True
     assert messages[0].escalate is False
@@ -137,7 +146,7 @@ def test_chat_persists_both_turns(client, db_session, monkeypatch):
         headers=_auth_headers(patient),
     )
 
-    messages = db_session.query(models.ChatMessage).filter_by(case_id=case.id).all()
+    messages = db_session.query(models.ChatMessage).filter_by(case_id=case.id).order_by(models.ChatMessage.created_at).all()
     assert len(messages) == 2
     assert messages[0].role == models.ChatRole.user
     assert messages[1].role == models.ChatRole.assistant
@@ -158,7 +167,7 @@ def test_chat_streaming(client, db_session, monkeypatch):
     assert response.status_code == 200
     assert response.text == "Test Chunk"
     
-    messages = db_session.query(models.ChatMessage).filter_by(case_id=case.id).all()
+    messages = db_session.query(models.ChatMessage).filter_by(case_id=case.id).order_by(models.ChatMessage.created_at).all()
     assert len(messages) == 2
     assert messages[0].role == models.ChatRole.user
     assert messages[0].content == "Test"
@@ -190,7 +199,7 @@ def test_chat_stream_guardrail_failure(client, db_session):
     assert response.status_code == 200
     assert "clinical decision" in response.text
 
-    messages = db_session.query(models.ChatMessage).filter_by(case_id=case.id).all()
+    messages = db_session.query(models.ChatMessage).filter_by(case_id=case.id).order_by(models.ChatMessage.created_at).all()
     assert len(messages) == 2
     assert messages[0].role == models.ChatRole.user
     assert messages[0].in_scope is False

@@ -4,6 +4,7 @@ from fastapi.responses import StreamingResponse
 from openinference.instrumentation import using_attributes
 from sqlalchemy.orm import Session
 
+from app.core.database import SessionLocal
 from app import models, schemas
 from app.dependencies import get_current_user, get_db_for_user
 from app.providers.llm import get_llm_provider
@@ -48,23 +49,28 @@ def _check_guardrail(request: schemas.ChatRequest) -> tuple[bool, bool]:
     return True, False
 
 
-def _process_chat_request(request: schemas.ChatRequest, db: Session) -> tuple[models.Case, bool, bool]:
-    case = db.query(models.Case).filter(models.Case.id == request.case_id).first()
+def _get_case_sync(db: Session, case_id: int) -> models.Case | None:
+    return db.query(models.Case).filter(models.Case.id == case_id).first()
+
+
+async def _process_chat_request(request: schemas.ChatRequest, db: Session) -> tuple[models.Case, bool, bool]:
+    case = await anyio.to_thread.run_sync(_get_case_sync, db, request.case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
     in_scope, escalate = _check_guardrail(request)
     return case, in_scope, escalate
 
 
-def _save_message_sync(db_sess: Session, message: models.ChatMessage):
-    db_sess.add(message)
-    db_sess.commit()
+def _save_message_sync(message: models.ChatMessage):
+    with SessionLocal() as db_sess:
+        db_sess.add(message)
+        db_sess.commit()
+        db_sess.refresh(message)
 
 
-async def _save_user_message(db: Session, case_id: int, content: str, in_scope: bool, escalate: bool):
+async def _save_user_message(case_id: int, content: str, in_scope: bool, escalate: bool):
     await anyio.to_thread.run_sync(
         _save_message_sync,
-        db,
         models.ChatMessage(
             case_id=case_id,
             role=models.ChatRole.user,
@@ -75,11 +81,10 @@ async def _save_user_message(db: Session, case_id: int, content: str, in_scope: 
     )
 
 
-async def _save_assistant_message_shielded(db: Session, case_id: int, content: str):
+async def _save_assistant_message_shielded(case_id: int, content: str):
     with anyio.CancelScope(shield=True):
         await anyio.to_thread.run_sync(
             _save_message_sync,
-            db,
             models.ChatMessage(
                 case_id=case_id,
                 role=models.ChatRole.assistant,
@@ -94,9 +99,9 @@ async def chat(
     db: Session = Depends(get_db_for_user),
     _ = Depends(get_current_user),
 ):
-    case, in_scope, escalate = _process_chat_request(request, db)
+    case, in_scope, escalate = await _process_chat_request(request, db)
 
-    await _save_user_message(db, case.id, request.message, in_scope, escalate)
+    await _save_user_message(case.id, request.message, in_scope, escalate)
 
     if not in_scope:
         reply = (
@@ -115,7 +120,6 @@ async def chat(
 
     await anyio.to_thread.run_sync(
         _save_message_sync,
-        db,
         models.ChatMessage(
             case_id=case.id,
             role=models.ChatRole.assistant,
@@ -131,9 +135,9 @@ async def chat_stream(
     db: Session = Depends(get_db_for_user),
     _ = Depends(get_current_user),
 ):
-    case, in_scope, escalate = _process_chat_request(request, db)
+    case, in_scope, escalate = await _process_chat_request(request, db)
 
-    await _save_user_message(db, case.id, request.message, in_scope, escalate)
+    await _save_user_message(case.id, request.message, in_scope, escalate)
     
     if not in_scope:
         async def mock_stream():
@@ -145,7 +149,7 @@ async def chat_stream(
             try:
                 yield reply
             finally:
-                await _save_assistant_message_shielded(db, case.id, reply)
+                await _save_assistant_message_shielded(case.id, reply)
         return StreamingResponse(mock_stream(), media_type="text/plain")
 
     async def stream_and_save():
@@ -158,6 +162,6 @@ async def chat_stream(
                 yield chunk
         finally:
             if chunks:
-                await _save_assistant_message_shielded(db, case.id, "".join(chunks))
+                await _save_assistant_message_shielded(case.id, "".join(chunks))
 
     return StreamingResponse(stream_and_save(), media_type="text/plain")
