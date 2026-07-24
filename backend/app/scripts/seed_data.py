@@ -1,4 +1,5 @@
 import sys
+from datetime import datetime, timedelta
 from pathlib import Path
 
 # Ensure backend root is in sys.path when script is executed directly
@@ -8,6 +9,8 @@ from app import models
 from app.database import SessionLocal, engine
 from app.models import Base
 from app.security import hash_password
+
+DEMO_PATIENT_CODE = "424242"
 
 
 def seed_database():
@@ -46,15 +49,16 @@ def seed_database():
                 email="patient@example.com",
                 full_name="Sarah Mitchell",
                 role=models.UserRole.patient,
-                password_hash=hash_password("password123"),
                 status="active",
                 phone="+1 555-0199",
                 date_of_birth="1988-04-12",
+                invite_code=DEMO_PATIENT_CODE,
+                invite_code_expires_at=datetime.utcnow() + timedelta(days=365),
             )
             db.add(patient)
             db.commit()
             db.refresh(patient)
-            print("Seeded patient: patient@example.com")
+            print(f"Seeded patient: patient@example.com (sign-in code: {DEMO_PATIENT_CODE})")
         else:
             print("Patient patient@example.com already exists.")
 
