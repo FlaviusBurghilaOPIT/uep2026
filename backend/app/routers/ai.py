@@ -1,13 +1,11 @@
 import anyio
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
-from openinference.instrumentation import using_attributes
 from sqlalchemy.orm import Session
 
 from app.core.database import SessionLocal
 from app import models, schemas
 from app.dependencies import get_current_user, get_db_for_user
-from app.providers.llm import get_llm_provider
 from app.services.rag import generate_recommendation_stream
 
 router = APIRouter(prefix="/ai", tags=["ai"])
@@ -24,22 +22,6 @@ BLOCKED_INTENTS = {
     schemas.IntentCategory.dose_change_request,
     schemas.IntentCategory.diagnosis_request,
 }
-
-
-def _build_system_prompt(case: models.Case) -> str:
-    meds = (
-        "\n".join(
-            f"- {m.name} {m.dose}, {m.schedule_text}, for {m.duration}" for m in case.medications
-        )
-        or "(no medications on file)"
-    )
-    recs = "\n".join(f"- {r.text}" for r in case.recommendations) or "(no recommendations on file)"
-
-    return (
-        f"{GUARDRAIL_PREAMBLE}\n\n"
-        f"Prescribed medications:\n{meds}\n\n"
-        f"Recovery recommendations:\n{recs}"
-    )
 
 
 def _check_guardrail(request: schemas.ChatRequest) -> tuple[bool, bool]:
@@ -110,13 +92,10 @@ async def chat(
             "contact option for anything urgent."
         )
     else:
-        provider = get_llm_provider()
-        system_prompt = _build_system_prompt(case)
-        with using_attributes(session_id=case.id, metadata={"endpoint": "ai.chat"}):
-            reply = await provider.chat(
-                messages=[{"role": "user", "content": request.message}],
-                system=system_prompt,
-            )
+        chunks = []
+        async for chunk in generate_recommendation_stream(db, request.message, case.surgery_type):
+            chunks.append(chunk)
+        reply = "".join(chunks)
 
     await anyio.to_thread.run_sync(
         _save_message_sync,

@@ -11,6 +11,12 @@ def _mock_session_local(monkeypatch, db_session):
     monkeypatch.setattr("app.routers.ai.SessionLocal", mock)
 
 
+@pytest.fixture(autouse=True)
+def _mock_rag(monkeypatch):
+    async def mock_async_generator(*args, **kwargs):
+        for c in ["Test", " Chunk"]:
+            yield c
+    monkeypatch.setattr('app.routers.ai.generate_recommendation_stream', mock_async_generator)
 def _auth_headers(user):
     token = create_access_token({"sub": user.id, "role": user.role.value, "email": user.email})
     return {"Authorization": f"Bearer {token}"}
@@ -50,7 +56,6 @@ def _make_case_with_meds(db_session):
 
 
 def test_chat_general_question_is_in_scope(client, db_session, monkeypatch):
-    monkeypatch.setenv("LLM_PROVIDER", "mock")
     patient, case = _make_case_with_meds(db_session)
 
     response = client.post(
@@ -76,7 +81,6 @@ def test_chat_general_question_is_in_scope(client, db_session, monkeypatch):
 
 def test_chat_dose_change_intent_is_blocked(client, db_session, monkeypatch):
     """Guardrail blocks dose_change_request regardless of message language."""
-    monkeypatch.setenv("LLM_PROVIDER", "mock")
     patient, case = _make_case_with_meds(db_session)
 
     response = client.post(
@@ -103,7 +107,6 @@ def test_chat_dose_change_intent_is_blocked(client, db_session, monkeypatch):
 
 
 def test_chat_diagnosis_intent_is_blocked(client, db_session, monkeypatch):
-    monkeypatch.setenv("LLM_PROVIDER", "mock")
     patient, case = _make_case_with_meds(db_session)
 
     response = client.post(
@@ -123,7 +126,6 @@ def test_chat_diagnosis_intent_is_blocked(client, db_session, monkeypatch):
 
 def test_chat_default_intent_is_general_question(client, db_session, monkeypatch):
     """Omitting intent_category defaults to general_question (in_scope=True)."""
-    monkeypatch.setenv("LLM_PROVIDER", "mock")
     patient, case = _make_case_with_meds(db_session)
 
     response = client.post(
@@ -137,7 +139,6 @@ def test_chat_default_intent_is_general_question(client, db_session, monkeypatch
 
 
 def test_chat_persists_both_turns(client, db_session, monkeypatch):
-    monkeypatch.setenv("LLM_PROVIDER", "mock")
     patient, case = _make_case_with_meds(db_session)
 
     client.post(
@@ -152,12 +153,7 @@ def test_chat_persists_both_turns(client, db_session, monkeypatch):
     assert messages[1].role == models.ChatRole.assistant
 
 
-def test_chat_streaming(client, db_session, monkeypatch):
-    async def mock_async_generator(*args, **kwargs):
-        for c in ["Test", " Chunk"]:
-            yield c
-
-    monkeypatch.setattr('app.routers.ai.generate_recommendation_stream', mock_async_generator)
+def test_chat_streaming(client, db_session):
     patient, case = _make_case_with_meds(db_session)
     response = client.post(
         "/ai/chat/stream",
