@@ -31,12 +31,16 @@ def _check_guardrail(request: schemas.ChatRequest) -> tuple[bool, bool]:
     return True, False
 
 
-def _get_case_sync(db: Session, case_id: int) -> models.Case | None:
-    return db.query(models.Case).filter(models.Case.id == case_id).first()
+def _get_case_sync(case_id: int) -> models.Case | None:
+    with SessionLocal() as db:
+        case = db.query(models.Case).filter(models.Case.id == case_id).first()
+        if case:
+            db.expunge(case)
+        return case
 
 
-async def _process_chat_request(request: schemas.ChatRequest, db: Session) -> tuple[models.Case, bool, bool]:
-    case = await anyio.to_thread.run_sync(_get_case_sync, db, request.case_id)
+async def _process_chat_request(request: schemas.ChatRequest) -> tuple[models.Case, bool, bool]:
+    case = await anyio.to_thread.run_sync(_get_case_sync, request.case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
     in_scope, escalate = _check_guardrail(request)
@@ -81,7 +85,7 @@ async def chat(
     db: Session = Depends(get_db_for_user),
     _ = Depends(get_current_user),
 ):
-    case, in_scope, escalate = await _process_chat_request(request, db)
+    case, in_scope, escalate = await _process_chat_request(request)
 
     await _save_user_message(case.id, request.message, in_scope, escalate)
 
@@ -93,7 +97,7 @@ async def chat(
         )
     else:
         chunks = []
-        async for chunk in generate_recommendation_stream(db, request.message, case.surgery_type):
+        async for chunk in generate_recommendation_stream(request.message, case.surgery_type):
             chunks.append(chunk)
         reply = "".join(chunks)
 
@@ -114,7 +118,7 @@ async def chat_stream(
     db: Session = Depends(get_db_for_user),
     _ = Depends(get_current_user),
 ):
-    case, in_scope, escalate = await _process_chat_request(request, db)
+    case, in_scope, escalate = await _process_chat_request(request)
 
     await _save_user_message(case.id, request.message, in_scope, escalate)
     
@@ -132,8 +136,7 @@ async def chat_stream(
         return StreamingResponse(mock_stream(), media_type="text/plain")
 
     async def stream_and_save():
-        # Pass the surgery_type from case for RAG filter
-        generator = generate_recommendation_stream(db, request.message, case.surgery_type)
+        generator = generate_recommendation_stream(request.message, case.surgery_type)
         chunks = []
         try:
             async for chunk in generator:

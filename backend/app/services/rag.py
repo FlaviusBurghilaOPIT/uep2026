@@ -5,6 +5,13 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from openai import OpenAI, AsyncOpenAI
 
+from app.core.database import SessionLocal
+
+client_async = AsyncOpenAI(
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    base_url="https://openrouter.ai/api/v1"
+)
+
 
 # ─────────────────────────────────────────
 # Embedding
@@ -31,7 +38,6 @@ def get_embedding(text_input: str) -> list[float]:
 # ─────────────────────────────────────────
 
 def retrieve_relevant_chunks(
-    db: Session,
     query: str,
     surgery_type: str | None = None,
     top_k: int = 5
@@ -43,33 +49,34 @@ def retrieve_relevant_chunks(
     query_embedding = get_embedding(query)
     embedding_str = str(query_embedding)
 
-    if surgery_type:
-        sql = text("""
-            SELECT content, source, source_type, surgery_type,
-                   1 - (embedding <=> CAST(:embedding AS vector)) AS similarity
-            FROM embeddings
-            WHERE surgery_type = :surgery_type
-               OR surgery_type IS NULL
-            ORDER BY embedding <=> CAST(:embedding AS vector)
-            LIMIT :top_k
-        """)
-        rows = db.execute(sql, {
-            "embedding": embedding_str,
-            "surgery_type": surgery_type,
-            "top_k": top_k
-        }).fetchall()
-    else:
-        sql = text("""
-            SELECT content, source, source_type, surgery_type,
-                   1 - (embedding <=> CAST(:embedding AS vector)) AS similarity
-            FROM embeddings
-            ORDER BY embedding <=> CAST(:embedding AS vector)
-            LIMIT :top_k
-        """)
-        rows = db.execute(sql, {
-            "embedding": embedding_str,
-            "top_k": top_k
-        }).fetchall()
+    with SessionLocal() as db:
+        if surgery_type:
+            sql = text("""
+                SELECT content, source, source_type, surgery_type,
+                       1 - (embedding <=> CAST(:embedding AS vector)) AS similarity
+                FROM embeddings
+                WHERE surgery_type = :surgery_type
+                   OR surgery_type IS NULL
+                ORDER BY embedding <=> CAST(:embedding AS vector)
+                LIMIT :top_k
+            """)
+            rows = db.execute(sql, {
+                "embedding": embedding_str,
+                "surgery_type": surgery_type,
+                "top_k": top_k
+            }).fetchall()
+        else:
+            sql = text("""
+                SELECT content, source, source_type, surgery_type,
+                       1 - (embedding <=> CAST(:embedding AS vector)) AS similarity
+                FROM embeddings
+                ORDER BY embedding <=> CAST(:embedding AS vector)
+                LIMIT :top_k
+            """)
+            rows = db.execute(sql, {
+                "embedding": embedding_str,
+                "top_k": top_k
+            }).fetchall()
 
     return [
         {
@@ -86,8 +93,8 @@ def retrieve_relevant_chunks(
 # Generation
 # ─────────────────────────────────────────
 
-async def generate_recommendation_stream(db: Session, doctor_message: str, surgery_type: str | None = None):
-    chunks = await anyio.to_thread.run_sync(retrieve_relevant_chunks, db, doctor_message, surgery_type)
+async def generate_recommendation_stream(doctor_message: str, surgery_type: str | None = None):
+    chunks = await anyio.to_thread.run_sync(retrieve_relevant_chunks, doctor_message, surgery_type)
     context = "\n\n".join([f"[Source: {chunk['source']}]\n{chunk['content']}" for chunk in chunks])
     
     system_prompt = """You are a clinical assistant helping doctors write post-surgery recovery recommendations.
@@ -103,12 +110,7 @@ Always end with: "Please review and adjust based on your clinical judgment."
 """
     user_prompt = f"Context documents:\n{context}\n\nDoctor's request: {doctor_message}\n\nPlease suggest recovery recommendations based on the context above."
 
-    client = AsyncOpenAI(
-        api_key=os.getenv("OPENROUTER_API_KEY"),
-        base_url="https://openrouter.ai/api/v1"
-    )
-    
-    response = await client.chat.completions.create(
+    response = await client_async.chat.completions.create(
         model=os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3-8b-instruct"),
         messages=[
             {"role": "system", "content": system_prompt},

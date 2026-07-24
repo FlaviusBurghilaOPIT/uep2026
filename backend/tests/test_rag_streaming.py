@@ -8,8 +8,8 @@ def anyio_backend():
 
 @pytest.mark.anyio
 @patch('app.services.rag.retrieve_relevant_chunks')
-@patch('app.services.rag.AsyncOpenAI')
-async def test_generate_recommendation_stream_yields_chunks(mock_openai, mock_retrieve, db_session):
+@patch('app.services.rag.client_async')
+async def test_generate_recommendation_stream_yields_chunks(mock_client_async, mock_retrieve):
     mock_retrieve.return_value = [{"source": "test.txt", "content": "mock context"}]
     
     # Mock OpenRouter client
@@ -24,8 +24,8 @@ async def test_generate_recommendation_stream_yields_chunks(mock_openai, mock_re
             yield mock_chunk2
         return mock_async_generator()
         
-    mock_openai.return_value.chat.completions.create.side_effect = mock_create
+    mock_client_async.chat.completions.create.side_effect = mock_create
     
-    generator = generate_recommendation_stream(db_session, "test message", "knee")
+    generator = generate_recommendation_stream("test message", "knee")
     chunks = [chunk async for chunk in generator]
     assert chunks == ["Hello ", "World"]
