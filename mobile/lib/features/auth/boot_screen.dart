@@ -45,7 +45,7 @@ class _BootScreenState extends ConsumerState<BootScreen> {
   Widget build(BuildContext context) {
     // Listen for state changes in case data isn't ready on mount
     ref.listen<AsyncValue<DemoAuthState>>(demoAuthProvider, (previous, next) {
-      if (next.hasValue) {
+      if (!next.isLoading) {
         _checkAuthAndRoute();
       }
     });
