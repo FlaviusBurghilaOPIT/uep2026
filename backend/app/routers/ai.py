@@ -56,6 +56,38 @@ def _process_chat_request(request: schemas.ChatRequest, db: Session) -> tuple[mo
     return case, in_scope, escalate
 
 
+def _save_message_sync(db_sess: Session, message: models.ChatMessage):
+    db_sess.add(message)
+    db_sess.commit()
+
+
+async def _save_user_message(db: Session, case_id: int, content: str, in_scope: bool, escalate: bool):
+    await anyio.to_thread.run_sync(
+        _save_message_sync,
+        db,
+        models.ChatMessage(
+            case_id=case_id,
+            role=models.ChatRole.user,
+            content=content,
+            in_scope=in_scope,
+            escalate=escalate,
+        )
+    )
+
+
+async def _save_assistant_message_shielded(db: Session, case_id: int, content: str):
+    with anyio.CancelScope(shield=True):
+        await anyio.to_thread.run_sync(
+            _save_message_sync,
+            db,
+            models.ChatMessage(
+                case_id=case_id,
+                role=models.ChatRole.assistant,
+                content=content,
+            )
+        )
+
+
 @router.post("/chat", response_model=schemas.ChatResponse)
 async def chat(
     request: schemas.ChatRequest,
@@ -64,21 +96,7 @@ async def chat(
 ):
     case, in_scope, escalate = _process_chat_request(request, db)
 
-    def _save_message_sync(db_sess: Session, message: models.ChatMessage):
-        db_sess.add(message)
-        db_sess.commit()
-
-    await anyio.to_thread.run_sync(
-        _save_message_sync,
-        db,
-        models.ChatMessage(
-            case_id=case.id,
-            role=models.ChatRole.user,
-            content=request.message,
-            in_scope=in_scope,
-            escalate=escalate,
-        )
-    )
+    await _save_user_message(db, case.id, request.message, in_scope, escalate)
 
     if not in_scope:
         reply = (
@@ -115,21 +133,7 @@ async def chat_stream(
 ):
     case, in_scope, escalate = _process_chat_request(request, db)
 
-    def _save_message_sync(db_sess: Session, message: models.ChatMessage):
-        db_sess.add(message)
-        db_sess.commit()
-
-    await anyio.to_thread.run_sync(
-        _save_message_sync,
-        db,
-        models.ChatMessage(
-            case_id=case.id,
-            role=models.ChatRole.user,
-            content=request.message,
-            in_scope=in_scope,
-            escalate=escalate,
-        )
-    )
+    await _save_user_message(db, case.id, request.message, in_scope, escalate)
     
     if not in_scope:
         async def mock_stream():
@@ -141,16 +145,7 @@ async def chat_stream(
             try:
                 yield reply
             finally:
-                with anyio.CancelScope(shield=True):
-                    await anyio.to_thread.run_sync(
-                        _save_message_sync,
-                        db,
-                        models.ChatMessage(
-                            case_id=case.id,
-                            role=models.ChatRole.assistant,
-                            content=reply,
-                        )
-                    )
+                await _save_assistant_message_shielded(db, case.id, reply)
         return StreamingResponse(mock_stream(), media_type="text/plain")
 
     async def stream_and_save():
@@ -163,15 +158,6 @@ async def chat_stream(
                 yield chunk
         finally:
             if chunks:
-                with anyio.CancelScope(shield=True):
-                    await anyio.to_thread.run_sync(
-                        _save_message_sync,
-                        db,
-                        models.ChatMessage(
-                            case_id=case.id,
-                            role=models.ChatRole.assistant,
-                            content="".join(chunks),
-                        )
-                    )
+                await _save_assistant_message_shielded(db, case.id, "".join(chunks))
 
     return StreamingResponse(stream_and_save(), media_type="text/plain")
