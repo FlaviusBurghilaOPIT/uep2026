@@ -8,7 +8,6 @@ import '../../core/constants/app_strings.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/shared_widgets/app_text_field.dart';
 import '../../core/shared_widgets/app_button.dart';
-import '../../core/shared_widgets/social_login_row.dart';
 import '../../core/shared_widgets/security_badge.dart';
 import '../../core/navigation/app_routes.dart';
 
@@ -43,9 +42,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (success && mounted) {
       AppRoutes.navigateAndClearStack(context, AppRoutes.main);
     } else if (mounted && auth.errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(auth.errorMessage!)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(auth.errorMessage!)));
     }
   }
 
@@ -123,7 +122,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () => AppRoutes.navigateTo(context, AppRoutes.forgotPassword),
+                    onPressed: () =>
+                        AppRoutes.navigateTo(context, AppRoutes.forgotPassword),
                     child: Text(
                       AppStrings.forgotPassword,
                       style: AppTextStyles.linkText.copyWith(
@@ -141,9 +141,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 SizedBox(height: AppSpacing.xl),
 
-                const SocialLoginRow(),
-                SizedBox(height: AppSpacing.xxl),
-
                 AppButton(
                   text: AppStrings.signIn,
                   isLoading: auth.isLoading,
@@ -152,15 +149,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 SizedBox(height: AppSpacing.lg),
 
                 Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
                     children: [
                       Text(
                         AppStrings.noAccountYet,
                         style: AppTextStyles.bodyMedium,
                       ),
                       GestureDetector(
-                        onTap: () => AppRoutes.navigateTo(context, AppRoutes.signupStep1),
+                        onTap: () => AppRoutes.navigateTo(
+                          context,
+                          AppRoutes.signupStep1,
+                        ),
                         child: Text(
                           AppStrings.createOne,
                           style: AppTextStyles.linkText,
