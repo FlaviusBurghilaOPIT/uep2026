@@ -17,7 +17,7 @@ A cross-platform Flutter application for post-surgery patient companion, medicat
 5. [Demo Credentials & Testing Flows](#demo-credentials--testing-flows)
    - [Patient Account (Existing User)](#patient-account-existing-user)
    - [Clinician Account](#clinician-account)
-   - [Invitation Code / Onboarding Flow](#invitation-code--onboarding-flow)
+   - [Patient Invitation / Sign-In Flow](#patient-invitation--sign-in-flow)
 6. [Local Testing & Debugging](#local-testing--debugging)
    - [Running Unit & Widget Tests](#running-unit--widget-tests)
    - [Integration / E2E test](#integration--e2e-test)
