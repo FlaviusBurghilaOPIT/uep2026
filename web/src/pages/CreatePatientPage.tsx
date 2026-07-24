@@ -49,11 +49,11 @@ function CreatePatientPage() {
       <div style={styles.container}>
         <div style={styles.card}>
           <h1 style={styles.title}>Patient Invited ✓</h1>
-          <p style={styles.subtitle}>Patient invitation generated for {fullName}.</p>
+          <p style={styles.subtitle}>An email with a sign-in code was sent to {email}.</p>
           <div style={styles.inviteBox}>
-            <p style={styles.inviteLabel}>6-Digit Invite Code:</p>
+            <p style={styles.inviteLabel}>Sign-In Code (backup, in case the email doesn't arrive):</p>
             <p style={styles.inviteCode}>{inviteCode}</p>
-            <p style={styles.inviteSubtext}>Provide this code to the patient to complete onboarding in the mobile app.</p>
+            <p style={styles.inviteSubtext}>The patient can enter this code directly in the mobile app if needed.</p>
           </div>
           <button
             style={styles.button}
