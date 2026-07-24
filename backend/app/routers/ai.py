@@ -1,3 +1,4 @@
+import anyio
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from openinference.instrumentation import using_attributes
@@ -63,7 +64,13 @@ async def chat(
 ):
     case, in_scope, escalate = _process_chat_request(request, db)
 
-    db.add(
+    def _save_message_sync(db_sess: Session, message: models.ChatMessage):
+        db_sess.add(message)
+        db_sess.commit()
+
+    await anyio.to_thread.run_sync(
+        _save_message_sync,
+        db,
         models.ChatMessage(
             case_id=case.id,
             role=models.ChatRole.user,
@@ -72,7 +79,6 @@ async def chat(
             escalate=escalate,
         )
     )
-    db.commit()
 
     if not in_scope:
         reply = (
@@ -89,14 +95,15 @@ async def chat(
                 system=system_prompt,
             )
 
-    db.add(
+    await anyio.to_thread.run_sync(
+        _save_message_sync,
+        db,
         models.ChatMessage(
             case_id=case.id,
             role=models.ChatRole.assistant,
             content=reply,
         )
     )
-    db.commit()
 
     return schemas.ChatResponse(reply=reply, in_scope=in_scope, escalate=escalate)
 
@@ -108,7 +115,13 @@ async def chat_stream(
 ):
     case, in_scope, escalate = _process_chat_request(request, db)
 
-    db.add(
+    def _save_message_sync(db_sess: Session, message: models.ChatMessage):
+        db_sess.add(message)
+        db_sess.commit()
+
+    await anyio.to_thread.run_sync(
+        _save_message_sync,
+        db,
         models.ChatMessage(
             case_id=case.id,
             role=models.ChatRole.user,
@@ -117,7 +130,6 @@ async def chat_stream(
             escalate=escalate,
         )
     )
-    db.commit()
     
     if not in_scope:
         async def mock_stream():
@@ -126,32 +138,40 @@ async def chat_stream(
                 "clinical decision. Please contact your clinician or use the emergency "
                 "contact option for anything urgent."
             )
-            yield reply
-            db.add(
-                models.ChatMessage(
-                    case_id=case.id,
-                    role=models.ChatRole.assistant,
-                    content=reply,
-                )
-            )
-            db.commit()
+            try:
+                yield reply
+            finally:
+                with anyio.CancelScope(shield=True):
+                    await anyio.to_thread.run_sync(
+                        _save_message_sync,
+                        db,
+                        models.ChatMessage(
+                            case_id=case.id,
+                            role=models.ChatRole.assistant,
+                            content=reply,
+                        )
+                    )
         return StreamingResponse(mock_stream(), media_type="text/plain")
 
     async def stream_and_save():
         # Pass the surgery_type from case for RAG filter
         generator = generate_recommendation_stream(db, request.message, case.surgery_type)
         chunks = []
-        async for chunk in generator:
-            chunks.append(chunk)
-            yield chunk
-            
-        db.add(
-            models.ChatMessage(
-                case_id=case.id,
-                role=models.ChatRole.assistant,
-                content="".join(chunks),
-            )
-        )
-        db.commit()
+        try:
+            async for chunk in generator:
+                chunks.append(chunk)
+                yield chunk
+        finally:
+            if chunks:
+                with anyio.CancelScope(shield=True):
+                    await anyio.to_thread.run_sync(
+                        _save_message_sync,
+                        db,
+                        models.ChatMessage(
+                            case_id=case.id,
+                            role=models.ChatRole.assistant,
+                            content="".join(chunks),
+                        )
+                    )
 
     return StreamingResponse(stream_and_save(), media_type="text/plain")
