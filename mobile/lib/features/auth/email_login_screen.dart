@@ -61,7 +61,7 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
                 keyboardType: TextInputType.emailAddress,
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) return 'Required';
-                  final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+                  final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
                   if (!emailRegex.hasMatch(val)) return 'Enter a valid email';
                   return null;
                 },
