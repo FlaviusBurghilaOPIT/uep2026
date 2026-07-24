@@ -29,9 +29,17 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
 
   void _submit() async {
     if (_formKey.currentState!.validate()) {
-      await ref.read(demoAuthProvider.notifier).triggerOtp(_emailController.text.trim());
-      if (mounted) {
-        AppRoutes.navigateAndReplace(context, AppRoutes.otp);
+      try {
+        await ref.read(demoAuthProvider.notifier).triggerOtp(_emailController.text.trim());
+        if (mounted) {
+          AppRoutes.navigateAndReplace(context, AppRoutes.otp);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error sending OTP: $e')),
+          );
+        }
       }
     }
   }
