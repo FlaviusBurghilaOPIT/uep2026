@@ -71,6 +71,7 @@ class User(Base):
     cognito_sub: Mapped[str | None] = mapped_column(String, unique=True, nullable=True)
 
     invite_code: Mapped[str | None] = mapped_column(String, nullable=True)
+    invite_code_expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     status: Mapped[str] = mapped_column(String, default="active")
     phone: Mapped[str | None] = mapped_column(String, nullable=True)
     date_of_birth: Mapped[str | None] = mapped_column(String, nullable=True)
