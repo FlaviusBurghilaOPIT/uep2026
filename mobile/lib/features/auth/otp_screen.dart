@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../core/navigation/app_routes.dart';
 import 'demo_auth_state.dart';
 
 class OtpScreen extends ConsumerStatefulWidget {
@@ -14,6 +15,12 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   final _formKey = GlobalKey<FormState>();
   final _otpController = TextEditingController();
 
+  @override
+  void dispose() {
+    _otpController.dispose();
+    super.dispose();
+  }
+
   void _submit() async {
     if (_formKey.currentState!.validate()) {
       await ref.read(demoAuthProvider.notifier).completeOtpLogin();
@@ -25,6 +32,12 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(demoAuthProvider).valueOrNull;
+    final email = authState?.email ?? '';
+    final emailText = email.isNotEmpty
+        ? 'Please enter the 6-digit code sent to $email.'
+        : 'Please enter the 6-digit code sent to your email.';
+
     return Scaffold(
       appBar: AppBar(title: const Text('Enter OTP')),
       body: Padding(
@@ -40,7 +53,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
               ),
               SizedBox(height: 16.h),
               Text(
-                'Please enter the 6-digit code sent to your email.',
+                emailText,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
@@ -54,10 +67,11 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (val) {
-                  if (val == null || val.trim().length != 6) {
+                  final trimmed = val?.trim() ?? '';
+                  if (trimmed.length != 6) {
                     return 'Code must be exactly 6 digits';
                   }
-                  if (int.tryParse(val) == null) {
+                  if (!RegExp(r'^\d{6}$').hasMatch(trimmed)) {
                     return 'Code must be numeric';
                   }
                   return null;
