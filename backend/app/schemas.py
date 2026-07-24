@@ -248,3 +248,45 @@ class SendTestPushRequest(BaseModel):
     data_payload: dict | None = None
 
 
+
+
+class TriageResolveRequest(BaseModel):
+    outreach_method: str
+    clinical_note: str
+
+
+class TriageResolutionResponse(BaseModel):
+    id: str
+    patient_id: str
+    clinician_id: str
+    outreach_method: str
+    clinical_note: str
+    resolved_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class TriageResolutionLatest(BaseModel):
+    patient_id: str
+    resolved_at: datetime
+
+
+class DoseLogDetailResponse(BaseModel):
+    id: str
+    scheduled_reminder_id: str
+    status: str
+    logged_at: datetime | None
+    medication_name: str | None
+    scheduled_time: datetime | None
+
+
+class AnalyticsEventIn(BaseModel):
+    event_name: str
+    properties: dict | None = None
+
+
+class TriageResponseStats(BaseModel):
+    median_seconds: float | None
+    samples: int
+    resolutions_total: int

@@ -90,6 +90,30 @@ def create_patient(user: schemas.UserCreate, db: Session = Depends(get_db_for_us
     return db_user
 
 
+@router.get(
+    "/triage-resolutions/latest",
+    response_model=list[schemas.TriageResolutionLatest],
+)
+def latest_triage_resolutions(
+    db: Session = Depends(get_db_for_user),
+    current_user: models.User = Depends(require_clinician),
+):
+    """Latest triage resolution per patient, for the clinician triage dashboard."""
+    resolutions = (
+        db.query(models.TriageResolution)
+        .order_by(models.TriageResolution.resolved_at.desc())
+        .all()
+    )
+    latest: dict[str, models.TriageResolution] = {}
+    for r in resolutions:
+        if r.patient_id not in latest:
+            latest[r.patient_id] = r
+    return [
+        schemas.TriageResolutionLatest(patient_id=pid, resolved_at=r.resolved_at)
+        for pid, r in latest.items()
+    ]
+
+
 @router.get("/{patient_id}", response_model=schemas.UserResponse)
 def get_patient(patient_id: str, db: Session = Depends(get_db_for_user)):
 
@@ -114,6 +138,44 @@ def get_patient_case(patient_id: str, db: Session = Depends(get_db_for_user)):
         raise HTTPException(status_code=404, detail="Case not found")
 
     return case
+
+
+@router.post(
+    "/{patient_id}/triage-resolve",
+    response_model=schemas.TriageResolutionResponse,
+)
+def resolve_triage_alert(
+    patient_id: str,
+    req: schemas.TriageResolveRequest,
+    db: Session = Depends(get_db_for_user),
+    current_user: models.User = Depends(require_clinician),
+):
+    patient = (
+        db.query(models.User)
+        .filter(models.User.id == patient_id, models.User.role == models.UserRole.patient)
+        .first()
+    )
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+
+    note = req.clinical_note.strip()
+    if not note:
+        raise HTTPException(status_code=400, detail="Clinical resolution note is required")
+
+    method = req.outreach_method.strip()
+    if not method:
+        raise HTTPException(status_code=400, detail="Outreach method is required")
+
+    resolution = models.TriageResolution(
+        patient_id=patient.id,
+        clinician_id=current_user.id,
+        outreach_method=method,
+        clinical_note=note,
+    )
+    db.add(resolution)
+    db.commit()
+    db.refresh(resolution)
+    return resolution
 
 
 @router.get("/{patient_id}/export")

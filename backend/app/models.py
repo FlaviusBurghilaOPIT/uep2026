@@ -284,3 +284,35 @@ class DeviceToken(Base):
 
     user: Mapped["User"] = relationship(back_populates="device_tokens")
 
+
+
+class TriageResolution(Base):
+    __tablename__ = "triage_resolutions"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
+    patient_id: Mapped[str] = mapped_column(
+        ForeignKey("users.id"), nullable=False, index=True
+    )
+    clinician_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)
+
+    outreach_method: Mapped[str] = mapped_column(String, nullable=False)
+    clinical_note: Mapped[str] = mapped_column(Text, nullable=False)
+    resolved_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class AnalyticsEvent(Base):
+    """UX telemetry. HIPAA boundary: event names, actor IDs, enum/timestamp
+    properties only — never names, drug names, doses, or free text."""
+
+    __tablename__ = "analytics_events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    event_name: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    actor_id: Mapped[str | None] = mapped_column(
+        ForeignKey("users.id"), nullable=True, index=True
+    )
+    properties: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, index=True
+    )

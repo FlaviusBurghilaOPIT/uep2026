@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app import models
+from app import models, schemas
 from app.dependencies import get_current_user, get_db_for_user
 
 router = APIRouter(
@@ -60,7 +60,7 @@ def log_dose(
     return dose_log
 
 
-@router.get("/patients/{patient_id}")
+@router.get("/patients/{patient_id}", response_model=list[schemas.DoseLogDetailResponse])
 def get_patient_adherence(
     patient_id: str,
     db: Session = Depends(get_db_for_user),
@@ -79,7 +79,23 @@ def get_patient_adherence(
         .all()
     )
 
-    return logs
+    return [
+        schemas.DoseLogDetailResponse(
+            id=log.id,
+            scheduled_reminder_id=log.scheduled_reminder_id,
+            status=log.status.value if hasattr(log.status, "value") else str(log.status),
+            logged_at=log.logged_at,
+            medication_name=(
+                log.scheduled_reminder.medication.name
+                if log.scheduled_reminder and log.scheduled_reminder.medication
+                else None
+            ),
+            scheduled_time=(
+                log.scheduled_reminder.scheduled_time if log.scheduled_reminder else None
+            ),
+        )
+        for log in logs
+    ]
 
 
 @router.get("/patients/{patient_id}/export")

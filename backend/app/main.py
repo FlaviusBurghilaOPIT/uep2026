@@ -10,6 +10,7 @@ from app.dependencies import get_current_user
 from app.routers import (
     adherence,
     ai,
+    analytics,
     auth,
     cases,
     checkins,
@@ -72,6 +73,7 @@ app.include_router(cases.router)
 app.include_router(medications.router)
 app.include_router(checkins.router)
 app.include_router(adherence.router)
+app.include_router(analytics.router)
 app.include_router(recommendations.router)
 app.include_router(reminders.router)
 app.include_router(fda.router)
