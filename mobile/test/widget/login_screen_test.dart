@@ -39,7 +39,7 @@ void main() {
       await tester.pumpWidget(buildTestApp(fakeApi));
       await tester.pumpAndSettle();
 
-      expect(find.text(AppStrings.password), findsNothing);
+      expect(find.text('PASSWORD'), findsNothing);
 
       await tester.enterText(
         find.byType(TextFormField).first,

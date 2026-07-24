@@ -19,12 +19,10 @@ class SignupStep2Screen extends ConsumerStatefulWidget {
 class _SignupStep2ScreenState extends ConsumerState<SignupStep2Screen> {
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
-  final _passwordController = TextEditingController();
 
   @override
   void dispose() {
     _phoneController.dispose();
-    _passwordController.dispose();
     super.dispose();
   }
 
@@ -36,7 +34,6 @@ class _SignupStep2ScreenState extends ConsumerState<SignupStep2Screen> {
       fullName: auth.fullName ?? '',
       email: auth.email ?? '',
       phone: _phoneController.text.trim(),
-      password: _passwordController.text,
     );
 
     AppRoutes.navigateTo(context, AppRoutes.signupStep3);
@@ -59,9 +56,15 @@ class _SignupStep2ScreenState extends ConsumerState<SignupStep2Screen> {
                 const StepProgressBar(currentStep: 2),
                 SizedBox(height: AppSpacing.xxl),
 
-                Text('Welcome, ${auth.fullName ?? 'Patient'}!', style: AppTextStyles.heading1),
+                Text(
+                  'Welcome, ${auth.fullName ?? 'Patient'}!',
+                  style: AppTextStyles.heading1,
+                ),
                 SizedBox(height: AppSpacing.sm),
-                Text('Set up your contact details and account password', style: AppTextStyles.subtitle),
+                Text(
+                  'Set up your contact details',
+                  style: AppTextStyles.subtitle,
+                ),
                 SizedBox(height: AppSpacing.xxl),
 
                 AppTextField(
@@ -79,22 +82,6 @@ class _SignupStep2ScreenState extends ConsumerState<SignupStep2Screen> {
                 ),
                 SizedBox(height: AppSpacing.xl),
 
-                AppTextField(
-                  label: AppStrings.password,
-                  hintText: AppStrings.passwordMinHint,
-                  prefixIcon: Icons.lock_outline,
-                  isPassword: true,
-                  controller: _passwordController,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a password';
-                    }
-                    if (value.length < 8) {
-                      return 'Password must be at least 8 characters';
-                    }
-                    return null;
-                  },
-                ),
                 SizedBox(height: AppSpacing.xxxl),
 
                 AppButton(

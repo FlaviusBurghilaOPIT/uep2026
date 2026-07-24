@@ -34,7 +34,6 @@ class AppStrings {
       'Sign in to continue your recovery journey';
   static const String email = 'EMAIL';
   static const String emailHint = 'sarah.mitchell@email.com';
-  static const String password = 'PASSWORD';
   static const String signIn = 'Sign In';
   static const String noAccountYet = 'No account yet? ';
   static const String createOne = 'Create one';
@@ -47,7 +46,6 @@ class AppStrings {
   static const String emailAddressHint = 'you@email.com';
   static const String phoneNumber = 'PHONE NUMBER';
   static const String phoneHint = '+1 (555) 000-0000';
-  static const String passwordMinHint = 'Min. 8 characters';
   static const String continueText = 'Continue';
 
   static const String verifyEmail = 'Verify your email';

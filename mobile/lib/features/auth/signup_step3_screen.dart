@@ -33,9 +33,9 @@ class _SignupStep3ScreenState extends ConsumerState<SignupStep3Screen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: AppColors.primaryGreen,
-            ),
+            colorScheme: Theme.of(
+              context,
+            ).colorScheme.copyWith(primary: AppColors.primaryGreen),
           ),
           child: child!,
         );
@@ -70,7 +70,6 @@ class _SignupStep3ScreenState extends ConsumerState<SignupStep3Screen> {
     final success = await auth.completeOnboarding(
       email: auth.email ?? '',
       inviteCode: auth.inviteCode ?? '',
-      password: auth.tempPassword ?? 'password123',
       dateOfBirth: _formattedIsoDate,
       phone: auth.phone ?? '',
     );
@@ -96,9 +95,9 @@ class _SignupStep3ScreenState extends ConsumerState<SignupStep3Screen> {
         AppRoutes.navigateAndClearStack(context, AppRoutes.main);
       }
     } else if (mounted && auth.errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(auth.errorMessage!)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(auth.errorMessage!)));
     }
   }
 
@@ -119,7 +118,10 @@ class _SignupStep3ScreenState extends ConsumerState<SignupStep3Screen> {
 
               Text(AppStrings.yourHealthProfile, style: AppTextStyles.heading1),
               SizedBox(height: AppSpacing.sm),
-              Text('Complete your patient profile setup', style: AppTextStyles.subtitle),
+              Text(
+                'Complete your patient profile setup',
+                style: AppTextStyles.subtitle,
+              ),
               SizedBox(height: AppSpacing.xxl),
 
               Text(AppStrings.dateOfBirth, style: AppTextStyles.label),
@@ -154,9 +156,7 @@ class _SignupStep3ScreenState extends ConsumerState<SignupStep3Screen> {
               ),
               SizedBox(height: AppSpacing.xxl),
 
-              SecurityBadge(
-                text: AppStrings.healthInfoEncrypted,
-              ),
+              SecurityBadge(text: AppStrings.healthInfoEncrypted),
               SizedBox(height: AppSpacing.xxl),
 
               AppButton(
