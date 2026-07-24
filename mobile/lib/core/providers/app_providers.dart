@@ -11,7 +11,7 @@ class AuthNotifier extends ChangeNotifier {
     checkAuthStatus();
   }
 
-  final HttpApiService _api;
+  final ApiService _api;
 
   bool _isSignedIn = false;
   bool _isLoading = false;
@@ -25,7 +25,6 @@ class AuthNotifier extends ChangeNotifier {
   String? _dateOfBirth;
   String? _primaryCondition;
   String? _inviteCode;
-  String? _tempPassword;
 
   bool get isSignedIn => _isSignedIn;
   bool get isLoading => _isLoading;
@@ -38,7 +37,6 @@ class AuthNotifier extends ChangeNotifier {
   String? get dateOfBirth => _dateOfBirth;
   String? get primaryCondition => _primaryCondition;
   String? get inviteCode => _inviteCode;
-  String? get tempPassword => _tempPassword;
 
   Future<void> checkAuthStatus() async {
     final token = await _api.getToken();
@@ -78,25 +76,19 @@ class AuthNotifier extends ChangeNotifier {
     return false;
   }
 
-  Future<bool> signIn({required String email, required String password}) async {
+  Future<bool> requestCode({required String email}) async {
     _setLoading(true);
     _errorMessage = null;
     try {
-      final res = await _api.post('/auth/login', {
+      final res = await _api.post('/auth/patient/request-code', {
         'email': email,
-        'password': password,
       });
-
       if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        final token = data['access_token'];
-        await _api.setToken(token);
-        await fetchProfile();
-        _setLoading(false);
+        _email = email;
         return true;
       } else {
         final err = jsonDecode(res.body);
-        _errorMessage = err['detail'] ?? 'Login failed';
+        _errorMessage = err['detail'] ?? 'Failed to send code';
       }
     } catch (e) {
       _errorMessage = 'Network error: ${e.toString()}';
@@ -106,41 +98,47 @@ class AuthNotifier extends ChangeNotifier {
     return false;
   }
 
-  Future<bool> verifyInvite({
+  /// Returns 'onboarding', 'authenticated', or null on failure (see [errorMessage]).
+  Future<String?> verifyCode({
     required String email,
-    required String inviteCode,
+    required String code,
   }) async {
     _setLoading(true);
     _errorMessage = null;
     try {
-      final res = await _api.post('/auth/verify-invite', {
+      final res = await _api.post('/auth/patient/verify-code', {
         'email': email,
-        'invite_code': inviteCode,
+        'code': code,
       });
 
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
-        _email = data['email'];
-        _fullName = data['full_name'];
-        _inviteCode = data['invite_code'];
-        _setLoading(false);
-        return true;
+        final result = data['result'] as String;
+        if (result == 'authenticated') {
+          final token = data['access_token'];
+          await _api.setToken(token);
+          await fetchProfile();
+        } else {
+          _email = data['email'];
+          _fullName = data['full_name'];
+          _inviteCode = code;
+        }
+        return result;
       } else {
         final err = jsonDecode(res.body);
-        _errorMessage = err['detail'] ?? 'Invalid email or invite code';
+        _errorMessage = err['detail'] ?? 'Invalid or expired code';
       }
     } catch (e) {
       _errorMessage = 'Network error: ${e.toString()}';
     } finally {
       _setLoading(false);
     }
-    return false;
+    return null;
   }
 
   Future<bool> completeOnboarding({
     required String email,
     required String inviteCode,
-    required String password,
     required String dateOfBirth,
     required String phone,
   }) async {
@@ -150,7 +148,6 @@ class AuthNotifier extends ChangeNotifier {
       final res = await _api.post('/auth/complete-onboarding', {
         'email': email,
         'invite_code': inviteCode,
-        'password': password,
         'date_of_birth': dateOfBirth,
         'phone': phone,
       });
@@ -178,12 +175,10 @@ class AuthNotifier extends ChangeNotifier {
     required String fullName,
     required String email,
     required String phone,
-    required String password,
   }) {
     _fullName = fullName;
     _email = email;
     _phone = phone;
-    _tempPassword = password;
   }
 
   Future<void> signOut() async {
@@ -224,7 +219,7 @@ class NavigationNotifier extends ChangeNotifier {
 // ---------------------------------------------------------------------------
 
 final authProvider = ChangeNotifierProvider<AuthNotifier>((ref) {
-  return AuthNotifier(HttpApiService());
+  return AuthNotifier(ref.watch(apiServiceProvider));
 });
 
 final navigationProvider = ChangeNotifierProvider<NavigationNotifier>((ref) {
