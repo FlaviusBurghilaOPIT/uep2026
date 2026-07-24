@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../i18n'
 import { apiFetch } from '../api/client'
 
 type FDAResult = {
   drug: string
   warnings: string[]
-  source: string
-  retrieved_at: string
+  source: string | null
+  retrieved_at: string | null
 }
 
 function FDAPage() {
-  const { t } = useTranslation()
-  const params = new URLSearchParams(window.location.search)
-  const initialDrug = params.get('drug') || ''
+  const { t, language } = useTranslation()
+  const [searchParams] = useSearchParams()
+  const initialDrug = searchParams.get('drug') || ''
   const [drugName, setDrugName] = useState(initialDrug)
   const [result, setResult] = useState<FDAResult | null>(null)
   const [loading, setLoading] = useState(false)
@@ -29,16 +30,16 @@ function FDAPage() {
     setLoading(true)
     try {
       const data = await apiFetch<Record<string, unknown>>(`/fda/drug/${encodeURIComponent(term.toLowerCase().trim())}`)
-      const name = (data.drug || data.drug_name || term) as string
+      const name = (data.drug || data.drug_name || term.trim()) as string
       const rawWarnings = data.warnings as string[] | undefined
       const summary = data.summary as string | undefined
-      const warnings = rawWarnings || (summary ? summary.split('\n').filter(Boolean) : ['No specific warnings found.'])
-      const retrieved_at = (data.retrieved_at || new Date().toISOString()) as string
+      const warnings = rawWarnings || (summary ? summary.split('\n').filter(Boolean) : [t('fda.noWarnings')])
       setResult({
         drug: name,
         warnings,
-        source: (data.source || 'openFDA') as string,
-        retrieved_at
+        // Honest provenance: render source/timestamp only when the server provides them
+        source: typeof data.source === 'string' ? data.source : null,
+        retrieved_at: typeof data.retrieved_at === 'string' ? data.retrieved_at : null
       })
     } catch (err: unknown) {
       setError((err as Error).message || t('fda.errorFetchFailed'))
@@ -48,7 +49,7 @@ function FDAPage() {
   }
 
   const openFDAWebsite = (drug: string) => {
-    window.open('https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=BasicSearch.process&query=' + drug, '_blank')
+    window.open('https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=BasicSearch.process&query=' + encodeURIComponent(drug), '_blank')
   }
 
   useEffect(() => {
@@ -73,6 +74,7 @@ function FDAPage() {
           style={styles.input}
           type="text"
           placeholder={t('fda.searchPlaceholder')}
+          aria-label={t('fda.searchLabel')}
           value={drugName}
           onChange={(e) => setDrugName(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -86,61 +88,62 @@ function FDAPage() {
         </button>
       </div>
 
-      {error && <p style={styles.error}>{error}</p>}
+      {error && <p style={styles.error} role="alert">{error}</p>}
 
       {result && (
         <div style={styles.resultCard}>
           <div style={styles.resultHeader}>
             <div>
-              <h2 style={styles.drugName}>{result.drug.toUpperCase()}</h2>
-              <div style={styles.sourceBadge}>
-                <span>📋</span>
-                <span>{result.source}</span>
-              </div>
+              <h2 style={styles.drugName}>{result.drug}</h2>
+              {result.source && (
+                <div style={styles.sourceBadge}>
+                  <span aria-hidden="true">📋</span>
+                  <span>{result.source}</span>
+                </div>
+              )}
             </div>
             <div style={styles.rightHeader}>
-              <span style={styles.timestamp}>
-                {t('fda.retrieved')}: {new Date(result.retrieved_at).toLocaleString()}
-              </span>
+              {result.retrieved_at && (
+                <span style={styles.timestamp}>
+                  {t('fda.retrieved')}: {new Date(result.retrieved_at).toLocaleString(language)}
+                </span>
+              )}
               <button
                 style={styles.fdaWebsiteLink}
                 onClick={() => openFDAWebsite(result.drug)}
               >
-                View on FDA Website
+                {t('fda.viewOnFDAWebsite')}
               </button>
             </div>
           </div>
 
           <div style={styles.warningsSection}>
             <h3 style={styles.warningsTitle}>{t('fda.warningsTitle')}</h3>
-            <div style={styles.warningsList}>
+            <ul style={styles.warningsList}>
               {result.warnings.map((warning, i) => (
-                <div key={i} style={styles.warningItem}>
-                  <span style={styles.warningDot}>•</span>
+                <li key={i} style={styles.warningItem}>
                   <p style={styles.warningText}>{warning}</p>
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
 
           <p style={styles.disclaimer}>
             {t('fda.disclaimer')}
-            
-            
           </p>
         </div>
       )}
 
       {loading && (
         <div style={styles.emptyState}>
-          <p style={styles.emptyIcon}>🔍</p>
+          <p style={styles.emptyIcon} aria-hidden="true">🔍</p>
           <p style={styles.emptyText}>{t('fda.fetching')}</p>
         </div>
       )}
 
       {!result && !loading && !error && (
         <div style={styles.emptyState}>
-          <p style={styles.emptyIcon}>💊</p>
+          <p style={styles.emptyIcon} aria-hidden="true">💊</p>
           <p style={styles.emptyText}>
             {t('fda.emptyText')}
           </p>
@@ -195,7 +198,6 @@ const styles = {
     borderRadius: '8px',
     border: '1px solid #e5e7eb',
     fontSize: '15px',
-    outline: 'none',
     backgroundColor: '#ffffff'
   },
   searchButton: {
@@ -235,7 +237,8 @@ const styles = {
     fontSize: '20px',
     fontWeight: '700',
     color: '#111827',
-    margin: '0 0 8px 0'
+    margin: '0 0 8px 0',
+    textTransform: 'capitalize' as const
   },
   sourceBadge: {
     display: 'flex',
@@ -250,8 +253,8 @@ const styles = {
     width: 'fit-content'
   },
   timestamp: {
-    fontSize: '11px',
-    color: '#9ca3af'
+    fontSize: '12px',
+    color: '#6b7280'
   },
   fdaWebsiteLink: {
     fontSize: '12px',
@@ -275,22 +278,17 @@ const styles = {
   warningsList: {
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '10px'
+    gap: '10px',
+    listStyle: 'none' as const,
+    margin: 0,
+    padding: 0
   },
   warningItem: {
-    display: 'flex',
-    gap: '10px',
-    alignItems: 'flex-start',
     backgroundColor: '#fef9f0',
     padding: '12px',
     borderRadius: '8px',
-    border: '1px solid #fde68a'
-  },
-  warningDot: {
-    color: '#d97706',
-    fontWeight: '700',
-    fontSize: '16px',
-    flexShrink: 0
+    border: '1px solid #fde68a',
+    borderLeft: '4px solid #d97706'
   },
   warningText: {
     fontSize: '14px',
@@ -299,8 +297,8 @@ const styles = {
     lineHeight: '1.5'
   },
   disclaimer: {
-    fontSize: '12px',
-    color: '#9ca3af',
+    fontSize: '13px',
+    color: '#4b5563',
     margin: 0,
     fontStyle: 'italic',
     lineHeight: '1.5'

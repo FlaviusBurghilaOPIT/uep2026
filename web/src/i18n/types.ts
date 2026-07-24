@@ -8,6 +8,7 @@ export interface NavTranslations {
   recommendations: string
   fdaSafety: string
   logout: string
+  clinicianRole: string
 }
 
 export interface TriageTranslations {
@@ -36,6 +37,36 @@ export interface TriageTranslations {
   outreachMethod: string
   clinicalNote: string
   notePlaceholder: string
+  errorLoading: string
+  noLogsYet: string
+  dataUnknown: string
+  lastUpdated: string
+  refresh: string
+  allOnTrack: string
+  resolveFailed: string
+  resolvedToast: string
+  noPhone: string
+  reviewCase: string
+  resolveException: string
+  callPatient: string
+  stable: string
+  surgery: string
+  triggerReasons: string
+  noteRequired: string
+  outreachPhone: string
+  outreachSms: string
+  outreachVisit: string
+  archiving: string
+  adherenceLabel: string
+  reasonMissed: string
+  reasonAiEscalation: string
+  reasonSideEffects: string
+  reasonLowAdherence: string
+  unknownTitle: string
+  unknownTelemetry: string
+  medianResponse: string
+  noResponseData: string
+  responseTarget: string
 }
 
 export interface PatientCardTranslations {
@@ -88,6 +119,8 @@ export interface CommonTranslations {
   loading: string
   error: string
   success: string
+  retry: string
+  errorLoading: string
 }
 
 export interface MedicationTranslations {
@@ -103,7 +136,6 @@ export interface MedicationTranslations {
   drugName: string
   drugNamePlaceholder: string
   viewFdaSafety: string
-  fdaWarningAvailable: string
   viewOnFdaWebsite: string
   dose: string
   dosePlaceholder: string
@@ -133,6 +165,7 @@ export interface LoginTranslations {
   passwordPlaceholder: string
   errorInvalid: string
   button: string
+  loggingIn: string
 }
 
 export interface CreateCaseTranslations {
@@ -151,6 +184,7 @@ export interface CreateCaseTranslations {
   creating: string
   createCase: string
   cancel: string
+  errorLoadPatients: string
 }
 
 export interface CreatePatientTranslations {
@@ -189,6 +223,8 @@ export interface FdaTranslations {
   disclaimer: string
   fetching: string
   emptyText: string
+  searchLabel: string
+  noWarnings: string
 }
 
 export interface PatientsTranslations {
@@ -208,6 +244,8 @@ export interface PatientsTranslations {
   medications: string
   recommendations: string
   noCases: string
+  emptyTitle: string
+  emptyBody: string
 }
 
 export interface MedicationsListTranslations {
@@ -215,7 +253,7 @@ export interface MedicationsListTranslations {
   case: string
   addMedication: string
   loading: string
-  fdaWarningAvailable: string
+  empty: string
   dose: string
   duration: string
   days: string
@@ -230,6 +268,7 @@ export interface RecommendationsListTranslations {
   loading: string
   added: string
   backToPatients: string
+  empty: string
 }
 
 export interface RecommendationsTranslations {
@@ -257,6 +296,33 @@ export interface RecommendationsTranslations {
   cancel: string
 }
 
+export interface CaseDetailTranslations {
+  title: string
+  backToPatients: string
+  emergencyContact: string
+  adherenceTimeline: string
+  colMedication: string
+  colScheduled: string
+  colStatus: string
+  colLogged: string
+  noDoseLogs: string
+  symptomTrend: string
+  noCheckins: string
+  feelingGreat: string
+  feelingOk: string
+  feelingNotGreat: string
+  feelingBad: string
+  prescriptions: string
+  recoveryInstructions: string
+  manageMedications: string
+  manageRecommendations: string
+  statusTaken: string
+  statusMissed: string
+  statusSkipped: string
+  statusPending: string
+  caseNotFound: string
+}
+
 export interface Translations {
 
   login: LoginTranslations
@@ -268,6 +334,7 @@ export interface Translations {
   recommendationsList: RecommendationsListTranslations
   recommendations: RecommendationsTranslations
 
+  caseDetail: CaseDetailTranslations
   nav: NavTranslations
   triage: TriageTranslations
   patientCard: PatientCardTranslations

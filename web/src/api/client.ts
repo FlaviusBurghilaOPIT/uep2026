@@ -1,5 +1,28 @@
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
+export class ApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
+
+function extractDetail(errorData: unknown, status: number): string {
+  if (errorData && typeof errorData === 'object' && 'detail' in errorData) {
+    const detail = (errorData as { detail: unknown }).detail;
+    // FastAPI validation errors arrive as an array of {loc, msg} objects
+    if (Array.isArray(detail)) {
+      return detail
+        .map((d) => (d && typeof d === 'object' && 'msg' in d ? String((d as { msg: unknown }).msg) : String(d)))
+        .join(' ');
+    }
+    if (typeof detail === 'string') return detail;
+  }
+  return `Request failed with status ${status}`;
+}
+
 export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem('token');
   const headers: Record<string, string> = {
@@ -16,9 +39,20 @@ export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): 
     headers,
   });
 
+  if (response.status === 401) {
+    // Expired or invalid session — force re-login
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('email');
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login';
+    }
+    throw new ApiError('Session expired. Please log in again.', 401);
+  }
+
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ detail: 'API Error' }));
-    throw new Error(errorData.detail || `Request failed with status ${response.status}`);
+    const errorData = await response.json().catch(() => null);
+    throw new ApiError(extractDetail(errorData, response.status), response.status);
   }
 
   return response.json();

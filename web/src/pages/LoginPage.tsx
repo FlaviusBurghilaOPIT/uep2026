@@ -1,26 +1,36 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../i18n'
 import { apiFetch } from '../api/client'
+import { trackEvent } from '../api/analytics'
 
 function LoginPage() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleLogin = async () => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (loading) return
+    setError('')
+    setLoading(true)
     try {
       const data = await apiFetch<{ access_token: string }>('/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password })
       })
-      // save the token
       localStorage.setItem('token', data.access_token)
       localStorage.setItem('role', 'clinician')
-      // go to patients page
-      window.location.href = '/patients'
+      localStorage.setItem('email', email)
+      trackEvent('web.auth.login_succeeded')
+      navigate('/')
     } catch (err: unknown) {
       setError((err as Error).message || t('login.errorInvalid'))
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -30,27 +40,43 @@ function LoginPage() {
         <h1 style={styles.title}>{t('login.title')}</h1>
         <p style={styles.subtitle}>{t('login.subtitle')}</p>
 
-        <input
-          style={styles.input}
-          type="email"
-          placeholder={t('login.emailPlaceholder')}
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <form onSubmit={handleLogin} style={styles.form}>
+          <label htmlFor="login-email" style={styles.label}>
+            {t('login.emailPlaceholder')}
+          </label>
+          <input
+            id="login-email"
+            style={styles.input}
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
 
-        <input
-          style={styles.input}
-          type="password"
-          placeholder={t('login.passwordPlaceholder')}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+          <label htmlFor="login-password" style={styles.label}>
+            {t('login.passwordPlaceholder')}
+          </label>
+          <input
+            id="login-password"
+            style={styles.input}
+            type="password"
+            autoComplete="current-password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
 
-        {error && <p style={styles.error}>{error}</p>}
+          {error && (
+            <p style={styles.error} role="alert">
+              {error}
+            </p>
+          )}
 
-        <button style={styles.button} onClick={handleLogin}>
-          Log in
-        </button>
+          <button style={styles.button} type="submit" disabled={loading}>
+            {loading ? t('login.loggingIn') : t('login.button')}
+          </button>
+        </form>
       </div>
     </div>
   )
@@ -85,12 +111,22 @@ const styles = {
     color: '#6b7280',
     margin: 0
   },
+  form: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '8px'
+  },
+  label: {
+    fontSize: '13px',
+    fontWeight: '500',
+    color: '#374151',
+    marginTop: '8px'
+  },
   input: {
     padding: '10px 12px',
     borderRadius: '8px',
     border: '1px solid #e5e7eb',
-    fontSize: '15px',
-    outline: 'none'
+    fontSize: '15px'
   },
   button: {
     padding: '10px',
@@ -99,7 +135,8 @@ const styles = {
     border: 'none',
     borderRadius: '8px',
     fontSize: '15px',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    marginTop: '8px'
   },
   error: {
     color: '#dc2626',

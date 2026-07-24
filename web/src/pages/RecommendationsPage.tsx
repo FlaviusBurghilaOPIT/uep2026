@@ -1,20 +1,36 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from '../i18n'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { apiFetch } from '../api/client'
+import { trackEvent } from '../api/analytics'
 
 type Message = {
   role: 'user' | 'assistant'
   content: string
 }
 
+type CaseInfo = {
+  id: string
+  patient_id: string
+  surgery_type: string
+}
+
+type PatientInfo = {
+  id: string
+  full_name: string
+}
+
 function RecommendationsPage() {
   const { t } = useTranslation()
-  const { caseId = 'case-001' } = useParams<{ caseId: string }>()
+  const { caseId } = useParams<{ caseId: string }>()
+  const navigate = useNavigate()
+  const [caseInfo, setCaseInfo] = useState<CaseInfo | null>(null)
+  const [patientName, setPatientName] = useState('')
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
+  const [contentInvalid, setContentInvalid] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -25,19 +41,38 @@ function RecommendationsPage() {
   const [chatInput, setChatInput] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
 
-  const handleSubmit = async () => {
-    if (!content) {
+  useEffect(() => {
+    if (!caseId) return
+    apiFetch<CaseInfo>(`/cases/${caseId}`)
+      .then(async (c) => {
+        setCaseInfo(c)
+        try {
+          const p = await apiFetch<PatientInfo>(`/patients/${c.patient_id}`)
+          setPatientName(p.full_name)
+        } catch {
+          setPatientName('')
+        }
+      })
+      .catch(() => setCaseInfo(null))
+  }, [caseId])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!content.trim()) {
+      setContentInvalid(true)
       setError(t('recommendations.errorMissingContent'))
       return
     }
+    setContentInvalid(false)
     setLoading(true)
     setError('')
     try {
       await apiFetch(`/cases/${caseId}/recommendations`, {
         method: 'POST',
-        body: JSON.stringify({ content, text: content })
+        body: JSON.stringify({ content: content.trim(), text: content.trim() })
       })
       setSuccess(true)
+      if (caseId) trackEvent('web.recommendation.saved', { case_id: caseId })
     } catch (err: unknown) {
       setError((err as Error).message || t('recommendations.errorSaveFailed'))
     } finally {
@@ -84,11 +119,11 @@ function RecommendationsPage() {
         <div style={styles.card}>
           <h1 style={styles.title}>{t('recommendations.successTitle')}</h1>
           <p style={styles.subtitle}>{t('recommendations.successSubtitle')}</p>
-          <button style={styles.button} onClick={() => window.location.href = `/cases/${caseId}/recommendations/list`}>
-            View All Recommendations
+          <button style={styles.button} onClick={() => navigate(`/cases/${caseId}/recommendations/list`)}>
+            {t('recommendations.viewAll')}
           </button>
-          <button style={styles.backButton} onClick={() => window.location.href = '/patients'}>
-            Back to Patients
+          <button style={styles.backButton} onClick={() => navigate('/patients')}>
+            {t('recommendations.backToPatients')}
           </button>
         </div>
       </div>
@@ -99,74 +134,93 @@ function RecommendationsPage() {
     <div style={styles.container}>
       <div style={styles.card}>
         <h1 style={styles.title}>{t('recommendations.title')}</h1>
-        <p style={styles.subtitle}>{t('recommendations.caseSubtitle')}</p>
-
-        <label style={styles.label}>{t('recommendations.instructionsLabel')}</label>
-
-        <div style={styles.textareaWrapper}>
-          <textarea
-            style={styles.textarea}
-            placeholder={t('recommendations.instructionsPlaceholder')}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-          />
-          <button
-            style={styles.aiButton}
-            onClick={() => setChatOpen(!chatOpen)}
-            title={t('recommendations.askAiTitle')}
-          >
-            🤖
-          </button>
-        </div>
-
-        {chatOpen && (
-          <div style={styles.chatPanel}>
-            <div style={styles.chatHeader}>
-              <span style={styles.chatTitle}>🤖 {t('recommendations.aiTitle')}</span>
-              <span style={styles.chatSubtitle}>{t('recommendations.aiSubtitle')}</span>
-            </div>
-            <div style={styles.messages}>
-              {messages.map((msg, i) => (
-                <div key={i} style={msg.role === 'user' ? styles.userMessage : styles.assistantMessage}>
-                  <p style={styles.messageText}>{msg.content}</p>
-                  {msg.role === 'assistant' && i > 0 && (
-                    <button style={styles.useButton} onClick={() => applyAISuggestion(msg.content)}>
-                      Use this suggestion
-                    </button>
-                  )}
-                </div>
-              ))}
-              {chatLoading && (
-                <div style={styles.assistantMessage}>
-                  <p style={styles.messageText}>{t('recommendations.thinking')}</p>
-                </div>
-              )}
-            </div>
-            <div style={styles.chatInputRow}>
-              <input
-                style={styles.chatInput}
-                type="text"
-                placeholder={t('recommendations.chatPlaceholder')}
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSendChat()}
-              />
-              <button style={styles.sendButton} onClick={handleSendChat} disabled={chatLoading}>
-                Send
-              </button>
-            </div>
-          </div>
+        {caseInfo && (
+          <p style={styles.subtitle}>
+            {t('recommendations.caseSubtitle')
+              .replace('{surgery}', caseInfo.surgery_type)
+              .replace('{patient}', patientName)}
+          </p>
         )}
 
-        {error && <p style={styles.error}>{error}</p>}
+        <form onSubmit={handleSubmit} style={styles.form} noValidate>
+          <label style={styles.label} htmlFor="recommendations-content">
+            {t('recommendations.instructionsLabel')}
+          </label>
 
-        <button style={styles.button} onClick={handleSubmit} disabled={loading}>
-          {loading ? t('recommendations.saving') : t('recommendations.saveRecommendations')}
-        </button>
+          <div style={styles.textareaWrapper}>
+            <textarea
+              id="recommendations-content"
+              style={styles.textarea}
+              placeholder={t('recommendations.instructionsPlaceholder')}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              aria-invalid={contentInvalid}
+              aria-describedby={error ? 'form-error' : undefined}
+            />
+            <button
+              type="button"
+              style={styles.aiButton}
+              onClick={() => setChatOpen(!chatOpen)}
+              title={t('recommendations.askAiTitle')}
+              aria-label={t('recommendations.askAiTitle')}
+              aria-expanded={chatOpen}
+            >
+              <span aria-hidden="true">🤖</span>
+            </button>
+          </div>
 
-        <button style={styles.backButton} onClick={() => window.location.href = '/patients'}>
-          Cancel
-        </button>
+          {chatOpen && (
+            <div style={styles.chatPanel}>
+              <div style={styles.chatHeader}>
+                <span style={styles.chatTitle}>
+                  <span aria-hidden="true">🤖 </span>{t('recommendations.aiTitle')}
+                </span>
+                <span style={styles.chatSubtitle}>{t('recommendations.aiSubtitle')}</span>
+              </div>
+              <div style={styles.messages} role="log" aria-live="polite">
+                {messages.map((msg, i) => (
+                  <div key={i} style={msg.role === 'user' ? styles.userMessage : styles.assistantMessage}>
+                    <p style={styles.messageText}>{msg.content}</p>
+                    {msg.role === 'assistant' && i > 0 && (
+                      <button type="button" style={styles.useButton} onClick={() => applyAISuggestion(msg.content)}>
+                        {t('recommendations.useSuggestion')}
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {chatLoading && (
+                  <div style={styles.assistantMessage}>
+                    <p style={styles.messageText}>{t('recommendations.thinking')}</p>
+                  </div>
+                )}
+              </div>
+              <div style={styles.chatInputRow}>
+                <input
+                  style={styles.chatInput}
+                  type="text"
+                  placeholder={t('recommendations.chatPlaceholder')}
+                  aria-label={t('recommendations.chatPlaceholder')}
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSendChat()}
+                />
+                <button type="button" style={styles.sendButton} onClick={handleSendChat} disabled={chatLoading}>
+                  {t('recommendations.send')}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {error && <p id="form-error" role="alert" style={styles.error}>{error}</p>}
+
+          <button style={styles.button} type="submit" disabled={loading}>
+            {loading ? t('recommendations.saving') : t('recommendations.saveRecommendations')}
+          </button>
+
+          <button style={styles.backButton} type="button" onClick={() => navigate('/patients')}>
+            {t('recommendations.cancel')}
+          </button>
+        </form>
       </div>
     </div>
   )
@@ -202,6 +256,11 @@ const styles = {
     color: '#6b7280',
     margin: 0
   },
+  form: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '16px'
+  },
   label: {
     fontSize: '13px',
     fontWeight: '500',
@@ -216,7 +275,6 @@ const styles = {
     borderRadius: '8px',
     border: '1px solid #e5e7eb',
     fontSize: '15px',
-    outline: 'none',
     resize: 'vertical' as const,
     minHeight: '160px',
     boxSizing: 'border-box' as const
@@ -305,8 +363,7 @@ const styles = {
     padding: '8px 12px',
     borderRadius: '8px',
     border: '1px solid #e5e7eb',
-    fontSize: '14px',
-    outline: 'none'
+    fontSize: '14px'
   },
   sendButton: {
     padding: '8px 16px',

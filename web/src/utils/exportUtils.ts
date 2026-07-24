@@ -44,15 +44,22 @@ function sanitizeCsv(field?: string | number | boolean | null): string {
   return `"${str}"`
 }
 
+/** Escape any server-supplied string before interpolating into print-window HTML. */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+/** Throws when telemetry is unavailable — an export with silently missing data is worse than no export. */
 async function fetchPatientDoseLogs(patientId: string): Promise<DoseLog[]> {
   try {
     return await apiFetch<DoseLog[]>(`/patients/${patientId}/adherence`)
   } catch {
-    try {
-      return await apiFetch<DoseLog[]>(`/adherence/patients/${patientId}`)
-    } catch {
-      return []
-    }
+    return await apiFetch<DoseLog[]>(`/adherence/patients/${patientId}`)
   }
 }
 
@@ -60,12 +67,16 @@ async function fetchPatientSymptoms(patientId: string): Promise<SymptomCheckIn[]
   try {
     return await apiFetch<SymptomCheckIn[]>(`/patients/${patientId}/symptoms`)
   } catch {
-    try {
-      return await apiFetch<SymptomCheckIn[]>(`/symptoms/patients/${patientId}/symptoms`)
-    } catch {
-      return []
-    }
+    return await apiFetch<SymptomCheckIn[]>(`/symptoms/patients/${patientId}/symptoms`)
   }
+}
+
+/** Returns adherence % or null when there are no completed dose logs. Never fabricates 100%. */
+function computeAdherence(doseLogs: DoseLog[]): number | null {
+  const completedLogs = doseLogs.filter((log) => ['taken', 'missed', 'skipped'].includes(log.status))
+  if (completedLogs.length === 0) return null
+  const takenCount = doseLogs.filter((log) => log.status === 'taken').length
+  return Math.round((takenCount / completedLogs.length) * 100)
 }
 
 async function fetchPatientData(patientId: string): Promise<{
@@ -75,18 +86,15 @@ async function fetchPatientData(patientId: string): Promise<{
   symptoms: SymptomCheckIn[]
 }> {
   const [patientsRes, casesRes, doseLogs, symptoms] = await Promise.all([
-    apiFetch<Patient[]>('/patients').catch(() => []),
-    apiFetch<Case[]>('/cases').catch(() => []),
+    apiFetch<Patient[]>('/patients'),
+    apiFetch<Case[]>('/cases'),
     fetchPatientDoseLogs(patientId),
     fetchPatientSymptoms(patientId)
   ])
 
-  const patient = patientsRes.find((p) => p.id === patientId) || {
-    id: patientId,
-    full_name: `Patient ${patientId}`,
-    date_of_birth: 'N/A',
-    allergies: [],
-    status: 'active'
+  const patient = patientsRes.find((p) => p.id === patientId)
+  if (!patient) {
+    throw new Error('Patient record could not be loaded — export aborted.')
   }
 
   const patientCases = casesRes.filter((c) => c.patient_id === patientId)
@@ -123,14 +131,18 @@ export async function exportPatientAdherenceCSV(patientId: string): Promise<void
   }
 
   // Client CSV Fallback
-  const { patient, cases, doseLogs, symptoms } = await fetchPatientData(patientId)
+  let data: Awaited<ReturnType<typeof fetchPatientData>>
+  try {
+    data = await fetchPatientData(patientId)
+  } catch (err) {
+    alert(`Export failed: ${err instanceof Error ? err.message : 'clinical data could not be loaded.'}`)
+    return
+  }
+  const { patient, cases, doseLogs, symptoms } = data
   const surgeryTypes = cases.map((c) => c.surgery_type).join('; ') || 'N/A'
   const allergiesStr = patient.allergies && patient.allergies.length > 0 ? patient.allergies.join(', ') : 'None'
 
-  const completedLogs = doseLogs.filter((log) => ['taken', 'missed', 'skipped'].includes(log.status))
-  const takenCount = doseLogs.filter((log) => log.status === 'taken').length
-  const adherencePercentage =
-    completedLogs.length > 0 ? Math.round((takenCount / completedLogs.length) * 100) : 100
+  const adherencePercentage = computeAdherence(doseLogs)
 
   const lines: string[] = []
 
@@ -142,7 +154,7 @@ export async function exportPatientAdherenceCSV(patientId: string): Promise<void
   lines.push(`Allergies,${sanitizeCsv(allergiesStr)}`)
   lines.push(`Status,${sanitizeCsv(patient.status || 'Active')}`)
   lines.push(`Surgery Type,${sanitizeCsv(surgeryTypes)}`)
-  lines.push(`Adherence Rate,${sanitizeCsv(`${adherencePercentage}%`)}`)
+  lines.push(`Adherence Rate,${sanitizeCsv(adherencePercentage === null ? 'N/A (no dose logs recorded)' : `${adherencePercentage}%`)}`)
   lines.push('')
 
   lines.push('=== MEDICATION & DOSE LOGS ===')
@@ -201,16 +213,22 @@ function downloadFile(content: string, filename: string, mimeType: string) {
 }
 
 export async function printPatientClinicalPDF(patientId: string): Promise<void> {
-  const { patient, cases, doseLogs, symptoms } = await fetchPatientData(patientId)
+  let data: Awaited<ReturnType<typeof fetchPatientData>>
+  try {
+    data = await fetchPatientData(patientId)
+  } catch (err) {
+    alert(`Export failed: ${err instanceof Error ? err.message : 'clinical data could not be loaded.'}`)
+    return
+  }
+  const { patient, cases, doseLogs, symptoms } = data
   const surgeryTypes = cases.map((c) => c.surgery_type).join(', ') || 'N/A'
   const allergiesStr = patient.allergies && patient.allergies.length > 0 ? patient.allergies.join(', ') : 'None'
 
-  const completedLogs = doseLogs.filter((log) => ['taken', 'missed', 'skipped'].includes(log.status))
   const takenCount = doseLogs.filter((log) => log.status === 'taken').length
   const missedCount = doseLogs.filter((log) => log.status === 'missed').length
   const skippedCount = doseLogs.filter((log) => log.status === 'skipped').length
-  const adherencePercentage =
-    completedLogs.length > 0 ? Math.round((takenCount / completedLogs.length) * 100) : 100
+  const adherencePercentage = computeAdherence(doseLogs)
+  const adherenceDisplay = adherencePercentage === null ? 'N/A' : `${adherencePercentage}%`
 
   const hasEscalations =
     symptoms.some((s) => s.escalate) ||
@@ -229,7 +247,7 @@ export async function printPatientClinicalPDF(patientId: string): Promise<void> 
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Clinical Telemetry Report - ${patient.full_name}</title>
+  <title>Clinical Telemetry Report - ${escapeHtml(patient.full_name)}</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -383,29 +401,29 @@ export async function printPatientClinicalPDF(patientId: string): Promise<void> 
     </div>
     <div class="meta">
       <div>Report Date: <strong>${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</strong></div>
-      <div>Patient ID: <strong>${patient.id}</strong></div>
+      <div>Patient ID: <strong>${escapeHtml(patient.id)}</strong></div>
     </div>
   </div>
 
   <div class="grid">
     <div class="card">
       <div class="card-title">Patient Profile</div>
-      <div class="info-row"><span class="info-label">Full Name:</span><span class="info-value">${patient.full_name}</span></div>
-      <div class="info-row"><span class="info-label">Date of Birth:</span><span class="info-value">${patient.date_of_birth || 'N/A'}</span></div>
-      <div class="info-row"><span class="info-label">Allergies:</span><span class="info-value">${allergiesStr}</span></div>
-      <div class="info-row"><span class="info-label">Status:</span><span class="info-value">${patient.status || 'Active'}</span></div>
+      <div class="info-row"><span class="info-label">Full Name:</span><span class="info-value">${escapeHtml(patient.full_name)}</span></div>
+      <div class="info-row"><span class="info-label">Date of Birth:</span><span class="info-value">${escapeHtml(patient.date_of_birth || 'N/A')}</span></div>
+      <div class="info-row"><span class="info-label">Allergies:</span><span class="info-value">${escapeHtml(allergiesStr)}</span></div>
+      <div class="info-row"><span class="info-label">Status:</span><span class="info-value">${escapeHtml(patient.status || 'Active')}</span></div>
     </div>
 
     <div class="card">
       <div class="card-title">Case Information</div>
-      <div class="info-row"><span class="info-label">Surgery / Case Type:</span><span class="info-value">${surgeryTypes}</span></div>
+      <div class="info-row"><span class="info-label">Surgery / Case Type:</span><span class="info-value">${escapeHtml(surgeryTypes)}</span></div>
       <div class="info-row"><span class="info-label">Escalation Status:</span><span class="info-value" style="color: ${hasEscalations ? '#b91c1c' : '#15803d'};">${hasEscalations ? '🚨 ESCALATED / HIGH RISK' : '🟢 STABLE'}</span></div>
     </div>
   </div>
 
   <div class="metrics">
     <div class="metric-box">
-      <div class="metric-num">${adherencePercentage}%</div>
+      <div class="metric-num">${adherenceDisplay}</div>
       <div class="metric-label">Adherence Rate</div>
     </div>
     <div class="metric-box">
@@ -442,10 +460,10 @@ export async function printPatientClinicalPDF(patientId: string): Promise<void> 
                 (log) => `
         <tr>
           <td>${log.logged_at ? new Date(log.logged_at).toLocaleString() : 'N/A'}</td>
-          <td>${log.scheduled_reminder_id || 'N/A'}</td>
+          <td>${escapeHtml(log.scheduled_reminder_id || 'N/A')}</td>
           <td><span class="badge badge-${log.status}">${log.status.toUpperCase()}</span></td>
-          <td>${log.skipped_reason || '-'}</td>
-          <td>${log.notes || '-'}</td>
+          <td>${escapeHtml(log.skipped_reason || '-')}</td>
+          <td>${escapeHtml(log.notes || '-')}</td>
         </tr>
       `
               )
@@ -472,10 +490,10 @@ export async function printPatientClinicalPDF(patientId: string): Promise<void> 
               .map(
                 (s) => `
         <tr>
-          <td>${s.checkin_date || 'N/A'}</td>
-          <td><strong>${s.feeling.toUpperCase()}</strong></td>
+          <td>${escapeHtml(s.checkin_date || 'N/A')}</td>
+          <td><strong>${escapeHtml(s.feeling.toUpperCase())}</strong></td>
           <td><span class="badge ${s.escalate ? 'badge-missed' : 'badge-taken'}">${s.escalate ? 'YES - FLAG' : 'NO'}</span></td>
-          <td>${s.notes || '-'}</td>
+          <td>${escapeHtml(s.notes || '-')}</td>
         </tr>
       `
               )

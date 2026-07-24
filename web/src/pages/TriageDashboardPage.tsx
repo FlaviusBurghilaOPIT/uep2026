@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { apiFetch } from '../api/client'
+import { fetchTriageResponseStats, trackEvent, type TriageResponseStats } from '../api/analytics'
 import { useTranslation } from '../i18n'
 import { exportPatientAdherenceCSV, printPatientClinicalPDF } from '../utils/exportUtils'
 
@@ -40,32 +41,41 @@ type SymptomCheckIn = {
   feeling: 'great' | 'ok' | 'not_great' | 'bad'
   notes?: string
   checkin_date?: string
+  created_at?: string
   escalate?: boolean
 }
+
+type Severity = 'red' | 'amber' | 'green' | 'unknown'
 
 type TriagePatient = {
   patient: Patient
   caseItem?: Case
   missedDoses: number
   hasSkippedSideEffects: boolean
-  adherencePercentage: number
+  /** null = no dose logs exist; never fabricate a percentage */
+  adherencePercentage: number | null
   aiEscalate: boolean
   reasons: string[]
-  severity: 'red' | 'amber' | 'green'
+  severity: Severity
+  /** true when telemetry could not be fetched — never present as "stable" */
+  dataUnavailable: boolean
+  latestActivity: string | null
+}
+
+type LatestResolution = {
+  patient_id: string
+  resolved_at: string
 }
 
 type OutreachMethod = 'Phone Call' | 'Secure SMS' | 'In-Person Visit'
 type FilterTab = 'all' | 'red' | 'amber'
 
+/** Throws if neither endpoint shape works — callers must handle failure honestly. */
 async function fetchPatientDoseLogs(patientId: string): Promise<DoseLog[]> {
   try {
     return await apiFetch<DoseLog[]>(`/patients/${patientId}/adherence`)
   } catch {
-    try {
-      return await apiFetch<DoseLog[]>(`/adherence/patients/${patientId}`)
-    } catch {
-      return []
-    }
+    return await apiFetch<DoseLog[]>(`/adherence/patients/${patientId}`)
   }
 }
 
@@ -73,11 +83,7 @@ async function fetchPatientSymptoms(patientId: string): Promise<SymptomCheckIn[]
   try {
     return await apiFetch<SymptomCheckIn[]>(`/patients/${patientId}/symptoms`)
   } catch {
-    try {
-      return await apiFetch<SymptomCheckIn[]>(`/symptoms/patients/${patientId}/symptoms`)
-    } catch {
-      return []
-    }
+    return await apiFetch<SymptomCheckIn[]>(`/symptoms/patients/${patientId}/symptoms`)
   }
 }
 
@@ -88,6 +94,8 @@ function TriageDashboardPage() {
   const [triageItems, setTriageItems] = useState<TriagePatient[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const [responseStats, setResponseStats] = useState<TriageResponseStats | null>(null)
 
   // Filter & Search states
   const [activeTab, setActiveTab] = useState<FilterTab>('all')
@@ -103,95 +111,163 @@ function TriageDashboardPage() {
   // Toast Notification state
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
-  useEffect(() => {
-    const fetchTriageData = async () => {
-      setLoading(true)
-      setError('')
-      try {
-        const [patientsRes, casesRes] = await Promise.all([
-          apiFetch<Patient[]>('/patients').catch(() => []),
-          apiFetch<Case[]>('/cases').catch(() => [])
-        ])
+  const fetchTriageData = useCallback(async () => {
+    setLoading(true)
+    setError('')
+    try {
+      // No silent fallbacks here: if the roster itself fails, the page must say so.
+      const [patientsRes, casesRes, resolutionsRes] = await Promise.all([
+        apiFetch<Patient[]>('/patients'),
+        apiFetch<Case[]>('/cases'),
+        apiFetch<LatestResolution[]>('/patients/triage-resolutions/latest').catch(() => [] as LatestResolution[])
+      ])
 
-        setPatients(patientsRes)
+      setPatients(patientsRes)
+      const latestResolution = new Map<string, Date>(
+        resolutionsRes.map((r) => [r.patient_id, new Date(r.resolved_at)])
+      )
 
-        const evaluated: TriagePatient[] = await Promise.all(
-          patientsRes.map(async (patient) => {
-            const patientCase = casesRes.find((c) => c.patient_id === patient.id)
-            const doseLogs = await fetchPatientDoseLogs(patient.id)
-            const symptoms = await fetchPatientSymptoms(patient.id)
+      const evaluated: TriagePatient[] = await Promise.all(
+        patientsRes.map(async (patient): Promise<TriagePatient> => {
+          const patientCase = casesRes.find((c) => c.patient_id === patient.id)
 
-            const missedDoses = doseLogs.filter((log) => log.status === 'missed').length
-            const hasSkippedSideEffects = doseLogs.some(
-              (log) =>
-                log.status === 'skipped' ||
-                !!log.skipped_reason ||
-                (log.notes && log.notes.toLowerCase().includes('side effect'))
-            )
-
-            const completedLogs = doseLogs.filter((log) =>
-              ['taken', 'missed', 'skipped'].includes(log.status)
-            )
-            const takenCount = doseLogs.filter((log) => log.status === 'taken').length
-            const adherencePercentage =
-              completedLogs.length > 0
-                ? Math.round((takenCount / completedLogs.length) * 100)
-                : 100
-
-            const aiEscalate =
-              symptoms.some((s) => s.escalate === true) ||
-              doseLogs.some((d) => d.escalate === true) ||
-              patient.status === 'escalated'
-
-            const reasons: string[] = []
-            let severity: 'red' | 'amber' | 'green' = 'green'
-
-            // Red Escalation triggers
-            if (missedDoses >= 2) {
-              reasons.push(`Missed ${missedDoses} doses`)
-              severity = 'red'
-            }
-            if (aiEscalate) {
-              reasons.push('AI Escalation Flagged')
-              severity = 'red'
-            }
-
-            // Amber Caution triggers (only if not already red)
-            if (severity !== 'red') {
-              if (hasSkippedSideEffects) {
-                reasons.push('Skipped dose for side effects')
-                severity = 'amber'
-              }
-              if (adherencePercentage < 75) {
-                reasons.push(`Low Adherence (${adherencePercentage}%)`)
-                severity = 'amber'
-              }
-            }
-
+          let doseLogs: DoseLog[]
+          let symptoms: SymptomCheckIn[]
+          try {
+            ;[doseLogs, symptoms] = await Promise.all([
+              fetchPatientDoseLogs(patient.id),
+              fetchPatientSymptoms(patient.id)
+            ])
+          } catch {
+            // Telemetry failed: surface the patient as "status unknown", never "stable"
             return {
               patient,
               caseItem: patientCase,
-              missedDoses,
-              hasSkippedSideEffects,
-              adherencePercentage,
-              aiEscalate,
-              reasons,
-              severity
+              missedDoses: 0,
+              hasSkippedSideEffects: false,
+              adherencePercentage: null,
+              aiEscalate: false,
+              reasons: [],
+              severity: 'unknown',
+              dataUnavailable: true,
+              latestActivity: null
             }
+          }
+
+          const missedDoses = doseLogs.filter((log) => log.status === 'missed').length
+          const hasSkippedSideEffects = doseLogs.some(
+            (log) =>
+              log.status === 'skipped' ||
+              !!log.skipped_reason ||
+              (log.notes && log.notes.toLowerCase().includes('side effect'))
+          )
+
+          const completedLogs = doseLogs.filter((log) =>
+            ['taken', 'missed', 'skipped'].includes(log.status)
+          )
+          const takenCount = doseLogs.filter((log) => log.status === 'taken').length
+          const adherencePercentage =
+            completedLogs.length > 0
+              ? Math.round((takenCount / completedLogs.length) * 100)
+              : null
+
+          const aiEscalate =
+            symptoms.some((s) => s.escalate === true) ||
+            doseLogs.some((d) => d.escalate === true) ||
+            patient.status === 'escalated'
+
+          const latestActivity =
+            [
+              ...doseLogs.map((l) => l.logged_at),
+              ...symptoms.map((s) => s.created_at || s.checkin_date)
+            ]
+              .filter((ts): ts is string => !!ts)
+              .sort()
+              .pop() ?? null
+
+          const reasons: string[] = []
+          let severity: Severity = 'green'
+
+          if (missedDoses >= 2) {
+            reasons.push(t('triage.reasonMissed').replace('{count}', String(missedDoses)))
+            severity = 'red'
+          }
+          if (aiEscalate) {
+            reasons.push(t('triage.reasonAiEscalation'))
+            severity = 'red'
+          }
+          if (severity !== 'red') {
+            if (hasSkippedSideEffects) {
+              reasons.push(t('triage.reasonSideEffects'))
+              severity = 'amber'
+            }
+            if (adherencePercentage !== null && adherencePercentage < 80) {
+              reasons.push(
+                t('triage.reasonLowAdherence').replace('{pct}', String(adherencePercentage))
+              )
+              severity = 'amber'
+            }
+          }
+
+          // A persisted resolution suppresses current alerts until NEW activity
+          // arrives after resolved_at — then the patient is re-evaluated.
+          const resolvedAt = latestResolution.get(patient.id)
+          if (
+            severity !== 'green' &&
+            resolvedAt &&
+            (!latestActivity || resolvedAt >= new Date(latestActivity))
+          ) {
+            severity = 'green'
+            reasons.length = 0
+          }
+
+          return {
+            patient,
+            caseItem: patientCase,
+            missedDoses,
+            hasSkippedSideEffects,
+            adherencePercentage,
+            aiEscalate,
+            reasons,
+            severity,
+            dataUnavailable: false,
+            latestActivity
+          }
+        })
+      )
+
+      setTriageItems(evaluated)
+      setLastUpdated(new Date())
+
+      // Telemetry: one exception_viewed event per patient per session per
+      // severity — the baseline for the median response-time metric.
+      for (const item of evaluated) {
+        if (item.severity !== 'red' && item.severity !== 'amber') continue
+        const key = `triage-viewed:${item.severity}:${item.patient.id}`
+        if (!sessionStorage.getItem(key)) {
+          sessionStorage.setItem(key, '1')
+          trackEvent('web.triage.exception_viewed', {
+            patient_id: item.patient.id,
+            severity: item.severity,
           })
-        )
-
-        setTriageItems(evaluated)
-      } catch (err: unknown) {
-        console.error('Error fetching triage dashboard data:', err)
-        setError('Failed to load triage dashboard data.')
-      } finally {
-        setLoading(false)
+        }
       }
-    }
 
+      // Widget 3 telemetry: failure hides the gauge, never the dashboard.
+      fetchTriageResponseStats()
+        .then(setResponseStats)
+        .catch(() => setResponseStats(null))
+    } catch (err: unknown) {
+      console.error('Error fetching triage dashboard data:', err)
+      setError(t('triage.errorLoading'))
+    } finally {
+      setLoading(false)
+    }
+  }, [t])
+
+  useEffect(() => {
     fetchTriageData()
-  }, [])
+  }, [fetchTriageData])
 
   // Auto hide toast after 4 seconds
   useEffect(() => {
@@ -203,17 +279,19 @@ function TriageDashboardPage() {
     }
   }, [toastMessage])
 
-  const handleCallPatient = (phone?: string | null, name?: string) => {
-    if (phone) {
-      window.open(`tel:${phone}`, '_self')
-    } else {
-      alert(`Calling ${name || 'patient'}... (No phone number registered)`)
+  // Escape closes the resolution modal
+  useEffect(() => {
+    if (!selectedPatientItem) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleCloseResolutionModal()
     }
-  }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [selectedPatientItem])
 
   const handleReviewCase = (caseId?: string) => {
     if (caseId) {
-      navigate(`/cases/${caseId}/medications/list`)
+      navigate(`/cases/${caseId}`)
     } else {
       navigate('/patients')
     }
@@ -234,8 +312,8 @@ function TriageDashboardPage() {
   }
 
   const handleResolveSubmit = async () => {
-    if (!resolutionNote.trim()) {
-      setNoteError('Mandatory clinical resolution note is required before archiving.')
+    if (resolutionNote.trim().length < 10) {
+      setNoteError(t('triage.noteRequired'))
       return
     }
 
@@ -245,18 +323,16 @@ function TriageDashboardPage() {
     setNoteError('')
 
     try {
+      // No silent fallback: a clinical resolution only "happened" if the
+      // server persisted it. On failure the alert stays open and visible.
       await apiFetch(`/patients/${selectedPatientItem.patient.id}/triage-resolve`, {
         method: 'POST',
         body: JSON.stringify({
           outreach_method: outreachMethod,
-          clinical_note: resolutionNote.trim(),
-          resolved_at: new Date().toISOString()
+          clinical_note: resolutionNote.trim()
         })
-      }).catch(() => {
-        // Fallback gracefully if endpoint is not implemented on server
       })
 
-      // Update local state to archive alert / change severity to green
       setTriageItems((prev) =>
         prev.map((item) => {
           if (item.patient.id === selectedPatientItem.patient.id) {
@@ -273,12 +349,12 @@ function TriageDashboardPage() {
       )
 
       setToastMessage(
-        `Triage alert resolved & archived for ${selectedPatientItem.patient.full_name} via ${outreachMethod}.`
+        `${t('triage.resolvedToast')} — ${selectedPatientItem.patient.full_name}`
       )
       handleCloseResolutionModal()
     } catch (err) {
       console.error('Error resolving triage exception:', err)
-      setNoteError('Failed to resolve triage exception. Please try again.')
+      setNoteError(t('triage.resolveFailed'))
       setIsSubmitting(false)
     }
   }
@@ -286,6 +362,7 @@ function TriageDashboardPage() {
   // Filter queues
   const redQueue = triageItems.filter((item) => item.severity === 'red')
   const amberQueue = triageItems.filter((item) => item.severity === 'amber')
+  const unknownQueue = triageItems.filter((item) => item.severity === 'unknown')
   const normalQueue = triageItems.filter((item) => item.severity === 'green')
   const exceptionQueue = triageItems.filter(
     (item) => item.severity === 'red' || item.severity === 'amber'
@@ -306,33 +383,143 @@ function TriageDashboardPage() {
 
   const filteredRed = filterBySearch(redQueue)
   const filteredAmber = filterBySearch(amberQueue)
+  const filteredUnknown = filterBySearch(unknownQueue)
   const filteredExceptions = filterBySearch(exceptionQueue)
   const filteredNormal = filterBySearch(normalQueue)
+
+  const adherenceText = (item: TriagePatient) =>
+    item.adherencePercentage === null ? t('triage.noLogsYet') : `${item.adherencePercentage}%`
+
+  const renderAlertCard = (item: TriagePatient, severity: 'red' | 'amber') => {
+    const phone = item.patient.phone || item.caseItem?.emergency_contact_phone
+    const isRed = severity === 'red'
+    return (
+      <div key={item.patient.id} style={isRed ? styles.redCard : styles.amberCard}>
+        <div style={styles.cardHeader}>
+          <div>
+            <span style={isRed ? styles.redBadge : styles.amberBadge}>
+              {isRed ? `🛑 ${t('triage.highPriority')}` : `⚠️ ${t('triage.mediumPriority')}`}
+            </span>
+            <h3 style={styles.patientName}>{item.patient.full_name}</h3>
+            <p style={styles.patientSub}>
+              {t('triage.surgery')}: {item.caseItem?.surgery_type || 'N/A'} &bull;{' '}
+              {t('patients.dob')}: {item.patient.date_of_birth || 'N/A'}
+            </p>
+          </div>
+          <div style={styles.actionButtons}>
+            <button
+              style={styles.exportCsvButton}
+              onClick={() => exportPatientAdherenceCSV(item.patient.id)}
+            >
+              <span aria-hidden="true">📥 </span>{t('patients.exportCsv')}
+            </button>
+            <button
+              style={styles.printPdfButton}
+              onClick={() => printPatientClinicalPDF(item.patient.id)}
+            >
+              <span aria-hidden="true">📄 </span>{t('patients.printPdf')}
+            </button>
+            <button
+              style={styles.resolveButton}
+              onClick={() => handleOpenResolutionModal(item)}
+            >
+              <span aria-hidden="true">✅ </span>{t('triage.resolveException')}
+            </button>
+            {phone ? (
+              <a
+                href={`tel:${phone}`}
+                style={styles.callButton}
+                onClick={() =>
+                  trackEvent('web.triage.patient_called', { patient_id: item.patient.id })
+                }
+              >
+                <span aria-hidden="true">📞 </span>{t('triage.callPatient')}
+              </a>
+            ) : (
+              <button
+                style={{ ...styles.callButton, opacity: 0.5, cursor: 'not-allowed' }}
+                disabled
+                title={t('triage.noPhone')}
+              >
+                <span aria-hidden="true">📞 </span>{t('triage.callPatient')}
+              </button>
+            )}
+            <button
+              style={styles.reviewButton}
+              onClick={() => handleReviewCase(item.caseItem?.id)}
+            >
+              <span aria-hidden="true">📋 </span>{t('triage.reviewCase')}
+            </button>
+          </div>
+        </div>
+
+        <div style={styles.reasonsList}>
+          <strong>{t('triage.triggerReasons')}:</strong>
+          <ul>
+            {item.reasons.map((r, idx) => (
+              <li key={idx}>{r}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div style={styles.cardFooter}>
+          <span>
+            {t('triage.adherenceLabel')}: <strong>{adherenceText(item)}</strong>
+          </span>
+          <span>
+            {t('triage.missedDoses')}: <strong>{item.missedDoses}</strong>
+          </span>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div style={styles.container}>
       {/* Toast Notification */}
       {toastMessage && (
-        <div style={styles.toastContainer}>
-          <span style={styles.toastIcon}>✅</span>
+        <div style={styles.toastContainer} role="status">
+          <span style={styles.toastIcon} aria-hidden="true">✅</span>
           <span style={styles.toastContent}>{toastMessage}</span>
-          <button style={styles.toastClose} onClick={() => setToastMessage(null)}>
+          <button
+            style={styles.toastClose}
+            onClick={() => setToastMessage(null)}
+            aria-label={t('cta.close')}
+          >
             &times;
           </button>
         </div>
       )}
 
-      <div style={styles.header}>
+      <div style={styles.headerRow}>
         <div>
           <h1 style={styles.title}>{t('triage.title')}</h1>
           <p style={styles.subtitle}>{t('triage.subtitle')}</p>
         </div>
+        <div style={styles.refreshGroup}>
+          {lastUpdated && (
+            <span style={styles.lastUpdated}>
+              {t('triage.lastUpdated')}: {lastUpdated.toLocaleTimeString()}
+            </span>
+          )}
+          <button style={styles.refreshButton} onClick={fetchTriageData} disabled={loading}>
+            <span aria-hidden="true">🔄 </span>{t('triage.refresh')}
+          </button>
+        </div>
       </div>
 
       {loading && <p style={styles.loadingText}>{t('triage.loadingTriage')}</p>}
-      {error && <p style={styles.errorText}>{error}</p>}
 
-      {!loading && (
+      {!loading && error && (
+        <div style={styles.errorBox} role="alert">
+          <p style={styles.errorText}>{error}</p>
+          <button style={styles.retryButton} onClick={fetchTriageData}>
+            {t('common.retry')}
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && (
         <>
           {/* Overview Metric Badges */}
           <div style={styles.statsGrid}>
@@ -348,29 +535,59 @@ function TriageDashboardPage() {
               <div style={styles.statNumber}>{patients.length}</div>
               <div style={styles.statLabel}>{t('triage.allPatients')}</div>
             </div>
+            {/* Widget 3: median time from exception viewed to resolution (target < 60s) */}
+            <div
+              style={{
+                ...styles.statCard,
+                borderLeft: `4px solid ${
+                  responseStats?.median_seconds == null
+                    ? '#94a3b8'
+                    : responseStats.median_seconds < 60
+                      ? '#16a34a'
+                      : '#b91c1c'
+                }`,
+              }}
+            >
+              <div style={styles.statNumber}>
+                {responseStats?.median_seconds != null
+                  ? `${Math.round(responseStats.median_seconds)}s`
+                  : '—'}
+              </div>
+              <div style={styles.statLabel}>{t('triage.medianResponse')}</div>
+              <div style={styles.statSub}>
+                {responseStats?.median_seconds != null
+                  ? t('triage.responseTarget')
+                  : t('triage.noResponseData')}
+              </div>
+            </div>
           </div>
 
           {/* Controls Bar: Search & Filter Tabs */}
           <div style={styles.controlsBar}>
             {/* Search Input */}
             <div style={styles.searchContainer}>
-              <span style={styles.searchIcon}>🔍</span>
+              <span style={styles.searchIcon} aria-hidden="true">🔍</span>
               <input
                 type="text"
                 placeholder={t('triage.searchPlaceholder')}
+                aria-label={t('triage.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={styles.searchInput}
               />
               {searchQuery && (
-                <button style={styles.clearSearchButton} onClick={() => setSearchQuery('')}>
+                <button
+                  style={styles.clearSearchButton}
+                  onClick={() => setSearchQuery('')}
+                  aria-label={t('cta.close')}
+                >
                   &times;
                 </button>
               )}
             </div>
 
             {/* Filter Tabs */}
-            <div style={styles.tabContainer}>
+            <div style={styles.tabContainer} role="tablist">
               <button
                 style={{
                   ...styles.tabButton,
@@ -388,7 +605,7 @@ function TriageDashboardPage() {
                 }}
                 onClick={() => setActiveTab('red')}
               >
-                🚨 {t('triage.highPriority')}
+                <span aria-hidden="true">🚨 </span>{t('triage.highPriority')}
                 <span style={{ ...styles.tabBadge, backgroundColor: '#fef2f2', color: '#b91c1c' }}>
                   {redQueue.length}
                 </span>
@@ -400,7 +617,7 @@ function TriageDashboardPage() {
                 }}
                 onClick={() => setActiveTab('amber')}
               >
-                ⚠️ {t('triage.mediumPriority')}
+                <span aria-hidden="true">⚠️ </span>{t('triage.mediumPriority')}
                 <span style={{ ...styles.tabBadge, backgroundColor: '#fffbe6', color: '#d97706' }}>
                   {amberQueue.length}
                 </span>
@@ -411,7 +628,7 @@ function TriageDashboardPage() {
           {/* Top Priority Section: Needs Attention Triage Queue */}
           <div style={styles.section}>
             <h2 style={styles.sectionTitle}>
-              🚨 Needs Attention Triage Queue (
+              🚨 {t('triage.emergencyTriage')} (
               {activeTab === 'all'
                 ? filteredExceptions.length
                 : activeTab === 'red'
@@ -425,196 +642,90 @@ function TriageDashboardPage() {
               (activeTab === 'red' && filteredRed.length === 0) ||
               (activeTab === 'amber' && filteredAmber.length === 0)) && (
               <div style={styles.emptyBox}>
-                <span style={styles.emptyIcon}>✓</span>
+                <span style={styles.emptyIcon} aria-hidden="true">✓</span>
                 <p style={styles.emptyText}>
-                  {searchQuery
-                    ? `No triage exceptions found matching "${searchQuery}".`
-                    : 'All patient care plans are currently on track. No pending triage alerts.'}
+                  {searchQuery ? t('triage.noPatientsFound') : t('triage.allOnTrack')}
                 </p>
               </div>
             )}
 
-            {/* Red Escalation Cards */}
             {(activeTab === 'all' || activeTab === 'red') &&
-              filteredRed.map((item) => (
-                <div key={item.patient.id} style={styles.redCard}>
-                  <div style={styles.cardHeader}>
-                    <div>
-                      <span style={styles.redBadge}>🛑 RED ESCALATION</span>
-                      <h3 style={styles.patientName}>{item.patient.full_name}</h3>
-                      <p style={styles.patientSub}>
-                        Surgery: {item.caseItem?.surgery_type || 'N/A'} &bull; DOB:{' '}
-                        {item.patient.date_of_birth || 'N/A'}
-                      </p>
-                    </div>
-                    <div style={styles.actionButtons}>
-                      <button
-                        style={styles.exportCsvButton}
-                        onClick={() => exportPatientAdherenceCSV(item.patient.id)}
-                      >
-                        📥 Export Adherence CSV
-                      </button>
-                      <button
-                        style={styles.printPdfButton}
-                        onClick={() => printPatientClinicalPDF(item.patient.id)}
-                      >
-                        📄 Print / Save Clinical PDF
-                      </button>
-                      <button
-                        style={styles.resolveButton}
-                        onClick={() => handleOpenResolutionModal(item)}
-                      >
-                        ✅ Resolve Exception
-                      </button>
-                      <button
-                        style={styles.callButton}
-                        onClick={() =>
-                          handleCallPatient(
-                            item.patient.phone || item.caseItem?.emergency_contact_phone,
-                            item.patient.full_name
-                          )
-                        }
-                      >
-                        📞 Call Patient
-                      </button>
-                      <button
-                        style={styles.reviewButton}
-                        onClick={() => handleReviewCase(item.caseItem?.id)}
-                      >
-                        📋 Review Case
-                      </button>
-                    </div>
-                  </div>
+              filteredRed.map((item) => renderAlertCard(item, 'red'))}
 
-                  <div style={styles.reasonsList}>
-                    <strong>Trigger Reasons:</strong>
-                    <ul>
-                      {item.reasons.map((r, idx) => (
-                        <li key={idx}>{r}</li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div style={styles.cardFooter}>
-                    <span>
-                      Adherence: <strong>{item.adherencePercentage}%</strong>
-                    </span>
-                    <span>
-                      Missed Doses: <strong>{item.missedDoses}</strong>
-                    </span>
-                  </div>
-                </div>
-              ))}
-
-            {/* Amber Caution Cards */}
             {(activeTab === 'all' || activeTab === 'amber') &&
-              filteredAmber.map((item) => (
-                <div key={item.patient.id} style={styles.amberCard}>
-                  <div style={styles.cardHeader}>
-                    <div>
-                      <span style={styles.amberBadge}>⚠️ AMBER CAUTION</span>
-                      <h3 style={styles.patientName}>{item.patient.full_name}</h3>
-                      <p style={styles.patientSub}>
-                        Surgery: {item.caseItem?.surgery_type || 'N/A'} &bull; DOB:{' '}
-                        {item.patient.date_of_birth || 'N/A'}
-                      </p>
-                    </div>
-                    <div style={styles.actionButtons}>
-                      <button
-                        style={styles.exportCsvButton}
-                        onClick={() => exportPatientAdherenceCSV(item.patient.id)}
-                      >
-                        📥 Export Adherence CSV
-                      </button>
-                      <button
-                        style={styles.printPdfButton}
-                        onClick={() => printPatientClinicalPDF(item.patient.id)}
-                      >
-                        📄 Print / Save Clinical PDF
-                      </button>
-                      <button
-                        style={styles.resolveButton}
-                        onClick={() => handleOpenResolutionModal(item)}
-                      >
-                        ✅ Resolve Exception
-                      </button>
-                      <button
-                        style={styles.callButton}
-                        onClick={() =>
-                          handleCallPatient(
-                            item.patient.phone || item.caseItem?.emergency_contact_phone,
-                            item.patient.full_name
-                          )
-                        }
-                      >
-                        📞 Call Patient
-                      </button>
-                      <button
-                        style={styles.reviewButton}
-                        onClick={() => handleReviewCase(item.caseItem?.id)}
-                      >
-                        📋 Review Case
-                      </button>
-                    </div>
-                  </div>
-
-                  <div style={styles.reasonsList}>
-                    <strong>Trigger Reasons:</strong>
-                    <ul>
-                      {item.reasons.map((r, idx) => (
-                        <li key={idx}>{r}</li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div style={styles.cardFooter}>
-                    <span>
-                      Adherence: <strong>{item.adherencePercentage}%</strong>
-                    </span>
-                    <span>
-                      Missed Doses: <strong>{item.missedDoses}</strong>
-                    </span>
-                  </div>
-                </div>
-              ))}
+              filteredAmber.map((item) => renderAlertCard(item, 'amber'))}
           </div>
 
-          {/* Normal Patient Roster */}
+          {/* Unknown-status patients: telemetry failed — never shown as stable */}
+          {filteredUnknown.length > 0 && (
+            <div style={styles.section}>
+              <h2 style={styles.sectionTitle}>⚪ {t('triage.unknownTitle')} ({filteredUnknown.length})</h2>
+              <div style={styles.normalGrid}>
+                {filteredUnknown.map((item) => (
+                  <div key={item.patient.id} style={styles.unknownCard}>
+                    <div style={styles.normalHeader}>
+                      <h4 style={styles.normalName}>{item.patient.full_name}</h4>
+                      <span style={styles.unknownBadge}>{t('triage.unknownTitle')}</span>
+                    </div>
+                    <p style={styles.normalSub}>{t('triage.unknownTelemetry')}</p>
+                    <div style={styles.normalFooter}>
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' as const }}>
+                        <button
+                          style={styles.smallReviewButton}
+                          onClick={fetchTriageData}
+                        >
+                          {t('common.retry')}
+                        </button>
+                        <button
+                          style={styles.smallReviewButton}
+                          onClick={() => handleReviewCase(item.caseItem?.id)}
+                        >
+                          {t('triage.reviewCase')}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Stable Patient Roster */}
           {filteredNormal.length > 0 && (
             <div style={styles.section}>
-              <h2 style={styles.sectionTitle}>🟢 Stable Patients ({filteredNormal.length})</h2>
+              <h2 style={styles.sectionTitle}>🟢 {t('triage.stable')} ({filteredNormal.length})</h2>
               <div style={styles.normalGrid}>
                 {filteredNormal.map((item) => (
                   <div key={item.patient.id} style={styles.normalCard}>
                     <div style={styles.normalHeader}>
                       <h4 style={styles.normalName}>{item.patient.full_name}</h4>
-                      <span style={styles.greenBadge}>Stable</span>
+                      <span style={styles.greenBadge}>{t('triage.stable')}</span>
                     </div>
                     <p style={styles.normalSub}>
-                      Surgery: {item.caseItem?.surgery_type || 'N/A'}
+                      {t('triage.surgery')}: {item.caseItem?.surgery_type || 'N/A'}
                     </p>
                     <div style={styles.normalFooter}>
                       <span>
-                        Adherence: <strong>{item.adherencePercentage}%</strong>
+                        {t('triage.adherenceLabel')}: <strong>{adherenceText(item)}</strong>
                       </span>
                       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' as const }}>
                         <button
                           style={styles.smallExportCsvButton}
                           onClick={() => exportPatientAdherenceCSV(item.patient.id)}
                         >
-                          📥 Export Adherence CSV
+                          <span aria-hidden="true">📥 </span>{t('patients.exportCsv')}
                         </button>
                         <button
                           style={styles.smallPrintPdfButton}
                           onClick={() => printPatientClinicalPDF(item.patient.id)}
                         >
-                          📄 Print / Save Clinical PDF
+                          <span aria-hidden="true">📄 </span>{t('patients.printPdf')}
                         </button>
                         <button
                           style={styles.smallReviewButton}
                           onClick={() => handleReviewCase(item.caseItem?.id)}
                         >
-                          Review
+                          {t('triage.reviewCase')}
                         </button>
                       </div>
                     </div>
@@ -629,15 +740,27 @@ function TriageDashboardPage() {
       {/* Triage Exception Resolution Modal */}
       {selectedPatientItem && (
         <div style={styles.modalOverlay} onClick={handleCloseResolutionModal}>
-          <div style={styles.modalContainer} onClick={(e) => e.stopPropagation()}>
+          <div
+            style={styles.modalContainer}
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="resolve-modal-title"
+          >
             <div style={styles.modalHeader}>
               <div>
-                <h3 style={styles.modalTitle}>Resolve Triage Exception</h3>
+                <h3 style={styles.modalTitle} id="resolve-modal-title">
+                  {t('triage.resolveModalTitle')}
+                </h3>
                 <p style={styles.modalSubtitle}>
-                  Archive exception alert for {selectedPatientItem.patient.full_name}
+                  {selectedPatientItem.patient.full_name}
                 </p>
               </div>
-              <button style={styles.modalCloseButton} onClick={handleCloseResolutionModal}>
+              <button
+                style={styles.modalCloseButton}
+                onClick={handleCloseResolutionModal}
+                aria-label={t('cta.close')}
+              >
                 &times;
               </button>
             </div>
@@ -652,7 +775,7 @@ function TriageDashboardPage() {
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <strong>Current Alert Details:</strong>
+                  <strong>{t('triage.escalationReasons')}:</strong>
                   <span
                     style={
                       selectedPatientItem.severity === 'red'
@@ -660,55 +783,66 @@ function TriageDashboardPage() {
                         : styles.amberBadge
                     }
                   >
-                    {selectedPatientItem.severity === 'red' ? '🛑 RED ESCALATION' : '⚠️ AMBER CAUTION'}
+                    {selectedPatientItem.severity === 'red'
+                      ? `🛑 ${t('triage.highPriority')}`
+                      : `⚠️ ${t('triage.mediumPriority')}`}
                   </span>
                 </div>
                 <div style={{ fontSize: '13px', color: '#374151' }}>
-                  <strong>Trigger Reasons:</strong> {selectedPatientItem.reasons.join(', ')}
+                  {selectedPatientItem.reasons.join(', ')}
                 </div>
               </div>
 
               {/* Outreach Method Selection */}
-              <div style={styles.fieldGroup}>
-                <label style={styles.label}>Outreach Method *</label>
+              <fieldset style={styles.fieldset}>
+                <legend style={styles.label}>{t('triage.outreachMethod')} *</legend>
                 <div style={styles.radioGroup}>
-                  {(['Phone Call', 'Secure SMS', 'In-Person Visit'] as OutreachMethod[]).map(
-                    (method) => (
-                      <label key={method} style={styles.radioOptionLabel}>
-                        <input
-                          type="radio"
-                          name="outreachMethod"
-                          value={method}
-                          checked={outreachMethod === method}
-                          onChange={() => setOutreachMethod(method)}
-                          style={styles.radioInput}
-                        />
-                        <span>{method}</span>
-                      </label>
-                    )
-                  )}
+                  {([
+                    ['Phone Call', t('triage.outreachPhone')],
+                    ['Secure SMS', t('triage.outreachSms')],
+                    ['In-Person Visit', t('triage.outreachVisit')]
+                  ] as [OutreachMethod, string][]).map(([method, label]) => (
+                    <label key={method} style={styles.radioOptionLabel}>
+                      <input
+                        type="radio"
+                        name="outreachMethod"
+                        value={method}
+                        checked={outreachMethod === method}
+                        onChange={() => setOutreachMethod(method)}
+                        style={styles.radioInput}
+                      />
+                      <span>{label}</span>
+                    </label>
+                  ))}
                 </div>
-              </div>
+              </fieldset>
 
               {/* Mandatory Resolution Notes Textarea */}
               <div style={styles.fieldGroup}>
-                <label style={styles.label}>
-                  Mandatory Clinical Resolution Note <span style={{ color: '#dc2626' }}>*</span>
+                <label style={styles.label} htmlFor="resolution-note">
+                  {t('triage.clinicalNote')} <span style={{ color: '#dc2626' }}>*</span>
                 </label>
                 <textarea
+                  id="resolution-note"
                   rows={4}
-                  placeholder="Document clinical outreach outcome, patient feedback, or protocol adjustment..."
+                  placeholder={t('triage.notePlaceholder')}
                   value={resolutionNote}
                   onChange={(e) => {
                     setResolutionNote(e.target.value)
-                    if (e.target.value.trim()) setNoteError('')
+                    if (e.target.value.trim().length >= 10) setNoteError('')
                   }}
+                  aria-invalid={!!noteError}
+                  aria-describedby={noteError ? 'note-error' : undefined}
                   style={{
                     ...styles.textarea,
                     ...(noteError ? { borderColor: '#dc2626' } : {})
                   }}
                 />
-                {noteError && <p style={styles.errorNoteText}>{noteError}</p>}
+                {noteError && (
+                  <p id="note-error" role="alert" style={styles.errorNoteText}>
+                    {noteError}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -720,7 +854,7 @@ function TriageDashboardPage() {
                 onClick={handleCloseResolutionModal}
                 disabled={isSubmitting}
               >
-                Cancel
+                {t('cta.cancel')}
               </button>
               <button
                 type="button"
@@ -728,7 +862,7 @@ function TriageDashboardPage() {
                 onClick={handleResolveSubmit}
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Archiving Alert...' : 'Resolve & Archive Alert'}
+                {isSubmitting ? t('triage.archiving') : t('cta.submit')}
               </button>
             </div>
           </div>
@@ -745,8 +879,13 @@ const styles = {
     minHeight: '100vh',
     position: 'relative' as const
   },
-  header: {
-    marginBottom: '24px'
+  headerRow: {
+    marginBottom: '24px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: '16px',
+    flexWrap: 'wrap' as const
   },
   title: {
     fontSize: '24px',
@@ -759,13 +898,49 @@ const styles = {
     color: '#64748b',
     marginTop: '4px'
   },
+  refreshGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px'
+  },
+  lastUpdated: {
+    fontSize: '12px',
+    color: '#64748b'
+  },
+  refreshButton: {
+    padding: '8px 14px',
+    backgroundColor: '#ffffff',
+    color: '#0f172a',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    fontSize: '13px',
+    fontWeight: '600' as const,
+    cursor: 'pointer'
+  },
   loadingText: {
     fontSize: '15px',
     color: '#64748b'
   },
+  errorBox: {
+    backgroundColor: '#fef2f2',
+    border: '1px solid #fecaca',
+    borderRadius: '12px',
+    padding: '32px',
+    textAlign: 'center' as const
+  },
   errorText: {
     fontSize: '15px',
-    color: '#b91c1c'
+    color: '#b91c1c',
+    margin: '0 0 16px 0'
+  },
+  retryButton: {
+    padding: '8px 20px',
+    backgroundColor: '#b91c1c',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '14px',
+    cursor: 'pointer'
   },
   statsGrid: {
     display: 'grid',
@@ -789,6 +964,11 @@ const styles = {
     fontSize: '13px',
     color: '#64748b',
     marginTop: '4px'
+  },
+  statSub: {
+    fontSize: '11px',
+    color: '#94a3b8',
+    marginTop: '2px'
   },
   controlsBar: {
     display: 'flex',
@@ -821,7 +1001,6 @@ const styles = {
     fontSize: '14px',
     backgroundColor: '#ffffff',
     color: '#0f172a',
-    outline: 'none',
     boxSizing: 'border-box' as const
   },
   clearSearchButton: {
@@ -961,6 +1140,21 @@ const styles = {
     fontWeight: '700',
     borderRadius: '4px'
   },
+  unknownBadge: {
+    display: 'inline-block',
+    padding: '2px 8px',
+    backgroundColor: '#f1f5f9',
+    color: '#475569',
+    fontSize: '11px',
+    fontWeight: '700',
+    borderRadius: '4px'
+  },
+  unknownCard: {
+    backgroundColor: '#ffffff',
+    border: '1px dashed #94a3b8',
+    borderRadius: '10px',
+    padding: '16px'
+  },
   patientName: {
     fontSize: '17px',
     fontWeight: '700',
@@ -995,7 +1189,8 @@ const styles = {
     borderRadius: '6px',
     fontSize: '13px',
     fontWeight: '600',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    textDecoration: 'none' as const
   },
   reviewButton: {
     padding: '8px 14px',
@@ -1143,8 +1338,7 @@ const styles = {
   modalSubtitle: {
     fontSize: '13px',
     color: '#64748b',
-    marginTop: '4px',
-    margin: 0
+    marginTop: '4px'
   },
   modalCloseButton: {
     background: 'transparent',
@@ -1169,6 +1363,14 @@ const styles = {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '6px'
+  },
+  fieldset: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '6px',
+    border: 'none',
+    margin: 0,
+    padding: 0
   },
   label: {
     fontSize: '13px',
@@ -1199,7 +1401,6 @@ const styles = {
     fontSize: '13px',
     color: '#0f172a',
     fontFamily: 'inherit',
-    outline: 'none',
     boxSizing: 'border-box' as const,
     resize: 'vertical' as const
   },

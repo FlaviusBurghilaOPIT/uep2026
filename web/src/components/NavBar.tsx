@@ -1,10 +1,14 @@
+import { NavLink, useNavigate } from 'react-router-dom'
 import { useTranslation, type Language } from '../i18n'
 
 function NavBar() {
-  const path = window.location.pathname
   const { language, setLanguage, t } = useTranslation()
+  const navigate = useNavigate()
 
-  const linkStyle = (active: boolean) => ({
+  const email = localStorage.getItem('email') || ''
+  const initials = email ? email.slice(0, 2).toUpperCase() : '–'
+
+  const linkStyle = ({ isActive }: { isActive: boolean }) => ({
     display: 'flex',
     alignItems: 'center',
     gap: '10px',
@@ -12,25 +16,32 @@ function NavBar() {
     borderRadius: '8px',
     fontSize: '14px',
     fontWeight: '500' as const,
-    color: active ? '#ffffff' : '#cbd5e1',
-    backgroundColor: active ? '#0284c7' : 'transparent',
+    color: isActive ? '#ffffff' : '#cbd5e1',
+    backgroundColor: isActive ? '#0284c7' : 'transparent',
     textDecoration: 'none' as const,
     cursor: 'pointer'
   })
 
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('role')
+    localStorage.removeItem('email')
+    navigate('/login')
+  }
+
   return (
-    <div style={styles.sidebar}>
+    <nav style={styles.sidebar} aria-label="Main navigation">
       <div style={styles.brandHeader}>
         <div style={styles.brand}>
           <span style={styles.brandPlus}>+</span> CarePro
         </div>
         <div style={styles.langSelectorWrapper}>
-          <span style={styles.langIcon}>🌐</span>
+          <span style={styles.langIcon} aria-hidden="true">🌐</span>
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value as Language)}
             style={styles.langSelect}
-            aria-label="Select Language"
+            aria-label={t('common.selectLanguage')}
           >
             <option value="en">EN</option>
             <option value="es">ES</option>
@@ -39,48 +50,43 @@ function NavBar() {
         </div>
       </div>
 
-      <div style={styles.nav}>
-        <a href="/" style={linkStyle(path === '/' || path === '/triage')}>
-          <span>🩺</span> {t('nav.triageDashboard')}
-        </a>
-        <a href="/patients" style={linkStyle(path === '/patients')}>
-          <span>👤</span> {t('nav.patients')}
-        </a>
-        <a href="/cases/new" style={linkStyle(path === '/cases/new')}>
-          <span>📋</span> {t('nav.newCase')}
-        </a>
-        <a href="/cases/case-001/medications/list" style={linkStyle(path.includes('medications'))}>
-          <span>💊</span> {t('nav.medications')}
-        </a>
-        <a href="/cases/case-001/recommendations/list" style={linkStyle(path.includes('recommendations'))}>
-          <span>📝</span> {t('nav.recommendations')}
-        </a>
-        <a href="/fda" style={linkStyle(path.includes('fda'))}>
-          <span>⚕️</span> {t('nav.fdaSafety')}
-        </a>
-      </div>
+      <ul style={styles.nav}>
+        <li>
+          <NavLink to="/" end style={linkStyle}>
+            <span aria-hidden="true">🚨</span> {t('nav.triageDashboard')}
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/patients" style={linkStyle}>
+            <span aria-hidden="true">👥</span> {t('nav.patients')}
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/cases/new" style={linkStyle}>
+            <span aria-hidden="true">📋</span> {t('nav.newCase')}
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/fda" style={linkStyle}>
+            <span aria-hidden="true">🛡️</span> {t('nav.fdaSafety')}
+          </NavLink>
+        </li>
+      </ul>
 
       <div style={styles.bottom}>
         <div style={styles.divider} />
-        <button
-          style={styles.logout}
-          onClick={() => {
-            localStorage.removeItem('token')
-            localStorage.removeItem('role')
-            window.location.href = '/login'
-          }}
-        >
-          <span>🚪</span> {t('nav.logout')}
+        <button style={styles.logout} onClick={handleLogout}>
+          <span aria-hidden="true">🚪</span> {t('nav.logout')}
         </button>
         <div style={styles.userCard}>
-          <div style={styles.avatar}>DR</div>
+          <div style={styles.avatar} aria-hidden="true">{initials}</div>
           <div>
-            <div style={styles.userName}>Dr. Clinician</div>
-            <div style={styles.userRole}>Surgeon</div>
+            <div style={styles.userName}>{email}</div>
+            <div style={styles.userRole}>{t('nav.clinicianRole')}</div>
           </div>
         </div>
       </div>
-    </div>
+    </nav>
   )
 }
 
@@ -132,14 +138,16 @@ const styles = {
     border: 'none',
     fontSize: '12px',
     fontWeight: '700' as const,
-    cursor: 'pointer',
-    outline: 'none'
+    cursor: 'pointer'
   },
   nav: {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '4px',
-    flex: 1
+    flex: 1,
+    listStyle: 'none' as const,
+    margin: 0,
+    padding: 0
   },
   bottom: {
     display: 'flex',
@@ -172,7 +180,8 @@ const styles = {
     gap: '10px',
     padding: '10px 8px',
     borderRadius: '8px',
-    backgroundColor: '#1e293b'
+    backgroundColor: '#1e293b',
+    overflow: 'hidden'
   },
   avatar: {
     width: '36px',
@@ -190,11 +199,15 @@ const styles = {
   userName: {
     fontSize: '13px',
     fontWeight: '500' as const,
-    color: '#ffffff'
+    color: '#ffffff',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap' as const,
+    maxWidth: '130px'
   },
   userRole: {
     fontSize: '11px',
-    color: '#94a3b8'
+    color: '#cbd5e1'
   }
 }
 

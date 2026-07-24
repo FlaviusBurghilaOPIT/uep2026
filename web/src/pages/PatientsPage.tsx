@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../i18n'
 import { apiFetch } from '../api/client'
 import { exportPatientAdherenceCSV, printPatientClinicalPDF } from '../utils/exportUtils'
@@ -22,36 +23,45 @@ type Case = {
 
 function PatientsPage() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const [patients, setPatients] = useState<Patient[]>([])
   const [cases, setCases] = useState<Case[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
-  const handleCopyCode = (patientId: string, code: string) => {
-    navigator.clipboard.writeText(code)
-    setCopiedId(patientId)
-    setTimeout(() => setCopiedId((current) => (current === patientId ? null : current)), 2000)
+  const handleCopyCode = async (patientId: string, code: string) => {
+    try {
+      await navigator.clipboard.writeText(code)
+      setCopiedId(patientId)
+      setTimeout(() => setCopiedId((current) => (current === patientId ? null : current)), 2000)
+    } catch {
+      // Clipboard unavailable (permissions/non-secure context) — select-free fallback:
+      // the code is already visible on screen in large type for manual transcription.
+    }
   }
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [patientsRes, casesRes] = await Promise.all([
-          apiFetch<Patient[]>('/patients'),
-          apiFetch<Case[]>('/cases')
-        ])
-
-        setPatients(patientsRes)
-        setCases(casesRes)
-      } catch (err) {
-        console.error('Failed to fetch data', err)
-      } finally {
-        setLoading(false)
-      }
+  const fetchData = useCallback(async () => {
+    setLoading(true)
+    setError(false)
+    try {
+      const [patientsRes, casesRes] = await Promise.all([
+        apiFetch<Patient[]>('/patients'),
+        apiFetch<Case[]>('/cases')
+      ])
+      setPatients(patientsRes)
+      setCases(casesRes)
+    } catch (err) {
+      console.error('Failed to fetch data', err)
+      setError(true)
+    } finally {
+      setLoading(false)
     }
-
-    fetchData()
   }, [])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
 
   const getCasesForPatient = (patientId: string) =>
     cases.filter((c) => c.patient_id === patientId)
@@ -62,7 +72,7 @@ function PatientsPage() {
         <h1 style={styles.title}>{t('patients.title')}</h1>
         <button
           style={styles.newButton}
-          onClick={() => window.location.href = '/patients/new'}
+          onClick={() => navigate('/patients/new')}
         >
           + {t('patients.newPatient')}
         </button>
@@ -70,95 +80,120 @@ function PatientsPage() {
 
       {loading && <p>{t('patients.loading')}</p>}
 
-      <div style={styles.list}>
-        {patients.map((patient) => {
-          const patientCases = getCasesForPatient(patient.id)
-          return (
-            <div key={patient.id} style={styles.card}>
-              <div style={styles.patientHeader}>
-                <div>
-                  <p style={styles.name}>{patient.full_name}</p>
-                  <p style={styles.detail}>{t('patients.dob')}: {patient.date_of_birth}</p>
-                  <p style={styles.detail}>
-                    {t('patients.allergies')}: {patient.allergies && patient.allergies.length > 0 ? patient.allergies.join(', ') : t('patients.none')}
-                  </p>
-                </div>
-                <div style={styles.patientActions}>
-                  <button
-                    style={styles.exportCsvButton}
-                    onClick={() => exportPatientAdherenceCSV(patient.id)}
-                  >
-                    📥 {t('patients.exportCsv')}
-                  </button>
-                  <button
-                    style={styles.printPdfButton}
-                    onClick={() => printPatientClinicalPDF(patient.id)}
-                  >
-                    📄 {t('patients.printPdf')}
-                  </button>
-                  <button
-                    style={styles.newCaseButton}
-                    onClick={() => window.location.href = '/cases/new'}
-                  >
-                    + {t('patients.newCase')}
-                  </button>
-                </div>
-              </div>
+      {!loading && error && (
+        <div style={styles.errorBox} role="alert">
+          <p style={styles.errorText}>{t('common.errorLoading')}</p>
+          <button style={styles.retryButton} onClick={fetchData}>
+            {t('common.retry')}
+          </button>
+        </div>
+      )}
 
-              {(patient.status === 'pending_onboarding' || patient.status === 'pending') && (
-                <div style={styles.inviteBox}>
-                  <p style={styles.inviteLabel}>{t('patients.pendingOnboarding')}:</p>
-                  <p style={styles.inviteCode}>{patient.invite_code || 'N/A'}</p>
-                  {patient.invite_code && (
+      {!loading && !error && patients.length === 0 && (
+        <div style={styles.emptyBox}>
+          <p style={styles.emptyTitle}>{t('patients.emptyTitle')}</p>
+          <p style={styles.emptyBody}>{t('patients.emptyBody')}</p>
+        </div>
+      )}
+
+      {!loading && !error && (
+        <div style={styles.list}>
+          {patients.map((patient) => {
+            const patientCases = getCasesForPatient(patient.id)
+            return (
+              <div key={patient.id} style={styles.card}>
+                <div style={styles.patientHeader}>
+                  <div>
+                    <p style={styles.name}>{patient.full_name}</p>
+                    {patient.date_of_birth && (
+                      <p style={styles.detail}>{t('patients.dob')}: {patient.date_of_birth}</p>
+                    )}
+                    <p style={styles.detail}>
+                      {t('patients.allergies')}: {patient.allergies && patient.allergies.length > 0 ? patient.allergies.join(', ') : t('patients.none')}
+                    </p>
+                  </div>
+                  <div style={styles.patientActions}>
                     <button
-                      style={styles.copyButton}
-                      onClick={() => handleCopyCode(patient.id, patient.invite_code as string)}
+                      style={styles.exportCsvButton}
+                      onClick={() => exportPatientAdherenceCSV(patient.id)}
                     >
-                      {copiedId === patient.id ? t('patients.copied') : t('patients.copyCode')}
+                      <span aria-hidden="true">📥 </span>{t('patients.exportCsv')}
                     </button>
-                  )}
+                    <button
+                      style={styles.printPdfButton}
+                      onClick={() => printPatientClinicalPDF(patient.id)}
+                    >
+                      <span aria-hidden="true">📄 </span>{t('patients.printPdf')}
+                    </button>
+                    <button
+                      style={styles.newCaseButton}
+                      onClick={() => navigate(`/cases/new?patient=${patient.id}`)}
+                    >
+                      + {t('patients.newCase')}
+                    </button>
+                  </div>
                 </div>
-              )}
 
-              {patientCases.length > 0 && (
-                <div style={styles.casesSection}>
-                  <p style={styles.casesTitle}>{t('patients.cases')}</p>
-                  {patientCases.map((c) => (
-                    <div key={c.id} style={styles.caseRow}>
-                      <span style={styles.caseType}>{c.surgery_type}</span>
-                      <span style={{
-                        ...styles.caseStatus,
-                        backgroundColor: c.status === 'open' ? '#f0fdf4' : '#f1f5f9',
-                        color: c.status === 'open' ? '#166534' : '#64748b'
-                      }}>
-                        {c.status}
-                      </span>
-                      <div style={styles.caseButtons}>
+                {(patient.status === 'pending_onboarding' || patient.status === 'pending') && (
+                  <div style={styles.inviteBox}>
+                    <p style={styles.inviteLabel}>{t('patients.pendingOnboarding')}:</p>
+                    <p style={styles.inviteCode}>{patient.invite_code || 'N/A'}</p>
+                    {patient.invite_code && (
+                      <button
+                        style={styles.copyButton}
+                        onClick={() => handleCopyCode(patient.id, patient.invite_code as string)}
+                      >
+                        {copiedId === patient.id ? t('patients.copied') : t('patients.copyCode')}
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {patientCases.length > 0 && (
+                  <div style={styles.casesSection}>
+                    <p style={styles.casesTitle}>{t('patients.cases')}</p>
+                    {patientCases.map((c) => (
+                      <div key={c.id} style={styles.caseRow}>
                         <button
-                          style={styles.secondaryButton}
-                          onClick={() => window.location.href = `/cases/${c.id}/medications/list`}
+                          style={styles.caseLink}
+                          onClick={() => navigate(`/cases/${c.id}`)}
                         >
-                          Medications
+                          {c.surgery_type}
                         </button>
-                        <button
-                          style={styles.secondaryButton}
-                          onClick={() => window.location.href = `/cases/${c.id}/recommendations/list`}
-                        >
-                          Recommendations
-                        </button>
+                        <span style={{
+                          ...styles.caseStatus,
+                          backgroundColor: c.status === 'open' ? '#f0fdf4' : '#f1f5f9',
+                          color: c.status === 'open' ? '#166534' : '#64748b'
+                        }}>
+                          {c.status}
+                        </span>
+                        <div style={styles.caseButtons}>
+                          <button
+                            style={styles.secondaryButton}
+                            onClick={() => navigate(`/cases/${c.id}/medications/list`)}
+                          >
+                            {t('patients.medications')}
+                          </button>
+                          <button
+                            style={styles.secondaryButton}
+                            onClick={() => navigate(`/cases/${c.id}/recommendations/list`)}
+                          >
+                            {t('patients.recommendations')}
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
 
-              {patientCases.length === 0 && (
-                <p style={styles.noCases}>{t('patients.noCases')}</p>
-              )}
-            </div>
-          )
-        })}
-      </div>
+                {patientCases.length === 0 && (
+                  <p style={styles.noCases}>{t('patients.noCases')}</p>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
@@ -189,6 +224,45 @@ const styles = {
     borderRadius: '8px',
     fontSize: '14px',
     cursor: 'pointer'
+  },
+  errorBox: {
+    backgroundColor: '#fef2f2',
+    border: '1px solid #fecaca',
+    borderRadius: '12px',
+    padding: '24px',
+    textAlign: 'center' as const
+  },
+  errorText: {
+    color: '#b91c1c',
+    fontSize: '14px',
+    margin: '0 0 12px 0'
+  },
+  retryButton: {
+    padding: '8px 20px',
+    backgroundColor: '#b91c1c',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '14px',
+    cursor: 'pointer'
+  },
+  emptyBox: {
+    backgroundColor: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderRadius: '12px',
+    padding: '48px 24px',
+    textAlign: 'center' as const
+  },
+  emptyTitle: {
+    fontSize: '16px',
+    fontWeight: '600' as const,
+    color: '#0f172a',
+    margin: '0 0 8px 0'
+  },
+  emptyBody: {
+    fontSize: '14px',
+    color: '#64748b',
+    margin: 0
   },
   list: {
     display: 'flex',
@@ -275,10 +349,15 @@ const styles = {
     flexWrap: 'wrap' as const,
     marginBottom: '8px'
   },
-  caseType: {
+  caseLink: {
+    background: 'none',
+    border: 'none',
+    padding: 0,
     fontSize: '14px',
-    color: '#0f172a',
-    fontWeight: '500'
+    color: '#0284c7',
+    fontWeight: '500' as const,
+    cursor: 'pointer',
+    textDecoration: 'underline' as const
   },
   caseStatus: {
     fontSize: '11px',
