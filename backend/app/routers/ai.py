@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 from openinference.instrumentation import using_attributes
 from sqlalchemy.orm import Session
 
 from app import models, schemas
 from app.dependencies import get_current_user, get_db_for_user
 from app.providers.llm import get_llm_provider
+from app.services.rag import generate_recommendation_stream
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
@@ -93,3 +95,24 @@ async def chat(
     db.commit()
 
     return schemas.ChatResponse(reply=reply, in_scope=in_scope, escalate=escalate)
+
+@router.post("/chat/stream")
+async def chat_stream(
+    request: schemas.ChatRequest,
+    db: Session = Depends(get_db_for_user),
+    current_user: models.User = Depends(get_current_user),
+):
+    case = db.query(models.Case).filter(models.Case.id == request.case_id).first()
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+
+    in_scope, escalate = _check_guardrail(request)
+    
+    if not in_scope:
+        async def mock_stream():
+            yield "I can't help with changing medication doses or schedules — that's a clinical decision. Please contact your clinician or use the emergency contact option for anything urgent."
+        return StreamingResponse(mock_stream(), media_type="text/plain")
+
+    # Pass the surgery_type from case for RAG filter
+    generator = generate_recommendation_stream(db, request.message, case.surgery_type)
+    return StreamingResponse(generator, media_type="text/plain")

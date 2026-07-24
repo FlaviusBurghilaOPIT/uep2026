@@ -141,3 +141,15 @@ def test_chat_persists_both_turns(client, db_session, monkeypatch):
     assert len(messages) == 2
     assert messages[0].role == models.ChatRole.user
     assert messages[1].role == models.ChatRole.assistant
+
+
+def test_chat_streaming(client, db_session, monkeypatch):
+    monkeypatch.setattr('app.routers.ai.generate_recommendation_stream', lambda *args, **kwargs: (c for c in ["Test", " Chunk"]))
+    patient, case = _make_case_with_meds(db_session)
+    response = client.post(
+        "/ai/chat/stream",
+        json={"case_id": case.id, "message": "Test"},
+        headers=_auth_headers(patient)
+    )
+    assert response.status_code == 200
+    assert response.text == "Test Chunk"
