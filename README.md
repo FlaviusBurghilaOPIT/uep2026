@@ -95,7 +95,6 @@ Note: a dedicated clinician "Needs Attention" triage view (surfacing missed dose
 | Service | URL |
 |---|---|
 | Real backend (FastAPI) | `http://localhost:8000` (`/docs` for OpenAPI) |
-| Mock server (Prism) | `http://localhost:8001` |
 | Web dashboard (Vite dev) | `http://localhost:5173` |
 | Postgres | `localhost:5432` (`caredev` / `caredev`, db `remotecare`) |
 
