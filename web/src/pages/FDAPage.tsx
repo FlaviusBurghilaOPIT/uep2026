@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from '../i18n'
 import { apiFetch } from '../api/client'
 
 type FDAResult = {
@@ -9,6 +10,7 @@ type FDAResult = {
 }
 
 function FDAPage() {
+  const { t } = useTranslation()
   const params = new URLSearchParams(window.location.search)
   const initialDrug = params.get('drug') || ''
   const [drugName, setDrugName] = useState(initialDrug)
@@ -19,7 +21,7 @@ function FDAPage() {
   const handleSearch = async (searchTerm?: string) => {
     const term = searchTerm || drugName
     if (!term.trim()) {
-      setError('Please enter a drug name')
+      setError(t('fda.errorMissingDrug'))
       return
     }
     setError('')
@@ -39,7 +41,7 @@ function FDAPage() {
         retrieved_at
       })
     } catch (err: unknown) {
-      setError((err as Error).message || 'Could not fetch FDA data. Please try again.')
+      setError((err as Error).message || t('fda.errorFetchFailed'))
     } finally {
       setLoading(false)
     }
@@ -60,9 +62,9 @@ function FDAPage() {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h1 style={styles.title}>FDA Drug Safety</h1>
+        <h1 style={styles.title}>{t('fda.title')}</h1>
         <p style={styles.subtitle}>
-          Search for FDA warnings and side effects for any medication
+          {t('fda.subtitle')}
         </p>
       </div>
 
@@ -70,7 +72,7 @@ function FDAPage() {
         <input
           style={styles.input}
           type="text"
-          placeholder="e.g. ibuprofen, metformin, aspirin"
+          placeholder={t('fda.searchPlaceholder')}
           value={drugName}
           onChange={(e) => setDrugName(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -80,7 +82,7 @@ function FDAPage() {
           onClick={() => handleSearch()}
           disabled={loading}
         >
-          {loading ? 'Searching...' : 'Search'}
+          {loading ? t('fda.searching') : t('fda.search')}
         </button>
       </div>
 
@@ -98,7 +100,7 @@ function FDAPage() {
             </div>
             <div style={styles.rightHeader}>
               <span style={styles.timestamp}>
-                Retrieved: {new Date(result.retrieved_at).toLocaleString()}
+                {t('fda.retrieved')}: {new Date(result.retrieved_at).toLocaleString()}
               </span>
               <button
                 style={styles.fdaWebsiteLink}
@@ -110,7 +112,7 @@ function FDAPage() {
           </div>
 
           <div style={styles.warningsSection}>
-            <h3 style={styles.warningsTitle}>Warnings & Side Effects</h3>
+            <h3 style={styles.warningsTitle}>{t('fda.warningsTitle')}</h3>
             <div style={styles.warningsList}>
               {result.warnings.map((warning, i) => (
                 <div key={i} style={styles.warningItem}>
@@ -122,9 +124,9 @@ function FDAPage() {
           </div>
 
           <p style={styles.disclaimer}>
-            This information is sourced from the FDA and summarized by AI.
-            Always consult clinical guidelines and your own judgment before
-            making prescribing decisions.
+            {t('fda.disclaimer')}
+            
+            
           </p>
         </div>
       )}
@@ -132,7 +134,7 @@ function FDAPage() {
       {loading && (
         <div style={styles.emptyState}>
           <p style={styles.emptyIcon}>🔍</p>
-          <p style={styles.emptyText}>Fetching FDA data...</p>
+          <p style={styles.emptyText}>{t('fda.fetching')}</p>
         </div>
       )}
 
@@ -140,7 +142,7 @@ function FDAPage() {
         <div style={styles.emptyState}>
           <p style={styles.emptyIcon}>💊</p>
           <p style={styles.emptyText}>
-            Search for a drug to see FDA warnings and side effects
+            {t('fda.emptyText')}
           </p>
           <div style={styles.suggestions}>
             {['ibuprofen', 'metformin', 'aspirin', 'paracetamol'].map((drug) => (

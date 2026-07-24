@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from '../i18n'
 import { apiFetch } from '../api/client'
 
 type Patient = {
@@ -13,6 +14,7 @@ type CreatedCase = {
 }
 
 function CreateCasePage() {
+  const { t } = useTranslation()
   const [patients, setPatients] = useState<Patient[]>([])
   const [patientId, setPatientId] = useState('')
   const [surgeryType, setSurgeryType] = useState('')
@@ -34,7 +36,7 @@ function CreateCasePage() {
 
   const handleCreateCase = async () => {
     if (!patientId || !surgeryType) {
-      setError('Please select a patient and enter a surgery type')
+      setError(t('createCase.errorMissingFields'))
       return
     }
 
@@ -50,7 +52,7 @@ function CreateCasePage() {
       })
       setCreatedCaseId(res.id)
     } catch (err: unknown) {
-      setError((err as Error).message || 'Failed to create case. Please try again.')
+      setError((err as Error).message || t('createCase.errorCreateFailed'))
     } finally {
       setLoading(false)
     }
@@ -60,8 +62,8 @@ function CreateCasePage() {
     return (
       <div style={styles.container}>
         <div style={styles.card}>
-          <h1 style={styles.title}>Case Created ✓</h1>
-          <p style={styles.subtitle}>The case has been created successfully.</p>
+          <h1 style={styles.title}>{t('createCase.successTitle')}</h1>
+          <p style={styles.subtitle}>{t('createCase.successSubtitle')}</p>
           <button
             style={styles.button}
             onClick={() => window.location.href = `/cases/${createdCaseId}/medications`}
@@ -88,9 +90,9 @@ function CreateCasePage() {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>New Case</h1>
+        <h1 style={styles.title}>{t('createCase.title')}</h1>
 
-        <label style={styles.label} htmlFor="patient-select">Select Patient</label>
+        <label style={styles.label} htmlFor="patient-select">{t('createCase.selectPatient')}</label>
         <select
           id="patient-select"
           style={styles.input}
@@ -99,7 +101,7 @@ function CreateCasePage() {
           aria-invalid={!!error}
           aria-describedby={error ? 'form-error' : undefined}
         >
-          <option value="">-- Select a patient --</option>
+          <option value="">{t('createCase.selectPatientPlaceholder')}</option>
           {patients.map((p) => (
             <option key={p.id} value={p.id}>
               {p.full_name}
@@ -107,12 +109,12 @@ function CreateCasePage() {
           ))}
         </select>
 
-        <label style={styles.label} htmlFor="surgery-type">Surgery Type</label>
+        <label style={styles.label} htmlFor="surgery-type">{t('createCase.surgeryType')}</label>
         <input
           id="surgery-type"
           style={styles.input}
           type="text"
-          placeholder="e.g. Knee Replacement"
+          placeholder={t('createCase.surgeryTypePlaceholder')}
           value={surgeryType}
           onChange={(e) => setSurgeryType(e.target.value)}
           aria-invalid={!!error}
@@ -126,7 +128,7 @@ function CreateCasePage() {
           onClick={handleCreateCase}
           disabled={loading}
         >
-          {loading ? 'Creating...' : 'Create Case'}
+          {loading ? t('createCase.creating') : t('createCase.createCase')}
         </button>
 
         <button

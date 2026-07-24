@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/navigation/app_routes.dart';
+import '../../core/l10n/app_localizations.dart';
 
 class InvitationScreen extends StatefulWidget {
   const InvitationScreen({super.key});
@@ -30,8 +31,9 @@ class _InvitationScreenState extends State<InvitationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Enter Invitation Code')),
+      appBar: AppBar(title: Text(l10n.authEnterInvitationCodeTitle)),
       body: Padding(
         padding: EdgeInsets.all(16.w),
         child: Form(
@@ -40,25 +42,25 @@ class _InvitationScreenState extends State<InvitationScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Welcome!',
+                l10n.authWelcomeTitle,
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
               SizedBox(height: 16.h),
               Text(
-                'Please enter your invitation code to continue.',
+                l10n.authInvitationCodeSubtitle,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
               SizedBox(height: 32.h),
               TextFormField(
                 controller: _codeController,
-                decoration: const InputDecoration(
-                  labelText: 'Invitation Code',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.authInvitationCodeLabel,
+                  border: const OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a valid invitation code';
+                    return l10n.authInvalidInvitationCodeError;
                   }
                   return null;
                 },
@@ -70,7 +72,7 @@ class _InvitationScreenState extends State<InvitationScreen> {
                 style: ElevatedButton.styleFrom(
                   minimumSize: Size(double.infinity, 50.h),
                 ),
-                child: const Text('Continue'),
+                child: Text(l10n.authContinueButton),
               ),
             ],
           ),

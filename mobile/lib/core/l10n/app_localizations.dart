@@ -595,6 +595,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'As needed'**
   String get frequencyPRN;
+
+  /// No description provided for @authEmailLoginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Login'**
+  String get authEmailLoginTitle;
+
+  /// No description provided for @authEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get authEmailLabel;
+
+  /// No description provided for @authRequiredError.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get authRequiredError;
+
+  /// No description provided for @authInvalidEmailError.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email'**
+  String get authInvalidEmailError;
+
+  /// No description provided for @authSendOtpButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Send OTP'**
+  String get authSendOtpButton;
+
+  /// No description provided for @authErrorSendingOtp.
+  ///
+  /// In en, this message translates to:
+  /// **'Error sending OTP: {error}'**
+  String authErrorSendingOtp(String error);
+
+  /// No description provided for @authEnterInvitationCodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Invitation Code'**
+  String get authEnterInvitationCodeTitle;
+
+  /// No description provided for @authWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome!'**
+  String get authWelcomeTitle;
+
+  /// No description provided for @authInvitationCodeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your invitation code to continue.'**
+  String get authInvitationCodeSubtitle;
+
+  /// No description provided for @authInvitationCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation Code'**
+  String get authInvitationCodeLabel;
+
+  /// No description provided for @authInvalidInvitationCodeError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid invitation code'**
+  String get authInvalidInvitationCodeError;
+
+  /// No description provided for @authContinueButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get authContinueButton;
+
+  /// No description provided for @authEnterOtpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter OTP'**
+  String get authEnterOtpTitle;
+
+  /// No description provided for @authVerifyIdentityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify Identity'**
+  String get authVerifyIdentityTitle;
+
+  /// No description provided for @authOtpSentToEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter the 6-digit code sent to {email}.'**
+  String authOtpSentToEmail(String email);
+
+  /// No description provided for @authOtpSentToEmailFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter the 6-digit code sent to your email.'**
+  String get authOtpSentToEmailFallback;
+
+  /// No description provided for @authOtpCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'OTP Code'**
+  String get authOtpCodeLabel;
+
+  /// No description provided for @authOtpCodeLengthError.
+  ///
+  /// In en, this message translates to:
+  /// **'Code must be exactly 6 digits'**
+  String get authOtpCodeLengthError;
+
+  /// No description provided for @authOtpCodeNumericError.
+  ///
+  /// In en, this message translates to:
+  /// **'Code must be numeric'**
+  String get authOtpCodeNumericError;
+
+  /// No description provided for @authVerifyAndLogInButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify and Log In'**
+  String get authVerifyAndLogInButton;
+
+  /// No description provided for @authProfileSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile Setup'**
+  String get authProfileSetupTitle;
+
+  /// No description provided for @authNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get authNameLabel;
+
+  /// No description provided for @authSurnameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Surname'**
+  String get authSurnameLabel;
+
+  /// No description provided for @authAgeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Age'**
+  String get authAgeLabel;
+
+  /// No description provided for @authInvalidAgeError.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid positive integer'**
+  String get authInvalidAgeError;
+
+  /// No description provided for @authSaveAndEnterAppButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save and Enter App'**
+  String get authSaveAndEnterAppButton;
+
+  /// No description provided for @authSelectDobError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select your date of birth'**
+  String get authSelectDobError;
+
+  /// No description provided for @okButton.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get okButton;
+
+  /// No description provided for @authCompleteProfileSetupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your patient profile setup'**
+  String get authCompleteProfileSetupSubtitle;
 }
 
 class _AppLocalizationsDelegate

@@ -282,4 +282,99 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get frequencyPRN => 'Bei Bedarf';
+
+  @override
+  String get authEmailLoginTitle => 'Login';
+
+  @override
+  String get authEmailLabel => 'Email';
+
+  @override
+  String get authRequiredError => 'Required';
+
+  @override
+  String get authInvalidEmailError => 'Enter a valid email';
+
+  @override
+  String get authSendOtpButton => 'Send OTP';
+
+  @override
+  String authErrorSendingOtp(String error) {
+    return 'Error sending OTP: $error';
+  }
+
+  @override
+  String get authEnterInvitationCodeTitle => 'Enter Invitation Code';
+
+  @override
+  String get authWelcomeTitle => 'Welcome!';
+
+  @override
+  String get authInvitationCodeSubtitle =>
+      'Please enter your invitation code to continue.';
+
+  @override
+  String get authInvitationCodeLabel => 'Invitation Code';
+
+  @override
+  String get authInvalidInvitationCodeError =>
+      'Please enter a valid invitation code';
+
+  @override
+  String get authContinueButton => 'Continue';
+
+  @override
+  String get authEnterOtpTitle => 'Enter OTP';
+
+  @override
+  String get authVerifyIdentityTitle => 'Verify Identity';
+
+  @override
+  String authOtpSentToEmail(String email) {
+    return 'Please enter the 6-digit code sent to $email.';
+  }
+
+  @override
+  String get authOtpSentToEmailFallback =>
+      'Please enter the 6-digit code sent to your email.';
+
+  @override
+  String get authOtpCodeLabel => 'OTP Code';
+
+  @override
+  String get authOtpCodeLengthError => 'Code must be exactly 6 digits';
+
+  @override
+  String get authOtpCodeNumericError => 'Code must be numeric';
+
+  @override
+  String get authVerifyAndLogInButton => 'Verify and Log In';
+
+  @override
+  String get authProfileSetupTitle => 'Profile Setup';
+
+  @override
+  String get authNameLabel => 'Name';
+
+  @override
+  String get authSurnameLabel => 'Surname';
+
+  @override
+  String get authAgeLabel => 'Age';
+
+  @override
+  String get authInvalidAgeError => 'Enter a valid positive integer';
+
+  @override
+  String get authSaveAndEnterAppButton => 'Save and Enter App';
+
+  @override
+  String get authSelectDobError => 'Please select your date of birth';
+
+  @override
+  String get okButton => 'OK';
+
+  @override
+  String get authCompleteProfileSetupSubtitle =>
+      'Complete your patient profile setup';
 }

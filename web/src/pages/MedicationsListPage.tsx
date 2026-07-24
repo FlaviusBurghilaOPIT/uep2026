@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from '../i18n'
 import { useParams } from 'react-router-dom'
 import { apiFetch } from '../api/client'
 
@@ -14,6 +15,7 @@ type Medication = {
 }
 
 function MedicationsListPage() {
+  const { t } = useTranslation()
   const { caseId = 'case-001' } = useParams<{ caseId: string }>()
   const [medications, setMedications] = useState<Medication[]>([])
   const [loading, setLoading] = useState(true)
@@ -36,18 +38,18 @@ function MedicationsListPage() {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h1 style={styles.title}>Medications</h1>
-        <p style={styles.subtitle}>Case: {caseId}</p>
+        <h1 style={styles.title}>{t('medicationsList.title')}</h1>
+        <p style={styles.subtitle}>{t('medicationsList.case')}: {caseId}</p>
       </div>
 
       <button
         style={styles.addButton}
         onClick={() => window.location.href = `/cases/${caseId}/medications`}
       >
-        + Add Medication
+        + {t('medicationsList.addMedication')}
       </button>
 
-      {loading && <p style={styles.loading}>Loading...</p>}
+      {loading && <p style={styles.loading}>{t('medicationsList.loading')}</p>}
 
       <div style={styles.list}>
         {medications.map((med) => (
@@ -55,18 +57,18 @@ function MedicationsListPage() {
             <div style={styles.cardHeader}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                 <p style={styles.medName}>{med.name}</p>
-                <span style={styles.fdaBadge}>📋 openFDA Regulatory Warning Available</span>
+                <span style={styles.fdaBadge}>📋 {t('medicationsList.fdaWarningAvailable')}</span>
               </div>
               <span style={styles.badge}>{med.schedule_text || med.frequency || ''}</span>
             </div>
-            <p style={styles.detail}>Dose: {med.dose}</p>
-            <p style={styles.detail}>Duration: {med.duration || (med.duration_days ? `${med.duration_days} days` : '')}</p>
+            <p style={styles.detail}>{t('medicationsList.dose')}: {med.dose}</p>
+            <p style={styles.detail}>{t('medicationsList.duration')}: {med.duration || (med.duration_days ? `${med.duration_days} {t('medicationsList.days')}` : '')}</p>
             {med.notes && <p style={styles.notes}>{med.notes}</p>}
             <button
               style={styles.fdaButton}
               onClick={() => window.location.href = `/fda?drug=${encodeURIComponent(med.name.toLowerCase())}`}
             >
-              [View FDA Safety Warnings]
+              [{t('medicationsList.viewFdaSafety')}]
             </button>
           </div>
         ))}

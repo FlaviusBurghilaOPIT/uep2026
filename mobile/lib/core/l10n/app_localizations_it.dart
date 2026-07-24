@@ -280,4 +280,101 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get frequencyPRN => 'Al bisogno';
+
+  @override
+  String get authEmailLoginTitle => 'Accedi';
+
+  @override
+  String get authEmailLabel => 'E-mail';
+
+  @override
+  String get authRequiredError => 'Obbligatorio';
+
+  @override
+  String get authInvalidEmailError => 'Inserisci un\'e-mail valida';
+
+  @override
+  String get authSendOtpButton => 'Invia OTP';
+
+  @override
+  String authErrorSendingOtp(String error) {
+    return 'Errore durante l\'invio dell\'OTP: $error';
+  }
+
+  @override
+  String get authEnterInvitationCodeTitle => 'Inserisci il codice di invito';
+
+  @override
+  String get authWelcomeTitle => 'Benvenuto!';
+
+  @override
+  String get authInvitationCodeSubtitle =>
+      'Inserisci il tuo codice di invito per continuare.';
+
+  @override
+  String get authInvitationCodeLabel => 'Codice di invito';
+
+  @override
+  String get authInvalidInvitationCodeError =>
+      'Inserisci un codice di invito valido';
+
+  @override
+  String get authContinueButton => 'Continua';
+
+  @override
+  String get authEnterOtpTitle => 'Inserisci OTP';
+
+  @override
+  String get authVerifyIdentityTitle => 'Verifica identità';
+
+  @override
+  String authOtpSentToEmail(String email) {
+    return 'Inserisci il codice di 6 cifre inviato a $email.';
+  }
+
+  @override
+  String get authOtpSentToEmailFallback =>
+      'Inserisci il codice di 6 cifre inviato alla tua e-mail.';
+
+  @override
+  String get authOtpCodeLabel => 'Codice OTP';
+
+  @override
+  String get authOtpCodeLengthError =>
+      'Il codice deve avere esattamente 6 cifre';
+
+  @override
+  String get authOtpCodeNumericError => 'Il codice deve essere numerico';
+
+  @override
+  String get authVerifyAndLogInButton => 'Verifica e Accedi';
+
+  @override
+  String get authProfileSetupTitle => 'Configurazione profilo';
+
+  @override
+  String get authNameLabel => 'Nome';
+
+  @override
+  String get authSurnameLabel => 'Cognome';
+
+  @override
+  String get authAgeLabel => 'Età';
+
+  @override
+  String get authInvalidAgeError =>
+      'Inserisci un numero intero positivo valido';
+
+  @override
+  String get authSaveAndEnterAppButton => 'Salva ed entra';
+
+  @override
+  String get authSelectDobError => 'Seleziona la tua data di nascita';
+
+  @override
+  String get okButton => 'OK';
+
+  @override
+  String get authCompleteProfileSetupSubtitle =>
+      'Completa la configurazione del tuo profilo paziente';
 }

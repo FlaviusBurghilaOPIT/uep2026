@@ -1,18 +1,15 @@
 {
   "@@locale": "en",
-
   "appTitle": "Remote CarePro",
   "loginTitle": "Welcome Back",
   "loginEmailLabel": "Email address",
   "loginPasswordLabel": "Password",
   "loginButton": "Sign In",
-
   "onboardingTitle": "You've been invited",
   "onboardingSubtitle": "Enter your email and the code your clinician sent you.",
   "inviteCodeLabel": "Invitation code",
   "verifyButton": "Verify Code",
   "completeSetupButton": "Complete Setup",
-
   "todayTitle": "Today",
   "greetingMorning": "Good morning",
   "greetingAfternoon": "Good afternoon",
@@ -47,7 +44,6 @@
   "takeDoseButton": "Take Dose",
   "skipDoseButton": "Skip",
   "missedDoseButton": "Missed",
-
   "checkinTitle": "Daily Check-in",
   "symptomQuestion": "How are you feeling today?",
   "severityMild": "Mild",
@@ -59,7 +55,6 @@
   "checkinNotGreatOption": "Not Feeling Great 😟",
   "checkinBadOption": "Feeling Unwell 😣",
   "checkinSuccessBanner": "Daily check-in logged. Thank you for updating your care team.",
-
   "assistantTitle": "Care Team Assistant",
   "assistantGuardrailBanner": "Care Team Assistant • Informational only, never diagnostic",
   "typeMessagePlaceholder": "Type your question...",
@@ -77,7 +72,6 @@
     }
   },
   "emergencyWarningTitle": "I Cannot Advise on Dose Changes or Urgent Symptoms",
-
   "fdaSafetyAlertTitle": "Official FDA Drug Safety Info",
   "fdaSourceLive": "📋 Source: Official FDA Drug Safety Info",
   "fdaSourceFixture": "📋 Source: Regulatory Cache",
@@ -90,7 +84,6 @@
     }
   },
   "fdaWarningMessage": "New drug interaction warning for Amoxicillin. Tap info to learn more.",
-
   "profileTitle": "Profile",
   "languageSectionTitle": "Language",
   "languageEnglish": "English",
@@ -99,7 +92,6 @@
   "languageFrench": "French",
   "languageGerman": "German",
   "signOutButton": "Sign Out",
-
   "notificationReminderTitle": "Medication Reminder",
   "notificationReminderBody": "Time to take {medicationName} — {doseAmount}",
   "@notificationReminderBody": {
@@ -115,17 +107,14 @@
   "notificationActionTake": "Take Dose",
   "notificationActionSnooze": "Snooze 15 min",
   "notificationPermissionRationale": "Enable notifications to receive medication reminders at the right time.",
-
   "errorGeneric": "Something went wrong. Please try again.",
   "errorNetwork": "No connection. Please check your internet.",
   "loadingLabel": "Loading...",
-
   "navTabToday": "Today",
   "navTabMedications": "Medications",
   "navTabRecovery": "Recovery",
   "navTabAssistant": "Assistant",
   "navTabProfile": "Profile",
-
   "medicationsScreenTitle": "Medications",
   "medCardDoseLabel": "Dose: {dose}",
   "@medCardDoseLabel": {
@@ -158,5 +147,48 @@
   "frequencyBID": "Twice daily",
   "frequencyTID": "Three times daily",
   "frequencyQID": "Four times daily",
-  "frequencyPRN": "As needed"
+  "frequencyPRN": "As needed",
+  "authEmailLoginTitle": "Login",
+  "authEmailLabel": "Email",
+  "authRequiredError": "Required",
+  "authInvalidEmailError": "Enter a valid email",
+  "authSendOtpButton": "Send OTP",
+  "authErrorSendingOtp": "Error sending OTP: {error}",
+  "@authErrorSendingOtp": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "authEnterInvitationCodeTitle": "Enter Invitation Code",
+  "authWelcomeTitle": "Welcome!",
+  "authInvitationCodeSubtitle": "Please enter your invitation code to continue.",
+  "authInvitationCodeLabel": "Invitation Code",
+  "authInvalidInvitationCodeError": "Please enter a valid invitation code",
+  "authContinueButton": "Continue",
+  "authEnterOtpTitle": "Enter OTP",
+  "authVerifyIdentityTitle": "Verify Identity",
+  "authOtpSentToEmail": "Please enter the 6-digit code sent to {email}.",
+  "@authOtpSentToEmail": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "authOtpSentToEmailFallback": "Please enter the 6-digit code sent to your email.",
+  "authOtpCodeLabel": "OTP Code",
+  "authOtpCodeLengthError": "Code must be exactly 6 digits",
+  "authOtpCodeNumericError": "Code must be numeric",
+  "authVerifyAndLogInButton": "Verify and Log In",
+  "authProfileSetupTitle": "Profile Setup",
+  "authNameLabel": "Name",
+  "authSurnameLabel": "Surname",
+  "authAgeLabel": "Age",
+  "authInvalidAgeError": "Enter a valid positive integer",
+  "authSaveAndEnterAppButton": "Save and Enter App",
+  "authSelectDobError": "Please select your date of birth",
+  "okButton": "OK",
+  "authCompleteProfileSetupSubtitle": "Complete your patient profile setup"
 }

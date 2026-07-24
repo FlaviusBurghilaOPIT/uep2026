@@ -13,7 +13,7 @@ const FREQUENCY_TIMES: Record<string, string[]> = {
 
 function MedicationsPage() {
   const { caseId = 'case-001' } = useParams<{ caseId: string }>()
-  const { t } = useTranslation()
+  const { translations: t } = useTranslation()
   const [name, setName] = useState('')
   const [dose, setDose] = useState('')
   const [frequency, setFrequency] = useState<'QD'|'BID'|'TID'|'QID'|'PRN'>('QD')
@@ -129,7 +129,7 @@ function MedicationsPage() {
           aria-describedby={error ? 'form-error' : undefined}
         />
 
-        <label style={styles.label} htmlFor="frequency">{t('medication.frequencyLabel')}</label>
+        <label style={styles.label} htmlFor="frequency">{t.medication.frequencyLabel}</label>
         <select
           id="frequency"
           style={styles.input}
@@ -137,16 +137,16 @@ function MedicationsPage() {
           onChange={(e) => setFrequency(e.target.value as 'QD'|'BID'|'TID'|'QID'|'PRN')}
           aria-describedby={error ? 'form-error' : 'frequency-hint'}
         >
-          <option value="QD">{t('medication.frequencyQD')}</option>
-          <option value="BID">{t('medication.frequencyBID')}</option>
-          <option value="TID">{t('medication.frequencyTID')}</option>
-          <option value="QID">{t('medication.frequencyQID')}</option>
-          <option value="PRN">{t('medication.frequencyPRN')}</option>
+          <option value="QD">{t.medication.frequencyQD}</option>
+          <option value="BID">{t.medication.frequencyBID}</option>
+          <option value="TID">{t.medication.frequencyTID}</option>
+          <option value="QID">{t.medication.frequencyQID}</option>
+          <option value="PRN">{t.medication.frequencyPRN}</option>
         </select>
         <p id="frequency-hint" style={{ fontSize: '0.8rem', color: '#64748b', margin: '4px 0 12px' }}>
           {reminderTimes.length > 0
-            ? `${t('medication.remindersAt')} ${reminderTimes.join(', ')}`
-            : t('medication.noReminders')}
+            ? `${t.medication.remindersAt} ${reminderTimes.join(', ')}`
+            : t.medication.noReminders}
         </p>
 
         <label style={styles.label} htmlFor="duration-days">{t('medication.durationDays')}</label>

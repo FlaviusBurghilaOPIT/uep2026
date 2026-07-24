@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/navigation/app_routes.dart';
 import 'demo_auth_state.dart';
+import '../../core/l10n/app_localizations.dart';
 
 class ProfileSetupScreen extends ConsumerStatefulWidget {
   const ProfileSetupScreen({super.key});
@@ -28,8 +29,9 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile Setup')),
+      appBar: AppBar(title: Text(l10n.authProfileSetupTitle)),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -38,40 +40,40 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
-                validator: (val) => val == null || val.trim().isEmpty ? 'Required' : null,
+                decoration: InputDecoration(labelText: l10n.authNameLabel),
+                validator: (val) => val == null || val.trim().isEmpty ? l10n.authRequiredError : null,
               ),
               TextFormField(
                 controller: _surnameController,
-                decoration: const InputDecoration(labelText: 'Surname'),
-                validator: (val) => val == null || val.trim().isEmpty ? 'Required' : null,
+                decoration: InputDecoration(labelText: l10n.authSurnameLabel),
+                validator: (val) => val == null || val.trim().isEmpty ? l10n.authRequiredError : null,
               ),
               TextFormField(
                 controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
+                decoration: InputDecoration(labelText: l10n.authEmailLabel),
                 keyboardType: TextInputType.emailAddress,
                 validator: (val) {
-                  if (val == null || val.trim().isEmpty) return 'Required';
+                  if (val == null || val.trim().isEmpty) return l10n.authRequiredError;
                   final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-                  if (!emailRegex.hasMatch(val)) return 'Enter a valid email';
+                  if (!emailRegex.hasMatch(val)) return l10n.authInvalidEmailError;
                   return null;
                 },
               ),
               TextFormField(
                 controller: _ageController,
-                decoration: const InputDecoration(labelText: 'Age'),
+                decoration: InputDecoration(labelText: l10n.authAgeLabel),
                 keyboardType: TextInputType.number,
                 validator: (val) {
-                  if (val == null || val.trim().isEmpty) return 'Required';
+                  if (val == null || val.trim().isEmpty) return l10n.authRequiredError;
                   final age = int.tryParse(val);
-                  if (age == null || age <= 0) return 'Enter a valid positive integer';
+                  if (age == null || age <= 0) return l10n.authInvalidAgeError;
                   return null;
                 },
               ),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _submit,
-                child: const Text('Save and Enter App'),
+                child: Text(l10n.authSaveAndEnterAppButton),
               ),
             ],
           ),

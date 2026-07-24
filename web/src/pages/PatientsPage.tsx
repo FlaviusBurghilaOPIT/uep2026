@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from '../i18n'
 import { apiFetch } from '../api/client'
 import { exportPatientAdherenceCSV, printPatientClinicalPDF } from '../utils/exportUtils'
 
@@ -20,6 +21,7 @@ type Case = {
 }
 
 function PatientsPage() {
+  const { t } = useTranslation()
   const [patients, setPatients] = useState<Patient[]>([])
   const [cases, setCases] = useState<Case[]>([])
   const [loading, setLoading] = useState(true)
@@ -57,16 +59,16 @@ function PatientsPage() {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h1 style={styles.title}>Patients</h1>
+        <h1 style={styles.title}>{t('patients.title')}</h1>
         <button
           style={styles.newButton}
           onClick={() => window.location.href = '/patients/new'}
         >
-          + New Patient
+          + {t('patients.newPatient')}
         </button>
       </div>
 
-      {loading && <p>Loading...</p>}
+      {loading && <p>{t('patients.loading')}</p>}
 
       <div style={styles.list}>
         {patients.map((patient) => {
@@ -76,9 +78,9 @@ function PatientsPage() {
               <div style={styles.patientHeader}>
                 <div>
                   <p style={styles.name}>{patient.full_name}</p>
-                  <p style={styles.detail}>DOB: {patient.date_of_birth}</p>
+                  <p style={styles.detail}>{t('patients.dob')}: {patient.date_of_birth}</p>
                   <p style={styles.detail}>
-                    Allergies: {patient.allergies && patient.allergies.length > 0 ? patient.allergies.join(', ') : 'None'}
+                    {t('patients.allergies')}: {patient.allergies && patient.allergies.length > 0 ? patient.allergies.join(', ') : t('patients.none')}
                   </p>
                 </div>
                 <div style={styles.patientActions}>
@@ -86,33 +88,33 @@ function PatientsPage() {
                     style={styles.exportCsvButton}
                     onClick={() => exportPatientAdherenceCSV(patient.id)}
                   >
-                    📥 Export Adherence CSV
+                    📥 {t('patients.exportCsv')}
                   </button>
                   <button
                     style={styles.printPdfButton}
                     onClick={() => printPatientClinicalPDF(patient.id)}
                   >
-                    📄 Print / Save Clinical PDF
+                    📄 {t('patients.printPdf')}
                   </button>
                   <button
                     style={styles.newCaseButton}
                     onClick={() => window.location.href = '/cases/new'}
                   >
-                    + New Case
+                    + {t('patients.newCase')}
                   </button>
                 </div>
               </div>
 
               {(patient.status === 'pending_onboarding' || patient.status === 'pending') && (
                 <div style={styles.inviteBox}>
-                  <p style={styles.inviteLabel}>Pending onboarding &mdash; 6-Digit Invite Code:</p>
+                  <p style={styles.inviteLabel}>{t('patients.pendingOnboarding')}:</p>
                   <p style={styles.inviteCode}>{patient.invite_code || 'N/A'}</p>
                   {patient.invite_code && (
                     <button
                       style={styles.copyButton}
                       onClick={() => handleCopyCode(patient.id, patient.invite_code as string)}
                     >
-                      {copiedId === patient.id ? 'Copied!' : 'Copy Code'}
+                      {copiedId === patient.id ? t('patients.copied') : t('patients.copyCode')}
                     </button>
                   )}
                 </div>
@@ -120,7 +122,7 @@ function PatientsPage() {
 
               {patientCases.length > 0 && (
                 <div style={styles.casesSection}>
-                  <p style={styles.casesTitle}>Cases</p>
+                  <p style={styles.casesTitle}>{t('patients.cases')}</p>
                   {patientCases.map((c) => (
                     <div key={c.id} style={styles.caseRow}>
                       <span style={styles.caseType}>{c.surgery_type}</span>
@@ -151,7 +153,7 @@ function PatientsPage() {
               )}
 
               {patientCases.length === 0 && (
-                <p style={styles.noCases}>No cases yet</p>
+                <p style={styles.noCases}>{t('patients.noCases')}</p>
               )}
             </div>
           )

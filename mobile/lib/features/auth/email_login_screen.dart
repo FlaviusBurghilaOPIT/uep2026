@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/navigation/app_routes.dart';
 import 'demo_auth_state.dart';
+import '../../core/l10n/app_localizations.dart';
 
 class EmailLoginScreen extends ConsumerStatefulWidget {
   const EmailLoginScreen({Key? key}) : super(key: key);
@@ -28,6 +29,7 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
   }
 
   void _submit() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_formKey.currentState!.validate()) {
       try {
         await ref.read(demoAuthProvider.notifier).triggerOtp(_emailController.text.trim());
@@ -37,7 +39,7 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error sending OTP: $e')),
+            SnackBar(content: Text(l10n.authErrorSendingOtp(e.toString()))),
           );
         }
       }
@@ -46,8 +48,9 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
+      appBar: AppBar(title: Text(l10n.authEmailLoginTitle)),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -57,19 +60,19 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
             children: [
               TextFormField(
                 controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
+                decoration: InputDecoration(labelText: l10n.authEmailLabel),
                 keyboardType: TextInputType.emailAddress,
                 validator: (val) {
-                  if (val == null || val.trim().isEmpty) return 'Required';
+                  if (val == null || val.trim().isEmpty) return l10n.authRequiredError;
                   final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
-                  if (!emailRegex.hasMatch(val)) return 'Enter a valid email';
+                  if (!emailRegex.hasMatch(val)) return l10n.authInvalidEmailError;
                   return null;
                 },
               ),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _submit,
-                child: const Text('Send OTP'),
+                child: Text(l10n.authSendOtpButton),
               ),
             ],
           ),

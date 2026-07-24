@@ -7,6 +7,7 @@ import 'package:remotecare/core/l10n/app_localizations.dart';
 import 'package:remotecare/core/navigation/app_routes.dart';
 import 'package:remotecare/features/auth/demo_auth_state.dart';
 import 'package:remotecare/features/auth/otp_screen.dart';
+import 'package:remotecare/core/l10n/app_localizations.dart';
 
 Widget buildTestApp(SharedPreferences prefs) {
   return ProviderScope(

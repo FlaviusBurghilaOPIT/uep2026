@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from '../i18n'
 import { useParams } from 'react-router-dom'
 import { apiFetch } from '../api/client'
 
@@ -8,6 +9,7 @@ type Message = {
 }
 
 function RecommendationsPage() {
+  const { t } = useTranslation()
   const { caseId = 'case-001' } = useParams<{ caseId: string }>()
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(false)
@@ -17,7 +19,7 @@ function RecommendationsPage() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Hi! Describe the surgery and patient details and I will suggest recovery steps based on clinical guidelines.'
+      content: t('recommendations.aiGreeting')
     }
   ])
   const [chatInput, setChatInput] = useState('')
@@ -25,7 +27,7 @@ function RecommendationsPage() {
 
   const handleSubmit = async () => {
     if (!content) {
-      setError('Please write some recommendations')
+      setError(t('recommendations.errorMissingContent'))
       return
     }
     setLoading(true)
@@ -37,7 +39,7 @@ function RecommendationsPage() {
       })
       setSuccess(true)
     } catch (err: unknown) {
-      setError((err as Error).message || 'Failed to save. Please try again.')
+      setError((err as Error).message || t('recommendations.errorSaveFailed'))
     } finally {
       setLoading(false)
     }
@@ -63,7 +65,7 @@ function RecommendationsPage() {
     } catch {
       const errorMessage: Message = {
         role: 'assistant',
-        content: 'Sorry, could not get a response. Please try again.'
+        content: t('recommendations.aiError')
       }
       setMessages((prev) => [...prev, errorMessage])
     } finally {
@@ -80,8 +82,8 @@ function RecommendationsPage() {
     return (
       <div style={styles.container}>
         <div style={styles.card}>
-          <h1 style={styles.title}>Recommendations Saved</h1>
-          <p style={styles.subtitle}>Recovery instructions saved successfully.</p>
+          <h1 style={styles.title}>{t('recommendations.successTitle')}</h1>
+          <p style={styles.subtitle}>{t('recommendations.successSubtitle')}</p>
           <button style={styles.button} onClick={() => window.location.href = `/cases/${caseId}/recommendations/list`}>
             View All Recommendations
           </button>
@@ -96,22 +98,22 @@ function RecommendationsPage() {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>Recovery Recommendations</h1>
-        <p style={styles.subtitle}>Case: Knee Replacement — Maria Rossi</p>
+        <h1 style={styles.title}>{t('recommendations.title')}</h1>
+        <p style={styles.subtitle}>{t('recommendations.caseSubtitle')}</p>
 
-        <label style={styles.label}>Recovery Instructions</label>
+        <label style={styles.label}>{t('recommendations.instructionsLabel')}</label>
 
         <div style={styles.textareaWrapper}>
           <textarea
             style={styles.textarea}
-            placeholder="e.g. Avoid weight-bearing for 2 weeks. Ice the knee 3x daily."
+            placeholder={t('recommendations.instructionsPlaceholder')}
             value={content}
             onChange={(e) => setContent(e.target.value)}
           />
           <button
             style={styles.aiButton}
             onClick={() => setChatOpen(!chatOpen)}
-            title="Ask AI for suggestions"
+            title={t('recommendations.askAiTitle')}
           >
             🤖
           </button>
@@ -120,8 +122,8 @@ function RecommendationsPage() {
         {chatOpen && (
           <div style={styles.chatPanel}>
             <div style={styles.chatHeader}>
-              <span style={styles.chatTitle}>🤖 AI Assistant</span>
-              <span style={styles.chatSubtitle}>Powered by clinical guidelines</span>
+              <span style={styles.chatTitle}>🤖 {t('recommendations.aiTitle')}</span>
+              <span style={styles.chatSubtitle}>{t('recommendations.aiSubtitle')}</span>
             </div>
             <div style={styles.messages}>
               {messages.map((msg, i) => (
@@ -136,7 +138,7 @@ function RecommendationsPage() {
               ))}
               {chatLoading && (
                 <div style={styles.assistantMessage}>
-                  <p style={styles.messageText}>Thinking...</p>
+                  <p style={styles.messageText}>{t('recommendations.thinking')}</p>
                 </div>
               )}
             </div>
@@ -144,7 +146,7 @@ function RecommendationsPage() {
               <input
                 style={styles.chatInput}
                 type="text"
-                placeholder="e.g. knee replacement, 65yo, diabetic"
+                placeholder={t('recommendations.chatPlaceholder')}
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSendChat()}
@@ -159,7 +161,7 @@ function RecommendationsPage() {
         {error && <p style={styles.error}>{error}</p>}
 
         <button style={styles.button} onClick={handleSubmit} disabled={loading}>
-          {loading ? 'Saving...' : 'Save Recommendations'}
+          {loading ? t('recommendations.saving') : t('recommendations.saveRecommendations')}
         </button>
 
         <button style={styles.backButton} onClick={() => window.location.href = '/patients'}>

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/navigation/app_routes.dart';
 import 'demo_auth_state.dart';
+import '../../core/l10n/app_localizations.dart';
 
 class OtpScreen extends ConsumerStatefulWidget {
   const OtpScreen({super.key});
@@ -32,14 +33,15 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(demoAuthProvider).valueOrNull;
     final email = authState?.email ?? '';
     final emailText = email.isNotEmpty
-        ? 'Please enter the 6-digit code sent to $email.'
-        : 'Please enter the 6-digit code sent to your email.';
+        ? l10n.authOtpSentToEmail(email)
+        : l10n.authOtpSentToEmailFallback;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Enter OTP')),
+      appBar: AppBar(title: Text(l10n.authEnterOtpTitle)),
       body: Padding(
         padding: EdgeInsets.all(16.w),
         child: Form(
@@ -48,7 +50,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Verify Identity',
+                l10n.authVerifyIdentityTitle,
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
               SizedBox(height: 16.h),
@@ -62,17 +64,17 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                 controller: _otpController,
                 keyboardType: TextInputType.number,
                 maxLength: 6,
-                decoration: const InputDecoration(
-                  labelText: 'OTP Code',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.authOtpCodeLabel,
+                  border: const OutlineInputBorder(),
                 ),
                 validator: (val) {
                   final trimmed = val?.trim() ?? '';
                   if (trimmed.length != 6) {
-                    return 'Code must be exactly 6 digits';
+                    return l10n.authOtpCodeLengthError;
                   }
                   if (!RegExp(r'^\d{6}$').hasMatch(trimmed)) {
-                    return 'Code must be numeric';
+                    return l10n.authOtpCodeNumericError;
                   }
                   return null;
                 },
@@ -83,7 +85,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                 style: ElevatedButton.styleFrom(
                   minimumSize: Size(double.infinity, 50.h),
                 ),
-                child: const Text('Verify and Log In'),
+                child: Text(l10n.authVerifyAndLogInButton),
               ),
             ],
           ),

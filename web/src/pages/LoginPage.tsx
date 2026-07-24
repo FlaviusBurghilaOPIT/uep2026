@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { useTranslation } from '../i18n'
 import { apiFetch } from '../api/client'
 
 function LoginPage() {
+  const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -18,20 +20,20 @@ function LoginPage() {
       // go to patients page
       window.location.href = '/patients'
     } catch (err: unknown) {
-      setError((err as Error).message || 'Invalid email or password')
+      setError((err as Error).message || t('login.errorInvalid'))
     }
   }
 
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>Remote CarePro</h1>
-        <p style={styles.subtitle}>Clinician Portal</p>
+        <h1 style={styles.title}>{t('login.title')}</h1>
+        <p style={styles.subtitle}>{t('login.subtitle')}</p>
 
         <input
           style={styles.input}
           type="email"
-          placeholder="Email"
+          placeholder={t('login.emailPlaceholder')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
@@ -39,7 +41,7 @@ function LoginPage() {
         <input
           style={styles.input}
           type="password"
-          placeholder="Password"
+          placeholder={t('login.passwordPlaceholder')}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />

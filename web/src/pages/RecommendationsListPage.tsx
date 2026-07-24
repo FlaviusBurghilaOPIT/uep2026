@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from '../i18n'
 import { useParams } from 'react-router-dom'
 import { apiFetch } from '../api/client'
 
@@ -10,6 +11,7 @@ type Recommendation = {
 }
 
 function RecommendationsListPage() {
+  const { t } = useTranslation()
   const { caseId = 'case-001' } = useParams<{ caseId: string }>()
   const [recommendations, setRecommendations] = useState<Recommendation[]>([])
   const [loading, setLoading] = useState(true)
@@ -32,25 +34,25 @@ function RecommendationsListPage() {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h1 style={styles.title}>Recovery Recommendations</h1>
-        <p style={styles.subtitle}>Case: {caseId}</p>
+        <h1 style={styles.title}>{t('recommendationsList.title')}</h1>
+        <p style={styles.subtitle}>{t('recommendationsList.case')}: {caseId}</p>
       </div>
 
       <button
         style={styles.addButton}
         onClick={() => window.location.href = `/cases/${caseId}/recommendations`}
       >
-        + Add Recommendation
+        + {t('recommendationsList.addRecommendation')}
       </button>
 
-      {loading && <p style={styles.loading}>Loading...</p>}
+      {loading && <p style={styles.loading}>{t('recommendationsList.loading')}</p>}
 
       <div style={styles.list}>
         {recommendations.map((rec) => (
           <div key={rec.id} style={styles.card}>
             <p style={styles.content}>{rec.content || rec.text || ''}</p>
             <p style={styles.date}>
-              Added: {new Date(rec.created_at).toLocaleDateString()}
+              {t('recommendationsList.added')}: {new Date(rec.created_at).toLocaleDateString()}
             </p>
           </div>
         ))}

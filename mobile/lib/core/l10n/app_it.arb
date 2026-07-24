@@ -1,18 +1,15 @@
 {
   "@@locale": "it",
-
   "appTitle": "Remote CarePro",
   "loginTitle": "Bentornato",
   "loginEmailLabel": "Indirizzo e-mail",
   "loginPasswordLabel": "Password",
   "loginButton": "Accedi",
-
   "onboardingTitle": "Sei stato invitato",
   "onboardingSubtitle": "Inserisci la tua e-mail e il codice inviato dal tuo medico.",
   "inviteCodeLabel": "Codice di invito",
   "verifyButton": "Verifica codice",
   "completeSetupButton": "Completa configurazione",
-
   "todayTitle": "Oggi",
   "greetingMorning": "Buongiorno",
   "greetingAfternoon": "Buon pomeriggio",
@@ -47,7 +44,6 @@
   "takeDoseButton": "Prendi dose",
   "skipDoseButton": "Salta",
   "missedDoseButton": "Mancato",
-
   "checkinTitle": "Check-in giornaliero",
   "symptomQuestion": "Come ti senti oggi?",
   "severityMild": "Lieve",
@@ -59,7 +55,6 @@
   "checkinNotGreatOption": "Non mi sento benissimo 😟",
   "checkinBadOption": "Mi sento male 😣",
   "checkinSuccessBanner": "Check-in giornaliero registrato. Grazie per aver aggiornato il tuo team medico.",
-
   "assistantTitle": "Assistente del Team Medico",
   "assistantGuardrailBanner": "Assistente del Team Medico • Solo informativo, mai diagnostico",
   "typeMessagePlaceholder": "Scrivi la tua domanda...",
@@ -77,7 +72,6 @@
     }
   },
   "emergencyWarningTitle": "Non posso fornire consulenza su modifiche di dosaggio o sintomi urgenti",
-
   "fdaSafetyAlertTitle": "Informazioni ufficiali sulla sicurezza dei farmaci FDA",
   "fdaSourceLive": "📋 Fonte: Informazioni ufficiali FDA",
   "fdaSourceFixture": "📋 Fonte: Cache regolatoria",
@@ -90,7 +84,6 @@
     }
   },
   "fdaWarningMessage": "Nuovo avviso di interazione tra farmaci per Amoxicillina. Tocca per saperne di più.",
-
   "profileTitle": "Profilo",
   "languageSectionTitle": "Lingua",
   "languageEnglish": "Inglese",
@@ -99,7 +92,6 @@
   "languageFrench": "Francese",
   "languageGerman": "Tedesco",
   "signOutButton": "Disconnetti",
-
   "notificationReminderTitle": "Reminder del farmaco",
   "notificationReminderBody": "Ora di prendere {medicationName} — {doseAmount}",
   "@notificationReminderBody": {
@@ -115,17 +107,14 @@
   "notificationActionTake": "Prendi dose",
   "notificationActionSnooze": "Posticipa 15 min",
   "notificationPermissionRationale": "Attiva le notifiche per ricevere i promemoria dei farmaci al momento giusto.",
-
   "errorGeneric": "Si è verificato un errore. Riprova.",
   "errorNetwork": "Nessuna connessione. Controlla internet.",
   "loadingLabel": "Caricamento...",
-
   "navTabToday": "Oggi",
   "navTabMedications": "Farmaci",
   "navTabRecovery": "Recupero",
   "navTabAssistant": "Assistente",
   "navTabProfile": "Profilo",
-
   "medicationsScreenTitle": "Farmaci",
   "medCardDoseLabel": "Dose: {dose}",
   "@medCardDoseLabel": {
@@ -158,5 +147,48 @@
   "frequencyBID": "Due volte al giorno",
   "frequencyTID": "Tre volte al giorno",
   "frequencyQID": "Quattro volte al giorno",
-  "frequencyPRN": "Al bisogno"
+  "frequencyPRN": "Al bisogno",
+  "authEmailLoginTitle": "Accedi",
+  "authEmailLabel": "E-mail",
+  "authRequiredError": "Obbligatorio",
+  "authInvalidEmailError": "Inserisci un'e-mail valida",
+  "authSendOtpButton": "Invia OTP",
+  "authErrorSendingOtp": "Errore durante l'invio dell'OTP: {error}",
+  "@authErrorSendingOtp": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "authEnterInvitationCodeTitle": "Inserisci il codice di invito",
+  "authWelcomeTitle": "Benvenuto!",
+  "authInvitationCodeSubtitle": "Inserisci il tuo codice di invito per continuare.",
+  "authInvitationCodeLabel": "Codice di invito",
+  "authInvalidInvitationCodeError": "Inserisci un codice di invito valido",
+  "authContinueButton": "Continua",
+  "authEnterOtpTitle": "Inserisci OTP",
+  "authVerifyIdentityTitle": "Verifica identità",
+  "authOtpSentToEmail": "Inserisci il codice di 6 cifre inviato a {email}.",
+  "@authOtpSentToEmail": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "authOtpSentToEmailFallback": "Inserisci il codice di 6 cifre inviato alla tua e-mail.",
+  "authOtpCodeLabel": "Codice OTP",
+  "authOtpCodeLengthError": "Il codice deve avere esattamente 6 cifre",
+  "authOtpCodeNumericError": "Il codice deve essere numerico",
+  "authVerifyAndLogInButton": "Verifica e Accedi",
+  "authProfileSetupTitle": "Configurazione profilo",
+  "authNameLabel": "Nome",
+  "authSurnameLabel": "Cognome",
+  "authAgeLabel": "Età",
+  "authInvalidAgeError": "Inserisci un numero intero positivo valido",
+  "authSaveAndEnterAppButton": "Salva ed entra",
+  "authSelectDobError": "Seleziona la tua data di nascita",
+  "okButton": "OK",
+  "authCompleteProfileSetupSubtitle": "Completa la configurazione del tuo profilo paziente"
 }

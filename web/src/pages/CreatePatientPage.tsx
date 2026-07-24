@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from '../i18n'
 import { apiFetch } from '../api/client'
 
 type PatientInviteResponse = {
@@ -9,6 +10,7 @@ type PatientInviteResponse = {
 }
 
 function CreatePatientPage() {
+  const { t } = useTranslation()
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [surgeryType, setSurgeryType] = useState('')
@@ -19,7 +21,7 @@ function CreatePatientPage() {
 
   const handleSubmit = async () => {
     if (!fullName || !email || !surgeryType) {
-      setError('Please fill in name, email, and surgery type')
+      setError(t('createPatient.errorMissingFields'))
       return
     }
 
@@ -37,7 +39,7 @@ function CreatePatientPage() {
       })
       setInviteCode(res.invite_code)
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to invite patient. Please try again.'
+      const errorMessage = err instanceof Error ? err.message : t('createPatient.errorInviteFailed')
       setError(errorMessage)
     } finally {
       setLoading(false)
@@ -48,12 +50,12 @@ function CreatePatientPage() {
     return (
       <div style={styles.container}>
         <div style={styles.card}>
-          <h1 style={styles.title}>Patient Invited ✓</h1>
-          <p style={styles.subtitle}>An email with a sign-in code was sent to {email}.</p>
+          <h1 style={styles.title}>{t('createPatient.successTitle')}</h1>
+          <p style={styles.subtitle}>{t('createPatient.successSubtitle').replace('{email}', email)}</p>
           <div style={styles.inviteBox}>
-            <p style={styles.inviteLabel}>Sign-In Code (backup, in case the email doesn't arrive):</p>
+            <p style={styles.inviteLabel}>{t('createPatient.inviteLabel')}</p>
             <p style={styles.inviteCode}>{inviteCode}</p>
-            <p style={styles.inviteSubtext}>The patient can enter this code directly in the mobile app if needed.</p>
+            <p style={styles.inviteSubtext}>{t('createPatient.inviteSubtext')}</p>
           </div>
           <button
             style={styles.button}
@@ -69,50 +71,50 @@ function CreatePatientPage() {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>Invite New Patient</h1>
+        <h1 style={styles.title}>{t('createPatient.title')}</h1>
 
-        <label style={styles.label} htmlFor="full-name">Full Name *</label>
+        <label style={styles.label} htmlFor="full-name">{t('createPatient.fullName')}</label>
         <input
           id="full-name"
           style={styles.input}
           type="text"
-          placeholder="e.g. Maria Rossi"
+          placeholder={t('createPatient.fullNamePlaceholder')}
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           aria-invalid={!!error}
           aria-describedby={error ? 'form-error' : undefined}
         />
 
-        <label style={styles.label} htmlFor="patient-email">Patient Email *</label>
+        <label style={styles.label} htmlFor="patient-email">{t('createPatient.email')}</label>
         <input
           id="patient-email"
           style={styles.input}
           type="email"
-          placeholder="e.g. patient@example.com"
+          placeholder={t('createPatient.emailPlaceholder')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           aria-invalid={!!error}
           aria-describedby={error ? 'form-error' : undefined}
         />
 
-        <label style={styles.label} htmlFor="surgery-type">Surgery Type *</label>
+        <label style={styles.label} htmlFor="surgery-type">{t('createPatient.surgeryType')}</label>
         <input
           id="surgery-type"
           style={styles.input}
           type="text"
-          placeholder="e.g. Knee Replacement"
+          placeholder={t('createPatient.surgeryTypePlaceholder')}
           value={surgeryType}
           onChange={(e) => setSurgeryType(e.target.value)}
           aria-invalid={!!error}
           aria-describedby={error ? 'form-error' : undefined}
         />
 
-        <label style={styles.label} htmlFor="emergency-contact-phone">Emergency Contact Phone (optional)</label>
+        <label style={styles.label} htmlFor="emergency-contact-phone">{t('createPatient.emergencyContact')}</label>
         <input
           id="emergency-contact-phone"
           style={styles.input}
           type="tel"
-          placeholder="e.g. +123456789"
+          placeholder={t('createPatient.emergencyContactPlaceholder')}
           value={emergencyContactPhone}
           onChange={(e) => setEmergencyContactPhone(e.target.value)}
           aria-invalid={!!error}
@@ -126,7 +128,7 @@ function CreatePatientPage() {
           onClick={handleSubmit}
           disabled={loading}
         >
-          {loading ? 'Inviting...' : 'Invite Patient'}
+          {loading ? t('createPatient.inviting') : t('createPatient.invitePatient')}
         </button>
 
         <button
