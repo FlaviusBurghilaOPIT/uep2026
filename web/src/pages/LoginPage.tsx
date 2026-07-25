@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../i18n'
 import { apiFetch } from '../api/client'
 import { trackEvent } from '../api/analytics'
+import { FormField } from '../components/ui'
 
 function LoginPage() {
   const { t } = useTranslation()
@@ -41,37 +42,33 @@ function LoginPage() {
         <p style={styles.subtitle}>{t('login.subtitle')}</p>
 
         <form onSubmit={handleLogin} style={styles.form}>
-          <label htmlFor="login-email" style={styles.label}>
-            {t('login.emailPlaceholder')}
-          </label>
-          <input
-            id="login-email"
-            style={styles.input}
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          <FormField label={t('login.emailPlaceholder')} error={error || undefined}>
+            {(control) => (
+              <input
+                {...control}
+                style={styles.input}
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            )}
+          </FormField>
 
-          <label htmlFor="login-password" style={styles.label}>
-            {t('login.passwordPlaceholder')}
-          </label>
-          <input
-            id="login-password"
-            style={styles.input}
-            type="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-
-          {error && (
-            <p style={styles.error} role="alert">
-              {error}
-            </p>
-          )}
+          <FormField label={t('login.passwordPlaceholder')} invalid={!!error}>
+            {(control) => (
+              <input
+                {...control}
+                style={styles.input}
+                type="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            )}
+          </FormField>
 
           <button style={styles.button} type="submit" disabled={loading}>
             {loading ? t('login.loggingIn') : t('login.button')}

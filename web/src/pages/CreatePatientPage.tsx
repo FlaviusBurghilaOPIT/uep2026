@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../i18n'
 import { apiFetch } from '../api/client'
 import { trackEvent } from '../api/analytics'
+import { FormField } from '../components/ui'
 
 type PatientInviteResponse = {
   patient_id: string
@@ -101,53 +102,67 @@ function CreatePatientPage() {
         <h1 style={styles.title}>{t('createPatient.title')}</h1>
 
         <form onSubmit={handleSubmit} style={styles.form} noValidate>
-          <label style={styles.label} htmlFor="full-name">{t('createPatient.fullName')}</label>
-          <input
-            id="full-name"
-            style={styles.input}
-            type="text"
-            placeholder={t('createPatient.fullNamePlaceholder')}
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            aria-invalid={missing.includes('full-name')}
-            aria-describedby={error ? 'form-error' : undefined}
-          />
+          <FormField
+            label={t('createPatient.fullName')}
+            invalid={missing.includes('full-name')}
+            error={error || undefined}
+          >
+            {(control) => (
+              <input
+                {...control}
+                style={styles.input}
+                type="text"
+                placeholder={t('createPatient.fullNamePlaceholder')}
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+              />
+            )}
+          </FormField>
 
-          <label style={styles.label} htmlFor="patient-email">{t('createPatient.email')}</label>
-          <input
-            id="patient-email"
-            style={styles.input}
-            type="email"
-            placeholder={t('createPatient.emailPlaceholder')}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            aria-invalid={missing.includes('patient-email')}
-            aria-describedby={error ? 'form-error' : undefined}
-          />
+          <FormField
+            label={t('createPatient.email')}
+            invalid={missing.includes('patient-email')}
+          >
+            {(control) => (
+              <input
+                {...control}
+                style={styles.input}
+                type="email"
+                placeholder={t('createPatient.emailPlaceholder')}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            )}
+          </FormField>
 
-          <label style={styles.label} htmlFor="surgery-type">{t('createPatient.surgeryType')}</label>
-          <input
-            id="surgery-type"
-            style={styles.input}
-            type="text"
-            placeholder={t('createPatient.surgeryTypePlaceholder')}
-            value={surgeryType}
-            onChange={(e) => setSurgeryType(e.target.value)}
-            aria-invalid={missing.includes('surgery-type')}
-            aria-describedby={error ? 'form-error' : undefined}
-          />
+          <FormField
+            label={t('createPatient.surgeryType')}
+            invalid={missing.includes('surgery-type')}
+          >
+            {(control) => (
+              <input
+                {...control}
+                style={styles.input}
+                type="text"
+                placeholder={t('createPatient.surgeryTypePlaceholder')}
+                value={surgeryType}
+                onChange={(e) => setSurgeryType(e.target.value)}
+              />
+            )}
+          </FormField>
 
-          <label style={styles.label} htmlFor="emergency-contact-phone">{t('createPatient.emergencyContact')}</label>
-          <input
-            id="emergency-contact-phone"
-            style={styles.input}
-            type="tel"
-            placeholder={t('createPatient.emergencyContactPlaceholder')}
-            value={emergencyContactPhone}
-            onChange={(e) => setEmergencyContactPhone(e.target.value)}
-          />
-
-          {error && <span id="form-error" role="alert" style={styles.error}>{error}</span>}
+          <FormField label={t('createPatient.emergencyContact')}>
+            {(control) => (
+              <input
+                {...control}
+                style={styles.input}
+                type="tel"
+                placeholder={t('createPatient.emergencyContactPlaceholder')}
+                value={emergencyContactPhone}
+                onChange={(e) => setEmergencyContactPhone(e.target.value)}
+              />
+            )}
+          </FormField>
 
           <button
             style={styles.button}
