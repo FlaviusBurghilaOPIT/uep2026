@@ -6,7 +6,7 @@
 
 **Architecture:** Thin styled wrappers in `web/src/components/ui/` own all styling (existing inline style-object convention) and accessibility wiring; pages consume only wrappers. Radix Primitives for Dialog/Select/Tabs/RadioGroup/Toast/Tooltip; Base UI (`@base-ui-components/react`) for NumberField only.
 
-**Tech Stack:** React 19, TypeScript 7, Vite 8, `@radix-ui/react-*`, `@base-ui-components/react`, `@fortawesome/react-fontawesome`.
+**Tech Stack:** React 19, TypeScript 7, Vite 8, `@radix-ui/react-*`, `@base-ui/react` (successor of the deprecated `@base-ui-components/react` — amended during execution), `@fortawesome/react-fontawesome`.
 
 **Spec:** `docs/superpowers/specs/2026-07-25-clinician-web-ui-libraries-design.md`
 
@@ -46,7 +46,7 @@ npm uninstall axios
 npm install @radix-ui/react-dialog @radix-ui/react-select @radix-ui/react-tabs \
   @radix-ui/react-radio-group @radix-ui/react-toast @radix-ui/react-tooltip \
   @radix-ui/react-visually-hidden \
-  @base-ui-components/react \
+  @base-ui/react \
   @fortawesome/fontawesome-svg-core @fortawesome/free-solid-svg-icons \
   @fortawesome/react-fontawesome
 ```
@@ -575,7 +575,7 @@ git commit -m "feat(web): Select wrapper; migrate navbar icons/language and case
 - [ ] **Step 1: Create `web/src/components/ui/NumberField.tsx`**
 
 ```tsx
-import { NumberField as BaseNumberField } from '@base-ui-components/react/number-field'
+import { NumberField as BaseNumberField } from '@base-ui/react/number-field'
 import { faMinus, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { Icon } from './Icon'
 
