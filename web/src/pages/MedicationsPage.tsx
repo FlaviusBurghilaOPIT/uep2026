@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { apiFetch } from '../api/client'
 import { trackEvent } from '../api/analytics'
 import { useTranslation } from '../i18n/useTranslation'
+import { FormField, NumberField, Select } from '../components/ui'
 
 const FREQUENCY_TIMES: Record<string, string[]> = {
   QD:  ['08:00'],
@@ -25,7 +26,7 @@ function MedicationsPage() {
   const [name, setName] = useState('')
   const [dose, setDose] = useState('')
   const [frequency, setFrequency] = useState<'QD'|'BID'|'TID'|'QID'|'PRN'>('QD')
-  const [durationDays, setDurationDays] = useState('')
+  const [durationDays, setDurationDays] = useState<number | null>(null)
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -47,8 +48,7 @@ function MedicationsPage() {
     const missingFields: string[] = []
     if (!name.trim()) missingFields.push('drug-name')
     if (!dose.trim()) missingFields.push('dose')
-    const days = parseInt(durationDays, 10)
-    if (!durationDays || isNaN(days) || days < 1) missingFields.push('duration-days')
+    if (durationDays === null || durationDays < 1) missingFields.push('duration-days')
     setMissing(missingFields)
     if (missingFields.length > 0) {
       setError(t('medication.errorMissingFields'))
@@ -64,7 +64,7 @@ function MedicationsPage() {
           name: name.trim(),
           dose: dose.trim(),
           frequency,
-          duration: `${days} days`,
+          duration: `${durationDays} days`,
           notes: notes.trim(),
         }),
       })
@@ -116,80 +116,95 @@ function MedicationsPage() {
         )}
 
         <form onSubmit={handleSubmit} style={styles.form} noValidate>
-          <label style={styles.label} htmlFor="drug-name">{t('medication.drugName')}</label>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <input
-              id="drug-name"
-              style={{ ...styles.input, flex: 1 }}
-              type="text"
-              placeholder={t('medication.drugNamePlaceholder')}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              aria-invalid={missing.includes('drug-name')}
-              aria-describedby={error ? 'form-error' : undefined}
-            />
-            {name.trim() && (
-              <button type="button" style={styles.fdaWarningButton} onClick={openFDA}>
-                {t('medication.viewFdaSafety')}
-              </button>
-            )}
-          </div>
-
-          <label style={styles.label} htmlFor="dose">{t('medication.dose')}</label>
-          <input
-            id="dose"
-            style={styles.input}
-            type="text"
-            placeholder={t('medication.dosePlaceholder')}
-            value={dose}
-            onChange={(e) => setDose(e.target.value)}
-            aria-invalid={missing.includes('dose')}
-            aria-describedby={error ? 'form-error' : undefined}
-          />
-
-          <label style={styles.label} htmlFor="frequency">{t('medication.frequencyLabel')}</label>
-          <select
-            id="frequency"
-            style={styles.input}
-            value={frequency}
-            onChange={(e) => setFrequency(e.target.value as 'QD'|'BID'|'TID'|'QID'|'PRN')}
-            aria-describedby={error ? 'form-error' : 'frequency-hint'}
+          <FormField
+            label={t('medication.drugName')}
+            invalid={missing.includes('drug-name')}
+            error={error || undefined}
           >
-            <option value="QD">{t('medication.frequencyQD')}</option>
-            <option value="BID">{t('medication.frequencyBID')}</option>
-            <option value="TID">{t('medication.frequencyTID')}</option>
-            <option value="QID">{t('medication.frequencyQID')}</option>
-            <option value="PRN">{t('medication.frequencyPRN')}</option>
-          </select>
-          <p id="frequency-hint" style={{ fontSize: '0.8rem', color: '#64748b', margin: '4px 0 12px' }}>
-            {reminderTimes.length > 0
-              ? `${t('medication.remindersAt')} ${reminderTimes.join(', ')}`
-              : t('medication.noReminders')}
-          </p>
+            {(control) => (
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <input
+                  {...control}
+                  style={{ ...styles.input, flex: 1 }}
+                  type="text"
+                  placeholder={t('medication.drugNamePlaceholder')}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+                {name.trim() && (
+                  <button type="button" style={styles.fdaWarningButton} onClick={openFDA}>
+                    {t('medication.viewFdaSafety')}
+                  </button>
+                )}
+              </div>
+            )}
+          </FormField>
 
-          <label style={styles.label} htmlFor="duration-days">{t('medication.durationDays')}</label>
-          <input
-            id="duration-days"
-            style={styles.input}
-            type="number"
-            min={1}
-            placeholder={t('medication.durationPlaceholder')}
-            value={durationDays}
-            onChange={(e) => setDurationDays(e.target.value)}
-            aria-invalid={missing.includes('duration-days')}
-            aria-describedby={error ? 'form-error' : undefined}
-          />
+          <FormField
+            label={t('medication.dose')}
+            invalid={missing.includes('dose')}
+          >
+            {(control) => (
+              <input
+                {...control}
+                style={styles.input}
+                type="text"
+                placeholder={t('medication.dosePlaceholder')}
+                value={dose}
+                onChange={(e) => setDose(e.target.value)}
+              />
+            )}
+          </FormField>
 
-          <label style={styles.label} htmlFor="notes">{t('medication.notesOptional')}</label>
-          <textarea
-            id="notes"
-            style={styles.textarea}
-            placeholder={t('medication.notesPlaceholder')}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-          />
+          <FormField
+            label={t('medication.frequencyLabel')}
+            hint={
+              reminderTimes.length > 0
+                ? `${t('medication.remindersAt')} ${reminderTimes.join(', ')}`
+                : t('medication.noReminders')
+            }
+          >
+            {(control) => (
+              <Select
+                {...control}
+                value={frequency}
+                onChange={(v) => setFrequency(v as 'QD'|'BID'|'TID'|'QID'|'PRN')}
+                options={[
+                  { value: 'QD', label: t('medication.frequencyQD') },
+                  { value: 'BID', label: t('medication.frequencyBID') },
+                  { value: 'TID', label: t('medication.frequencyTID') },
+                  { value: 'QID', label: t('medication.frequencyQID') },
+                  { value: 'PRN', label: t('medication.frequencyPRN') },
+                ]}
+              />
+            )}
+          </FormField>
 
-          {error && <p id="form-error" role="alert" style={styles.error}>{error}</p>}
+          <FormField
+            label={t('medication.durationDays')}
+            invalid={missing.includes('duration-days')}
+          >
+            {(control) => (
+              <NumberField
+                {...control}
+                value={durationDays}
+                onChange={setDurationDays}
+                placeholder={t('medication.durationPlaceholder')}
+              />
+            )}
+          </FormField>
+
+          <FormField label={t('medication.notesOptional')}>
+            {(control) => (
+              <textarea
+                {...control}
+                style={styles.textarea}
+                placeholder={t('medication.notesPlaceholder')}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
+            )}
+          </FormField>
 
           <button style={styles.button} type="submit" disabled={loading}>
             {loading ? t('medication.adding') : t('medication.addMedication')}
@@ -238,12 +253,6 @@ const styles = {
     flexDirection: 'column' as const,
     gap: '16px'
   },
-  label: {
-    fontSize: '13px',
-    fontWeight: '500',
-    color: '#111827',
-    marginBottom: '-10px'
-  },
   input: {
     padding: '10px 12px',
     borderRadius: '8px',
@@ -286,11 +295,6 @@ const styles = {
     cursor: 'pointer',
     fontWeight: '500' as const,
     whiteSpace: 'nowrap' as const
-  },
-  error: {
-    color: '#dc2626',
-    fontSize: '13px',
-    margin: 0
   }
 }
 
