@@ -1,17 +1,25 @@
 import * as RadixToast from '@radix-ui/react-toast'
 import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
-import { faCircleCheck, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faCircleCheck, faCircleExclamation, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { Icon } from './Icon'
+import { useTranslation } from '../../i18n'
 
-type ToastContextValue = { show: (message: string) => void }
+type ToastVariant = 'success' | 'error'
+
+type ToastContextValue = { show: (message: string, variant?: ToastVariant) => void }
 
 const ToastContext = createContext<ToastContextValue>({ show: () => {} })
 
 export const useToast = () => useContext(ToastContext)
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+  const { t } = useTranslation()
   const [message, setMessage] = useState<string | null>(null)
-  const show = useCallback((msg: string) => setMessage(msg), [])
+  const [variant, setVariant] = useState<ToastVariant>('success')
+  const show = useCallback((msg: string, v: ToastVariant = 'success') => {
+    setVariant(v)
+    setMessage(msg)
+  }, [])
 
   return (
     <ToastContext.Provider value={{ show }}>
@@ -20,13 +28,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         <RadixToast.Root
           open={message !== null}
           onOpenChange={(open) => !open && setMessage(null)}
-          style={styles.root}
+          style={{ ...styles.root, backgroundColor: variantColors[variant] }}
         >
           <RadixToast.Description style={styles.description}>
-            <Icon icon={faCircleCheck} style={{ marginRight: '8px' }} />
+            <Icon icon={variantIcons[variant]} style={{ marginRight: '8px' }} />
             {message}
           </RadixToast.Description>
-          <RadixToast.Close style={styles.close} aria-label="Close">
+          <RadixToast.Close style={styles.close} aria-label={t('cta.close')}>
             <Icon icon={faXmark} />
           </RadixToast.Close>
         </RadixToast.Root>
@@ -34,6 +42,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       </RadixToast.Provider>
     </ToastContext.Provider>
   )
+}
+
+const variantColors: Record<ToastVariant, string> = {
+  success: '#065f46',
+  error: '#b91c1c',
+}
+
+const variantIcons: Record<ToastVariant, typeof faCircleCheck> = {
+  success: faCircleCheck,
+  error: faCircleExclamation,
 }
 
 const styles = {
@@ -44,7 +62,6 @@ const styles = {
     zIndex: 1100,
   },
   root: {
-    backgroundColor: '#065f46',
     color: '#ffffff',
     padding: '12px 18px',
     borderRadius: '8px',

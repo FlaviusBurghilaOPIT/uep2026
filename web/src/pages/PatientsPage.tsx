@@ -37,7 +37,7 @@ function PatientsPage() {
     try {
       await fn()
     } catch (err) {
-      show(err instanceof Error ? err.message : t('common.error'))
+      show(err instanceof Error ? err.message : t('common.error'), 'error')
     }
   }
 

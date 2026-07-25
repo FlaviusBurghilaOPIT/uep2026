@@ -28,30 +28,42 @@ export function Select({
   ...aria
 }: SelectProps) {
   return (
-    <RadixSelect.Root value={value} onValueChange={onChange} disabled={disabled}>
-      <RadixSelect.Trigger id={id} style={{ ...styles.trigger, ...style }} {...aria}>
-        <RadixSelect.Value placeholder={placeholder} />
-        <RadixSelect.Icon style={styles.triggerIcon}>
-          <Icon icon={faChevronDown} />
-        </RadixSelect.Icon>
-      </RadixSelect.Trigger>
-      <RadixSelect.Portal>
-        <RadixSelect.Content style={styles.content} position="popper" sideOffset={4}>
-          <RadixSelect.Viewport>
-            {options.map((opt) => (
-              <RadixSelect.Item key={opt.value} value={opt.value} style={styles.item}>
-                <RadixSelect.ItemText>{opt.label}</RadixSelect.ItemText>
-                <RadixSelect.ItemIndicator style={styles.indicator}>
-                  <Icon icon={faCheck} />
-                </RadixSelect.ItemIndicator>
-              </RadixSelect.Item>
-            ))}
-          </RadixSelect.Viewport>
-        </RadixSelect.Content>
-      </RadixSelect.Portal>
-    </RadixSelect.Root>
+    <>
+      <style>{HIGHLIGHT_STYLE}</style>
+      <RadixSelect.Root value={value} onValueChange={onChange} disabled={disabled}>
+        <RadixSelect.Trigger id={id} style={{ ...styles.trigger, ...style }} {...aria}>
+          <RadixSelect.Value placeholder={placeholder} />
+          <RadixSelect.Icon style={styles.triggerIcon}>
+            <Icon icon={faChevronDown} />
+          </RadixSelect.Icon>
+        </RadixSelect.Trigger>
+        <RadixSelect.Portal>
+          <RadixSelect.Content style={styles.content} position="popper" sideOffset={4}>
+            <RadixSelect.Viewport>
+              {options.map((opt) => (
+                <RadixSelect.Item
+                  key={opt.value}
+                  value={opt.value}
+                  className="ui-select-item"
+                  style={styles.item}
+                >
+                  <RadixSelect.ItemText>{opt.label}</RadixSelect.ItemText>
+                  <RadixSelect.ItemIndicator style={styles.indicator}>
+                    <Icon icon={faCheck} />
+                  </RadixSelect.ItemIndicator>
+                </RadixSelect.Item>
+              ))}
+            </RadixSelect.Viewport>
+          </RadixSelect.Content>
+        </RadixSelect.Portal>
+      </RadixSelect.Root>
+    </>
   )
 }
+
+// Radix marks keyboard/hover-highlighted items with [data-highlighted]; inline
+// styles cannot express it, so this one rule lives in a module-level <style>.
+const HIGHLIGHT_STYLE = '.ui-select-item[data-highlighted] { background-color: #f0f9ff; }'
 
 const styles = {
   trigger: {
