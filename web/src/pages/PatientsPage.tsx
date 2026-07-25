@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { faFileCsv, faFilePdf } from '@fortawesome/free-solid-svg-icons'
 import { useTranslation } from '../i18n'
 import { apiFetch } from '../api/client'
 import { exportPatientAdherenceCSV, printPatientClinicalPDF } from '../utils/exportUtils'
+import { Icon, useToast } from '../components/ui'
 
 type Patient = {
   id: string
@@ -24,11 +26,20 @@ type Case = {
 function PatientsPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const { show } = useToast()
   const [patients, setPatients] = useState<Patient[]>([])
   const [cases, setCases] = useState<Case[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+
+  const handleExport = async (fn: () => Promise<void>) => {
+    try {
+      await fn()
+    } catch (err) {
+      show(err instanceof Error ? err.message : t('common.error'))
+    }
+  }
 
   const handleCopyCode = async (patientId: string, code: string) => {
     try {
@@ -115,15 +126,15 @@ function PatientsPage() {
                   <div style={styles.patientActions}>
                     <button
                       style={styles.exportCsvButton}
-                      onClick={() => exportPatientAdherenceCSV(patient.id)}
+                      onClick={() => handleExport(() => exportPatientAdherenceCSV(patient.id))}
                     >
-                      <span aria-hidden="true">📥 </span>{t('patients.exportCsv')}
+                      <Icon icon={faFileCsv} /> {t('patients.exportCsv')}
                     </button>
                     <button
                       style={styles.printPdfButton}
-                      onClick={() => printPatientClinicalPDF(patient.id)}
+                      onClick={() => handleExport(() => printPatientClinicalPDF(patient.id))}
                     >
-                      <span aria-hidden="true">📄 </span>{t('patients.printPdf')}
+                      <Icon icon={faFilePdf} /> {t('patients.printPdf')}
                     </button>
                     <button
                       style={styles.newCaseButton}

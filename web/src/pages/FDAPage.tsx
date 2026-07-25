@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { faClipboardList, faMagnifyingGlass, faPills } from '@fortawesome/free-solid-svg-icons'
 import { useTranslation } from '../i18n'
 import { apiFetch } from '../api/client'
+import { Icon } from '../components/ui'
 
 type FDAResult = {
   drug: string
@@ -97,7 +99,7 @@ function FDAPage() {
               <h2 style={styles.drugName}>{result.drug}</h2>
               {result.source && (
                 <div style={styles.sourceBadge}>
-                  <span aria-hidden="true">📋</span>
+                  <Icon icon={faClipboardList} />
                   <span>{result.source}</span>
                 </div>
               )}
@@ -136,14 +138,14 @@ function FDAPage() {
 
       {loading && (
         <div style={styles.emptyState}>
-          <p style={styles.emptyIcon} aria-hidden="true">🔍</p>
+          <p style={styles.emptyIcon} aria-hidden="true"><Icon icon={faMagnifyingGlass} /></p>
           <p style={styles.emptyText}>{t('fda.fetching')}</p>
         </div>
       )}
 
       {!result && !loading && !error && (
         <div style={styles.emptyState}>
-          <p style={styles.emptyIcon} aria-hidden="true">💊</p>
+          <p style={styles.emptyIcon} aria-hidden="true"><Icon icon={faPills} /></p>
           <p style={styles.emptyText}>
             {t('fda.emptyText')}
           </p>

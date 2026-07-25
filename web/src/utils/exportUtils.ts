@@ -135,8 +135,7 @@ export async function exportPatientAdherenceCSV(patientId: string): Promise<void
   try {
     data = await fetchPatientData(patientId)
   } catch (err) {
-    alert(`Export failed: ${err instanceof Error ? err.message : 'clinical data could not be loaded.'}`)
-    return
+    throw err instanceof Error ? err : new Error('Clinical data could not be loaded.')
   }
   const { patient, cases, doseLogs, symptoms } = data
   const surgeryTypes = cases.map((c) => c.surgery_type).join('; ') || 'N/A'
@@ -217,8 +216,7 @@ export async function printPatientClinicalPDF(patientId: string): Promise<void> 
   try {
     data = await fetchPatientData(patientId)
   } catch (err) {
-    alert(`Export failed: ${err instanceof Error ? err.message : 'clinical data could not be loaded.'}`)
-    return
+    throw err instanceof Error ? err : new Error('Clinical data could not be loaded.')
   }
   const { patient, cases, doseLogs, symptoms } = data
   const surgeryTypes = cases.map((c) => c.surgery_type).join(', ') || 'N/A'
@@ -238,8 +236,7 @@ export async function printPatientClinicalPDF(patientId: string): Promise<void> 
 
   const printWindow = window.open('', '_blank', 'width=900,height=1000')
   if (!printWindow) {
-    alert('Popup window was blocked by the browser. Please allow popups to view and print clinical PDF.')
-    return
+    throw new Error('Popup window was blocked by the browser. Please allow popups to print.')
   }
 
   const html = `

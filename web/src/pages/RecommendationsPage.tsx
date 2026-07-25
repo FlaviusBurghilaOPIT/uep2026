@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from '../i18n'
 import { useNavigate, useParams } from 'react-router-dom'
+import { faRobot } from '@fortawesome/free-solid-svg-icons'
 import { apiFetch } from '../api/client'
 import { trackEvent } from '../api/analytics'
+import { Icon } from '../components/ui'
 
 type Message = {
   role: 'user' | 'assistant'
@@ -165,7 +167,7 @@ function RecommendationsPage() {
               aria-label={t('recommendations.askAiTitle')}
               aria-expanded={chatOpen}
             >
-              <span aria-hidden="true">🤖</span>
+              <Icon icon={faRobot} style={{ color: '#ffffff' }} />
             </button>
           </div>
 
@@ -173,7 +175,7 @@ function RecommendationsPage() {
             <div style={styles.chatPanel}>
               <div style={styles.chatHeader}>
                 <span style={styles.chatTitle}>
-                  <span aria-hidden="true">🤖 </span>{t('recommendations.aiTitle')}
+                  <Icon icon={faRobot} /> {t('recommendations.aiTitle')}
                 </span>
                 <span style={styles.chatSubtitle}>{t('recommendations.aiSubtitle')}</span>
               </div>

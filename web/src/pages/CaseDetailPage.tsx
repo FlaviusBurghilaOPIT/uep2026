@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { faArrowLeft, faPhone } from '@fortawesome/free-solid-svg-icons'
 import { useTranslation } from '../i18n'
 import { apiFetch } from '../api/client'
+import { Icon } from '../components/ui'
 
 type CaseInfo = {
   id: string
@@ -171,7 +173,7 @@ function CaseDetailPage() {
   return (
     <div style={styles.container}>
       <button style={styles.backLink} onClick={() => navigate('/patients')}>
-        ← {t('caseDetail.backToPatients')}
+        <Icon icon={faArrowLeft} /> {t('caseDetail.backToPatients')}
       </button>
 
       {/* Header card: patient identity + emergency contact */}
@@ -197,8 +199,7 @@ function CaseDetailPage() {
           <p style={styles.emergencyName}>{caseInfo.emergency_contact_name || '—'}</p>
           {caseInfo.emergency_contact_phone ? (
             <a href={`tel:${caseInfo.emergency_contact_phone}`} style={styles.telLink}>
-              <span aria-hidden="true">📞 </span>
-              {caseInfo.emergency_contact_phone}
+              <Icon icon={faPhone} /> {caseInfo.emergency_contact_phone}
             </a>
           ) : (
             <p style={styles.muted}>{t('triage.noPhone')}</p>

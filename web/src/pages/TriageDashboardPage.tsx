@@ -123,6 +123,14 @@ function TriageDashboardPage() {
   // Shared toast (Radix) — auto-hide + close handled by ToastProvider
   const { show } = useToast()
 
+  const handleExport = async (fn: () => Promise<void>) => {
+    try {
+      await fn()
+    } catch (err) {
+      show(err instanceof Error ? err.message : t('common.error'))
+    }
+  }
+
   const fetchTriageData = useCallback(async () => {
     setLoading(true)
     setError('')
@@ -407,13 +415,13 @@ function TriageDashboardPage() {
           <div style={styles.actionButtons}>
             <button
               style={styles.exportCsvButton}
-              onClick={() => exportPatientAdherenceCSV(item.patient.id)}
+              onClick={() => handleExport(() => exportPatientAdherenceCSV(item.patient.id))}
             >
               <Icon icon={faFileCsv} /> {t('patients.exportCsv')}
             </button>
             <button
               style={styles.printPdfButton}
-              onClick={() => printPatientClinicalPDF(item.patient.id)}
+              onClick={() => handleExport(() => printPatientClinicalPDF(item.patient.id))}
             >
               <Icon icon={faFilePdf} /> {t('patients.printPdf')}
             </button>
@@ -712,13 +720,13 @@ function TriageDashboardPage() {
                       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' as const }}>
                         <button
                           style={styles.smallExportCsvButton}
-                          onClick={() => exportPatientAdherenceCSV(item.patient.id)}
+                          onClick={() => handleExport(() => exportPatientAdherenceCSV(item.patient.id))}
                         >
                           <Icon icon={faFileCsv} /> {t('patients.exportCsv')}
                         </button>
                         <button
                           style={styles.smallPrintPdfButton}
-                          onClick={() => printPatientClinicalPDF(item.patient.id)}
+                          onClick={() => handleExport(() => printPatientClinicalPDF(item.patient.id))}
                         >
                           <Icon icon={faFilePdf} /> {t('patients.printPdf')}
                         </button>
