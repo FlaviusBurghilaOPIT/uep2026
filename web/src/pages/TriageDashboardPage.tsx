@@ -1,9 +1,21 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import {
+  faCircleCheck,
+  faCircleExclamation,
+  faClipboardList,
+  faFileCsv,
+  faFilePdf,
+  faMagnifyingGlass,
+  faPhone,
+  faRotate,
+  faTriangleExclamation
+} from '@fortawesome/free-solid-svg-icons'
 import { apiFetch } from '../api/client'
 import { fetchTriageResponseStats, trackEvent, type TriageResponseStats } from '../api/analytics'
 import { useTranslation } from '../i18n'
 import { exportPatientAdherenceCSV, printPatientClinicalPDF } from '../utils/exportUtils'
+import { Dialog, Icon, RadioGroup, Tabs, Tooltip, useToast } from '../components/ui'
 
 type Patient = {
   id: string
@@ -108,8 +120,8 @@ function TriageDashboardPage() {
   const [noteError, setNoteError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Toast Notification state
-  const [toastMessage, setToastMessage] = useState<string | null>(null)
+  // Shared toast (Radix) — auto-hide + close handled by ToastProvider
+  const { show } = useToast()
 
   const fetchTriageData = useCallback(async () => {
     setLoading(true)
@@ -269,26 +281,6 @@ function TriageDashboardPage() {
     fetchTriageData()
   }, [fetchTriageData])
 
-  // Auto hide toast after 4 seconds
-  useEffect(() => {
-    if (toastMessage) {
-      const timer = setTimeout(() => {
-        setToastMessage(null)
-      }, 4000)
-      return () => clearTimeout(timer)
-    }
-  }, [toastMessage])
-
-  // Escape closes the resolution modal
-  useEffect(() => {
-    if (!selectedPatientItem) return
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') handleCloseResolutionModal()
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [selectedPatientItem])
-
   const handleReviewCase = (caseId?: string) => {
     if (caseId) {
       navigate(`/cases/${caseId}`)
@@ -348,9 +340,7 @@ function TriageDashboardPage() {
         })
       )
 
-      setToastMessage(
-        `${t('triage.resolvedToast')} — ${selectedPatientItem.patient.full_name}`
-      )
+      show(`${t('triage.resolvedToast')} — ${selectedPatientItem.patient.full_name}`)
       handleCloseResolutionModal()
     } catch (err) {
       console.error('Error resolving triage exception:', err)
@@ -398,7 +388,15 @@ function TriageDashboardPage() {
         <div style={styles.cardHeader}>
           <div>
             <span style={isRed ? styles.redBadge : styles.amberBadge}>
-              {isRed ? `🛑 ${t('triage.highPriority')}` : `⚠️ ${t('triage.mediumPriority')}`}
+              {isRed ? (
+                <>
+                  <Icon icon={faCircleExclamation} /> {t('triage.highPriority')}
+                </>
+              ) : (
+                <>
+                  <Icon icon={faTriangleExclamation} /> {t('triage.mediumPriority')}
+                </>
+              )}
             </span>
             <h3 style={styles.patientName}>{item.patient.full_name}</h3>
             <p style={styles.patientSub}>
@@ -411,19 +409,19 @@ function TriageDashboardPage() {
               style={styles.exportCsvButton}
               onClick={() => exportPatientAdherenceCSV(item.patient.id)}
             >
-              <span aria-hidden="true">📥 </span>{t('patients.exportCsv')}
+              <Icon icon={faFileCsv} /> {t('patients.exportCsv')}
             </button>
             <button
               style={styles.printPdfButton}
               onClick={() => printPatientClinicalPDF(item.patient.id)}
             >
-              <span aria-hidden="true">📄 </span>{t('patients.printPdf')}
+              <Icon icon={faFilePdf} /> {t('patients.printPdf')}
             </button>
             <button
               style={styles.resolveButton}
               onClick={() => handleOpenResolutionModal(item)}
             >
-              <span aria-hidden="true">✅ </span>{t('triage.resolveException')}
+              <Icon icon={faCircleCheck} /> {t('triage.resolveException')}
             </button>
             {phone ? (
               <a
@@ -433,22 +431,25 @@ function TriageDashboardPage() {
                   trackEvent('web.triage.patient_called', { patient_id: item.patient.id })
                 }
               >
-                <span aria-hidden="true">📞 </span>{t('triage.callPatient')}
+                <Icon icon={faPhone} /> {t('triage.callPatient')}
               </a>
             ) : (
-              <button
-                style={{ ...styles.callButton, opacity: 0.5, cursor: 'not-allowed' }}
-                disabled
-                title={t('triage.noPhone')}
-              >
-                <span aria-hidden="true">📞 </span>{t('triage.callPatient')}
-              </button>
+              <Tooltip content={t('triage.noPhone')}>
+                <span>
+                  <button
+                    style={{ ...styles.callButton, opacity: 0.5, cursor: 'not-allowed' }}
+                    disabled
+                  >
+                    <Icon icon={faPhone} /> {t('triage.callPatient')}
+                  </button>
+                </span>
+              </Tooltip>
             )}
             <button
               style={styles.reviewButton}
               onClick={() => handleReviewCase(item.caseItem?.id)}
             >
-              <span aria-hidden="true">📋 </span>{t('triage.reviewCase')}
+              <Icon icon={faClipboardList} /> {t('triage.reviewCase')}
             </button>
           </div>
         </div>
@@ -476,21 +477,6 @@ function TriageDashboardPage() {
 
   return (
     <div style={styles.container}>
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div style={styles.toastContainer} role="status">
-          <span style={styles.toastIcon} aria-hidden="true">✅</span>
-          <span style={styles.toastContent}>{toastMessage}</span>
-          <button
-            style={styles.toastClose}
-            onClick={() => setToastMessage(null)}
-            aria-label={t('cta.close')}
-          >
-            &times;
-          </button>
-        </div>
-      )}
-
       <div style={styles.headerRow}>
         <div>
           <h1 style={styles.title}>{t('triage.title')}</h1>
@@ -503,7 +489,7 @@ function TriageDashboardPage() {
             </span>
           )}
           <button style={styles.refreshButton} onClick={fetchTriageData} disabled={loading}>
-            <span aria-hidden="true">🔄 </span>{t('triage.refresh')}
+            <Icon icon={faRotate} /> {t('triage.refresh')}
           </button>
         </div>
       </div>
@@ -566,7 +552,9 @@ function TriageDashboardPage() {
           <div style={styles.controlsBar}>
             {/* Search Input */}
             <div style={styles.searchContainer}>
-              <span style={styles.searchIcon} aria-hidden="true">🔍</span>
+              <span style={styles.searchIcon}>
+                <Icon icon={faMagnifyingGlass} />
+              </span>
               <input
                 type="text"
                 placeholder={t('triage.searchPlaceholder')}
@@ -587,48 +575,56 @@ function TriageDashboardPage() {
             </div>
 
             {/* Filter Tabs */}
-            <div style={styles.tabContainer} role="tablist">
-              <button
-                style={{
-                  ...styles.tabButton,
-                  ...(activeTab === 'all' ? styles.activeTabButton : {})
-                }}
-                onClick={() => setActiveTab('all')}
-              >
-                {t('triage.allAlerts')}
-                <span style={styles.tabBadge}>{exceptionQueue.length}</span>
-              </button>
-              <button
-                style={{
-                  ...styles.tabButton,
-                  ...(activeTab === 'red' ? styles.activeRedTabButton : {})
-                }}
-                onClick={() => setActiveTab('red')}
-              >
-                <span aria-hidden="true">🚨 </span>{t('triage.highPriority')}
-                <span style={{ ...styles.tabBadge, backgroundColor: '#fef2f2', color: '#b91c1c' }}>
-                  {redQueue.length}
-                </span>
-              </button>
-              <button
-                style={{
-                  ...styles.tabButton,
-                  ...(activeTab === 'amber' ? styles.activeAmberTabButton : {})
-                }}
-                onClick={() => setActiveTab('amber')}
-              >
-                <span aria-hidden="true">⚠️ </span>{t('triage.mediumPriority')}
-                <span style={{ ...styles.tabBadge, backgroundColor: '#fffbe6', color: '#d97706' }}>
-                  {amberQueue.length}
-                </span>
-              </button>
-            </div>
+            <Tabs
+              value={activeTab}
+              onChange={(v) => setActiveTab(v as FilterTab)}
+              items={[
+                {
+                  value: 'all',
+                  label: (
+                    <>
+                      {t('triage.allAlerts')}
+                      <span style={styles.tabBadge}>{exceptionQueue.length}</span>
+                    </>
+                  )
+                },
+                {
+                  value: 'red',
+                  label: (
+                    <>
+                      <Icon icon={faCircleExclamation} style={{ color: '#b91c1c' }} />
+                      {t('triage.highPriority')}
+                      <span
+                        style={{ ...styles.tabBadge, backgroundColor: '#fef2f2', color: '#b91c1c' }}
+                      >
+                        {redQueue.length}
+                      </span>
+                    </>
+                  )
+                },
+                {
+                  value: 'amber',
+                  label: (
+                    <>
+                      <Icon icon={faTriangleExclamation} style={{ color: '#d97706' }} />
+                      {t('triage.mediumPriority')}
+                      <span
+                        style={{ ...styles.tabBadge, backgroundColor: '#fffbe6', color: '#d97706' }}
+                      >
+                        {amberQueue.length}
+                      </span>
+                    </>
+                  )
+                }
+              ]}
+            />
           </div>
 
           {/* Top Priority Section: Needs Attention Triage Queue */}
           <div style={styles.section}>
             <h2 style={styles.sectionTitle}>
-              🚨 {t('triage.emergencyTriage')} (
+              <Icon icon={faTriangleExclamation} style={{ color: '#b91c1c' }} />{' '}
+              {t('triage.emergencyTriage')} (
               {activeTab === 'all'
                 ? filteredExceptions.length
                 : activeTab === 'red'
@@ -642,7 +638,9 @@ function TriageDashboardPage() {
               (activeTab === 'red' && filteredRed.length === 0) ||
               (activeTab === 'amber' && filteredAmber.length === 0)) && (
               <div style={styles.emptyBox}>
-                <span style={styles.emptyIcon} aria-hidden="true">✓</span>
+                <span style={styles.emptyIcon}>
+                  <Icon icon={faCircleCheck} />
+                </span>
                 <p style={styles.emptyText}>
                   {searchQuery ? t('triage.noPatientsFound') : t('triage.allOnTrack')}
                 </p>
@@ -659,7 +657,7 @@ function TriageDashboardPage() {
           {/* Unknown-status patients: telemetry failed — never shown as stable */}
           {filteredUnknown.length > 0 && (
             <div style={styles.section}>
-              <h2 style={styles.sectionTitle}>⚪ {t('triage.unknownTitle')} ({filteredUnknown.length})</h2>
+              <h2 style={styles.sectionTitle}>{t('triage.unknownTitle')} ({filteredUnknown.length})</h2>
               <div style={styles.normalGrid}>
                 {filteredUnknown.map((item) => (
                   <div key={item.patient.id} style={styles.unknownCard}>
@@ -693,7 +691,10 @@ function TriageDashboardPage() {
           {/* Stable Patient Roster */}
           {filteredNormal.length > 0 && (
             <div style={styles.section}>
-              <h2 style={styles.sectionTitle}>🟢 {t('triage.stable')} ({filteredNormal.length})</h2>
+              <h2 style={styles.sectionTitle}>
+                <Icon icon={faCircleCheck} style={{ color: '#16a34a' }} /> {t('triage.stable')} (
+                {filteredNormal.length})
+              </h2>
               <div style={styles.normalGrid}>
                 {filteredNormal.map((item) => (
                   <div key={item.patient.id} style={styles.normalCard}>
@@ -713,13 +714,13 @@ function TriageDashboardPage() {
                           style={styles.smallExportCsvButton}
                           onClick={() => exportPatientAdherenceCSV(item.patient.id)}
                         >
-                          <span aria-hidden="true">📥 </span>{t('patients.exportCsv')}
+                          <Icon icon={faFileCsv} /> {t('patients.exportCsv')}
                         </button>
                         <button
                           style={styles.smallPrintPdfButton}
                           onClick={() => printPatientClinicalPDF(item.patient.id)}
                         >
-                          <span aria-hidden="true">📄 </span>{t('patients.printPdf')}
+                          <Icon icon={faFilePdf} /> {t('patients.printPdf')}
                         </button>
                         <button
                           style={styles.smallReviewButton}
@@ -738,33 +739,15 @@ function TriageDashboardPage() {
       )}
 
       {/* Triage Exception Resolution Modal */}
-      {selectedPatientItem && (
-        <div style={styles.modalOverlay} onClick={handleCloseResolutionModal}>
-          <div
-            style={styles.modalContainer}
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="resolve-modal-title"
-          >
-            <div style={styles.modalHeader}>
-              <div>
-                <h3 style={styles.modalTitle} id="resolve-modal-title">
-                  {t('triage.resolveModalTitle')}
-                </h3>
-                <p style={styles.modalSubtitle}>
-                  {selectedPatientItem.patient.full_name}
-                </p>
-              </div>
-              <button
-                style={styles.modalCloseButton}
-                onClick={handleCloseResolutionModal}
-                aria-label={t('cta.close')}
-              >
-                &times;
-              </button>
-            </div>
-
+      <Dialog
+        open={selectedPatientItem !== null}
+        onClose={handleCloseResolutionModal}
+        title={t('triage.resolveModalTitle')}
+        description={selectedPatientItem?.patient.full_name}
+        closeLabel={t('cta.close')}
+      >
+        {selectedPatientItem && (
+          <>
             <div style={styles.modalBody}>
               {/* Context Summary Box */}
               <div
@@ -783,9 +766,15 @@ function TriageDashboardPage() {
                         : styles.amberBadge
                     }
                   >
-                    {selectedPatientItem.severity === 'red'
-                      ? `🛑 ${t('triage.highPriority')}`
-                      : `⚠️ ${t('triage.mediumPriority')}`}
+                    {selectedPatientItem.severity === 'red' ? (
+                      <>
+                        <Icon icon={faCircleExclamation} /> {t('triage.highPriority')}
+                      </>
+                    ) : (
+                      <>
+                        <Icon icon={faTriangleExclamation} /> {t('triage.mediumPriority')}
+                      </>
+                    )}
                   </span>
                 </div>
                 <div style={{ fontSize: '13px', color: '#374151' }}>
@@ -796,25 +785,16 @@ function TriageDashboardPage() {
               {/* Outreach Method Selection */}
               <fieldset style={styles.fieldset}>
                 <legend style={styles.label}>{t('triage.outreachMethod')} *</legend>
-                <div style={styles.radioGroup}>
-                  {([
-                    ['Phone Call', t('triage.outreachPhone')],
-                    ['Secure SMS', t('triage.outreachSms')],
-                    ['In-Person Visit', t('triage.outreachVisit')]
-                  ] as [OutreachMethod, string][]).map(([method, label]) => (
-                    <label key={method} style={styles.radioOptionLabel}>
-                      <input
-                        type="radio"
-                        name="outreachMethod"
-                        value={method}
-                        checked={outreachMethod === method}
-                        onChange={() => setOutreachMethod(method)}
-                        style={styles.radioInput}
-                      />
-                      <span>{label}</span>
-                    </label>
-                  ))}
-                </div>
+                <RadioGroup
+                  name="outreachMethod"
+                  value={outreachMethod}
+                  onChange={(v) => setOutreachMethod(v as OutreachMethod)}
+                  options={[
+                    { value: 'Phone Call', label: t('triage.outreachPhone') },
+                    { value: 'Secure SMS', label: t('triage.outreachSms') },
+                    { value: 'In-Person Visit', label: t('triage.outreachVisit') }
+                  ]}
+                />
               </fieldset>
 
               {/* Mandatory Resolution Notes Textarea */}
@@ -865,9 +845,9 @@ function TriageDashboardPage() {
                 {isSubmitting ? t('triage.archiving') : t('cta.submit')}
               </button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Dialog>
     </div>
   )
 }
@@ -1013,39 +993,6 @@ const styles = {
     fontSize: '18px',
     color: '#64748b',
     cursor: 'pointer'
-  },
-  tabContainer: {
-    display: 'flex',
-    gap: '8px',
-    flexWrap: 'wrap' as const
-  },
-  tabButton: {
-    padding: '8px 14px',
-    borderRadius: '8px',
-    border: '1px solid #e2e8f0',
-    backgroundColor: '#ffffff',
-    color: '#0f172a',
-    fontSize: '13px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px'
-  },
-  activeTabButton: {
-    backgroundColor: '#0284c7',
-    color: '#ffffff',
-    borderColor: '#0284c7'
-  },
-  activeRedTabButton: {
-    backgroundColor: '#b91c1c',
-    color: '#ffffff',
-    borderColor: '#b91c1c'
-  },
-  activeAmberTabButton: {
-    backgroundColor: '#d97706',
-    color: '#ffffff',
-    borderColor: '#d97706'
   },
   tabBadge: {
     padding: '2px 6px',
@@ -1300,55 +1247,6 @@ const styles = {
     fontSize: '12px',
     cursor: 'pointer'
   },
-  modalOverlay: {
-    position: 'fixed' as const,
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-    padding: '16px'
-  },
-  modalContainer: {
-    backgroundColor: '#ffffff',
-    borderRadius: '12px',
-    width: '100%',
-    maxWidth: '520px',
-    padding: '24px',
-    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-    border: '1px solid #e2e8f0',
-    boxSizing: 'border-box' as const
-  },
-  modalHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: '16px'
-  },
-  modalTitle: {
-    fontSize: '18px',
-    fontWeight: '700',
-    color: '#0f172a',
-    margin: 0
-  },
-  modalSubtitle: {
-    fontSize: '13px',
-    color: '#64748b',
-    marginTop: '4px'
-  },
-  modalCloseButton: {
-    background: 'transparent',
-    border: 'none',
-    fontSize: '22px',
-    color: '#94a3b8',
-    cursor: 'pointer',
-    padding: 0,
-    lineHeight: 1
-  },
   modalBody: {
     display: 'flex',
     flexDirection: 'column' as const,
@@ -1376,22 +1274,6 @@ const styles = {
     fontSize: '13px',
     fontWeight: '600',
     color: '#0f172a'
-  },
-  radioGroup: {
-    display: 'flex',
-    gap: '16px',
-    flexWrap: 'wrap' as const
-  },
-  radioOptionLabel: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    fontSize: '13px',
-    color: '#0f172a',
-    cursor: 'pointer'
-  },
-  radioInput: {
-    cursor: 'pointer'
   },
   textarea: {
     width: '100%',
@@ -1434,36 +1316,6 @@ const styles = {
     fontSize: '13px',
     fontWeight: '600',
     cursor: 'pointer'
-  },
-  toastContainer: {
-    position: 'fixed' as const,
-    top: '20px',
-    right: '20px',
-    backgroundColor: '#065f46',
-    color: '#ffffff',
-    padding: '12px 18px',
-    borderRadius: '8px',
-    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    zIndex: 1100
-  },
-  toastIcon: {
-    fontSize: '16px'
-  },
-  toastContent: {
-    fontSize: '13px',
-    fontWeight: '500'
-  },
-  toastClose: {
-    background: 'transparent',
-    border: 'none',
-    color: '#ffffff',
-    fontSize: '18px',
-    cursor: 'pointer',
-    marginLeft: '8px',
-    lineHeight: 1
   }
 }
 
