@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../i18n'
 import { apiFetch } from '../api/client'
 import { trackEvent } from '../api/analytics'
+import { FormField, Select } from '../components/ui'
 
 type Patient = {
   id: string
@@ -121,37 +122,38 @@ function CreateCasePage() {
           </div>
         ) : (
           <form onSubmit={handleCreateCase} style={styles.form} noValidate>
-            <label style={styles.label} htmlFor="patient-select">{t('createCase.selectPatient')}</label>
-            <select
-              id="patient-select"
-              style={styles.input}
-              value={patientId}
-              onChange={(e) => setPatientId(e.target.value)}
-              disabled={loadingPatients}
-              aria-invalid={missing.includes('patient-select')}
-              aria-describedby={error ? 'form-error' : undefined}
+            <FormField
+              label={t('createCase.selectPatient')}
+              invalid={missing.includes('patient-select')}
+              error={error || undefined}
             >
-              <option value="">{t('createCase.selectPatientPlaceholder')}</option>
-              {patients.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.full_name}
-                </option>
-              ))}
-            </select>
+              {(control) => (
+                <Select
+                  {...control}
+                  value={patientId}
+                  onChange={setPatientId}
+                  placeholder={t('createCase.selectPatientPlaceholder')}
+                  disabled={loadingPatients}
+                  options={patients.map((p) => ({ value: p.id, label: p.full_name }))}
+                />
+              )}
+            </FormField>
 
-            <label style={styles.label} htmlFor="surgery-type">{t('createCase.surgeryType')}</label>
-            <input
-              id="surgery-type"
-              style={styles.input}
-              type="text"
-              placeholder={t('createCase.surgeryTypePlaceholder')}
-              value={surgeryType}
-              onChange={(e) => setSurgeryType(e.target.value)}
-              aria-invalid={missing.includes('surgery-type')}
-              aria-describedby={error ? 'form-error' : undefined}
-            />
-
-            {error && <p id="form-error" role="alert" style={styles.error}>{error}</p>}
+            <FormField
+              label={t('createCase.surgeryType')}
+              invalid={missing.includes('surgery-type')}
+            >
+              {(control) => (
+                <input
+                  {...control}
+                  style={styles.input}
+                  type="text"
+                  placeholder={t('createCase.surgeryTypePlaceholder')}
+                  value={surgeryType}
+                  onChange={(e) => setSurgeryType(e.target.value)}
+                />
+              )}
+            </FormField>
 
             <button
               style={styles.button}

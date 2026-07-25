@@ -1,5 +1,14 @@
 import { NavLink, useNavigate } from 'react-router-dom'
+import {
+  faTriangleExclamation,
+  faUserGroup,
+  faFileCirclePlus,
+  faShieldHalved,
+  faRightFromBracket,
+  faGlobe
+} from '@fortawesome/free-solid-svg-icons'
 import { useTranslation, type Language } from '../i18n'
+import { Icon, Select } from './ui'
 
 function NavBar() {
   const { language, setLanguage, t } = useTranslation()
@@ -36,39 +45,40 @@ function NavBar() {
           <span style={styles.brandPlus}>+</span> CarePro
         </div>
         <div style={styles.langSelectorWrapper}>
-          <span style={styles.langIcon} aria-hidden="true">🌐</span>
-          <select
+          <Icon icon={faGlobe} style={{ color: '#38bdf8', fontSize: '12px' }} />
+          <Select
             value={language}
-            onChange={(e) => setLanguage(e.target.value as Language)}
-            style={styles.langSelect}
+            onChange={(v) => setLanguage(v as Language)}
+            options={[
+              { value: 'en', label: 'EN' },
+              { value: 'es', label: 'ES' },
+              { value: 'it', label: 'IT' }
+            ]}
             aria-label={t('common.selectLanguage')}
-          >
-            <option value="en">EN</option>
-            <option value="es">ES</option>
-            <option value="it">IT</option>
-          </select>
+            style={styles.langSelectTrigger}
+          />
         </div>
       </div>
 
       <ul style={styles.nav}>
         <li>
           <NavLink to="/" end style={linkStyle}>
-            <span aria-hidden="true">🚨</span> {t('nav.triageDashboard')}
+            <Icon icon={faTriangleExclamation} /> {t('nav.triageDashboard')}
           </NavLink>
         </li>
         <li>
           <NavLink to="/patients" style={linkStyle}>
-            <span aria-hidden="true">👥</span> {t('nav.patients')}
+            <Icon icon={faUserGroup} /> {t('nav.patients')}
           </NavLink>
         </li>
         <li>
           <NavLink to="/cases/new" style={linkStyle}>
-            <span aria-hidden="true">📋</span> {t('nav.newCase')}
+            <Icon icon={faFileCirclePlus} /> {t('nav.newCase')}
           </NavLink>
         </li>
         <li>
           <NavLink to="/fda" style={linkStyle}>
-            <span aria-hidden="true">🛡️</span> {t('nav.fdaSafety')}
+            <Icon icon={faShieldHalved} /> {t('nav.fdaSafety')}
           </NavLink>
         </li>
       </ul>
@@ -76,7 +86,7 @@ function NavBar() {
       <div style={styles.bottom}>
         <div style={styles.divider} />
         <button style={styles.logout} onClick={handleLogout}>
-          <span aria-hidden="true">🚪</span> {t('nav.logout')}
+          <Icon icon={faRightFromBracket} /> {t('nav.logout')}
         </button>
         <div style={styles.userCard}>
           <div style={styles.avatar} aria-hidden="true">{initials}</div>
@@ -129,16 +139,14 @@ const styles = {
     borderRadius: '6px',
     border: '1px solid #334155'
   },
-  langIcon: {
-    fontSize: '12px'
-  },
-  langSelect: {
+  langSelectTrigger: {
     backgroundColor: 'transparent',
     color: '#38bdf8',
     border: 'none',
     fontSize: '12px',
     fontWeight: '700' as const,
-    cursor: 'pointer'
+    padding: '0',
+    width: 'auto'
   },
   nav: {
     display: 'flex',
