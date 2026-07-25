@@ -10,7 +10,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "axios": "^1.18.1",
+    "@base-ui-components/react": "^1.0.0-rc.0",
+    "@fortawesome/fontawesome-svg-core": "^7.3.1",
+    "@fortawesome/free-solid-svg-icons": "^7.3.1",
+    "@fortawesome/react-fontawesome": "^3.5.0",
+    "@radix-ui/react-dialog": "^1.1.23",
+    "@radix-ui/react-radio-group": "^1.4.7",
+    "@radix-ui/react-select": "^2.3.7",
+    "@radix-ui/react-tabs": "^1.1.21",
+    "@radix-ui/react-toast": "^1.2.23",
+    "@radix-ui/react-tooltip": "^1.2.16",
+    "@radix-ui/react-visually-hidden": "^1.2.11",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.1"
