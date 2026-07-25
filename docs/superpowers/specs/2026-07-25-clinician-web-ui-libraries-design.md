@@ -31,7 +31,7 @@ Pages consume only these wrappers, never raw primitives. Wrappers own styling
 | `Select` | `@radix-ui/react-select` | Language switcher, patient picker (CreateCase), frequency (Medications) |
 | `RadioGroup` | `@radix-ui/react-radio-group` | Outreach method in resolution modal |
 | `Toast` | `@radix-ui/react-toast` | Resolution success; export failures (replaces `alert()` in exportUtils) |
-| `NumberField` | `@base-ui/react` NumberField | Duration (days) — min 1 enforced by the control |
+| `NumberField` | `@base-ui-components/react` NumberField | Duration (days) — min 1 enforced by the control |
 | `Tooltip` | `@radix-ui/react-tooltip` | Disabled Call button explanation (no phone registered) |
 | `FormField` | ours | label + input/textarea + `aria-invalid`/`aria-describedby` wiring for all forms |
 | `Icon` | ours + `@fortawesome/react-fontawesome` | FA icon; `aria-hidden` default, optional accessible label |
@@ -42,7 +42,7 @@ Pages consume only these wrappers, never raw primitives. Wrappers own styling
 @radix-ui/react-dialog @radix-ui/react-select @radix-ui/react-tabs
 @radix-ui/react-radio-group @radix-ui/react-toast @radix-ui/react-tooltip
 @radix-ui/react-visually-hidden
-@base-ui/react
+@base-ui-components/react
 @fortawesome/fontawesome-svg-core @fortawesome/free-solid-svg-icons
 @fortawesome/react-fontawesome
 ```
