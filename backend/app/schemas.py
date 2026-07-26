@@ -1,7 +1,9 @@
-from datetime import datetime
 import enum
+from datetime import date, datetime
 
 from pydantic import BaseModel
+
+from app.models import DoseStatus
 
 
 class FrequencyCode(str, enum.Enum):
@@ -290,3 +292,66 @@ class TriageResponseStats(BaseModel):
     median_seconds: float | None
     samples: int
     resolutions_total: int
+
+
+# --- Adherence pipeline (spec: ai_specs/2026-07-26-adherence-pipeline-backend-spec.md §6) ---
+
+
+class SlotState(str, enum.Enum):
+    upcoming = "upcoming"
+    due = "due"
+    overdue = "overdue"
+    missed = "missed"
+    taken = "taken"
+    skipped = "skipped"
+
+
+class AgendaSlot(BaseModel):
+    slot_id: str
+    medication_id: str
+    medication_name: str
+    dose: str
+    notes: str | None
+    scheduled_time: datetime
+    state: SlotState
+    logged_at: datetime | None = None
+    dose_log_id: str | None = None
+    previous_status: DoseStatus | None = None
+
+
+class AgendaPrnMedication(BaseModel):
+    medication_id: str
+    medication_name: str
+    dose: str
+    notes: str | None = None
+
+
+class AgendaResponse(BaseModel):
+    date: date
+    slots: list[AgendaSlot] = []
+    prn: list[AgendaPrnMedication] = []
+
+
+class AdhocLogRequest(BaseModel):
+    medication_id: str
+    status: DoseStatus
+    taken_at: datetime | None = None
+    idempotency_key: str
+
+
+class AdhocLogResponse(BaseModel):
+    slot: AgendaSlot
+    dose_log: "DoseLogCorrectResponse"
+
+
+class DoseLogCorrectRequest(BaseModel):
+    status: DoseStatus
+
+
+class DoseLogCorrectResponse(BaseModel):
+    id: str
+    scheduled_reminder_id: str
+    status: DoseStatus
+    previous_status: DoseStatus | None = None
+    logged_at: datetime | None = None
+    corrected_at: datetime | None = None

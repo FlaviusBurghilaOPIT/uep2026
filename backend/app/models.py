@@ -137,6 +137,9 @@ class Medication(Base):
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    # Soft-delete marker (spec E4): set instead of deleting so adherence
+    # history is preserved; read paths filter `discontinued_at IS NULL`.
+    discontinued_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     case: Mapped["Case"] = relationship(back_populates="medications")
     scheduled_reminders: Mapped[list["ScheduledReminder"]] = relationship(
@@ -155,6 +158,12 @@ class ScheduledReminder(Base):
 
     status: Mapped[str] = mapped_column(String, default="pending")
 
+    # Client-supplied UUID for ad-hoc (PRN) log retries; null for parser-created
+    # slots. Unique-indexed — Postgres NULLs don't collide.
+    idempotency_key: Mapped[str | None] = mapped_column(
+        String, unique=True, index=True, nullable=True
+    )
+
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     medication: Mapped["Medication"] = relationship(back_populates="scheduled_reminders")
@@ -170,8 +179,30 @@ class DoseLog(Base):
     )
     status: Mapped[DoseStatus] = mapped_column(Enum(DoseStatus), default=DoseStatus.pending)
     logged_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    corrected_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     scheduled_reminder: Mapped["ScheduledReminder"] = relationship(back_populates="dose_log")
+    events: Mapped[list["DoseLogEvent"]] = relationship(back_populates="dose_log")
+
+
+class DoseLogEvent(Base):
+    """Correction audit trail for DoseLog.
+
+    Append-only by convention: application code only ever INSERTs rows here
+    (one per status change); there are no UPDATE/DELETE paths.
+    """
+
+    __tablename__ = "dose_log_events"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
+    dose_log_id: Mapped[str] = mapped_column(
+        ForeignKey("dose_logs.id"), index=True, nullable=False
+    )
+    old_status: Mapped[DoseStatus] = mapped_column(Enum(DoseStatus), nullable=False)
+    new_status: Mapped[DoseStatus] = mapped_column(Enum(DoseStatus), nullable=False)
+    changed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    dose_log: Mapped["DoseLog"] = relationship(back_populates="events")
 
 
 class Recommendation(Base):
