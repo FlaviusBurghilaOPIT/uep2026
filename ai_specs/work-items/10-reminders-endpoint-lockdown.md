@@ -25,11 +25,26 @@ Do NOT delete the endpoints in this Work Item — deletion is gated (see Blockin
 
 ## Acceptance criteria
 
-- [ ] Patient A receives zero of patient B's reminders from `GET /reminders` (two-patient fixture test)
-- [ ] Patients get 403 on POST/PATCH; clinicians restricted to own cases
-- [ ] Current mobile flows against these endpoints still function (regression: existing tests + golden loop)
-- [ ] `web/` grep results recorded; deviations documented
-- [ ] Deprecation comments present on all three handlers
+- [x] Patient A receives zero of patient B's reminders from `GET /reminders` (two-patient fixture test)
+- [x] Patients get 403 on POST/PATCH; clinicians restricted to own cases
+- [~] Current mobile flows against these endpoints still function — existing backend suite fully green (88 passed, 1 skipped, 2026-07-26); golden-loop integration test NOT run (requires booted simulator + live backend). Note: patient `POST /reminders` now returns 403 by design — the `today_screen.dart` fallback create path fails silently (try/catch) until the Today-screen migration ships.
+- [x] `web/` grep results recorded; deviations documented (see note below — no deviation needed)
+- [x] Deprecation comments present on all three handlers
+
+### Web grep findings (2026-07-26, `grep -rn "reminders" web/src/`)
+
+No fetch/axios calls to any of the three `/reminders` endpoints exist in `web/src/` — only i18n display strings. Verbatim results:
+
+```
+web/src/i18n/types.ts:156:  remindersAt:      string
+web/src/i18n/translations/it.ts:308:    remindersAt: '⏰ Promemoria alle:',
+web/src/i18n/translations/es.ts:308:    remindersAt: '⏰ Recordatorios a las:',
+web/src/i18n/translations/en.ts:310:    remindersAt:    '⏰ Reminders at:',
+web/src/i18n/translations/en.ts:311:    noReminders:    '⏰ No scheduled reminders (as needed)',
+web/src/pages/MedicationsPage.tsx:163:                ? `${t('medication.remindersAt')} ${reminderTimes.join(', ')}`
+```
+
+Deviation: none — endpoints kept (deprecated, not deleted) solely because the mobile app still calls them, per this WI's gating decision.
 
 ## Covers
 
