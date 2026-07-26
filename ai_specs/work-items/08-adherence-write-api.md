@@ -30,12 +30,12 @@ Three endpoint changes in `app/routers/adherence.py`:
 
 ## Acceptance criteria
 
-- [ ] 409 contract pinned by test (duplicate → 409 with detail; no duplicate row)
-- [ ] Patient B cannot log/correct against patient A's reminder or log (403)
-- [ ] Successful log and correction both sync `scheduled_reminders.status` in the same transaction
-- [ ] Ad-hoc: creates slot+log atomically; same-key retry returns original 201, no duplicate; 400 on non-PRN or discontinued med
-- [ ] Correction: status updated, event appended, `corrected_at` set; two successive corrections produce two ordered events rows
-- [ ] Full pytest suite green
+- [x] 409 contract pinned by test (duplicate → 409 with detail; no duplicate row)
+- [x] Patient B cannot log/correct against patient A's reminder or log (403)
+- [x] Successful log and correction both sync `scheduled_reminders.status` in the same transaction
+- [x] Ad-hoc: creates slot+log atomically; same-key retry returns original 201, no duplicate; 400 on non-PRN or discontinued med
+- [x] Correction: status updated, event appended, `corrected_at` set; two successive corrections produce two ordered events rows
+- [x] Full pytest suite green
 
 ## Covers
 
