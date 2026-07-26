@@ -1,9 +1,11 @@
-from datetime import datetime, time, timedelta
-from typing import Final
 import re
-from sqlalchemy.orm import Session
-from app import models
+from datetime import date, datetime, time, timedelta
+from typing import Final
 
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+
+from app import models
 
 FREQUENCY_TIMES: Final[dict[str, list[time]]] = {
     "QD":  [time(8, 0)],
@@ -47,6 +49,52 @@ def parse_duration_days(duration: str | None) -> int:
             pass
 
     return 7
+
+
+def create_scheduled_reminders_for_day(
+    db: Session, medication: models.Medication, day_date: date
+) -> list[models.ScheduledReminder]:
+    """
+    Per-day variant of create_scheduled_reminders_for_medication, used by the
+    agenda endpoint's ensure-on-read path (spec E2).
+
+    Idempotent: check-then-insert on the natural key (medication_id,
+    scheduled_time); each insert runs in a SAVEPOINT so a concurrent request
+    that wins the race is absorbed via IntegrityError instead of failing the
+    read. Returns the reminders this call actually created.
+    """
+    times = times_for_frequency(medication.schedule_text)
+    if not times:
+        return []  # PRN — no reminders
+
+    created = []
+    for t in times:
+        scheduled_dt = datetime.combine(day_date, t)
+        exists = (
+            db.query(models.ScheduledReminder)
+            .filter(
+                models.ScheduledReminder.medication_id == medication.id,
+                models.ScheduledReminder.scheduled_time == scheduled_dt,
+            )
+            .first()
+        )
+        if exists:
+            continue
+        reminder = models.ScheduledReminder(
+            medication_id=medication.id,
+            scheduled_time=scheduled_dt,
+            status="pending",
+        )
+        try:
+            with db.begin_nested():
+                db.add(reminder)
+            created.append(reminder)
+        except IntegrityError:
+            # Lost a concurrent insert race — the slot now exists; treat as
+            # already materialized.
+            continue
+
+    return created
 
 
 def create_scheduled_reminders_for_medication(

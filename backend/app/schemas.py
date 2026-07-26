@@ -1,7 +1,7 @@
 import enum
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_serializer
 
 from app.models import DoseStatus
 
@@ -317,6 +317,16 @@ class AgendaSlot(BaseModel):
     logged_at: datetime | None = None
     dose_log_id: str | None = None
     previous_status: DoseStatus | None = None
+
+    @field_serializer("scheduled_time", "logged_at")
+    def _serialize_as_utc_z(self, value: datetime | None) -> str | None:
+        # Spec E2: stored naive datetimes are interpreted as UTC and
+        # serialized with a trailing Z.
+        if value is None:
+            return None
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        return value.isoformat().replace("+00:00", "Z")
 
 
 class AgendaPrnMedication(BaseModel):

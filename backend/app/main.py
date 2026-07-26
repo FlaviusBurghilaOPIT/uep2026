@@ -9,6 +9,7 @@ from app.database import get_db
 from app.dependencies import get_current_user
 from app.routers import (
     adherence,
+    agenda,
     ai,
     analytics,
     auth,
@@ -68,6 +69,7 @@ def get_me_root(current_user: models.User = Depends(get_current_user)):
 
 
 app.include_router(auth.router)
+app.include_router(agenda.router)
 app.include_router(patients.router)
 app.include_router(cases.router)
 app.include_router(medications.router)

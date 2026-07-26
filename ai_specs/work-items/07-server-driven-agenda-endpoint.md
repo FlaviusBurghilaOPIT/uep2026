@@ -24,12 +24,12 @@ New endpoint `GET /patients/me/agenda?date=YYYY-MM-DD` in a new `app/routers/age
 
 ## Acceptance criteria
 
-- [ ] Returns real slots with computed states at frozen `now` (test: upcoming/due/missed/taken/skipped)
-- [ ] Ensure-on-read materializes missing slots exactly once; concurrent double-call safe; slot_ids stable across calls
-- [ ] PRN meds appear only in `prn`
-- [ ] 403 for clinician role; slots only from the JWT user's own cases (two-patient fixture)
-- [ ] `previous_status` populated after a correction (integration with WI 08's events)
-- [ ] Full pytest suite green
+- [x] Returns real slots with computed states at frozen `now` (test: upcoming/due/missed/taken/skipped)
+- [x] Ensure-on-read materializes missing slots exactly once; concurrent double-call safe; slot_ids stable across calls
+- [x] PRN meds appear only in `prn`
+- [x] 403 for clinician role; slots only from the JWT user's own cases (two-patient fixture)
+- [x] `previous_status` populated after a correction (integration with WI 08's events)
+- [x] Full pytest suite green
 
 ## Covers
 
