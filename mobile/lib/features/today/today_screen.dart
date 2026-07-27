@@ -28,8 +28,6 @@ class TodayScreen extends ConsumerStatefulWidget {
 class _TodayScreenState extends ConsumerState<TodayScreen> {
   bool _isLoading = false;
   bool _dismissedCelebration = false;
-  final Map<int, Timer> _undoTimers = {};
-  final Map<int, String> _previousStatuses = {};
 
   List<Map<String, dynamic>> _medications = [
     {
@@ -83,9 +81,6 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
 
   @override
   void dispose() {
-    for (final timer in _undoTimers.values) {
-      timer.cancel();
-    }
     _notificationSubscription?.cancel();
     _scrollController.dispose();
     super.dispose();
@@ -226,14 +221,14 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       _medications.isNotEmpty &&
       _medications.every((m) => m['status'] != 'pending');
 
+  /// NOTE (WI 11 interim): the notifier is now the ONLY writer for adherence.
+  /// This legacy card list is replaced entirely in WI 13; until then taps
+  /// update local display state only and deliberately perform NO server write.
   Future<void> _updateStatus(int index, String newStatus) async {
     final previousStatus = _medications[index]['status'] as String;
-    _undoTimers[index]?.cancel();
-    _undoTimers.remove(index);
 
     setState(() {
       _medications[index]['status'] = newStatus;
-      _previousStatuses[index] = previousStatus;
     });
 
     try {
@@ -267,77 +262,15 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           label: 'Undo',
           textColor: AppColors.primaryGreen,
           onPressed: () {
-            _undoTimers[index]?.cancel();
-            _undoTimers.remove(index);
             if (mounted) {
               setState(() {
                 _medications[index]['status'] = previousStatus;
               });
             }
-            final medId = _medications[index]['id']?.toString() ?? 'med_$index';
-            try {
-              ref
-                  .read(todayAgendaNotifierProvider.notifier)
-                  .undoDoseLog(
-                    reminderId: medId,
-                    previousStatus: DoseStatus.values.firstWhere(
-                      (e) => e.name == previousStatus,
-                      orElse: () => DoseStatus.pending,
-                    ),
-                  );
-            } catch (_) {}
           },
         ),
       ),
     );
-
-    _undoTimers[index] = Timer(const Duration(seconds: 5), () async {
-      _undoTimers.remove(index);
-      final medId = _medications[index]['id'];
-      if (medId != null) {
-        try {
-          final api = ref.read(apiServiceProvider);
-          final remindersRes = await api.get('/reminders');
-          String? reminderId;
-          if (remindersRes.statusCode == 200) {
-            final List reminders = jsonDecode(remindersRes.body);
-            final match = reminders.firstWhere(
-              (r) => r['medication_id'] == medId,
-              orElse: () => null,
-            );
-            if (match != null) {
-              reminderId = match['id'];
-            }
-          }
-          if (reminderId == null) {
-            final createRes = await api.post('/reminders', {
-              'medication_id': medId,
-              'scheduled_time': DateTime.now().toIso8601String(),
-            });
-            if (createRes.statusCode == 200) {
-              reminderId = jsonDecode(createRes.body)['id'];
-            }
-          }
-          if (reminderId != null) {
-            await api.post(
-              '/adherence/log?scheduled_reminder_id=$reminderId&status=$newStatus',
-              {},
-            );
-          }
-        } catch (_) {}
-      }
-
-      try {
-        final reminderId = medId?.toString() ?? 'med_$index';
-        final statusEnum = DoseStatus.values.firstWhere(
-          (e) => e.name == newStatus,
-          orElse: () => DoseStatus.taken,
-        );
-        ref
-            .read(todayAgendaNotifierProvider.notifier)
-            .commitDoseLog(reminderId: reminderId, status: statusEnum);
-      } catch (_) {}
-    });
   }
 
   @override
@@ -345,11 +278,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     final auth = ref.watch(authProvider);
     final agendaState =
         ref.watch(todayAgendaNotifierProvider).valueOrNull ??
-        const AgendaState(
-          medications: AsyncValue.data([]),
-          doseStatuses: {},
-          offlineQueue: [],
-        );
+        const AgendaState();
     final firstName = auth.fullName?.split(' ').first ?? 'User';
     final now = DateTime.now();
     final l10n = AppLocalizations.of(context);

@@ -25,11 +25,19 @@ Rewrite `TodayAgendaNotifier` as the single owner of all Today-screen reads and 
 
 ## Acceptance criteria
 
-- [ ] All spec §11 unit tests pass against `FakeApiService`: optimistic apply; per-slot write lock; 409 reconcile; rollback on final failure; undo cancels write; correction path; queue ordering (creates→corrections); ad-hoc idempotency-key reuse; boot flush; empty/stale/error source-state mapping
-- [ ] Offline queue survives an app kill (persisted; covered by a test that simulates restart with a fresh notifier against the same store)
-- [ ] No screen code performs adherence writes — notifier is the only writer (grep-verifiable)
-- [ ] Measurement events from spec §5 fire at the listed points (no PHI)
-- [ ] `flutter analyze` clean, `flutter test` green
+- [x] All spec §11 unit tests pass against `FakeApiService`: optimistic apply; per-slot write lock; 409 reconcile; rollback on final failure; undo cancels write; correction path; queue ordering (creates→corrections); ad-hoc idempotency-key reuse; boot flush; empty/stale/error source-state mapping (19 tests in `test/unit/today_agenda_notifier_test.dart`)
+- [x] Offline queue survives an app kill (persisted; covered by a test that simulates restart with a fresh notifier against the same store)
+- [x] No screen code performs adherence writes — notifier is the only writer (grep-verifiable)
+- [x] Measurement events from spec §5 fire at the listed points (no PHI)
+- [x] `flutter analyze` clean, `flutter test` green
+
+## Implementation notes (2026-07-27)
+
+- `ApiService` gained typed calls `getPatientAgenda` / `logAdherence` / `logAdhocAdherence` / `correctAdherenceLog` implemented per backend spec §6 E1/E2; `FakeApiService` extended with matching handler seams.
+- Persistence via SharedPreferences (existing convention): last-good agenda JSON + offline queue under `today_*_v1` keys.
+- **Deviation:** no `connectivity_plus` dependency added — "connectivity restore" flush is covered by boot flush + flush-on-successful-fetch + a 30s retry timer that runs only while the queue is non-empty.
+- **Deviation:** C8 side-effect prompt triggers on an immediately-committed `skipped` write (201); offline-queued skips do not prompt on later flush (patient context is gone by then).
+- Interim: `today_screen.dart` legacy card list no longer performs any server write; full screen rewire lands in WI 13.
 
 ## Covers
 
