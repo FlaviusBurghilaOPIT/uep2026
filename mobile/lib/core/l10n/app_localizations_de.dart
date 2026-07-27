@@ -506,4 +506,17 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get checkinErrorRetry =>
       'Wir konnten Ihren Check-in nicht speichern. Tippen Sie, um es erneut zu versuchen.';
+
+  @override
+  String get todayTimeJustNow => 'gerade eben';
+
+  @override
+  String todayTimeMinutesAgo(int count) {
+    return 'vor $count Min.';
+  }
+
+  @override
+  String todayTimeHoursAgo(int count) {
+    return 'vor $count Std.';
+  }
 }

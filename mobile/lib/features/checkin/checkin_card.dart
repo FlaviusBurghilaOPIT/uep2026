@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,9 +11,10 @@ import '../../core/network/api_service.dart';
 import '../../core/providers/app_providers.dart';
 import 'providers/symptom_checkin_notifier.dart';
 
-/// Top action card embedding the daily feeling check-in on `Today`.
-/// Reuses [symptomCheckinNotifierProvider] for submission — the original
-/// full-screen `CheckInScreen` flow is not rewritten.
+/// Top action card embedding the daily feeling check-in on `Today` — the
+/// one check-in surface in the app (the orphan full-screen `CheckInScreen`
+/// is deleted per spec §9). Posts via [symptomCheckinNotifierProvider];
+/// shows an error+retry state when the write fails (spec §7).
 class CheckInCard extends ConsumerStatefulWidget {
   const CheckInCard({super.key});
 
@@ -44,7 +46,12 @@ class _CheckInCardState extends ConsumerState<CheckInCard> {
     if (caseId == null || !mounted) return;
     await ref
         .read(symptomCheckinNotifierProvider.notifier)
-        .submit(caseId: caseId, severity: moodValue);
+        .submit(caseId: caseId, feeling: moodValue);
+  }
+
+  void _retry() {
+    if (_selectedMood == null) return;
+    unawaited(_selectMood(_selectedMood!));
   }
 
   @override
@@ -53,6 +60,7 @@ class _CheckInCardState extends ConsumerState<CheckInCard> {
     final checkinState = ref.watch(symptomCheckinNotifierProvider);
     final isSuccess = checkinState.valueOrNull == true;
     final isSubmitting = checkinState.isLoading;
+    final isError = checkinState.hasError;
 
     final moods = <(String, String)>[
       ('great', l10n.checkinGreatOption),
@@ -99,6 +107,29 @@ class _CheckInCardState extends ConsumerState<CheckInCard> {
                   ),
                 ),
               ],
+            )
+          else if (isError)
+            GestureDetector(
+              key: const Key('checkin_error_retry'),
+              onTap: _retry,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    color: AppColors.errorRed,
+                    size: AppSpacing.iconMd,
+                  ),
+                  SizedBox(width: AppSpacing.hSm),
+                  Expanded(
+                    child: Text(
+                      l10n.checkinErrorRetry,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.errorRed,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             )
           else
             Wrap(

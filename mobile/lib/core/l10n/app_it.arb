@@ -292,5 +292,22 @@
   "todayOpenSettings": "Apri Impostazioni",
   "remindersOffBanner": "I promemoria sono disattivati. Puoi registrare le dosi manualmente — oppure attivare i promemoria nelle Impostazioni.",
   "emptyPlanMessage": "Il tuo team di cura sta preparando il tuo piano. Non devi fare nulla per ora.",
-  "checkinErrorRetry": "Non siamo riusciti a salvare il tuo check-in. Tocca per riprovare."
+  "checkinErrorRetry": "Non siamo riusciti a salvare il tuo check-in. Tocca per riprovare.",
+  "todayTimeJustNow": "proprio ora",
+  "todayTimeMinutesAgo": "{count} min fa",
+  "@todayTimeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "todayTimeHoursAgo": "{count} h fa",
+  "@todayTimeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

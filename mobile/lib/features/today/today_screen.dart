@@ -1,458 +1,291 @@
 import 'dart:async';
-import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_text_styles.dart';
-import '../../core/constants/app_spacing.dart';
-import '../../core/constants/app_strings.dart';
-import '../../core/navigation/app_routes.dart';
-import '../../core/providers/app_providers.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import '../../core/l10n/app_localizations.dart';
-import '../../core/notifications/notification_service.dart';
-import '../../core/network/api_service.dart';
-import '../checkin/checkin_card.dart';
-import 'fda_warning_card.dart';
-import 'providers/today_agenda_notifier.dart';
+import 'package:intl/intl.dart';
 
+import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_spacing.dart';
+import '../../core/constants/app_text_styles.dart';
+import '../../core/l10n/app_localizations.dart';
+import '../../core/navigation/app_routes.dart';
+import '../../core/notifications/notification_service.dart';
+import '../../core/providers/app_providers.dart';
+import '../../core/settings/settings_opener.dart';
+import '../../core/widgets/app_skeleton_loader.dart';
+import '../checkin/checkin_card.dart';
+import 'correction_sheet.dart';
+import 'dose_format.dart';
+import 'dose_group.dart';
+import 'dose_slot_card.dart';
+import 'fda_warning_card.dart';
+import 'providers/fda_warning_provider.dart';
+import 'providers/today_agenda_notifier.dart';
+import 'side_effect_prompt_card.dart';
+
+/// The clinical home screen (spec §7). Server truth in, intents out — every
+/// dose write goes through [TodayAgendaNotifier]; this widget never talks to
+/// `ApiService` directly and renders no fabricated data.
 class TodayScreen extends ConsumerStatefulWidget {
-  const TodayScreen({super.key});
+  const TodayScreen({super.key, DateTime Function()? clock})
+    : _clock = clock ?? DateTime.now;
+
+  /// Testable clock seam for the time-of-day greeting/date line — defaults
+  /// to [DateTime.now] in production.
+  final DateTime Function() _clock;
 
   @override
   ConsumerState<TodayScreen> createState() => _TodayScreenState();
 }
 
 class _TodayScreenState extends ConsumerState<TodayScreen> {
-  bool _isLoading = false;
   bool _dismissedCelebration = false;
-
-  List<Map<String, dynamic>> _medications = [
-    {
-      'id': null,
-      'name': 'Ibuprofen',
-      'dosage': '400 mg · 3× daily',
-      'time': '08:00',
-      'status': 'pending',
-      'hasWarning': false,
-    },
-    {
-      'id': null,
-      'name': 'Amoxicillin',
-      'dosage': '500 mg · 2× daily',
-      'time': '13:00',
-      'status': 'pending',
-      'hasWarning': true,
-    },
-    {
-      'id': null,
-      'name': 'Metoprolol',
-      'dosage': '25 mg · 1× daily',
-      'time': '20:00',
-      'status': 'pending',
-      'hasWarning': false,
-    },
-  ];
-
-  String _fdaSource = 'Official FDA Drug Safety Info';
-  String? _fdaRetrievedAt;
-  String _fdaMessage =
-      'New drug interaction warning for Amoxicillin. Tap info to learn more.';
-
-  final ScrollController _scrollController = ScrollController();
+  final Set<DoseGroup> _expandedGroups = {};
   final Map<String, GlobalKey> _cardKeys = {};
   StreamSubscription<NotificationResponse>? _notificationSubscription;
+
+  static const _terminal = {
+    SlotState.taken,
+    SlotState.skipped,
+    SlotState.missed,
+  };
+  static const _pinnable = {SlotState.due, SlotState.overdue};
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadData();
+      unawaited(ref.read(todayAgendaNotifierProvider.notifier).start());
     });
     _notificationSubscription = NotificationService
         .instance
         .notificationResponseStream
-        .listen((response) {
-          _handleNotificationResponse(response);
-        });
+        .listen(_handleNotificationResponse);
   }
 
   @override
   void dispose() {
     _notificationSubscription?.cancel();
-    _scrollController.dispose();
     super.dispose();
   }
 
   void _handleNotificationResponse(NotificationResponse response) {
-    final reminderId = NotificationService.parseReminderId(
-      response.payload ?? '',
-    );
-    if (reminderId != null) {
-      final key = _cardKeys[reminderId];
-      if (key != null && key.currentContext != null) {
-        Scrollable.ensureVisible(
-          key.currentContext!,
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeInOut,
-        );
-      }
-      final index = _medications.indexWhere((m) => m['id'] == reminderId);
-      if (index != -1) {
-        setState(() {
-          _medications[index]['status'] = 'taken';
-        });
-      }
-
-      if (mounted) {
-        final l10n = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.primaryGreen,
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle, color: Colors.white),
-                SizedBox(width: 8.w),
-                Text(
-                  l10n.doseStatusTaken,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      }
+    final slotId = NotificationService.parseReminderId(response.payload ?? '');
+    if (slotId == null) return;
+    final key = _cardKeys[slotId];
+    if (key != null && key.currentContext != null) {
+      Scrollable.ensureVisible(
+        key.currentContext!,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
     }
+    // A background interactive action may have changed server truth.
+    unawaited(ref.read(todayAgendaNotifierProvider.notifier).loadAgenda());
   }
 
-  Future<void> _loadData() async {
-    final api = ref.read(apiServiceProvider);
-    try {
-      final fdaRes = await api.get('/fda/drug/Amoxicillin');
-      if (fdaRes.statusCode == 200) {
-        final Map<String, dynamic> data = jsonDecode(fdaRes.body);
-        if (mounted) {
-          setState(() {
-            if (data['source'] != null) {
-              _fdaSource = data['source'].toString();
-            }
-            if (data['summary'] != null) {
-              _fdaMessage = data['summary'].toString();
-            }
-            if (data['retrieved_at'] != null) {
-              _fdaRetrievedAt = data['retrieved_at'].toString();
-            } else if (data['timestamp'] != null) {
-              _fdaRetrievedAt = data['timestamp'].toString();
-            }
-          });
-        }
-      }
-    } catch (_) {}
-
-    final auth = ref.read(authProvider);
-    String? caseId = auth.caseId;
-    if (caseId == null && auth.patientId != null) {
-      try {
-        final caseRes = await api.get('/patients/${auth.patientId}/case');
-        if (caseRes.statusCode == 200) {
-          caseId = jsonDecode(caseRes.body)['id'];
-        }
-      } catch (_) {}
-    }
-
-    if (caseId != null) {
-      setState(() => _isLoading = true);
-      try {
-        final res = await api.get('/cases/$caseId/medications');
-        if (res.statusCode == 200) {
-          final List list = jsonDecode(res.body);
-          if (list.isNotEmpty) {
-            setState(() {
-              _medications = list
-                  .map<Map<String, dynamic>>(
-                    (m) => {
-                      'id': m['id'],
-                      'name': m['name'],
-                      'dosage':
-                          '${m['dose']} · ${_localizedFrequency(context, (m['frequency'] ?? m['schedule_text'] ?? 'QD') as String)}',
-                      'time': '08:00',
-                      'status': 'pending',
-                      'hasWarning': false,
-                    },
-                  )
-                  .toList();
-            });
-          }
-        }
-      } catch (_) {
-      } finally {
-        if (mounted) setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  String _localizedFrequency(BuildContext context, String code) {
+  Future<void> _logDose(AgendaSlot slot, DoseLogStatus status) async {
     final l10n = AppLocalizations.of(context);
-    switch (code.toUpperCase()) {
-      case 'QD':
-        return l10n.frequencyQD;
-      case 'BID':
-        return l10n.frequencyBID;
-      case 'TID':
-        return l10n.frequencyTID;
-      case 'QID':
-        return l10n.frequencyQID;
-      case 'PRN':
-        return l10n.frequencyPRN;
-      default:
-        return code;
-    }
-  }
-
-  int get _takenCount =>
-      _medications.where((m) => m['status'] == 'taken').length;
-
-  bool get _allDosesCompleted =>
-      _medications.isNotEmpty &&
-      _medications.every((m) => m['status'] != 'pending');
-
-  /// NOTE (WI 11 interim): the notifier is now the ONLY writer for adherence.
-  /// This legacy card list is replaced entirely in WI 13; until then taps
-  /// update local display state only and deliberately perform NO server write.
-  Future<void> _updateStatus(int index, String newStatus) async {
-    final previousStatus = _medications[index]['status'] as String;
-
-    setState(() {
-      _medications[index]['status'] = newStatus;
-    });
-
     try {
       HapticFeedback.mediumImpact();
-    } catch (_) {}
-
-    if (newStatus == 'pending') {
-      return;
+    } catch (_) {
+      // Haptics unavailable on this platform/host — non-fatal.
     }
-
-    final l10n = AppLocalizations.of(context);
+    ref.read(todayAgendaNotifierProvider.notifier).logDose(slot, status);
+    if (!mounted) return;
     final messenger = ScaffoldMessenger.of(context);
-
-    final String statusDisplay = newStatus == 'taken'
-        ? l10n.doseStatusTaken
-        : (newStatus == 'skipped'
-              ? l10n.doseStatusSkipped
-              : l10n.doseStatusMissed);
-
     messenger.hideCurrentSnackBar();
-
     messenger.showSnackBar(
       SnackBar(
         duration: const Duration(seconds: 5),
         backgroundColor: AppColors.slateDark,
         content: Text(
-          'Logged as $statusDisplay.',
+          l10n.todayLoggedAs(localizedDoseStatus(l10n, status.name)),
           style: const TextStyle(color: Colors.white),
         ),
         action: SnackBarAction(
-          label: 'Undo',
+          label: l10n.todayLogUndo,
           textColor: AppColors.primaryGreen,
-          onPressed: () {
-            if (mounted) {
-              setState(() {
-                _medications[index]['status'] = previousStatus;
-              });
-            }
-          },
+          onPressed: () => ref
+              .read(todayAgendaNotifierProvider.notifier)
+              .undoDoseLog(slot.slotId),
         ),
       ),
+    );
+  }
+
+  void _openCorrection(AgendaSlot slot) {
+    ref.read(todayAgendaNotifierProvider.notifier).trackCorrectionOpened(slot);
+    CorrectionSheet.show(
+      context,
+      slot: slot,
+      onCorrect: (status) {
+        Navigator.of(context).pop();
+        ref.read(todayAgendaNotifierProvider.notifier).correctLog(slot, status);
+      },
+      onKeep: () => Navigator.of(context).pop(),
+    );
+  }
+
+  void _showFdaDetailSheet(FdaWarning warning) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        final l10n = AppLocalizations.of(sheetContext);
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 24.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(warning.source, style: AppTextStyles.label),
+                SizedBox(height: AppSpacing.sm),
+                Text(warning.message, style: AppTextStyles.bodyMedium),
+                if (warning.retrievedAt != null) ...[
+                  SizedBox(height: AppSpacing.md),
+                  Text(
+                    l10n.fdaRetrievedTimestamp(warning.retrievedAt!),
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.greyText,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
-    final agendaState =
-        ref.watch(todayAgendaNotifierProvider).valueOrNull ??
-        const AgendaState();
-    final firstName = auth.fullName?.split(' ').first ?? 'User';
-    final now = DateTime.now();
+    final agendaAsync = ref.watch(todayAgendaNotifierProvider);
+    final agenda = agendaAsync.valueOrNull ?? const AgendaState();
     final l10n = AppLocalizations.of(context);
-    final greeting = now.hour < 12
-        ? l10n.greetingMorning
-        : (now.hour < 17 ? l10n.greetingAfternoon : l10n.greetingEvening);
+
+    ref.listen<AsyncValue<AgendaState>>(todayAgendaNotifierProvider, (
+      previous,
+      next,
+    ) {
+      final prevState = previous?.valueOrNull;
+      final nextState = next.valueOrNull;
+      if (nextState == null) return;
+
+      // Rollback error snackbar (final write failure after retry).
+      final nextRollback = nextState.rollbackErrorSlotId;
+      if (nextRollback != null &&
+          nextRollback != prevState?.rollbackErrorSlotId) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.todayLogRollbackError)));
+        ref.read(todayAgendaNotifierProvider.notifier).acknowledgeRollback();
+      }
+    });
+
+    final isInitialLoading =
+        agenda.sourceState == AgendaSourceState.loading &&
+        agenda.slots.isEmpty &&
+        agenda.prn.isEmpty;
 
     return Scaffold(
+      backgroundColor: AppColors.scaffoldBg,
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: _loadData,
-          child: SingleChildScrollView(
-            controller: _scrollController,
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildOfflineSyncBanner(context, agendaState),
-                _buildTopBar(context, auth),
-                _buildGreetingCard(greeting, firstName),
-                if (_allDosesCompleted && !_dismissedCelebration)
-                  _buildCelebratoryCard(),
-                SizedBox(height: AppSpacing.lg),
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: AppSpacing.screenPaddingH,
-                  ),
-                  child: const CheckInCard(),
-                ),
-                SizedBox(height: AppSpacing.lg),
-                _buildFdaAlert(context),
-                SizedBox(height: AppSpacing.xl),
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: AppSpacing.screenPaddingH,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        AppStrings.todaysMedications,
-                        style: AppTextStyles.label,
-                      ),
-                      if (_isLoading)
-                        SizedBox(
-                          width: 14.w,
-                          height: 14.w,
-                          child: const CircularProgressIndicator(
-                            strokeWidth: 2,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: AppSpacing.md),
-                for (int i = 0; i < _medications.length; i++) ...[
-                  _buildMedCard(context, index: i),
-                  if (i < _medications.length - 1)
-                    SizedBox(height: AppSpacing.md),
-                ],
-                SizedBox(height: AppSpacing.lg),
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: AppSpacing.screenPaddingH,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.access_time_rounded,
-                        size: 16.sp,
-                        color: AppColors.greyLight,
-                      ),
-                      SizedBox(width: 6.w),
-                      Expanded(
-                        child: Text(
-                          'Next reminder: ${_medications.firstWhere((m) => m['status'] == 'pending', orElse: () => _medications.last)['name']} at ${_medications.firstWhere((m) => m['status'] == 'pending', orElse: () => _medications.last)['time']}',
-                          style: AppTextStyles.bodySmall,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 100.h),
-              ],
-            ),
-          ),
+          onRefresh: () =>
+              ref.read(todayAgendaNotifierProvider.notifier).loadAgenda(),
+          child: isInitialLoading
+              ? _buildSkeleton(auth, l10n)
+              : _buildBody(auth, agenda, l10n),
         ),
       ),
     );
   }
 
-  Widget _buildOfflineSyncBanner(
-    BuildContext context,
-    AgendaState agendaState,
+  // -- Skeleton (loading, no cache) ------------------------------------------
+
+  Widget _buildSkeleton(AuthNotifier auth, AppLocalizations l10n) {
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: EdgeInsets.only(bottom: 100.h),
+      children: [
+        _buildTopBar(auth),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
+          child: AppSkeletonLoader(
+            key: const Key('today_skeleton_greeting'),
+            height: 150.h,
+            borderRadius: AppSpacing.radiusLg,
+          ),
+        ),
+        SizedBox(height: AppSpacing.lg),
+        for (int i = 0; i < 3; i++)
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              AppSpacing.screenPaddingH,
+              0,
+              AppSpacing.screenPaddingH,
+              AppSpacing.md,
+            ),
+            child: AppSkeletonLoader(
+              height: 120.h,
+              borderRadius: AppSpacing.radiusMd,
+            ),
+          ),
+      ],
+    );
+  }
+
+  // -- Main body --------------------------------------------------------------
+
+  Widget _buildBody(
+    AuthNotifier auth,
+    AgendaState agenda,
+    AppLocalizations l10n,
   ) {
-    if (agendaState.offlineQueue.isEmpty) {
-      return const SizedBox.shrink();
-    }
-    return Container(
-      width: double.infinity,
-      color: AppColors.warningAmber.withValues(alpha: 0.15),
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
-      child: Row(
-        children: [
-          Icon(
-            Icons.wifi_off_rounded,
-            color: AppColors.warningAmber,
-            size: 18.sp,
-          ),
-          SizedBox(width: 8.w),
-          Expanded(
-            child: Text(
-              'Saved on your device. Will update care team when online.',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.black,
-                fontWeight: FontWeight.w500,
-              ),
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: EdgeInsets.only(bottom: 100.h),
+      children: [
+        _buildTopBar(auth),
+        _buildGreetingCard(agenda, l10n),
+        ..._buildBanners(agenda, l10n),
+        if (agenda.c8PromptSlotId != null)
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.screenPaddingH,
+              vertical: AppSpacing.sm,
             ),
+            child: SideEffectPromptCard(slotId: agenda.c8PromptSlotId!),
           ),
-        ],
-      ),
+        Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.screenPaddingH,
+            vertical: AppSpacing.sm,
+          ),
+          child: const CheckInCard(),
+        ),
+        _buildFdaSection(),
+        if (agenda.sourceState == AgendaSourceState.error)
+          _buildErrorCard(l10n)
+        else if (agenda.sourceState == AgendaSourceState.empty)
+          _buildEmptyState(l10n)
+        else
+          ..._buildSlotsSection(agenda, l10n),
+      ],
     );
   }
 
-  Widget _buildCelebratoryCard() {
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: AppSpacing.screenPaddingH,
-        vertical: AppSpacing.sm,
-      ),
-      child: Container(
-        padding: EdgeInsets.all(14.w),
-        decoration: BoxDecoration(
-          color: AppColors.lightGreen.withValues(alpha: 0.8),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          border: Border.all(color: AppColors.primaryGreen, width: 1),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.stars_rounded,
-              color: AppColors.primaryGreen,
-              size: 24.sp,
-            ),
-            SizedBox(width: 10.w),
-            Expanded(
-              child: Text(
-                'All doses for today completed! Thank you for updating your care team.',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.primaryGreen,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            IconButton(
-              icon: Icon(
-                Icons.close,
-                size: 18.sp,
-                color: AppColors.primaryGreen,
-              ),
-              onPressed: () {
-                setState(() {
-                  _dismissedCelebration = true;
-                });
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // -- Top bar (spec §7: "RemoteCare" + real fullName, avatar → /profile) ----
 
-  Widget _buildTopBar(BuildContext context, AuthNotifier auth) {
+  Widget _buildTopBar(AuthNotifier auth) {
+    final fullName = auth.fullName?.trim();
     return Padding(
       padding: EdgeInsets.fromLTRB(
         AppSpacing.screenPaddingH,
@@ -466,49 +299,17 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(AppStrings.remotecare, style: AppTextStyles.heading3),
-                Text(
-                  '${auth.fullName ?? 'User'} · Post-op',
-                  style: AppTextStyles.bodySmall,
-                ),
+                Text('RemoteCare', style: AppTextStyles.heading3),
+                if (fullName != null && fullName.isNotEmpty)
+                  Text(
+                    fullName,
+                    style: AppTextStyles.bodySmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
               ],
             ),
           ),
-          GestureDetector(
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Notifications — coming soon')),
-              );
-            },
-            child: Container(
-              width: 40.w,
-              height: 40.w,
-              decoration: const BoxDecoration(shape: BoxShape.circle),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Icon(
-                    Icons.notifications_outlined,
-                    color: AppColors.black,
-                    size: AppSpacing.iconLg,
-                  ),
-                  Positioned(
-                    right: 8.w,
-                    top: 8.h,
-                    child: Container(
-                      width: 8.w,
-                      height: 8.w,
-                      decoration: const BoxDecoration(
-                        color: AppColors.errorRed,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          SizedBox(width: 4.w),
           GestureDetector(
             onTap: () => AppRoutes.navigateTo(context, AppRoutes.profile),
             child: Container(
@@ -531,9 +332,26 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     );
   }
 
-  Widget _buildGreetingCard(String greeting, String firstName) {
-    final total = _medications.length;
-    final progress = total > 0 ? _takenCount / total : 0.0;
+  // -- Greeting card (spec §7: real progress, real date, no fabricated data) -
+
+  Widget _buildGreetingCard(AgendaState agenda, AppLocalizations l10n) {
+    final auth = ref.watch(authProvider);
+    final now = widget._clock();
+    final greeting = now.hour < 12
+        ? l10n.greetingMorning
+        : (now.hour < 17 ? l10n.greetingAfternoon : l10n.greetingEvening);
+    final trimmedName = auth.fullName?.trim();
+    final firstName = (trimmedName != null && trimmedName.isNotEmpty)
+        ? trimmedName.split(' ').first
+        : null;
+    final greetingLine = firstName == null
+        ? '$greeting.'
+        : '$greeting, $firstName';
+    final locale = Localizations.localeOf(context).toString();
+    final dateLine = DateFormat('EEEE, MMMM d', locale).format(now);
+
+    final taken = agenda.slots.where((s) => s.state == SlotState.taken).length;
+    final total = agenda.slots.length;
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
@@ -548,7 +366,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'TODAY · JUL ${DateTime.now().day}',
+              dateLine.toUpperCase(),
               style: AppTextStyles.labelSmall.copyWith(
                 color: AppColors.white.withValues(alpha: 0.7),
                 letterSpacing: 1.5,
@@ -556,7 +374,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             ),
             SizedBox(height: AppSpacing.sm),
             Text(
-              '$greeting, $firstName',
+              greetingLine,
               style: AppTextStyles.heading2.copyWith(color: AppColors.white),
             ),
             SizedBox(height: AppSpacing.md),
@@ -566,7 +384,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(4.r),
                     child: LinearProgressIndicator(
-                      value: progress,
+                      value: total > 0 ? taken / total : 0.0,
                       backgroundColor: AppColors.white.withValues(alpha: 0.2),
                       valueColor: const AlwaysStoppedAnimation<Color>(
                         AppColors.white,
@@ -577,7 +395,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                 ),
                 SizedBox(width: AppSpacing.hMd),
                 Text(
-                  '$_takenCount/$total doses',
+                  l10n.todayProgressDoses(taken, total),
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.white,
                     fontWeight: FontWeight.w600,
@@ -585,11 +403,157 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                 ),
               ],
             ),
-            SizedBox(height: AppSpacing.sm),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // -- Banners region (max one per kind, spec §7) -----------------------------
+
+  String _relativeTime(DateTime? syncedAt, AppLocalizations l10n) {
+    if (syncedAt == null) return l10n.todayTimeJustNow;
+    final diff = DateTime.now().difference(syncedAt);
+    if (diff.inMinutes < 1) return l10n.todayTimeJustNow;
+    if (diff.inMinutes < 60) return l10n.todayTimeMinutesAgo(diff.inMinutes);
+    return l10n.todayTimeHoursAgo(diff.inHours);
+  }
+
+  List<Widget> _buildBanners(AgendaState agenda, AppLocalizations l10n) {
+    final notifier = ref.read(todayAgendaNotifierProvider.notifier);
+    final banners = <Widget>[];
+
+    if (agenda.remindersOff) {
+      banners.add(
+        _TodayBanner(
+          key: const Key('banner_reminders_off'),
+          icon: Icons.notifications_off_outlined,
+          color: AppColors.warningAmber,
+          text: l10n.remindersOffBanner,
+          actionLabel: l10n.todayOpenSettings,
+          onAction: () =>
+              ref.read(settingsOpenerProvider).openNotificationSettings(),
+        ),
+      );
+    }
+    if (agenda.planUpdated) {
+      banners.add(
+        _TodayBanner(
+          key: const Key('banner_plan_updated'),
+          icon: Icons.fact_check_outlined,
+          color: AppColors.infoBlue,
+          text: l10n.todayPlanUpdatedBanner,
+          onDismiss: notifier.dismissPlanUpdated,
+        ),
+      );
+    }
+    if (agenda.sourceState == AgendaSourceState.stale) {
+      banners.add(
+        _TodayBanner(
+          key: const Key('banner_stale'),
+          icon: Icons.history,
+          color: AppColors.greyText,
+          text: l10n.todayStaleBanner(_relativeTime(agenda.lastSyncedAt, l10n)),
+        ),
+      );
+    }
+    if (agenda.offlineQueue.isNotEmpty) {
+      banners.add(
+        _TodayBanner(
+          key: const Key('banner_offline'),
+          icon: Icons.cloud_off_outlined,
+          color: AppColors.warningAmber,
+          text: l10n.todayOfflineBanner,
+        ),
+      );
+    }
+    if (agenda.timezoneAdjusted) {
+      banners.add(
+        _TodayBanner(
+          key: const Key('banner_timezone'),
+          icon: Icons.public,
+          color: AppColors.infoBlue,
+          text: l10n.todayTimezoneAdjusted,
+          onDismiss: notifier.dismissTimezoneAdjusted,
+        ),
+      );
+    }
+
+    return [
+      for (final banner in banners)
+        Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.screenPaddingH,
+            vertical: 4.h,
+          ),
+          child: banner,
+        ),
+    ];
+  }
+
+  // -- FDA card (spec §7: only when real data for an on-plan med) ------------
+
+  Widget _buildFdaSection() {
+    final warning = ref.watch(fdaWarningProvider).valueOrNull;
+    if (warning == null) return const SizedBox.shrink();
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      child: FdaWarningCard(
+        title: l10n.fdaSafetyAlertTitle,
+        source: warning.source,
+        retrievedAt: warning.retrievedAt,
+        message: warning.message,
+        onTap: () => _showFdaDetailSheet(warning),
+      ),
+    );
+  }
+
+  // -- Error / empty states ----------------------------------------------------
+
+  Widget _buildErrorCard(AppLocalizations l10n) {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.screenPaddingH,
+        vertical: AppSpacing.lg,
+      ),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(20.w),
+        decoration: BoxDecoration(
+          color: AppColors.cardBg,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          border: Border.all(color: AppColors.greyDivider),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Icons.cloud_off_outlined,
+              color: AppColors.greyText,
+              size: 40.sp,
+            ),
+            SizedBox(height: AppSpacing.md),
             Text(
-              'Day 19 post-surgery · Keep it up!',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.white.withValues(alpha: 0.7),
+              l10n.todayAgendaError,
+              style: AppTextStyles.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: AppSpacing.lg),
+            SizedBox(
+              height: 48,
+              width: double.infinity,
+              child: ElevatedButton(
+                key: const Key('today_retry'),
+                onPressed: () =>
+                    ref.read(todayAgendaNotifierProvider.notifier).loadAgenda(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryGreen,
+                  foregroundColor: AppColors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  ),
+                ),
+                child: Text(l10n.todayRetry),
               ),
             ),
           ],
@@ -598,236 +562,267 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     );
   }
 
-  Widget _buildFdaAlert(BuildContext context) {
-    return FdaWarningCard(
-      source: _fdaSource,
-      retrievedAt: _fdaRetrievedAt,
-      message: _fdaMessage,
-      onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('FDA detail — coming soon')),
-        );
-      },
+  Widget _buildEmptyState(AppLocalizations l10n) {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.screenPaddingH,
+        vertical: AppSpacing.xxl,
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.event_available_outlined,
+            color: AppColors.greyLight,
+            size: 48.sp,
+          ),
+          SizedBox(height: AppSpacing.md),
+          Text(
+            l10n.emptyPlanMessage,
+            style: AppTextStyles.bodyMedium,
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: AppSpacing.sm),
+          Text(
+            l10n.todayPullToRefreshHint,
+            style: AppTextStyles.bodySmall.copyWith(color: AppColors.greyLight),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildMedCard(BuildContext context, {required int index}) {
-    final med = _medications[index];
-    final medId = (med['id'] != null && med['id'].toString().isNotEmpty)
-        ? med['id'].toString()
-        : 'med_$index';
-    final cardKey = _cardKeys.putIfAbsent(medId, () => GlobalKey());
+  // -- Dose slots: next-due pin, time-of-day groups, PRN, celebration --------
 
-    final String status = med['status'];
-    final Color badgeBg;
-    final Color badgeText;
-    final String badgeLabel;
-    final IconData? badgeIcon;
-    final l10n = AppLocalizations.of(context);
+  List<Widget> _buildSlotsSection(AgendaState agenda, AppLocalizations l10n) {
+    final widgets = <Widget>[];
 
-    switch (status) {
-      case 'taken':
-        badgeBg = AppColors.takenBg;
-        badgeText = AppColors.takenText;
-        badgeLabel = l10n.doseStatusTaken;
-        badgeIcon = Icons.check_circle;
-        break;
-      case 'missed':
-        badgeBg = AppColors.missedBg;
-        badgeText = AppColors.missedText;
-        badgeLabel = l10n.doseStatusMissed;
-        badgeIcon = Icons.close;
-        break;
-      case 'skipped':
-        badgeBg = AppColors.inputFill;
-        badgeText = AppColors.greyText;
-        badgeLabel = l10n.doseStatusSkipped;
-        badgeIcon = Icons.warning_amber_rounded;
-        break;
-      default:
-        badgeBg = AppColors.pendingBg;
-        badgeText = AppColors.pendingText;
-        badgeLabel = AppStrings.pending;
-        badgeIcon = null;
+    final allDone =
+        agenda.slots.isNotEmpty &&
+        agenda.slots.every((s) => _terminal.contains(s.state));
+    if (allDone && !_dismissedCelebration) {
+      widgets.add(_buildCelebrationCard(l10n));
     }
 
+    final pinnedCandidates =
+        agenda.slots.where((s) => _pinnable.contains(s.state)).toList()
+          ..sort((a, b) => a.scheduledTime.compareTo(b.scheduledTime));
+    final pinned = pinnedCandidates.isEmpty ? null : pinnedCandidates.first;
+    final remaining = pinned == null
+        ? agenda.slots
+        : agenda.slots.where((s) => s.slotId != pinned.slotId).toList();
+
+    if (pinned != null) {
+      widgets.add(_sectionLabel(l10n.todayDueNow));
+      widgets.add(_slotTile(pinned, agenda));
+    }
+
+    final sorted = [...remaining]
+      ..sort((a, b) => a.scheduledTime.compareTo(b.scheduledTime));
+    final groups = <DoseGroup, List<AgendaSlot>>{};
+    for (final slot in sorted) {
+      groups
+          .putIfAbsent(doseGroupFor(slot.scheduledTime.toLocal()), () => [])
+          .add(slot);
+    }
+
+    for (final group in DoseGroup.values) {
+      final slots = groups[group];
+      if (slots == null || slots.isEmpty) continue;
+      widgets.add(_sectionLabel(_groupLabel(group, l10n)));
+      final expanded = _expandedGroups.contains(group) || slots.length <= 3;
+      final visible = expanded ? slots : slots.take(3).toList();
+      for (final slot in visible) {
+        widgets.add(_slotTile(slot, agenda));
+      }
+      if (!expanded) {
+        widgets.add(_collapsedGroupToggle(group, slots.length, l10n));
+      }
+    }
+
+    if (agenda.prn.isNotEmpty) {
+      widgets.add(_sectionLabel(l10n.todayPrnSection));
+      for (final med in agenda.prn) {
+        widgets.add(_prnTile(med, agenda, l10n));
+      }
+    }
+
+    return widgets;
+  }
+
+  Widget _sectionLabel(String text) => Padding(
+    padding: EdgeInsets.fromLTRB(
+      AppSpacing.screenPaddingH,
+      AppSpacing.md,
+      AppSpacing.screenPaddingH,
+      AppSpacing.sm,
+    ),
+    child: Text(text.toUpperCase(), style: AppTextStyles.label),
+  );
+
+  String _groupLabel(DoseGroup group, AppLocalizations l10n) => switch (group) {
+    DoseGroup.morning => l10n.todayGroupMorning,
+    DoseGroup.midday => l10n.todayGroupMidday,
+    DoseGroup.evening => l10n.todayGroupEvening,
+    DoseGroup.bedtime => l10n.todayGroupBedtime,
+  };
+
+  Widget _collapsedGroupToggle(
+    DoseGroup group,
+    int total,
+    AppLocalizations l10n,
+  ) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Semantics(
+          button: true,
+          label: '${_groupLabel(group, l10n)} · $total',
+          child: SizedBox(
+            height: 48,
+            child: TextButton.icon(
+              onPressed: () => setState(() => _expandedGroups.add(group)),
+              icon: const Icon(Icons.expand_more),
+              label: Text('+${total - 3}'),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _slotTile(AgendaSlot slot, AgendaState agenda) {
+    final cardKey = _cardKeys.putIfAbsent(slot.slotId, () => GlobalKey());
+    final syncPending = agenda.offlineQueue.any((e) => e.slotId == slot.slotId);
+    final writeInFlight = agenda.writeInFlightSlotIds.contains(slot.slotId);
+    return Padding(
+      key: cardKey,
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.screenPaddingH,
+        0,
+        AppSpacing.screenPaddingH,
+        AppSpacing.md,
+      ),
+      child: DoseSlotCard(
+        slot: slot,
+        syncPending: syncPending,
+        writeInFlight: writeInFlight,
+        onLog: (status) => _logDose(slot, status),
+        onOpenCorrection: () => _openCorrection(slot),
+      ),
+    );
+  }
+
+  Widget _prnTile(
+    PrnMedication med,
+    AgendaState agenda,
+    AppLocalizations l10n,
+  ) {
+    final writeInFlight = agenda.writeInFlightPrnIds.contains(med.medicationId);
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.screenPaddingH,
+        0,
+        AppSpacing.screenPaddingH,
+        AppSpacing.md,
+      ),
       child: Container(
-        key: cardKey,
+        key: Key('prn_${med.medicationId}'),
         width: double.infinity,
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
-          color: status == 'taken'
-              ? AppColors.takenBg.withValues(alpha: 0.3)
-              : AppColors.white,
+          color: AppColors.white,
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          border: Border.all(
-            color: status == 'taken'
-                ? AppColors.primaryGreen.withValues(alpha: 0.3)
-                : AppColors.greyDivider,
-            width: 0.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          border: Border.all(color: AppColors.greyDivider, width: 0.5),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 44.w,
-                  height: 44.w,
-                  decoration: BoxDecoration(
-                    color: status == 'taken'
-                        ? AppColors.primaryGreen.withValues(alpha: 0.1)
-                        : AppColors.lightGreen,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  ),
-                  child: Icon(
-                    status == 'taken'
-                        ? Icons.check_circle_outline
-                        : Icons.medication_outlined,
-                    color: AppColors.primaryGreen,
-                    size: AppSpacing.iconLg,
-                  ),
-                ),
-                SizedBox(width: AppSpacing.hMd),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              med['name'],
-                              style: AppTextStyles.bodyLarge.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          SizedBox(width: AppSpacing.hSm),
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                            key: ValueKey('dose_status_badge_$medId'),
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8.w,
-                              vertical: 2.h,
-                            ),
-                            decoration: BoxDecoration(
-                              color: badgeBg,
-                              borderRadius: BorderRadius.circular(
-                                AppSpacing.radiusRound,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (badgeIcon != null) ...[
-                                  Icon(
-                                    badgeIcon,
-                                    color: badgeText,
-                                    size: 12.sp,
-                                  ),
-                                  SizedBox(width: 4.w),
-                                ],
-                                Text(
-                                  badgeLabel,
-                                  style: TextStyle(
-                                    fontSize: 11.sp,
-                                    fontWeight: FontWeight.w600,
-                                    color: badgeText,
-                                  ),
-                                ),
-                                if (med['hasWarning'] == true) ...[
-                                  SizedBox(width: 4.w),
-                                  Icon(
-                                    Icons.error_outline,
-                                    color: AppColors.warningAmber,
-                                    size: 12.sp,
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 2.h),
-                      Text(med['dosage'], style: AppTextStyles.bodySmall),
-                      SizedBox(height: 2.h),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.access_time_rounded,
-                            size: 14.sp,
-                            color: AppColors.greyLight,
-                          ),
-                          SizedBox(width: 4.w),
-                          Text(med['time'], style: AppTextStyles.bodySmall),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.info_outline,
-                  color: AppColors.greyLight,
-                  size: AppSpacing.iconMd,
-                ),
-              ],
+            Text(
+              med.medicationName,
+              style: AppTextStyles.bodyLarge.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
+            SizedBox(height: 2.h),
+            Text(formatDose(med.dose), style: AppTextStyles.bodySmall),
             SizedBox(height: AppSpacing.md),
-            const Divider(height: 1),
-            SizedBox(height: AppSpacing.md),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Expanded(
-                  child: _MedAction(
-                    icon: Icons.check_circle_outline,
-                    label: AppStrings.taken,
-                    color: AppColors.primaryGreen,
-                    isActive: status == 'taken',
-                    onTap: () => _updateStatus(
-                      index,
-                      status == 'taken' ? 'pending' : 'taken',
+            if (writeInFlight)
+              const Center(
+                child: SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2.5),
+                ),
+              )
+            else
+              SizedBox(
+                height: 48,
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  key: Key('prn_log_${med.medicationId}'),
+                  onPressed: () => ref
+                      .read(todayAgendaNotifierProvider.notifier)
+                      .logPrn(med, DoseLogStatus.taken),
+                  icon: const Icon(Icons.check_circle_outline),
+                  label: Text(l10n.doseStatusTaken),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.primaryGreen),
+                    foregroundColor: AppColors.primaryGreen,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     ),
                   ),
                 ),
-                Expanded(
-                  child: _MedAction(
-                    icon: Icons.cancel_outlined,
-                    label: AppStrings.missed,
-                    color: AppColors.errorRed,
-                    isActive: status == 'missed',
-                    onTap: () => _updateStatus(
-                      index,
-                      status == 'missed' ? 'pending' : 'missed',
-                    ),
-                  ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // -- Celebration (spec §7/§9: ARB-localized, dismissible, no streaks) ------
+
+  Widget _buildCelebrationCard(AppLocalizations l10n) {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.screenPaddingH,
+        vertical: AppSpacing.sm,
+      ),
+      child: Container(
+        key: const Key('today_celebration'),
+        padding: EdgeInsets.all(14.w),
+        decoration: BoxDecoration(
+          color: AppColors.lightGreen.withValues(alpha: 0.8),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          border: Border.all(color: AppColors.primaryGreen, width: 1),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.stars_rounded,
+              color: AppColors.primaryGreen,
+              size: 24.sp,
+            ),
+            SizedBox(width: 10.w),
+            Expanded(
+              child: Text(
+                l10n.todayCelebration,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.primaryGreen,
+                  fontWeight: FontWeight.w600,
                 ),
-                Expanded(
-                  child: _MedAction(
-                    icon: Icons.skip_next_outlined,
-                    label: AppStrings.skip,
-                    color: AppColors.greyText,
-                    isActive: status == 'skipped',
-                    onTap: () => _updateStatus(
-                      index,
-                      status == 'skipped' ? 'pending' : 'skipped',
-                    ),
-                  ),
-                ),
-              ],
+              ),
+            ),
+            IconButton(
+              icon: Icon(
+                Icons.close,
+                size: 18.sp,
+                color: AppColors.primaryGreen,
+              ),
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              onPressed: () => setState(() => _dismissedCelebration = true),
             ),
           ],
         ),
@@ -836,50 +831,77 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   }
 }
 
-class _MedAction extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final bool isActive;
-  final VoidCallback onTap;
-
-  const _MedAction({
+/// A single-kind banner (spec §7 banners region: max one per kind).
+class _TodayBanner extends StatelessWidget {
+  const _TodayBanner({
+    super.key,
     required this.icon,
-    required this.label,
     required this.color,
-    required this.onTap,
-    this.isActive = false,
+    required this.text,
+    this.actionLabel,
+    this.onAction,
+    this.onDismiss,
   });
+
+  final IconData icon;
+  final Color color;
+  final String text;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+  final VoidCallback? onDismiss;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-        decoration: BoxDecoration(
-          color: isActive ? color.withValues(alpha: 0.1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: color, size: 18.sp),
-            SizedBox(width: 4.w),
-            Flexible(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13.sp,
-                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-                  color: color,
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: AppSpacing.iconMd),
+          SizedBox(width: AppSpacing.hSm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  text,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.black,
+                  ),
                 ),
-                overflow: TextOverflow.ellipsis,
-              ),
+                if (actionLabel != null && onAction != null)
+                  Padding(
+                    padding: EdgeInsets.only(top: 4.h),
+                    child: GestureDetector(
+                      onTap: onAction,
+                      child: Text(
+                        actionLabel!,
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: color,
+                          fontWeight: FontWeight.w700,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
-          ],
-        ),
+          ),
+          if (onDismiss != null)
+            IconButton(
+              icon: const Icon(Icons.close),
+              iconSize: 18,
+              color: color,
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              onPressed: onDismiss,
+            ),
+        ],
       ),
     );
   }

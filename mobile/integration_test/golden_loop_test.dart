@@ -63,7 +63,9 @@ void main() {
       await tester.tap(find.text(AppStrings.verifyAndContinue));
 
       // Real network round trip: POST /auth/patient/verify-code, GET /auth/me, GET /patients/{id}/case.
-      await pumpUntilFound(tester, find.text(AppStrings.taken));
+      // 'Taken' is the English `doseStatusTaken` ARB value rendered by the
+      // WI 12 DoseSlotCard action row (spec §7) — this test runs in 'en'.
+      await pumpUntilFound(tester, find.text('Taken'));
       await tester.pumpAndSettle();
 
       // --- Assistant: in-scope question gets a real (mock-provider) reply ---
@@ -104,7 +106,7 @@ void main() {
       await tester.tap(find.text('Today'));
       await tester.pumpAndSettle();
 
-      final takenAction = find.text(AppStrings.taken).first;
+      final takenAction = find.text('Taken').first;
       await tester.ensureVisible(takenAction);
       await tester.pumpAndSettle();
       await tester.tap(takenAction);

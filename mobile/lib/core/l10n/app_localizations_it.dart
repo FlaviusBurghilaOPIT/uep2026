@@ -506,4 +506,17 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get checkinErrorRetry =>
       'Non siamo riusciti a salvare il tuo check-in. Tocca per riprovare.';
+
+  @override
+  String get todayTimeJustNow => 'proprio ora';
+
+  @override
+  String todayTimeMinutesAgo(int count) {
+    return '$count min fa';
+  }
+
+  @override
+  String todayTimeHoursAgo(int count) {
+    return '$count h fa';
+  }
 }

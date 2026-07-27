@@ -74,11 +74,6 @@ class AppStrings {
   ];
 
   static const String remotecare = 'RemoteCare';
-  static const String todaysMedications = "TODAY'S MEDICATIONS";
-  static const String taken = 'Taken';
-  static const String pending = 'Pending';
-  static const String missed = 'Missed';
-  static const String skip = 'Skip';
   static const String fdaSafetyAlert = 'Official FDA Drug Safety Info';
   static const String fdaSourceLive =
       '📋 Source: Official FDA Drug Safety Info';

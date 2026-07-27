@@ -292,5 +292,22 @@
   "todayOpenSettings": "Open Settings",
   "remindersOffBanner": "Reminders are turned off. You can log doses manually — or turn reminders on in Settings.",
   "emptyPlanMessage": "Your care team is preparing your care plan. No action is needed from you right now.",
-  "checkinErrorRetry": "We couldn't save your check-in. Tap to try again."
+  "checkinErrorRetry": "We couldn't save your check-in. Tap to try again.",
+  "todayTimeJustNow": "just now",
+  "todayTimeMinutesAgo": "{count} min ago",
+  "@todayTimeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "todayTimeHoursAgo": "{count} h ago",
+  "@todayTimeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

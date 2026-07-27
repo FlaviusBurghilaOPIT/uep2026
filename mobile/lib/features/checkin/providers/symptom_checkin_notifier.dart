@@ -12,22 +12,22 @@ class SymptomCheckinNotifier extends AsyncNotifier<bool> {
 
   ApiService get _api => ref.read(apiServiceProvider);
 
-  /// POST /checkins with {case_id, severity, notes, checked_in_at}.
+  /// `POST /symptoms/checkin?case_id=&feeling=` — the canonical backend
+  /// route (`backend/app/routers/checkins.py`, `/symptoms` prefix). [feeling]
+  /// must be one of the `CheckInFeeling` enum values the mood picker already
+  /// sends (`great` / `ok` / `not_great` / `bad`); query params, no JSON
+  /// body — the endpoint declares no request-body model.
+  ///
   /// Resolves [AsyncData(true)] on success, [AsyncError] on failure.
-  Future<void> submit({
-    required String caseId,
-    required String severity,
-    String? notes,
-  }) async {
+  Future<void> submit({required String caseId, required String feeling}) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      final res = await _api.post('/checkins', {
-        'case_id': caseId,
-        'severity': severity,
-        // ignore: use_null_aware_elements
-        if (notes != null) 'notes': notes,
-        'checked_in_at': DateTime.now().toIso8601String(),
-      });
+      final res = await _api.post(
+        '/symptoms/checkin'
+        '?case_id=${Uri.encodeQueryComponent(caseId)}'
+        '&feeling=${Uri.encodeQueryComponent(feeling)}',
+        const {},
+      );
       if (res.statusCode == 200) {
         return true;
       }
@@ -38,5 +38,5 @@ class SymptomCheckinNotifier extends AsyncNotifier<bool> {
 
 final symptomCheckinNotifierProvider =
     AsyncNotifierProvider<SymptomCheckinNotifier, bool>(
-  SymptomCheckinNotifier.new,
-);
+      SymptomCheckinNotifier.new,
+    );

@@ -214,6 +214,23 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
 
     final current = state.valueOrNull ?? const AgendaState();
     final isEmpty = slots.isEmpty && prn.isEmpty;
+
+    // C6: plan-changed detection — the medication set differs from what we
+    // last rendered (first load never counts as a change).
+    final hadData = current.slots.isNotEmpty || current.prn.isNotEmpty;
+    final previousMedIds = {
+      ...current.slots.map((s) => s.medicationId),
+      ...current.prn.map((p) => p.medicationId),
+    };
+    final newMedIds = {
+      ...slots.map((s) => s.medicationId),
+      ...prn.map((p) => p.medicationId),
+    };
+    final planChanged =
+        hadData &&
+        (previousMedIds.length != newMedIds.length ||
+            !previousMedIds.containsAll(newMedIds));
+
     state = AsyncValue.data(
       current.copyWith(
         slots: slots,
@@ -222,6 +239,7 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
             ? AgendaSourceState.empty
             : AgendaSourceState.fresh,
         lastSyncedAt: DateTime.now(),
+        planUpdated: planChanged || current.planUpdated,
       ),
     );
 
@@ -519,6 +537,33 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
   void dismissC8Prompt() {
     final current = state.valueOrNull ?? const AgendaState();
     state = AsyncValue.data(current.copyWith(c8PromptSlotId: null));
+  }
+
+  /// Screen dismisses the C6 plan-changed banner.
+  void dismissPlanUpdated() {
+    final current = state.valueOrNull ?? const AgendaState();
+    state = AsyncValue.data(current.copyWith(planUpdated: false));
+  }
+
+  /// WI 14 sets this from the OS notification-permission check (C1).
+  void setRemindersOff(bool off) {
+    final current = state.valueOrNull ?? const AgendaState();
+    if (current.remindersOff == off) return;
+    state = AsyncValue.data(current.copyWith(remindersOff: off));
+  }
+
+  /// WI 14 sets this once when the notification re-anchor pass (app start /
+  /// timezone-change proxy) detects the device's UTC offset shifted (C5).
+  void setTimezoneAdjusted(bool adjusted) {
+    final current = state.valueOrNull ?? const AgendaState();
+    if (current.timezoneAdjusted == adjusted) return;
+    state = AsyncValue.data(current.copyWith(timezoneAdjusted: adjusted));
+  }
+
+  /// Screen dismisses the C5 timezone-adjusted banner.
+  void dismissTimezoneAdjusted() {
+    final current = state.valueOrNull ?? const AgendaState();
+    state = AsyncValue.data(current.copyWith(timezoneAdjusted: false));
   }
 
   /// C8 answer. Returns the emergency-contact phone when the patient taps

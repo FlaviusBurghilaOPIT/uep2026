@@ -973,6 +973,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'We couldn\'t save your check-in. Tap to try again.'**
   String get checkinErrorRetry;
+
+  /// No description provided for @todayTimeJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get todayTimeJustNow;
+
+  /// No description provided for @todayTimeMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} min ago'**
+  String todayTimeMinutesAgo(int count);
+
+  /// No description provided for @todayTimeHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} h ago'**
+  String todayTimeHoursAgo(int count);
 }
 
 class _AppLocalizationsDelegate

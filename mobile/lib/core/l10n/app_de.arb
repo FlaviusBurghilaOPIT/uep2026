@@ -292,5 +292,22 @@
   "todayOpenSettings": "Einstellungen öffnen",
   "remindersOffBanner": "Erinnerungen sind ausgeschaltet. Sie können Dosen manuell eintragen — oder Erinnerungen in den Einstellungen aktivieren.",
   "emptyPlanMessage": "Ihr Pflegeteam bereitet Ihren Behandlungsplan vor. Sie müssen im Moment nichts tun.",
-  "checkinErrorRetry": "Wir konnten Ihren Check-in nicht speichern. Tippen Sie, um es erneut zu versuchen."
+  "checkinErrorRetry": "Wir konnten Ihren Check-in nicht speichern. Tippen Sie, um es erneut zu versuchen.",
+  "todayTimeJustNow": "gerade eben",
+  "todayTimeMinutesAgo": "vor {count} Min.",
+  "@todayTimeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "todayTimeHoursAgo": "vor {count} Std.",
+  "@todayTimeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

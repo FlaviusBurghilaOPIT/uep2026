@@ -27,6 +27,7 @@ dependencies:
   timezone: ^0.9.4
   url_launcher: ^6.3.2
   uuid: ^4.6.0
+  app_settings: ^8.0.3
 
 dev_dependencies:
   flutter_test:

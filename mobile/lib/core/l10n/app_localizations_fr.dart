@@ -505,4 +505,17 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get checkinErrorRetry =>
       'Nous n\'avons pas pu enregistrer votre bilan. Touchez pour réessayer.';
+
+  @override
+  String get todayTimeJustNow => 'à l\'instant';
+
+  @override
+  String todayTimeMinutesAgo(int count) {
+    return 'il y a $count min';
+  }
+
+  @override
+  String todayTimeHoursAgo(int count) {
+    return 'il y a $count h';
+  }
 }

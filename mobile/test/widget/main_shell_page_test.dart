@@ -4,12 +4,16 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:remotecare/core/l10n/app_localizations.dart';
+import 'package:remotecare/core/network/api_service.dart';
+import 'package:remotecare/features/auth/demo_auth_state.dart';
 import 'package:remotecare/features/main/main_shell_page.dart';
 import 'package:remotecare/features/today/today_screen.dart';
 import 'package:remotecare/features/medications/medications_screen.dart';
 import 'package:remotecare/features/recovery/recovery_screen.dart';
 import 'package:remotecare/features/assistant/assistant_screen.dart';
 import 'package:remotecare/features/profile/profile_screen.dart';
+
+import '../unit/fake_api_service.dart';
 
 Widget _buildMaterialApp(BuildContext context, Widget? child) {
   return const MaterialApp(
@@ -19,10 +23,14 @@ Widget _buildMaterialApp(BuildContext context, Widget? child) {
   );
 }
 
-Widget buildTestApp() {
-  return const ProviderScope(
+Widget buildTestApp(SharedPreferences prefs, FakeApiService fakeApi) {
+  return ProviderScope(
+    overrides: [
+      sharedPreferencesProvider.overrideWithValue(prefs),
+      apiServiceProvider.overrideWithValue(fakeApi),
+    ],
     child: ScreenUtilInit(
-      designSize: Size(375, 812),
+      designSize: const Size(375, 812),
       minTextAdapt: true,
       builder: _buildMaterialApp,
     ),
@@ -32,8 +40,13 @@ Widget buildTestApp() {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  setUp(() {
+  late SharedPreferences prefs;
+  late FakeApiService fakeApi;
+
+  setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    prefs = await SharedPreferences.getInstance();
+    fakeApi = FakeApiService();
   });
 
   Future<void> pumpShell(WidgetTester tester) async {
@@ -42,7 +55,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(buildTestApp());
+    await tester.pumpWidget(buildTestApp(prefs, fakeApi));
     await tester.pumpAndSettle();
   }
 

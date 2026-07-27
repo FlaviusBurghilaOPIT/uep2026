@@ -14,9 +14,7 @@ void main() {
   setUp(() {
     fakeApi = FakeApiService();
     container = ProviderContainer(
-      overrides: [
-        apiServiceProvider.overrideWithValue(fakeApi),
-      ],
+      overrides: [apiServiceProvider.overrideWithValue(fakeApi)],
     );
   });
 
@@ -24,29 +22,36 @@ void main() {
     container.dispose();
   });
 
-  test('submit success -> AsyncData(true)', () async {
-    fakeApi.postHandlers['/checkins'] = (body) {
-      if (body?['case_id'] == 'case_1' && body?['severity'] == 'mild') {
-        return http.Response(jsonEncode({'status': 'ok'}), 200);
-      }
-      return http.Response(jsonEncode({'detail': 'Bad request'}), 400);
-    };
+  // D2 (spec §10 pending question): the canonical backend route is
+  // `POST /symptoms/checkin?case_id=&feeling=` (backend/app/routers/
+  // checkins.py, `/symptoms` prefix, query params — not a JSON body, and
+  // not `/checkins`). `feeling` matches the `CheckInFeeling` enum values the
+  // mood picker already sends (great/ok/not_great/bad).
+  test(
+    'submit success -> AsyncData(true), posts query params to /symptoms/checkin',
+    () async {
+      fakeApi.postHandlers['/symptoms/checkin?case_id=case_1&feeling=great'] =
+          (body) {
+            return http.Response(jsonEncode({'id': 'checkin_1'}), 200);
+          };
+
+      final notifier = container.read(symptomCheckinNotifierProvider.notifier);
+      await notifier.submit(caseId: 'case_1', feeling: 'great');
+
+      final state = container.read(symptomCheckinNotifierProvider);
+      expect(state.hasValue, isTrue);
+      expect(state.value, isTrue);
+    },
+  );
+
+  test('submit network failure -> AsyncError', () async {
+    fakeApi.postHandlers['/symptoms/checkin?case_id=case_1&feeling=bad'] =
+        (body) {
+          return http.Response(jsonEncode({'detail': 'Server error'}), 500);
+        };
 
     final notifier = container.read(symptomCheckinNotifierProvider.notifier);
-    await notifier.submit(caseId: 'case_1', severity: 'mild', notes: 'Feeling fine');
-
-    final state = container.read(symptomCheckinNotifierProvider);
-    expect(state.hasValue, isTrue);
-    expect(state.value, isTrue);
-  });
-
-  test('submit network failure -> AsyncError with message', () async {
-    fakeApi.postHandlers['/checkins'] = (body) {
-      return http.Response(jsonEncode({'detail': 'Server error'}), 500);
-    };
-
-    final notifier = container.read(symptomCheckinNotifierProvider.notifier);
-    await notifier.submit(caseId: 'case_1', severity: 'severe');
+    await notifier.submit(caseId: 'case_1', feeling: 'bad');
 
     final state = container.read(symptomCheckinNotifierProvider);
     expect(state.hasError, isTrue);

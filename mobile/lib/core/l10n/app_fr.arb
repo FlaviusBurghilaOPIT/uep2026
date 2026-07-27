@@ -292,5 +292,22 @@
   "todayOpenSettings": "Ouvrir les réglages",
   "remindersOffBanner": "Les rappels sont désactivés. Vous pouvez enregistrer vos doses manuellement — ou activer les rappels dans les réglages.",
   "emptyPlanMessage": "Votre équipe soignante prépare votre plan de soins. Vous n'avez rien à faire pour le moment.",
-  "checkinErrorRetry": "Nous n'avons pas pu enregistrer votre bilan. Touchez pour réessayer."
+  "checkinErrorRetry": "Nous n'avons pas pu enregistrer votre bilan. Touchez pour réessayer.",
+  "todayTimeJustNow": "à l'instant",
+  "todayTimeMinutesAgo": "il y a {count} min",
+  "@todayTimeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "todayTimeHoursAgo": "il y a {count} h",
+  "@todayTimeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

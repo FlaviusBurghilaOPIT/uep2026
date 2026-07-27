@@ -504,4 +504,17 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get checkinErrorRetry =>
       'No pudimos guardar tu registro diario. Toca para intentarlo de nuevo.';
+
+  @override
+  String get todayTimeJustNow => 'ahora mismo';
+
+  @override
+  String todayTimeMinutesAgo(int count) {
+    return 'hace $count min';
+  }
+
+  @override
+  String todayTimeHoursAgo(int count) {
+    return 'hace $count h';
+  }
 }

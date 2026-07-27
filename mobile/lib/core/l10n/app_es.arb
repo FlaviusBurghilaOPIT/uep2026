@@ -292,5 +292,22 @@
   "todayOpenSettings": "Abrir Ajustes",
   "remindersOffBanner": "Los recordatorios están desactivados. Puedes registrar dosis manualmente — o activar los recordatorios en Ajustes.",
   "emptyPlanMessage": "Tu equipo de cuidados está preparando tu plan. No necesitas hacer nada por ahora.",
-  "checkinErrorRetry": "No pudimos guardar tu registro diario. Toca para intentarlo de nuevo."
+  "checkinErrorRetry": "No pudimos guardar tu registro diario. Toca para intentarlo de nuevo.",
+  "todayTimeJustNow": "ahora mismo",
+  "todayTimeMinutesAgo": "hace {count} min",
+  "@todayTimeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "todayTimeHoursAgo": "hace {count} h",
+  "@todayTimeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }
