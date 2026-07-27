@@ -112,23 +112,27 @@ class _CheckInCardState extends ConsumerState<CheckInCard> {
             GestureDetector(
               key: const Key('checkin_error_retry'),
               onTap: _retry,
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    color: AppColors.errorRed,
-                    size: AppSpacing.iconMd,
-                  ),
-                  SizedBox(width: AppSpacing.hSm),
-                  Expanded(
-                    child: Text(
-                      l10n.checkinErrorRetry,
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.errorRed,
+              behavior: HitTestBehavior.opaque,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 48),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      color: AppColors.errorRed,
+                      size: AppSpacing.iconMd,
+                    ),
+                    SizedBox(width: AppSpacing.hSm),
+                    Expanded(
+                      child: Text(
+                        l10n.checkinErrorRetry,
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.errorRed,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             )
           else
@@ -141,10 +145,12 @@ class _CheckInCardState extends ConsumerState<CheckInCard> {
                 return GestureDetector(
                   onTap: isSubmitting ? null : () => _selectMood(value),
                   child: Container(
+                    constraints: const BoxConstraints(minHeight: 48),
                     padding: EdgeInsets.symmetric(
                       horizontal: 14.w,
                       vertical: 10.h,
                     ),
+                    alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: isSelected
                           ? AppColors.primaryGreen

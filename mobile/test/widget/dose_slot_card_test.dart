@@ -182,4 +182,124 @@ void main() {
       expect(text.overflow, TextOverflow.ellipsis);
     });
   });
+
+  group('DoseSlotCard accessibility (WI 15)', () {
+    testWidgets('M-01: descriptive block is one merged Semantics unit; action '
+        'buttons stay individually reachable', (tester) async {
+      await tester.pumpWidget(wrap(DoseSlotCard(slot: buildSlot())));
+      await tester.pumpAndSettle();
+
+      final mergedFinder = find.byWidgetPredicate(
+        (w) =>
+            w is Semantics &&
+            (w.properties.label?.contains('Ibuprofen') ?? false),
+      );
+      final merged = tester.widget<Semantics>(mergedFinder);
+      final label = merged.properties.label!;
+      expect(label, contains('Ibuprofen'));
+      expect(label, contains('400 mg'));
+      expect(label, contains('scheduled'));
+      expect(label, contains('Due now'));
+      expect(label, contains('Actions: taken, skipped, missed.'));
+      expect(merged.excludeSemantics, isTrue);
+
+      // Actions are structurally OUTSIDE the excluded/merged descriptive
+      // block — they remain their own focusable, tappable nodes, not
+      // swallowed into the card's single announcement.
+      final actionKey = const Key('slot_action_taken_rem-1');
+      expect(
+        find.descendant(of: mergedFinder, matching: find.byKey(actionKey)),
+        findsNothing,
+      );
+      expect(find.byKey(actionKey), findsOneWidget);
+    });
+
+    testWidgets('M-01: logged slot label describes state without a nonexistent '
+        'action list', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          DoseSlotCard(
+            slot: buildSlot(
+              state: SlotState.taken,
+              loggedAt: DateTime.parse('2026-07-26T08:42:00Z'),
+              doseLogId: 'log-1',
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final merged = tester
+          .widgetList<Semantics>(find.byType(Semantics))
+          .firstWhere(
+            (s) => s.properties.label?.contains('Ibuprofen') ?? false,
+          );
+      expect(merged.properties.label, isNot(contains('Actions:')));
+    });
+
+    testWidgets('M-02: 200% text scale — no overflow, actions remain ≥48dp', (
+      tester,
+    ) async {
+      // MaterialApp builds its own root MediaQuery from the test view, so
+      // the override must go through `builder` (inside that scope) rather
+      // than wrapping MaterialApp itself.
+      await tester.pumpWidget(
+        ScreenUtilInit(
+          designSize: const Size(375, 812),
+          minTextAdapt: true,
+          builder: (context, _) => MaterialApp(
+            supportedLocales: AppLocalizations.supportedLocales,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: const TextScaler.linear(2.0)),
+              child: child!,
+            ),
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: DoseSlotCard(slot: buildSlot()),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      final action = find.byKey(const Key('slot_action_taken_rem-1'));
+      expect(tester.getSize(action).height, greaterThanOrEqualTo(48.0));
+    });
+
+    testWidgets(
+      'M-03: every status badge uses a distinct icon — distinguishable in '
+      'grayscale, never color-only',
+      (tester) async {
+        final iconsByState = <SlotState, IconData>{};
+        for (final state in SlotState.values) {
+          await tester.pumpWidget(
+            wrap(DoseSlotCard(slot: buildSlot(state: state))),
+          );
+          await tester.pumpAndSettle();
+
+          final icons = tester
+              .widgetList<Icon>(
+                find.descendant(
+                  of: find.byKey(const Key('dose_slot_rem-1')),
+                  matching: find.byType(Icon),
+                ),
+              )
+              .map((i) => i.icon)
+              .toList();
+          // icons[0] is always the "scheduled time" clock icon; icons[1] is
+          // the state badge's icon (any action-row icons follow after it).
+          expect(icons.length, greaterThanOrEqualTo(2));
+          iconsByState[state] = icons[1]!;
+        }
+
+        // Pairwise distinct across all 6 states (M-03 grayscale requirement).
+        expect(iconsByState.values.toSet().length, SlotState.values.length);
+      },
+    );
+  });
 }

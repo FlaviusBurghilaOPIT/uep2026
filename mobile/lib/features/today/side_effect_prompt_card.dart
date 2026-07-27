@@ -120,17 +120,19 @@ class _SideEffectPromptCardState extends ConsumerState<SideEffectPromptCard> {
           else if (_answeredYes) ...[
             SizedBox(height: AppSpacing.sm),
             if (_emergencyPhone != null)
-              SizedBox(
+              ConstrainedBox(
                 key: const Key('c8_emergency_cta'),
-                height: 48,
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: _callEmergencyContact,
-                  icon: const Icon(Icons.phone),
-                  label: Text(l10n.emergencyCallCta),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.errorRed,
-                    foregroundColor: AppColors.white,
+                constraints: const BoxConstraints(minHeight: 48),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: _callEmergencyContact,
+                    icon: const Icon(Icons.phone),
+                    label: Text(l10n.emergencyCallCta),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.errorRed,
+                      foregroundColor: AppColors.white,
+                    ),
                   ),
                 ),
               )
@@ -156,9 +158,9 @@ class _SideEffectPromptCardState extends ConsumerState<SideEffectPromptCard> {
             Row(
               children: [
                 Expanded(
-                  child: SizedBox(
+                  child: ConstrainedBox(
                     key: const Key('c8_yes'),
-                    height: 48,
+                    constraints: const BoxConstraints(minHeight: 48),
                     child: OutlinedButton(
                       onPressed: () => _answer(severeSymptoms: true),
                       child: Text(l10n.todaySkipPromptYes),
@@ -167,9 +169,9 @@ class _SideEffectPromptCardState extends ConsumerState<SideEffectPromptCard> {
                 ),
                 SizedBox(width: AppSpacing.hMd),
                 Expanded(
-                  child: SizedBox(
+                  child: ConstrainedBox(
                     key: const Key('c8_no'),
-                    height: 48,
+                    constraints: const BoxConstraints(minHeight: 48),
                     child: OutlinedButton(
                       onPressed: () => _answer(severeSymptoms: false),
                       child: Text(l10n.todaySkipPromptNo),

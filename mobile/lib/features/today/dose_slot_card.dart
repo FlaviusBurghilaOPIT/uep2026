@@ -64,68 +64,93 @@ class DoseSlotCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
+              // M-01: the descriptive block (name/dose/time/status/both-times)
+              // is one merged Semantics unit; action buttons below stay
+              // individually focusable so reading order is card, then
+              // actions — never the whole card as one giant unreachable
+              // button.
+              Semantics(
+                container: true,
+                excludeSemantics: true,
+                label: _semanticsLabel(l10n, timeText, badge),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          slot.medicationName,
-                          style: AppTextStyles.bodyLarge.copyWith(
-                            fontWeight: FontWeight.w600,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                slot.medicationName,
+                                style: AppTextStyles.bodyLarge.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              SizedBox(height: 2.h),
+                              Text(
+                                formatDose(slot.dose),
+                                style: AppTextStyles.bodySmall,
+                              ),
+                              SizedBox(height: 2.h),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.schedule,
+                                    size: 14.sp,
+                                    color: AppColors.greyLight,
+                                  ),
+                                  SizedBox(width: 4.w),
+                                  // M-02: at large text scales this row must
+                                  // not overflow horizontally.
+                                  Flexible(
+                                    child: Text(
+                                      timeText,
+                                      style: AppTextStyles.bodySmall,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                        SizedBox(height: 2.h),
-                        Text(
-                          formatDose(slot.dose),
-                          style: AppTextStyles.bodySmall,
-                        ),
-                        SizedBox(height: 2.h),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.schedule,
-                              size: 14.sp,
-                              color: AppColors.greyLight,
-                            ),
-                            SizedBox(width: 4.w),
-                            Text(timeText, style: AppTextStyles.bodySmall),
-                          ],
-                        ),
+                        SizedBox(width: AppSpacing.hSm),
+                        _StateBadge(spec: badge),
                       ],
                     ),
-                  ),
-                  SizedBox(width: AppSpacing.hSm),
-                  _StateBadge(spec: badge),
-                ],
-              ),
-              if (syncPending) ...[
-                SizedBox(height: AppSpacing.sm),
-                _SyncPendingBadge(label: l10n.todaySyncPending),
-              ],
-              if (_isLogged && slot.loggedAt != null) ...[
-                SizedBox(height: AppSpacing.sm),
-                Text(
-                  l10n.todaySlotTimes(
-                    timeText,
-                    DateFormat.jm(locale).format(slot.loggedAt!.toLocal()),
-                  ),
-                  style: AppTextStyles.bodySmall,
+                    if (syncPending) ...[
+                      SizedBox(height: AppSpacing.sm),
+                      _SyncPendingBadge(label: l10n.todaySyncPending),
+                    ],
+                    if (_isLogged && slot.loggedAt != null) ...[
+                      SizedBox(height: AppSpacing.sm),
+                      Text(
+                        l10n.todaySlotTimes(
+                          timeText,
+                          DateFormat.jm(
+                            locale,
+                          ).format(slot.loggedAt!.toLocal()),
+                        ),
+                        style: AppTextStyles.bodySmall,
+                      ),
+                      if (slot.previousStatus != null)
+                        Text(
+                          l10n.todayPreviouslyLogged(
+                            localizedDoseStatus(l10n, slot.previousStatus!),
+                          ),
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.greyText,
+                          ),
+                        ),
+                    ],
+                  ],
                 ),
-                if (slot.previousStatus != null)
-                  Text(
-                    l10n.todayPreviouslyLogged(
-                      localizedDoseStatus(l10n, slot.previousStatus!),
-                    ),
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.greyText,
-                    ),
-                  ),
-              ],
+              ),
               SizedBox(height: AppSpacing.md),
               if (writeInFlight)
                 const Center(
@@ -157,6 +182,26 @@ class DoseSlotCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// M-01 merged label: "{medName} {dose}, scheduled {time}, {state}.
+  /// Actions: taken, skipped, missed." (only for actionable slots — logged/
+  /// terminal slots describe themselves without a nonexistent action list).
+  String _semanticsLabel(
+    AppLocalizations l10n,
+    String timeText,
+    _BadgeSpec badge,
+  ) {
+    final base =
+        '${slot.medicationName} ${formatDose(slot.dose)}, '
+        'scheduled $timeText, ${badge.label}.';
+    if (!_isActionable) return base;
+    final actions = [
+      l10n.doseStatusTaken,
+      l10n.doseStatusSkipped,
+      l10n.doseStatusMissed,
+    ].map((s) => s.toLowerCase()).join(', ');
+    return '$base Actions: $actions.';
   }
 
   List<_ActionSpec> _actions(AppLocalizations l10n) => [
@@ -339,20 +384,25 @@ class _SlotActionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 48,
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: onTap,
-        icon: Icon(icon, color: color, size: AppSpacing.iconMd),
-        label: Text(
-          label,
-          style: TextStyle(fontWeight: FontWeight.w600, color: color),
-        ),
-        style: OutlinedButton.styleFrom(
-          side: BorderSide(color: color.withValues(alpha: 0.4)),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+    // M-02: no fixed card/action heights — a minimum keeps the ≥48dp
+    // target at default text scale, but the button is free to grow at
+    // large text scales instead of clipping its label.
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 48),
+      child: SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: onTap,
+          icon: Icon(icon, color: color, size: AppSpacing.iconMd),
+          label: Text(
+            label,
+            style: TextStyle(fontWeight: FontWeight.w600, color: color),
+          ),
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(color: color.withValues(alpha: 0.4)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+            ),
           ),
         ),
       ),

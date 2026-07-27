@@ -169,5 +169,54 @@ void main() {
         findsNothing,
       );
     });
+
+    testWidgets('M-02: 200% text scale — no overflow, Yes/No remain ≥48dp', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final container = ProviderContainer(
+        overrides: [
+          apiServiceProvider.overrideWithValue(fakeApi),
+          sharedPreferencesProvider.overrideWithValue(prefs),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: ScreenUtilInit(
+            designSize: const Size(375, 812),
+            minTextAdapt: true,
+            builder: (context, _) => MaterialApp(
+              supportedLocales: AppLocalizations.supportedLocales,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(
+                  context,
+                ).copyWith(textScaler: const TextScaler.linear(2.0)),
+                child: child!,
+              ),
+              home: const Scaffold(body: SideEffectPromptCard(slotId: 'rem-1')),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(
+        tester.getSize(find.byKey(const Key('c8_yes'))).height,
+        greaterThanOrEqualTo(48.0),
+      );
+      expect(
+        tester.getSize(find.byKey(const Key('c8_no'))).height,
+        greaterThanOrEqualTo(48.0),
+      );
+    });
   });
 }

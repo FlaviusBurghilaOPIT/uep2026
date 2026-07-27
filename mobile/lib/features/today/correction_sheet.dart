@@ -53,34 +53,38 @@ class CorrectionSheet extends StatelessWidget {
         .toList();
 
     return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 24.h),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              l10n.todayCorrectionTitle(currentStatus, loggedText),
-              style: AppTextStyles.bodyLarge.copyWith(
-                fontWeight: FontWeight.w600,
+      // M-02: at large text scales the title + three ≥48dp options can
+      // exceed the available sheet height — scroll instead of overflowing.
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 24.h),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l10n.todayCorrectionTitle(currentStatus, loggedText),
+                style: AppTextStyles.bodyLarge.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-            SizedBox(height: AppSpacing.lg),
-            for (final (i, status) in options.indexed) ...[
-              if (i > 0) SizedBox(height: AppSpacing.sm),
+              SizedBox(height: AppSpacing.lg),
+              for (final (i, status) in options.indexed) ...[
+                if (i > 0) SizedBox(height: AppSpacing.sm),
+                _CorrectionOption(
+                  key: Key('correction_option_${status.name}'),
+                  label: localizedDoseStatus(l10n, status.name),
+                  onTap: () => onCorrect(status),
+                ),
+              ],
+              SizedBox(height: AppSpacing.sm),
               _CorrectionOption(
-                key: Key('correction_option_${status.name}'),
-                label: localizedDoseStatus(l10n, status.name),
-                onTap: () => onCorrect(status),
+                key: const Key('correction_keep'),
+                label: l10n.todayCorrectionKeep,
+                onTap: onKeep,
               ),
             ],
-            SizedBox(height: AppSpacing.sm),
-            _CorrectionOption(
-              key: const Key('correction_keep'),
-              label: l10n.todayCorrectionKeep,
-              onTap: onKeep,
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -99,19 +103,26 @@ class _CorrectionOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 48,
-      width: double.infinity,
-      child: OutlinedButton(
-        onPressed: onTap,
-        style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: AppColors.greyDivider),
-          foregroundColor: AppColors.black,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+    // M-02: no fixed heights — minimum keeps the ≥48dp target, free to
+    // grow at large text scales.
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 48),
+      child: SizedBox(
+        width: double.infinity,
+        child: OutlinedButton(
+          onPressed: onTap,
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: AppColors.greyDivider),
+            foregroundColor: AppColors.black,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+            ),
+          ),
+          child: Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.w600),
           ),
         ),
-        child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
       ),
     );
   }

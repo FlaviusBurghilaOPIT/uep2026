@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -131,6 +132,14 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
       // Haptics unavailable on this platform/host — non-fatal.
     }
     ref.read(todayAgendaNotifierProvider.notifier).logDose(slot, status);
+    // M-05: live-region announcement for screen reader users, independent
+    // of the visual snackbar confirmation ("Ibuprofen marked as taken").
+    SemanticsService.sendAnnouncement(
+      View.of(context),
+      '${slot.medicationName} marked as '
+      '${localizedDoseStatus(l10n, status.name).toLowerCase()}',
+      Directionality.of(context),
+    );
     if (!mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     messenger.hideCurrentSnackBar();
@@ -354,20 +363,31 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
               ],
             ),
           ),
-          GestureDetector(
+          // M-04: ≥48dp hit area even though the visible avatar is 40dp.
+          InkWell(
             onTap: () => AppRoutes.navigateTo(context, AppRoutes.profile),
-            child: Container(
-              width: 40.w,
-              height: 40.w,
-              decoration: BoxDecoration(
-                color: AppColors.lightGreen,
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.primaryGreen, width: 1.5),
-              ),
-              child: Icon(
-                Icons.person_outline,
-                color: AppColors.primaryGreen,
-                size: AppSpacing.iconMd,
+            customBorder: const CircleBorder(),
+            child: SizedBox(
+              width: 48,
+              height: 48,
+              child: Center(
+                child: Container(
+                  width: 40.w,
+                  height: 40.w,
+                  decoration: BoxDecoration(
+                    color: AppColors.lightGreen,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.primaryGreen,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.person_outline,
+                    color: AppColors.primaryGreen,
+                    size: AppSpacing.iconMd,
+                  ),
+                ),
               ),
             ),
           ),
@@ -583,21 +603,24 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
               textAlign: TextAlign.center,
             ),
             SizedBox(height: AppSpacing.lg),
-            SizedBox(
-              height: 48,
-              width: double.infinity,
-              child: ElevatedButton(
-                key: const Key('today_retry'),
-                onPressed: () =>
-                    ref.read(todayAgendaNotifierProvider.notifier).loadAgenda(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryGreen,
-                  foregroundColor: AppColors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  key: const Key('today_retry'),
+                  onPressed: () => ref
+                      .read(todayAgendaNotifierProvider.notifier)
+                      .loadAgenda(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryGreen,
+                    foregroundColor: AppColors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                    ),
                   ),
+                  child: Text(l10n.todayRetry),
                 ),
-                child: Text(l10n.todayRetry),
               ),
             ),
           ],
@@ -723,8 +746,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
         child: Semantics(
           button: true,
           label: '${_groupLabel(group, l10n)} · $total',
-          child: SizedBox(
-            height: 48,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
             child: TextButton.icon(
               onPressed: () => setState(() => _expandedGroups.add(group)),
               icon: const Icon(Icons.expand_more),
@@ -801,21 +824,25 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
                 ),
               )
             else
-              SizedBox(
-                height: 48,
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  key: Key('prn_log_${med.medicationId}'),
-                  onPressed: () => ref
-                      .read(todayAgendaNotifierProvider.notifier)
-                      .logPrn(med, DoseLogStatus.taken),
-                  icon: const Icon(Icons.check_circle_outline),
-                  label: Text(l10n.doseStatusTaken),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppColors.primaryGreen),
-                    foregroundColor: AppColors.primaryGreen,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 48),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    key: Key('prn_log_${med.medicationId}'),
+                    onPressed: () => ref
+                        .read(todayAgendaNotifierProvider.notifier)
+                        .logPrn(med, DoseLogStatus.taken),
+                    icon: const Icon(Icons.check_circle_outline),
+                    label: Text(l10n.doseStatusTaken),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.primaryGreen),
+                      foregroundColor: AppColors.primaryGreen,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusSm,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -922,14 +949,22 @@ class _TodayBanner extends StatelessWidget {
                 if (actionLabel != null && onAction != null)
                   Padding(
                     padding: EdgeInsets.only(top: 4.h),
-                    child: GestureDetector(
-                      onTap: onAction,
-                      child: Text(
-                        actionLabel!,
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: color,
-                          fontWeight: FontWeight.w700,
-                          decoration: TextDecoration.underline,
+                    // M-04: ≥48dp hit area for the banner's text-only action.
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 48),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: onAction,
+                          child: Text(
+                            actionLabel!,
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: color,
+                              fontWeight: FontWeight.w700,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
                         ),
                       ),
                     ),

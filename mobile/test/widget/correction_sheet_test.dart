@@ -115,5 +115,42 @@ void main() {
       await tester.tap(find.byKey(const Key('correction_keep')));
       expect(kept, 1);
     });
+
+    testWidgets('M-02: 200% text scale — no overflow, options remain ≥48dp', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        ScreenUtilInit(
+          designSize: const Size(375, 812),
+          minTextAdapt: true,
+          builder: (context, _) => MaterialApp(
+            supportedLocales: AppLocalizations.supportedLocales,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: const TextScaler.linear(2.0)),
+              child: child!,
+            ),
+            home: Scaffold(
+              body: CorrectionSheet(
+                slot: loggedSlot(state: SlotState.taken),
+                onCorrect: (_) {},
+                onKeep: () {},
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(
+        tester
+            .getSize(find.byKey(const Key('correction_option_skipped')))
+            .height,
+        greaterThanOrEqualTo(48.0),
+      );
+    });
   });
 }
