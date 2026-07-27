@@ -10,7 +10,9 @@ import '../../services/push_notification_service.dart';
 @pragma('vm:entry-point')
 void notificationTapBackground(NotificationResponse details) async {
   if (details.actionId == 'take_dose') {
-    final reminderId = NotificationService.parseReminderId(details.payload ?? '');
+    final reminderId = NotificationService.parseReminderId(
+      details.payload ?? '',
+    );
     if (reminderId != null && reminderId.isNotEmpty) {
       final api = HttpApiService();
       await api.post('/adherence/log', {
@@ -21,7 +23,9 @@ void notificationTapBackground(NotificationResponse details) async {
     }
   }
   if (details.actionId == 'snooze') {
-    final reminderId = NotificationService.parseReminderId(details.payload ?? '');
+    final reminderId = NotificationService.parseReminderId(
+      details.payload ?? '',
+    );
     if (reminderId != null && reminderId.isNotEmpty) {
       await NotificationService.instance.snoozeReminder(reminderId, 15);
     }
@@ -33,7 +37,8 @@ class NotificationService {
   NotificationService._();
 
   final _plugin = FlutterLocalNotificationsPlugin();
-  final _notificationResponseSubject = StreamController<NotificationResponse>.broadcast();
+  final _notificationResponseSubject =
+      StreamController<NotificationResponse>.broadcast();
   PushNotificationService? _pushNotificationService;
 
   Stream<NotificationResponse> get notificationResponseStream =>
@@ -44,7 +49,8 @@ class NotificationService {
   }
 
   PushNotificationService get pushNotificationService =>
-      _pushNotificationService ?? PushNotificationService(notificationService: this);
+      _pushNotificationService ??
+      PushNotificationService(notificationService: this);
 
   /// Synchronizes remote push fallback when OS local notification permissions are restricted
   /// or when operating in background.
@@ -62,7 +68,6 @@ class NotificationService {
     );
   }
 
-
   static String? parseReminderId(String payload) {
     if (payload.isEmpty) return null;
     final parts = payload.split(':');
@@ -77,7 +82,9 @@ class NotificationService {
   Future<void> initialize() async {
     await reinitialize();
 
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
 
     final takeDoseDarwinAction = DarwinNotificationAction.plain(
       'take_dose',
@@ -140,25 +147,50 @@ class NotificationService {
 
     await _plugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(androidChannel);
   }
 
+  /// Checks the OS notification-permission state WITHOUT prompting the user
+  /// (WI 14 / spec §6: the first-run primer owns the one-time request; Today
+  /// / notification-scheduling code must never re-prompt or nag).
+  Future<bool> arePermissionsGranted() async {
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    if (android != null) {
+      return await android.areNotificationsEnabled() ?? false;
+    }
+    final ios = _plugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
+    if (ios != null) {
+      final options = await ios.checkPermissions();
+      return options?.isEnabled ?? false;
+    }
+    // Unknown/unsupported platform (e.g. macOS in tests) — don't nag with a
+    // reminders-off banner when we simply cannot tell.
+    return true;
+  }
+
   Future<void> requestPermissions() async {
-    final android = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (android != null) {
       await android.requestNotificationsPermission();
     }
 
-    final ios = _plugin.resolvePlatformSpecificImplementation<
-        IOSFlutterLocalNotificationsPlugin>();
+    final ios = _plugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
     if (ios != null) {
-      await ios.requestPermissions(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
+      await ios.requestPermissions(alert: true, badge: true, sound: true);
     }
   }
 
@@ -203,7 +235,9 @@ class NotificationService {
 
     var scheduledTzTime = tz.TZDateTime.from(scheduledTime, tz.local);
     if (scheduledTzTime.isBefore(tz.TZDateTime.now(tz.local))) {
-      scheduledTzTime = tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5));
+      scheduledTzTime = tz.TZDateTime.now(
+        tz.local,
+      ).add(const Duration(seconds: 5));
     }
 
     final payload = '$reminderId:$medicationId:take_dose';

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -23,6 +24,7 @@ import 'dose_group.dart';
 import 'dose_slot_card.dart';
 import 'fda_warning_card.dart';
 import 'providers/fda_warning_provider.dart';
+import 'providers/notification_scheduling_controller.dart';
 import 'providers/today_agenda_notifier.dart';
 import 'side_effect_prompt_card.dart';
 
@@ -41,7 +43,8 @@ class TodayScreen extends ConsumerStatefulWidget {
   ConsumerState<TodayScreen> createState() => _TodayScreenState();
 }
 
-class _TodayScreenState extends ConsumerState<TodayScreen> {
+class _TodayScreenState extends ConsumerState<TodayScreen>
+    with WidgetsBindingObserver {
   bool _dismissedCelebration = false;
   final Set<DoseGroup> _expandedGroups = {};
   final Map<String, GlobalKey> _cardKeys = {};
@@ -57,8 +60,10 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(ref.read(todayAgendaNotifierProvider.notifier).start());
+      unawaited(_reanchorNotifications());
     });
     _notificationSubscription = NotificationService
         .instance
@@ -68,8 +73,20 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _notificationSubscription?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // True OS timezone-change broadcasts aren't observable from pure Dart
+    // without additional native channel code; app-resume is the pragmatic
+    // proxy (WI 14) — any tz shift a patient experiences coincides with the
+    // app returning to the foreground.
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_reanchorNotifications());
+    }
   }
 
   void _handleNotificationResponse(NotificationResponse response) {
@@ -85,6 +102,25 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     }
     // A background interactive action may have changed server truth.
     unawaited(ref.read(todayAgendaNotifierProvider.notifier).loadAgenda());
+  }
+
+  /// Re-anchor (C5) + permission check (C1) — spec §6. Never requests
+  /// permission; only checks the current OS state.
+  Future<void> _reanchorNotifications() async {
+    final controller = ref.read(notificationSchedulingControllerProvider);
+    final shifted = await controller.reanchor();
+    if (!mounted) return;
+    final notifier = ref.read(todayAgendaNotifierProvider.notifier);
+    if (shifted) notifier.setTimezoneAdjusted(true);
+    final granted = await controller.permissionsGranted();
+    if (!mounted) return;
+    notifier.setRemindersOff(!granted);
+  }
+
+  Future<void> _rescheduleFor(List<AgendaSlot> slots) {
+    return ref
+        .read(notificationSchedulingControllerProvider)
+        .scheduleForSlots(slots);
   }
 
   Future<void> _logDose(AgendaSlot slot, DoseLogStatus status) async {
@@ -177,6 +213,14 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       final prevState = previous?.valueOrNull;
       final nextState = next.valueOrNull;
       if (nextState == null) return;
+
+      // Reschedule notifications on every successful (fresh) agenda load
+      // whose slots actually changed — spec §6.
+      final wasFresh = prevState?.sourceState == AgendaSourceState.fresh;
+      if (nextState.sourceState == AgendaSourceState.fresh &&
+          (!wasFresh || !listEquals(prevState?.slots, nextState.slots))) {
+        unawaited(_rescheduleFor(nextState.slots));
+      }
 
       // Rollback error snackbar (final write failure after retry).
       final nextRollback = nextState.rollbackErrorSlotId;
