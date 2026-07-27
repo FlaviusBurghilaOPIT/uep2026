@@ -25,12 +25,12 @@ Replace hard deletion of medications with discontinuation:
 
 ## Acceptance criteria
 
-- [ ] DELETE no longer removes rows; discontinued med hidden from default case-medications and agenda
-- [ ] `?include_discontinued=true` returns it for clinicians
-- [ ] Its past dose logs remain queryable via `GET /adherence/patients/{patient_id}`
-- [ ] Future unlogged slots disappear from agenda; past logged slots remain
-- [ ] `GET /cases/{id}/medications` response shape otherwise unchanged (web regression test)
-- [ ] Full pytest suite green
+- [x] DELETE no longer removes rows; discontinued med hidden from default case-medications and agenda
+- [x] `?include_discontinued=true` returns it for clinicians
+- [x] Its past dose logs remain queryable via `GET /adherence/patients/{patient_id}`
+- [x] Future unlogged slots disappear from agenda; past logged slots remain
+- [x] `GET /cases/{id}/medications` response shape otherwise unchanged (web regression test)
+- [x] Full pytest suite green
 
 ## Covers
 

@@ -81,16 +81,21 @@ def get_my_agenda(
 
     medications = (
         db.query(models.Medication)
-        .filter(
-            models.Medication.case_id.in_(case_ids),
-            models.Medication.discontinued_at.is_(None),
-        )
+        .filter(models.Medication.case_id.in_(case_ids))
         .all()
     )
 
+    active_meds = []
+    discontinued_meds = []
+    for med in medications:
+        if med.discontinued_at is None:
+            active_meds.append(med)
+        else:
+            discontinued_meds.append(med)
+
     scheduled_meds = []
     prn = []
-    for med in medications:
+    for med in active_meds:
         if times_for_frequency(med.schedule_text):
             scheduled_meds.append(med)
         else:
@@ -104,12 +109,26 @@ def get_my_agenda(
             )
 
     # Ensure-on-read: idempotently materialize this date's slots (check-then-
-    # insert on (medication_id, scheduled_time); concurrent-safe).
+    # insert on (medication_id, scheduled_time); concurrent-safe). Active meds
+    # only — discontinued meds never grow new slots.
     for med in scheduled_meds:
         create_scheduled_reminders_for_day(db, med, agenda_date)
     db.commit()
 
     slots = _slots_for_date(db, scheduled_meds, agenda_date, now)
+
+    # Spec E4: a discontinued med's past slots (scheduled_time <=
+    # discontinued_at) and logged slots remain as history; future unlogged
+    # slots are excluded.
+    slots += _slots_for_date(
+        db,
+        discontinued_meds,
+        agenda_date,
+        now,
+        row_filter=lambda reminder, log, med: log is not None
+        or reminder.scheduled_time <= med.discontinued_at,
+    )
+    slots.sort(key=lambda s: (s.scheduled_time, s.slot_id))
     return schemas.AgendaResponse(date=agenda_date, slots=slots, prn=prn)
 
 
@@ -118,6 +137,7 @@ def _slots_for_date(
     medications: list[models.Medication],
     agenda_date: date,
     now: datetime,
+    row_filter=None,
 ) -> list[schemas.AgendaSlot]:
     if not medications:
         return []
@@ -156,6 +176,8 @@ def _slots_for_date(
     slots = []
     for reminder, log in rows:
         med = med_by_id[reminder.medication_id]
+        if row_filter is not None and not row_filter(reminder, log, med):
+            continue
         previous_status = None
         if log is not None:
             event = latest_event_by_log.get(log.id)

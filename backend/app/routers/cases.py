@@ -90,11 +90,15 @@ def delete_case(
 @router.get("/{case_id}/medications", response_model=list[schemas.MedicationResponse])
 def get_case_medications(
     case_id: str,
+    include_discontinued: bool = False,
     db: Session = Depends(get_db_for_user),
     current_user: models.User = Depends(get_current_user),
 ):
 
-    medications = db.query(models.Medication).filter(models.Medication.case_id == case_id).all()
+    query = db.query(models.Medication).filter(models.Medication.case_id == case_id)
+    if not include_discontinued:
+        query = query.filter(models.Medication.discontinued_at.is_(None))
+    medications = query.all()
 
     result = []
     for m in medications:
