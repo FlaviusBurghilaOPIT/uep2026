@@ -190,5 +190,107 @@
   "authSaveAndEnterAppButton": "Save and Enter App",
   "authSelectDobError": "Please select your date of birth",
   "okButton": "OK",
-  "authCompleteProfileSetupSubtitle": "Complete your patient profile setup"
+  "authCompleteProfileSetupSubtitle": "Complete your patient profile setup",
+  "todayAgendaError": "Wir konnten Ihren Behandlungsplan nicht laden. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+  "todayRetry": "Erneut versuchen",
+  "todayStaleBanner": "Aktualisiert {relativeTime} — neueste Version wird synchronisiert…",
+  "@todayStaleBanner": {
+    "placeholders": {
+      "relativeTime": {
+        "type": "String"
+      }
+    }
+  },
+  "todayOfflineBanner": "Protokoll auf Ihrem Gerät gespeichert. Wir informieren Ihr Pflegeteam, sobald Sie wieder online sind.",
+  "todayPlanUpdatedBanner": "Ihr Pflegeteam hat Ihre verschriebenen Medikamente aktualisiert.",
+  "todayTimezoneAdjusted": "Ihre Erinnerungszeiten wurden an Ihre aktuelle Zeitzone angepasst.",
+  "todayLogUndo": "Rückgängig",
+  "todayLoggedAs": "Eingetragen als {status}.",
+  "@todayLoggedAs": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "todayLogRollbackError": "Wir konnten diesen Eintrag nicht speichern. Ihre Dosis gilt als nicht eingetragen — tippen Sie, um es erneut zu versuchen.",
+  "todayCorrectionTitle": "Eingetragen als {status} um {time}. Korrigieren, was passiert ist?",
+  "@todayCorrectionTitle": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "todayCorrectionKeep": "So belassen",
+  "todaySkipPrompt": "Haben Sie starke oder beunruhigende Beschwerden?",
+  "todaySkipPromptYes": "Ja",
+  "todaySkipPromptNo": "Nein, mir geht es gut",
+  "todayNoEmergencyContact": "Kein Notfallkontakt hinterlegt — wenden Sie sich an Ihre Klinik.",
+  "todayGroupMorning": "Morgens",
+  "todayGroupMidday": "Mittags",
+  "todayGroupEvening": "Abends",
+  "todayGroupBedtime": "Zur Nacht",
+  "todayPrnSection": "Bei Bedarf",
+  "todayDueNow": "Jetzt fällig",
+  "todayUpcoming": "Bevorstehend",
+  "todayScheduledFor": "Geplant {time}",
+  "@todayScheduledFor": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "todaySlotTimes": "Geplant für {scheduledTime} — Eingetragen um {loggedTime}.",
+  "@todaySlotTimes": {
+    "placeholders": {
+      "scheduledTime": {
+        "type": "String"
+      },
+      "loggedTime": {
+        "type": "String"
+      }
+    }
+  },
+  "todayPreviouslyLogged": "Zuvor: {status}",
+  "@todayPreviouslyLogged": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "todaySyncPending": "Auf dem Gerät gespeichert",
+  "todayCelebrationNext": "Nächste Dosis: {weekday} um {time}",
+  "@todayCelebrationNext": {
+    "placeholders": {
+      "weekday": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "todayCelebration": "Alle Dosen für heute erledigt! Danke, dass Sie Ihr Pflegeteam auf dem Laufenden halten.",
+  "todayProgressDoses": "{taken}/{total} Dosen",
+  "@todayProgressDoses": {
+    "placeholders": {
+      "taken": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "todayPullToRefreshHint": "Zum Aktualisieren nach unten ziehen.",
+  "todayOpenSettings": "Einstellungen öffnen",
+  "remindersOffBanner": "Erinnerungen sind ausgeschaltet. Sie können Dosen manuell eintragen — oder Erinnerungen in den Einstellungen aktivieren.",
+  "emptyPlanMessage": "Ihr Pflegeteam bereitet Ihren Behandlungsplan vor. Sie müssen im Moment nichts tun.",
+  "checkinErrorRetry": "Wir konnten Ihren Check-in nicht speichern. Tippen Sie, um es erneut zu versuchen."
 }

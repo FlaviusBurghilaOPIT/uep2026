@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:remotecare/core/network/api_service.dart';
+import 'package:remotecare/core/providers/app_providers.dart';
 import 'package:remotecare/core/telemetry/telemetry_service.dart';
 import 'package:remotecare/features/auth/demo_auth_state.dart';
 import 'package:remotecare/features/today/providers/today_agenda_notifier.dart';
@@ -748,5 +749,90 @@ void main() {
         expect(committed.properties, {'status': 'taken', 'was_offline': false});
       },
     );
+  });
+
+  group('C8 side-effect prompt', () {
+    Future<AgendaSlot> commitSkipped() async {
+      fakeApi.agendaHandler = (date) =>
+          http.Response(jsonEncode(agendaJson()), 200);
+      fakeApi.adherenceLogHandler = (id, status) => http.Response(
+        jsonEncode({'id': 'log-1', 'logged_at': '2026-07-26T08:42:00Z'}),
+        201,
+      );
+      final n = notifier()..undoWindow = const Duration(milliseconds: 20);
+      await n.loadAgenda();
+      final slot = agendaState().slots.single;
+      await n.logDose(slot, DoseLogStatus.skipped);
+      await Future<void>.delayed(const Duration(milliseconds: 60));
+      return agendaState().slots.single;
+    }
+
+    void seedAuthWithCase() {
+      fakeApi.savedToken = 'tok';
+      fakeApi.getHandlers['/auth/me'] = () => http.Response(
+        jsonEncode({'id': 'p1', 'email': 'p@x.io', 'full_name': 'Pat'}),
+        200,
+      );
+      fakeApi.getHandlers['/patients/p1/case'] = () =>
+          http.Response(jsonEncode({'id': 'case-1'}), 200);
+    }
+
+    test('skipped commit raises the C8 prompt', () async {
+      await commitSkipped();
+      expect(agendaState().c8PromptSlotId, 'rem-1');
+      notifier().dismissC8Prompt();
+      expect(agendaState().c8PromptSlotId, isNull);
+    });
+
+    test(
+      'answer yes → telemetry + emergency phone from the case endpoint',
+      () async {
+        seedAuthWithCase();
+        fakeApi.getHandlers['/cases/case-1/emergency-contact'] = () =>
+            http.Response(
+              jsonEncode({'name': 'Dr. Connor', 'phone': '+1 555-0122'}),
+              200,
+            );
+        await container.read(authProvider).fetchProfile();
+
+        await commitSkipped();
+        final phone = await notifier().answerC8Prompt(severeSymptoms: true);
+
+        expect(phone, '+1 555-0122');
+        final names = container
+            .read(telemetryServiceProvider)
+            .events
+            .map((e) => e.name);
+        expect(names, contains('mobile.today.skip_sideeffect_yes'));
+      },
+    );
+
+    test(
+      'answer yes with no contact on file → null (no-contact branch)',
+      () async {
+        seedAuthWithCase();
+        fakeApi.getHandlers['/cases/case-1/emergency-contact'] = () =>
+            http.Response(jsonEncode({'name': null, 'phone': null}), 200);
+        await container.read(authProvider).fetchProfile();
+
+        await commitSkipped();
+        final phone = await notifier().answerC8Prompt(severeSymptoms: true);
+
+        expect(phone, isNull);
+      },
+    );
+
+    test('answer no → telemetry, silent completion', () async {
+      await commitSkipped();
+      final phone = await notifier().answerC8Prompt(severeSymptoms: false);
+
+      expect(phone, isNull);
+      final names = container
+          .read(telemetryServiceProvider)
+          .events
+          .map((e) => e.name);
+      expect(names, contains('mobile.today.skip_sideeffect_no'));
+      expect(agendaState().c8PromptSlotId, isNull);
+    });
   });
 }

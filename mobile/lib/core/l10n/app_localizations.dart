@@ -769,6 +769,210 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Complete your patient profile setup'**
   String get authCompleteProfileSetupSubtitle;
+
+  /// No description provided for @todayAgendaError.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load your care plan. Check your connection and try again.'**
+  String get todayAgendaError;
+
+  /// No description provided for @todayRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get todayRetry;
+
+  /// No description provided for @todayStaleBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {relativeTime} — syncing latest plan…'**
+  String todayStaleBanner(String relativeTime);
+
+  /// No description provided for @todayOfflineBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Log saved on your device. We will update your care team once you are back online.'**
+  String get todayOfflineBanner;
+
+  /// No description provided for @todayPlanUpdatedBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Your care team updated your prescribed medications.'**
+  String get todayPlanUpdatedBanner;
+
+  /// No description provided for @todayTimezoneAdjusted.
+  ///
+  /// In en, this message translates to:
+  /// **'Your reminder times have adjusted to your current time zone.'**
+  String get todayTimezoneAdjusted;
+
+  /// No description provided for @todayLogUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get todayLogUndo;
+
+  /// No description provided for @todayLoggedAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Logged as {status}.'**
+  String todayLoggedAs(String status);
+
+  /// No description provided for @todayLogRollbackError.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t save that log. Your dose shows as unlogged — tap to try again.'**
+  String get todayLogRollbackError;
+
+  /// No description provided for @todayCorrectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Logged as {status} at {time}. Change what happened?'**
+  String todayCorrectionTitle(String status, String time);
+
+  /// No description provided for @todayCorrectionKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep as is'**
+  String get todayCorrectionKeep;
+
+  /// No description provided for @todaySkipPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you experiencing severe or troubling symptoms?'**
+  String get todaySkipPrompt;
+
+  /// No description provided for @todaySkipPromptYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get todaySkipPromptYes;
+
+  /// No description provided for @todaySkipPromptNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No, I\'m okay'**
+  String get todaySkipPromptNo;
+
+  /// No description provided for @todayNoEmergencyContact.
+  ///
+  /// In en, this message translates to:
+  /// **'No emergency contact on file — contact your clinic.'**
+  String get todayNoEmergencyContact;
+
+  /// No description provided for @todayGroupMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning'**
+  String get todayGroupMorning;
+
+  /// No description provided for @todayGroupMidday.
+  ///
+  /// In en, this message translates to:
+  /// **'Midday'**
+  String get todayGroupMidday;
+
+  /// No description provided for @todayGroupEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Evening'**
+  String get todayGroupEvening;
+
+  /// No description provided for @todayGroupBedtime.
+  ///
+  /// In en, this message translates to:
+  /// **'Bedtime'**
+  String get todayGroupBedtime;
+
+  /// No description provided for @todayPrnSection.
+  ///
+  /// In en, this message translates to:
+  /// **'As needed'**
+  String get todayPrnSection;
+
+  /// No description provided for @todayDueNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Due now'**
+  String get todayDueNow;
+
+  /// No description provided for @todayUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming'**
+  String get todayUpcoming;
+
+  /// No description provided for @todayScheduledFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled {time}'**
+  String todayScheduledFor(String time);
+
+  /// No description provided for @todaySlotTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled for {scheduledTime} — Logged at {loggedTime}.'**
+  String todaySlotTimes(String scheduledTime, String loggedTime);
+
+  /// No description provided for @todayPreviouslyLogged.
+  ///
+  /// In en, this message translates to:
+  /// **'Previously: {status}'**
+  String todayPreviouslyLogged(String status);
+
+  /// No description provided for @todaySyncPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on device'**
+  String get todaySyncPending;
+
+  /// No description provided for @todayCelebrationNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next dose: {weekday} at {time}'**
+  String todayCelebrationNext(String weekday, String time);
+
+  /// No description provided for @todayCelebration.
+  ///
+  /// In en, this message translates to:
+  /// **'All doses for today completed! Thank you for updating your care team.'**
+  String get todayCelebration;
+
+  /// No description provided for @todayProgressDoses.
+  ///
+  /// In en, this message translates to:
+  /// **'{taken}/{total} doses'**
+  String todayProgressDoses(int taken, int total);
+
+  /// No description provided for @todayPullToRefreshHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull down to check again.'**
+  String get todayPullToRefreshHint;
+
+  /// No description provided for @todayOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get todayOpenSettings;
+
+  /// No description provided for @remindersOffBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders are turned off. You can log doses manually — or turn reminders on in Settings.'**
+  String get remindersOffBanner;
+
+  /// No description provided for @emptyPlanMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your care team is preparing your care plan. No action is needed from you right now.'**
+  String get emptyPlanMessage;
+
+  /// No description provided for @checkinErrorRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t save your check-in. Tap to try again.'**
+  String get checkinErrorRetry;
 }
 
 class _AppLocalizationsDelegate

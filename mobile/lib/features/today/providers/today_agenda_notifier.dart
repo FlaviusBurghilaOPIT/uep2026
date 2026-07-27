@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/network/api_service.dart';
+import '../../../core/providers/app_providers.dart';
 import '../../../core/telemetry/telemetry_service.dart';
 import '../../auth/demo_auth_state.dart' show sharedPreferencesProvider;
 
@@ -518,6 +519,72 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
   void dismissC8Prompt() {
     final current = state.valueOrNull ?? const AgendaState();
     state = AsyncValue.data(current.copyWith(c8PromptSlotId: null));
+  }
+
+  /// C8 answer. Returns the emergency-contact phone when the patient taps
+  /// "Yes" — null when no contact is on file (render the no-contact note)
+  /// or when the answer was "No" (completes silently).
+  Future<String?> answerC8Prompt({required bool severeSymptoms}) async {
+    _track(
+      severeSymptoms
+          ? 'mobile.today.skip_sideeffect_yes'
+          : 'mobile.today.skip_sideeffect_no',
+      const {},
+    );
+    if (!severeSymptoms) {
+      dismissC8Prompt();
+      return null;
+    }
+    return _fetchEmergencyContactPhone();
+  }
+
+  /// D1: `GET /cases/{caseId}/emergency-contact` returns 200 with null
+  /// fields when unset (404 only for an unknown case) — both map to the
+  /// no-contact branch.
+  Future<String?> _fetchEmergencyContactPhone() async {
+    try {
+      final auth = ref.read(authProvider);
+      var caseId = auth.caseId;
+      if (caseId == null && auth.patientId != null) {
+        final caseRes = await _api.get('/patients/${auth.patientId}/case');
+        if (caseRes.statusCode == 200) {
+          caseId =
+              (jsonDecode(caseRes.body) as Map<String, dynamic>)['id']
+                  as String?;
+        }
+      }
+      if (caseId == null) return null;
+      final res = await _api.get('/cases/$caseId/emergency-contact');
+      if (res.statusCode != 200) return null;
+      final phone =
+          (jsonDecode(res.body) as Map<String, dynamic>)['phone'] as String?;
+      return (phone == null || phone.trim().isEmpty) ? null : phone;
+    } catch (e, st) {
+      debugPrint(
+        'TodayAgendaNotifier: emergency contact fetch failed: $e\n$st',
+      );
+      return null;
+    }
+  }
+
+  /// Telemetry for the emergency CTA tap (launch happens screen-side).
+  void trackEmergencyCtaTapped() {
+    _track('mobile.today.emergency_cta_tapped', const {});
+  }
+
+  /// Telemetry for a logged slot being tapped to open the correction sheet.
+  void trackCorrectionOpened(AgendaSlot slot) {
+    final loggedAt = slot.loggedAt;
+    final age = loggedAt == null
+        ? Duration.zero
+        : DateTime.now().difference(loggedAt.toLocal());
+    _track('mobile.today.correction_opened', {
+      'slot_age_hours_bucket': age.inHours < 1
+          ? '<1h'
+          : age.inHours < 24
+          ? '1-24h'
+          : '>24h',
+    });
   }
 
   void _enqueue(OfflineQueueEntry entry) {

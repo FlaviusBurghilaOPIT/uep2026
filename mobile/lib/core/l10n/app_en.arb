@@ -190,5 +190,107 @@
   "authSaveAndEnterAppButton": "Save and Enter App",
   "authSelectDobError": "Please select your date of birth",
   "okButton": "OK",
-  "authCompleteProfileSetupSubtitle": "Complete your patient profile setup"
+  "authCompleteProfileSetupSubtitle": "Complete your patient profile setup",
+  "todayAgendaError": "We couldn't load your care plan. Check your connection and try again.",
+  "todayRetry": "Retry",
+  "todayStaleBanner": "Updated {relativeTime} — syncing latest plan…",
+  "@todayStaleBanner": {
+    "placeholders": {
+      "relativeTime": {
+        "type": "String"
+      }
+    }
+  },
+  "todayOfflineBanner": "Log saved on your device. We will update your care team once you are back online.",
+  "todayPlanUpdatedBanner": "Your care team updated your prescribed medications.",
+  "todayTimezoneAdjusted": "Your reminder times have adjusted to your current time zone.",
+  "todayLogUndo": "Undo",
+  "todayLoggedAs": "Logged as {status}.",
+  "@todayLoggedAs": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "todayLogRollbackError": "We couldn't save that log. Your dose shows as unlogged — tap to try again.",
+  "todayCorrectionTitle": "Logged as {status} at {time}. Change what happened?",
+  "@todayCorrectionTitle": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "todayCorrectionKeep": "Keep as is",
+  "todaySkipPrompt": "Are you experiencing severe or troubling symptoms?",
+  "todaySkipPromptYes": "Yes",
+  "todaySkipPromptNo": "No, I'm okay",
+  "todayNoEmergencyContact": "No emergency contact on file — contact your clinic.",
+  "todayGroupMorning": "Morning",
+  "todayGroupMidday": "Midday",
+  "todayGroupEvening": "Evening",
+  "todayGroupBedtime": "Bedtime",
+  "todayPrnSection": "As needed",
+  "todayDueNow": "Due now",
+  "todayUpcoming": "Upcoming",
+  "todayScheduledFor": "Scheduled {time}",
+  "@todayScheduledFor": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "todaySlotTimes": "Scheduled for {scheduledTime} — Logged at {loggedTime}.",
+  "@todaySlotTimes": {
+    "placeholders": {
+      "scheduledTime": {
+        "type": "String"
+      },
+      "loggedTime": {
+        "type": "String"
+      }
+    }
+  },
+  "todayPreviouslyLogged": "Previously: {status}",
+  "@todayPreviouslyLogged": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "todaySyncPending": "Saved on device",
+  "todayCelebrationNext": "Next dose: {weekday} at {time}",
+  "@todayCelebrationNext": {
+    "placeholders": {
+      "weekday": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "todayCelebration": "All doses for today completed! Thank you for updating your care team.",
+  "todayProgressDoses": "{taken}/{total} doses",
+  "@todayProgressDoses": {
+    "placeholders": {
+      "taken": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "todayPullToRefreshHint": "Pull down to check again.",
+  "todayOpenSettings": "Open Settings",
+  "remindersOffBanner": "Reminders are turned off. You can log doses manually — or turn reminders on in Settings.",
+  "emptyPlanMessage": "Your care team is preparing your care plan. No action is needed from you right now.",
+  "checkinErrorRetry": "We couldn't save your check-in. Tap to try again."
 }

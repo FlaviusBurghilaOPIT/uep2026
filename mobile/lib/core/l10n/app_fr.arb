@@ -190,5 +190,107 @@
   "authSaveAndEnterAppButton": "Save and Enter App",
   "authSelectDobError": "Please select your date of birth",
   "okButton": "OK",
-  "authCompleteProfileSetupSubtitle": "Complete your patient profile setup"
+  "authCompleteProfileSetupSubtitle": "Complete your patient profile setup",
+  "todayAgendaError": "Nous n'avons pas pu charger votre plan de soins. Vérifiez votre connexion et réessayez.",
+  "todayRetry": "Réessayer",
+  "todayStaleBanner": "Mis à jour {relativeTime} — synchronisation du dernier plan…",
+  "@todayStaleBanner": {
+    "placeholders": {
+      "relativeTime": {
+        "type": "String"
+      }
+    }
+  },
+  "todayOfflineBanner": "Enregistrement sauvegardé sur votre appareil. Nous informerons votre équipe soignante lorsque vous serez de nouveau en ligne.",
+  "todayPlanUpdatedBanner": "Votre équipe soignante a mis à jour vos médicaments prescrits.",
+  "todayTimezoneAdjusted": "Les horaires de vos rappels ont été adaptés à votre fuseau horaire actuel.",
+  "todayLogUndo": "Annuler",
+  "todayLoggedAs": "Enregistré comme {status}.",
+  "@todayLoggedAs": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "todayLogRollbackError": "Nous n'avons pas pu enregistrer ce suivi. Votre dose apparaît comme non enregistrée — touchez pour réessayer.",
+  "todayCorrectionTitle": "Enregistré comme {status} à {time}. Corriger ce qui s'est passé ?",
+  "@todayCorrectionTitle": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "todayCorrectionKeep": "Garder tel quel",
+  "todaySkipPrompt": "Ressentez-vous des symptômes graves ou inquiétants ?",
+  "todaySkipPromptYes": "Oui",
+  "todaySkipPromptNo": "Non, ça va",
+  "todayNoEmergencyContact": "Aucun contact d'urgence enregistré — contactez votre clinique.",
+  "todayGroupMorning": "Matin",
+  "todayGroupMidday": "Midi",
+  "todayGroupEvening": "Soir",
+  "todayGroupBedtime": "Coucher",
+  "todayPrnSection": "Si besoin",
+  "todayDueNow": "À prendre maintenant",
+  "todayUpcoming": "À venir",
+  "todayScheduledFor": "Prévu {time}",
+  "@todayScheduledFor": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "todaySlotTimes": "Prévu pour {scheduledTime} — Enregistré à {loggedTime}.",
+  "@todaySlotTimes": {
+    "placeholders": {
+      "scheduledTime": {
+        "type": "String"
+      },
+      "loggedTime": {
+        "type": "String"
+      }
+    }
+  },
+  "todayPreviouslyLogged": "Précédent : {status}",
+  "@todayPreviouslyLogged": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "todaySyncPending": "Enregistré sur l'appareil",
+  "todayCelebrationNext": "Prochaine dose : {weekday} à {time}",
+  "@todayCelebrationNext": {
+    "placeholders": {
+      "weekday": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "todayCelebration": "Toutes les doses du jour sont terminées ! Merci de tenir votre équipe soignante informée.",
+  "todayProgressDoses": "{taken}/{total} doses",
+  "@todayProgressDoses": {
+    "placeholders": {
+      "taken": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "todayPullToRefreshHint": "Tirez vers le bas pour vérifier à nouveau.",
+  "todayOpenSettings": "Ouvrir les réglages",
+  "remindersOffBanner": "Les rappels sont désactivés. Vous pouvez enregistrer vos doses manuellement — ou activer les rappels dans les réglages.",
+  "emptyPlanMessage": "Votre équipe soignante prépare votre plan de soins. Vous n'avez rien à faire pour le moment.",
+  "checkinErrorRetry": "Nous n'avons pas pu enregistrer votre bilan. Touchez pour réessayer."
 }

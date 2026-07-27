@@ -377,4 +377,133 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get authCompleteProfileSetupSubtitle =>
       'Completa la configurazione del tuo profilo paziente';
+
+  @override
+  String get todayAgendaError =>
+      'Non siamo riusciti a caricare il tuo piano di cura. Controlla la connessione e riprova.';
+
+  @override
+  String get todayRetry => 'Riprova';
+
+  @override
+  String todayStaleBanner(String relativeTime) {
+    return 'Aggiornato $relativeTime — sincronizzazione dell\'ultimo piano…';
+  }
+
+  @override
+  String get todayOfflineBanner =>
+      'Registrazione salvata sul tuo dispositivo. Avviseremo il tuo team di cura quando sarai di nuovo online.';
+
+  @override
+  String get todayPlanUpdatedBanner =>
+      'Il tuo team di cura ha aggiornato i tuoi farmaci prescritti.';
+
+  @override
+  String get todayTimezoneAdjusted =>
+      'Gli orari dei promemoria sono stati adattati al tuo fuso orario attuale.';
+
+  @override
+  String get todayLogUndo => 'Annulla';
+
+  @override
+  String todayLoggedAs(String status) {
+    return 'Registrato come $status.';
+  }
+
+  @override
+  String get todayLogRollbackError =>
+      'Non siamo riusciti a salvare la registrazione. La dose risulta non registrata — tocca per riprovare.';
+
+  @override
+  String todayCorrectionTitle(String status, String time) {
+    return 'Registrato come $status alle $time. Vuoi correggere cosa è successo?';
+  }
+
+  @override
+  String get todayCorrectionKeep => 'Lascia così';
+
+  @override
+  String get todaySkipPrompt => 'Hai sintomi gravi o preoccupanti?';
+
+  @override
+  String get todaySkipPromptYes => 'Sì';
+
+  @override
+  String get todaySkipPromptNo => 'No, sto bene';
+
+  @override
+  String get todayNoEmergencyContact =>
+      'Nessun contatto di emergenza registrato — contatta la tua clinica.';
+
+  @override
+  String get todayGroupMorning => 'Mattina';
+
+  @override
+  String get todayGroupMidday => 'Mezzogiorno';
+
+  @override
+  String get todayGroupEvening => 'Sera';
+
+  @override
+  String get todayGroupBedtime => 'Notte';
+
+  @override
+  String get todayPrnSection => 'Al bisogno';
+
+  @override
+  String get todayDueNow => 'Da prendere ora';
+
+  @override
+  String get todayUpcoming => 'In arrivo';
+
+  @override
+  String todayScheduledFor(String time) {
+    return 'Programmata $time';
+  }
+
+  @override
+  String todaySlotTimes(String scheduledTime, String loggedTime) {
+    return 'Programmata per $scheduledTime — Registrata alle $loggedTime.';
+  }
+
+  @override
+  String todayPreviouslyLogged(String status) {
+    return 'Precedente: $status';
+  }
+
+  @override
+  String get todaySyncPending => 'Salvato sul dispositivo';
+
+  @override
+  String todayCelebrationNext(String weekday, String time) {
+    return 'Prossima dose: $weekday alle $time';
+  }
+
+  @override
+  String get todayCelebration =>
+      'Tutte le dosi di oggi completate! Grazie per aver aggiornato il tuo team di cura.';
+
+  @override
+  String todayProgressDoses(int taken, int total) {
+    return '$taken/$total dosi';
+  }
+
+  @override
+  String get todayPullToRefreshHint =>
+      'Scorri verso il basso per controllare di nuovo.';
+
+  @override
+  String get todayOpenSettings => 'Apri Impostazioni';
+
+  @override
+  String get remindersOffBanner =>
+      'I promemoria sono disattivati. Puoi registrare le dosi manualmente — oppure attivare i promemoria nelle Impostazioni.';
+
+  @override
+  String get emptyPlanMessage =>
+      'Il tuo team di cura sta preparando il tuo piano. Non devi fare nulla per ora.';
+
+  @override
+  String get checkinErrorRetry =>
+      'Non siamo riusciti a salvare il tuo check-in. Tocca per riprovare.';
 }

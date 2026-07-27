@@ -190,5 +190,107 @@
   "authSaveAndEnterAppButton": "Save and Enter App",
   "authSelectDobError": "Please select your date of birth",
   "okButton": "OK",
-  "authCompleteProfileSetupSubtitle": "Complete your patient profile setup"
+  "authCompleteProfileSetupSubtitle": "Complete your patient profile setup",
+  "todayAgendaError": "No pudimos cargar tu plan de cuidados. Revisa tu conexión e inténtalo de nuevo.",
+  "todayRetry": "Reintentar",
+  "todayStaleBanner": "Actualizado {relativeTime} — sincronizando el plan más reciente…",
+  "@todayStaleBanner": {
+    "placeholders": {
+      "relativeTime": {
+        "type": "String"
+      }
+    }
+  },
+  "todayOfflineBanner": "Registro guardado en tu dispositivo. Avisaremos a tu equipo de cuidados cuando vuelvas a estar en línea.",
+  "todayPlanUpdatedBanner": "Tu equipo de cuidados actualizó tus medicamentos recetados.",
+  "todayTimezoneAdjusted": "Los horarios de tus recordatorios se ajustaron a tu zona horaria actual.",
+  "todayLogUndo": "Deshacer",
+  "todayLoggedAs": "Registrado como {status}.",
+  "@todayLoggedAs": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "todayLogRollbackError": "No pudimos guardar ese registro. Tu dosis aparece como no registrada — toca para intentarlo de nuevo.",
+  "todayCorrectionTitle": "Registrado como {status} a las {time}. ¿Quieres corregir lo que pasó?",
+  "@todayCorrectionTitle": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "todayCorrectionKeep": "Dejar como está",
+  "todaySkipPrompt": "¿Tienes síntomas graves o preocupantes?",
+  "todaySkipPromptYes": "Sí",
+  "todaySkipPromptNo": "No, estoy bien",
+  "todayNoEmergencyContact": "No hay contacto de emergencia registrado — contacta a tu clínica.",
+  "todayGroupMorning": "Mañana",
+  "todayGroupMidday": "Mediodía",
+  "todayGroupEvening": "Tarde",
+  "todayGroupBedtime": "Noche",
+  "todayPrnSection": "Según sea necesario",
+  "todayDueNow": "Toca ahora",
+  "todayUpcoming": "Próximo",
+  "todayScheduledFor": "Programada {time}",
+  "@todayScheduledFor": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "todaySlotTimes": "Programada para {scheduledTime} — Registrada a las {loggedTime}.",
+  "@todaySlotTimes": {
+    "placeholders": {
+      "scheduledTime": {
+        "type": "String"
+      },
+      "loggedTime": {
+        "type": "String"
+      }
+    }
+  },
+  "todayPreviouslyLogged": "Anterior: {status}",
+  "@todayPreviouslyLogged": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "todaySyncPending": "Guardado en el dispositivo",
+  "todayCelebrationNext": "Próxima dosis: {weekday} a las {time}",
+  "@todayCelebrationNext": {
+    "placeholders": {
+      "weekday": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "todayCelebration": "¡Todas las dosis de hoy completadas! Gracias por mantener informado a tu equipo de cuidados.",
+  "todayProgressDoses": "{taken}/{total} dosis",
+  "@todayProgressDoses": {
+    "placeholders": {
+      "taken": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "todayPullToRefreshHint": "Desliza hacia abajo para comprobar de nuevo.",
+  "todayOpenSettings": "Abrir Ajustes",
+  "remindersOffBanner": "Los recordatorios están desactivados. Puedes registrar dosis manualmente — o activar los recordatorios en Ajustes.",
+  "emptyPlanMessage": "Tu equipo de cuidados está preparando tu plan. No necesitas hacer nada por ahora.",
+  "checkinErrorRetry": "No pudimos guardar tu registro diario. Toca para intentarlo de nuevo."
 }

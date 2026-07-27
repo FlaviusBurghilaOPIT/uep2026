@@ -26,11 +26,18 @@ The core Today-screen dose slot component and its two interaction sheets (spec �
 
 ## Acceptance criteria
 
-- [ ] Slot renders every state with icon+text badge (grayscale-distinguishable); logged slots show both times
-- [ ] Correction sheet offers exactly the two other statuses + Keep as is at equal weight; success path preserves previous value in slot detail
-- [ ] C8 branches covered by widget tests: yes → CTA / yes → no-contact note (404 fake) / no → silent; prompt is dismissible and non-blocking
-- [ ] All new copy via ARB in 5 locales; no `AppStrings` introduced
-- [ ] Widget tests per spec §11 (slot per state, both-times, correction options, C8 branches) green; `flutter analyze` clean
+- [x] Slot renders every state with icon+text badge (grayscale-distinguishable); logged slots show both times
+- [x] Correction sheet offers exactly the two other statuses + Keep as is at equal weight; success path preserves previous value in slot detail
+- [x] C8 branches covered by widget tests: yes → CTA / yes → no-contact note (404 fake) / no → silent; prompt is dismissible and non-blocking
+- [x] All new copy via ARB in 5 locales; no `AppStrings` introduced
+- [x] Widget tests per spec §11 (slot per state, both-times, correction options, C8 branches) green; `flutter analyze` clean
+
+## Implementation notes (2026-07-27)
+
+- New components: `dose_slot_card.dart` (all 6 server states + syncPending + writeInFlight spinner, 48dp action rows, both-times line, previous-value line, M-08 dose formatting via `dose_format.dart`), `correction_sheet.dart` (C7), `side_effect_prompt_card.dart` (C8, inline non-blocking card — a modal dialog was rejected by spec §3).
+- **D1 verified:** `GET /cases/{caseId}/emergency-contact` returns 200 with `{"name": null, "phone": null}` when unset (404 only for unknown case) — the no-contact branch keys off null/empty phone, not 404 (`backend/app/routers/cases.py:193-207`).
+- C8 telemetry (`skip_sideeffect_yes/no`, `emergency_cta_tapped`, `correction_opened`) fires from the notifier; phone fetch reuses the auth case with the `/patients/{id}/case` fallback.
+- All spec §8 ARB keys + reused C1/C9 keys (`remindersOffBanner`, `emptyPlanMessage`) added in en/de/es/fr/it and pinned by `test/unit/today_l10n_test.dart`.
 
 ## Covers
 

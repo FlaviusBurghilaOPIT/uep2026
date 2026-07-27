@@ -373,4 +373,133 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get authCompleteProfileSetupSubtitle =>
       'Complete your patient profile setup';
+
+  @override
+  String get todayAgendaError =>
+      'We couldn\'t load your care plan. Check your connection and try again.';
+
+  @override
+  String get todayRetry => 'Retry';
+
+  @override
+  String todayStaleBanner(String relativeTime) {
+    return 'Updated $relativeTime — syncing latest plan…';
+  }
+
+  @override
+  String get todayOfflineBanner =>
+      'Log saved on your device. We will update your care team once you are back online.';
+
+  @override
+  String get todayPlanUpdatedBanner =>
+      'Your care team updated your prescribed medications.';
+
+  @override
+  String get todayTimezoneAdjusted =>
+      'Your reminder times have adjusted to your current time zone.';
+
+  @override
+  String get todayLogUndo => 'Undo';
+
+  @override
+  String todayLoggedAs(String status) {
+    return 'Logged as $status.';
+  }
+
+  @override
+  String get todayLogRollbackError =>
+      'We couldn\'t save that log. Your dose shows as unlogged — tap to try again.';
+
+  @override
+  String todayCorrectionTitle(String status, String time) {
+    return 'Logged as $status at $time. Change what happened?';
+  }
+
+  @override
+  String get todayCorrectionKeep => 'Keep as is';
+
+  @override
+  String get todaySkipPrompt =>
+      'Are you experiencing severe or troubling symptoms?';
+
+  @override
+  String get todaySkipPromptYes => 'Yes';
+
+  @override
+  String get todaySkipPromptNo => 'No, I\'m okay';
+
+  @override
+  String get todayNoEmergencyContact =>
+      'No emergency contact on file — contact your clinic.';
+
+  @override
+  String get todayGroupMorning => 'Morning';
+
+  @override
+  String get todayGroupMidday => 'Midday';
+
+  @override
+  String get todayGroupEvening => 'Evening';
+
+  @override
+  String get todayGroupBedtime => 'Bedtime';
+
+  @override
+  String get todayPrnSection => 'As needed';
+
+  @override
+  String get todayDueNow => 'Due now';
+
+  @override
+  String get todayUpcoming => 'Upcoming';
+
+  @override
+  String todayScheduledFor(String time) {
+    return 'Scheduled $time';
+  }
+
+  @override
+  String todaySlotTimes(String scheduledTime, String loggedTime) {
+    return 'Scheduled for $scheduledTime — Logged at $loggedTime.';
+  }
+
+  @override
+  String todayPreviouslyLogged(String status) {
+    return 'Previously: $status';
+  }
+
+  @override
+  String get todaySyncPending => 'Saved on device';
+
+  @override
+  String todayCelebrationNext(String weekday, String time) {
+    return 'Next dose: $weekday at $time';
+  }
+
+  @override
+  String get todayCelebration =>
+      'All doses for today completed! Thank you for updating your care team.';
+
+  @override
+  String todayProgressDoses(int taken, int total) {
+    return '$taken/$total doses';
+  }
+
+  @override
+  String get todayPullToRefreshHint => 'Pull down to check again.';
+
+  @override
+  String get todayOpenSettings => 'Open Settings';
+
+  @override
+  String get remindersOffBanner =>
+      'Reminders are turned off. You can log doses manually — or turn reminders on in Settings.';
+
+  @override
+  String get emptyPlanMessage =>
+      'Your care team is preparing your care plan. No action is needed from you right now.';
+
+  @override
+  String get checkinErrorRetry =>
+      'We couldn\'t save your check-in. Tap to try again.';
 }
