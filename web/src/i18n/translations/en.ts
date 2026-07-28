@@ -11,6 +11,9 @@ export const en: Translations = {
     errorInvalid: 'Invalid email or password',
     button: 'Log in',
   },
+  auth: {
+    sessionExpired: 'Session expired. Please log in again.',
+  },
   createCase: {
     errorMissingFields: 'Please select a patient and enter a surgery type',
     errorCreateFailed: 'Failed to create case. Please try again.',

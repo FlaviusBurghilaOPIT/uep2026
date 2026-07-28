@@ -11,6 +11,9 @@ export const es: Translations = {
     errorInvalid: 'Correo electrónico o contraseña no válidos',
     button: 'Iniciar sesión',
   },
+  auth: {
+    sessionExpired: 'La sesión ha caducado. Por favor, inicia sesión de nuevo.',
+  },
   createCase: {
     errorMissingFields: 'Seleccione un paciente e ingrese el tipo de cirugía',
     errorCreateFailed: 'No se pudo crear el caso. Inténtelo de nuevo.',

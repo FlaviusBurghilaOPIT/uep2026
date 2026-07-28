@@ -2,21 +2,14 @@ import React, { useState } from 'react'
 import type { Language } from './types'
 import { translations } from './translations'
 import { LanguageContext } from './context'
-
-const STORAGE_KEY = 'carepro_language'
+import { LANGUAGE_STORAGE_KEY, detectDefaultLanguage } from './detect'
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguageState] = useState<Language>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved === 'en' || saved === 'es' || saved === 'it') {
-      return saved
-    }
-    return 'en'
-  })
+  const [language, setLanguageState] = useState<Language>(() => detectDefaultLanguage())
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang)
-    localStorage.setItem(STORAGE_KEY, lang)
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, lang)
   }
 
   const currentTranslations = translations[language] || translations.en

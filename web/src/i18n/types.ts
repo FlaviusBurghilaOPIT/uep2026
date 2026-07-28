@@ -168,6 +168,10 @@ export interface LoginTranslations {
   loggingIn: string
 }
 
+export interface AuthTranslations {
+  sessionExpired: string
+}
+
 export interface CreateCaseTranslations {
   errorMissingFields: string
   errorCreateFailed: string
@@ -326,6 +330,7 @@ export interface CaseDetailTranslations {
 export interface Translations {
 
   login: LoginTranslations
+  auth: AuthTranslations
   createCase: CreateCaseTranslations
   createPatient: CreatePatientTranslations
   fda: FdaTranslations

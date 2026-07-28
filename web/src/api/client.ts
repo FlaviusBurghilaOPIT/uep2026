@@ -1,3 +1,5 @@
+import { translate } from '../i18n';
+
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export class ApiError extends Error {
@@ -39,15 +41,20 @@ export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): 
     headers,
   });
 
-  if (response.status === 401) {
-    // Expired or invalid session — force re-login
+  // A 401 on the login endpoint itself means "bad credentials", not an expired
+  // session — let the backend detail (e.g. "Invalid credentials") surface below
+  // instead of hijacking it with the session-expired flow.
+  const isLoginRequest = endpoint.includes('/auth/login');
+
+  if (response.status === 401 && !isLoginRequest) {
+    // Expired or invalid session on an authenticated call — force re-login
     localStorage.removeItem('token');
     localStorage.removeItem('role');
     localStorage.removeItem('email');
     if (window.location.pathname !== '/login') {
       window.location.href = '/login';
     }
-    throw new ApiError('Session expired. Please log in again.', 401);
+    throw new ApiError(translate('auth.sessionExpired', 'Session expired. Please log in again.'), 401);
   }
 
   if (!response.ok) {
