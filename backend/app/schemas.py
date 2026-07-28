@@ -43,6 +43,15 @@ class UserResponse(BaseModel):
         from_attributes = True
 
 
+class TriageRosterPage(BaseModel):
+    """Paginated query-by-example roster for the triage dashboard."""
+
+    items: list[UserResponse]
+    total: int
+    page: int
+    size: int
+
+
 class LoginRequest(BaseModel):
     email: str
     password: str

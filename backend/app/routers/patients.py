@@ -4,6 +4,7 @@ import secrets
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app import models, schemas
@@ -112,6 +113,44 @@ def latest_triage_resolutions(
         schemas.TriageResolutionLatest(patient_id=pid, resolved_at=r.resolved_at)
         for pid, r in latest.items()
     ]
+
+
+@router.get("/triage", response_model=schemas.TriageRosterPage)
+def triage_roster(
+    search: str | None = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    size: int = Query(default=20, ge=1, le=100),
+    db: Session = Depends(get_db_for_user),
+    current_user: models.User = Depends(require_clinician),
+):
+    """Query-by-example patient roster for the triage dashboard.
+
+    Filters by partial match on name/email and paginates server-side. Severity
+    triage is still computed client-side, so callers that need the prioritized
+    view can request a large ``size`` and rank locally.
+    """
+    query = (
+        db.query(models.User)
+        .outerjoin(models.Case, models.Case.patient_id == models.User.id)
+        .filter(models.User.role == models.UserRole.patient)
+    )
+
+    term = (search or "").strip()
+    if term:
+        like = f"%{term}%"
+        query = query.filter(
+            or_(
+                models.User.full_name.ilike(like),
+                models.User.email.ilike(like),
+                models.Case.surgery_type.ilike(like),
+            )
+        )
+
+    query = query.distinct()
+    total = query.count()
+    rows = query.order_by(models.User.full_name).offset((page - 1) * size).limit(size).all()
+
+    return schemas.TriageRosterPage(items=rows, total=total, page=page, size=size)
 
 
 @router.get("/{patient_id}", response_model=schemas.UserResponse)
