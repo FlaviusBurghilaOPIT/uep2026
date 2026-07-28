@@ -105,10 +105,10 @@ function CaseDetailPage() {
 
   const formatTs = (ts?: string | null) =>
     ts
-      ? new Date(ts).toLocaleString(language, {
+      ? // dateStyle/timeStyle cannot be combined with timeZoneName (throws in WebKit)
+        new Date(ts).toLocaleString(language, {
           dateStyle: 'short',
           timeStyle: 'short',
-          timeZoneName: 'short',
         } as Intl.DateTimeFormatOptions)
       : '—'
 

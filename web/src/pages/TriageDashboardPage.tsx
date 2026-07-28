@@ -1261,7 +1261,8 @@ const styles = {
     gap: '16px'
   },
   patientContextCard: {
-    border: '1px solid',
+    borderWidth: '1px',
+    borderStyle: 'solid',
     borderRadius: '8px',
     padding: '12px 14px'
   },
@@ -1287,7 +1288,9 @@ const styles = {
     width: '100%',
     padding: '10px',
     borderRadius: '8px',
-    border: '1px solid #e2e8f0',
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: '#e2e8f0',
     fontSize: '13px',
     color: '#0f172a',
     fontFamily: 'inherit',
