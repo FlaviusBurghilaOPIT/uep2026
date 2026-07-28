@@ -87,7 +87,7 @@ class MainBottomNav extends ConsumerWidget {
                   key: Key('navTab_${item.key}'),
                   behavior: HitTestBehavior.opaque,
                   onTap: () {
-                    ref.read(navigationProvider).setTab(index);
+                    ref.read(navigationProvider.notifier).setTab(index);
                   },
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,

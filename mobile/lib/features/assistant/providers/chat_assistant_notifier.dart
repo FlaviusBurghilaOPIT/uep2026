@@ -52,7 +52,7 @@ String _classifyIntent(String message) {
 }
 
 @freezed
-class ChatMessage with _$ChatMessage {
+abstract class ChatMessage with _$ChatMessage {
   const factory ChatMessage({
     required String id,
     required String text,
@@ -65,7 +65,7 @@ class ChatMessage with _$ChatMessage {
 }
 
 @freezed
-class ChatState with _$ChatState {
+abstract class ChatState with _$ChatState {
   const factory ChatState({
     @Default([]) List<ChatMessage> messages,
     @Default(false) bool isLoading,

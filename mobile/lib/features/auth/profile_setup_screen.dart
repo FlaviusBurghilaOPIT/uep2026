@@ -20,7 +20,9 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
 
   void _submit() async {
     if (_formKey.currentState!.validate()) {
-      await ref.read(demoAuthProvider.notifier).completeProfileSetup(_emailController.text.trim());
+      await ref
+          .read(demoAuthProvider.notifier)
+          .completeProfileSetup(_emailController.text.trim());
       if (mounted) {
         AppRoutes.navigateAndClearStack(context, AppRoutes.main);
       }
@@ -41,21 +43,27 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(labelText: l10n.authNameLabel),
-                validator: (val) => val == null || val.trim().isEmpty ? l10n.authRequiredError : null,
+                validator: (val) => val == null || val.trim().isEmpty
+                    ? l10n.authRequiredError
+                    : null,
               ),
               TextFormField(
                 controller: _surnameController,
                 decoration: InputDecoration(labelText: l10n.authSurnameLabel),
-                validator: (val) => val == null || val.trim().isEmpty ? l10n.authRequiredError : null,
+                validator: (val) => val == null || val.trim().isEmpty
+                    ? l10n.authRequiredError
+                    : null,
               ),
               TextFormField(
                 controller: _emailController,
                 decoration: InputDecoration(labelText: l10n.authEmailLabel),
                 keyboardType: TextInputType.emailAddress,
                 validator: (val) {
-                  if (val == null || val.trim().isEmpty) return l10n.authRequiredError;
+                  if (val == null || val.trim().isEmpty)
+                    return l10n.authRequiredError;
                   final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-                  if (!emailRegex.hasMatch(val)) return l10n.authInvalidEmailError;
+                  if (!emailRegex.hasMatch(val))
+                    return l10n.authInvalidEmailError;
                   return null;
                 },
               ),
@@ -64,7 +72,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                 decoration: InputDecoration(labelText: l10n.authAgeLabel),
                 keyboardType: TextInputType.number,
                 validator: (val) {
-                  if (val == null || val.trim().isEmpty) return l10n.authRequiredError;
+                  if (val == null || val.trim().isEmpty)
+                    return l10n.authRequiredError;
                   final age = int.tryParse(val);
                   if (age == null || age <= 0) return l10n.authInvalidAgeError;
                   return null;

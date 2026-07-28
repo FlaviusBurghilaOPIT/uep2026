@@ -4,9 +4,9 @@ import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/providers/app_providers.dart';
-import '../../core/shared_widgets/app_text_field.dart';
-import '../../core/shared_widgets/app_button.dart';
-import '../../core/shared_widgets/step_progress_bar.dart';
+import '../../core/widgets/app_text_field.dart';
+import '../../core/widgets/app_button.dart';
+import '../../core/widgets/step_progress_bar.dart';
 import '../../core/navigation/app_routes.dart';
 
 class SignupStep2Screen extends ConsumerStatefulWidget {
@@ -29,12 +29,14 @@ class _SignupStep2ScreenState extends ConsumerState<SignupStep2Screen> {
   void _handleContinue() {
     if (!_formKey.currentState!.validate()) return;
 
-    final auth = ref.read(authProvider);
-    auth.setSignUpInfo(
-      fullName: auth.fullName ?? '',
-      email: auth.email ?? '',
-      phone: _phoneController.text.trim(),
-    );
+    final authState = ref.read(authProvider);
+    ref
+        .read(authProvider.notifier)
+        .setSignUpInfo(
+          fullName: authState.fullName ?? '',
+          email: authState.email ?? '',
+          phone: _phoneController.text.trim(),
+        );
 
     AppRoutes.navigateTo(context, AppRoutes.signupStep3);
   }

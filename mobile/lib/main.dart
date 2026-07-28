@@ -8,7 +8,7 @@ import 'core/navigation/app_routes.dart';
 import 'core/theme/app_theme.dart';
 
 import 'core/notifications/notification_service.dart';
-import 'features/auth/demo_auth_state.dart';
+import 'core/providers/shared_preferences_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,9 +17,7 @@ void main() async {
 
   runApp(
     ProviderScope(
-      overrides: [
-        sharedPreferencesProvider.overrideWithValue(prefs),
-      ],
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
       child: const RemoteCareApp(),
     ),
   );
@@ -30,7 +28,7 @@ class RemoteCareApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final locale = ref.watch(localeNotifierProvider);
+    final locale = ref.watch(localeProvider);
 
     return ScreenUtilInit(
       designSize: const Size(375, 812),

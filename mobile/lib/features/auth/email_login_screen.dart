@@ -18,7 +18,7 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
   @override
   void initState() {
     super.initState();
-    final authState = ref.read(demoAuthProvider).valueOrNull;
+    final authState = ref.read(demoAuthProvider).value;
     _emailController = TextEditingController(text: authState?.email ?? '');
   }
 
@@ -32,7 +32,9 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
     final l10n = AppLocalizations.of(context)!;
     if (_formKey.currentState!.validate()) {
       try {
-        await ref.read(demoAuthProvider.notifier).triggerOtp(_emailController.text.trim());
+        await ref
+            .read(demoAuthProvider.notifier)
+            .triggerOtp(_emailController.text.trim());
         if (mounted) {
           AppRoutes.navigateAndReplace(context, AppRoutes.otp);
         }
@@ -63,9 +65,11 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
                 decoration: InputDecoration(labelText: l10n.authEmailLabel),
                 keyboardType: TextInputType.emailAddress,
                 validator: (val) {
-                  if (val == null || val.trim().isEmpty) return l10n.authRequiredError;
+                  if (val == null || val.trim().isEmpty)
+                    return l10n.authRequiredError;
                   final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
-                  if (!emailRegex.hasMatch(val)) return l10n.authInvalidEmailError;
+                  if (!emailRegex.hasMatch(val))
+                    return l10n.authInvalidEmailError;
                   return null;
                 },
               ),

@@ -30,11 +30,11 @@ void main() {
       );
     };
 
-    final auth = container.read(authProvider);
+    final auth = container.read(authProvider.notifier);
     final success = await auth.requestCode(email: 'jane@example.com');
 
     expect(success, true);
-    expect(auth.email, 'jane@example.com');
+    expect(container.read(authProvider).email, 'jane@example.com');
   });
 
   test(
@@ -51,15 +51,16 @@ void main() {
         );
       };
 
-      final auth = container.read(authProvider);
+      final auth = container.read(authProvider.notifier);
       final result = await auth.verifyCode(
         email: 'jane@example.com',
         code: '123456',
       );
 
       expect(result, 'onboarding');
-      expect(auth.fullName, 'Jane Doe');
-      expect(auth.inviteCode, '123456');
+      final state = container.read(authProvider);
+      expect(state.fullName, 'Jane Doe');
+      expect(state.inviteCode, '123456');
     },
   );
 
@@ -89,7 +90,7 @@ void main() {
         );
       };
 
-      final auth = container.read(authProvider);
+      final auth = container.read(authProvider.notifier);
       final result = await auth.verifyCode(
         email: 'jane@example.com',
         code: '123456',
@@ -97,7 +98,7 @@ void main() {
 
       expect(result, 'authenticated');
       expect(fakeApi.savedToken, 'jwt_1');
-      expect(auth.isSignedIn, true);
+      expect(container.read(authProvider).isSignedIn, true);
     },
   );
 
@@ -111,14 +112,14 @@ void main() {
         );
       };
 
-      final auth = container.read(authProvider);
+      final auth = container.read(authProvider.notifier);
       final result = await auth.verifyCode(
         email: 'jane@example.com',
         code: '000000',
       );
 
       expect(result, null);
-      expect(auth.errorMessage, 'Invalid or expired code');
+      expect(container.read(authProvider).errorMessage, 'Invalid or expired code');
     },
   );
 
@@ -144,7 +145,7 @@ void main() {
       );
     };
 
-    final auth = container.read(authProvider);
+    final auth = container.read(authProvider.notifier);
     final success = await auth.completeOnboarding(
       email: 'jane@example.com',
       inviteCode: '123456',

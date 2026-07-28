@@ -246,7 +246,7 @@ class _MedicationsScreenState extends ConsumerState<MedicationsScreen> {
     );
   }
 
-  Widget _buildTopBar(AuthNotifier auth) {
+  Widget _buildTopBar(AuthState auth) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         AppSpacing.screenPaddingH,

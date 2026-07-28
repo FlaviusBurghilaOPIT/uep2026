@@ -10,7 +10,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/network/api_service.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../../core/telemetry/telemetry_service.dart';
-import '../../auth/demo_auth_state.dart' show sharedPreferencesProvider;
+import '../../../core/providers/shared_preferences_provider.dart';
 
 part 'today_agenda_notifier.freezed.dart';
 
@@ -35,7 +35,7 @@ SlotState slotStateFromName(String name) =>
     SlotState.values.asNameMap()[name] ?? SlotState.upcoming;
 
 @freezed
-class AgendaSlot with _$AgendaSlot {
+abstract class AgendaSlot with _$AgendaSlot {
   const factory AgendaSlot({
     required String slotId,
     required String medicationId,
@@ -51,7 +51,7 @@ class AgendaSlot with _$AgendaSlot {
 }
 
 @freezed
-class PrnMedication with _$PrnMedication {
+abstract class PrnMedication with _$PrnMedication {
   const factory PrnMedication({
     required String medicationId,
     required String medicationName,
@@ -61,7 +61,7 @@ class PrnMedication with _$PrnMedication {
 }
 
 @freezed
-class OfflineQueueEntry with _$OfflineQueueEntry {
+abstract class OfflineQueueEntry with _$OfflineQueueEntry {
   const factory OfflineQueueEntry({
     required String idempotencyKey,
     required OfflineQueueKind kind,
@@ -103,7 +103,7 @@ OfflineQueueEntry offlineQueueEntryFromJson(Map<String, dynamic> m) =>
 // ---------------------------------------------------------------------------
 
 @freezed
-class AgendaState with _$AgendaState {
+abstract class AgendaState with _$AgendaState {
   const factory AgendaState({
     @Default([]) List<AgendaSlot> slots,
     @Default([]) List<PrnMedication> prn,
@@ -212,17 +212,17 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
         .map((m) => _prnFromJson(m as Map<String, dynamic>))
         .toList();
 
-    final current = state.valueOrNull ?? const AgendaState();
+    final current = state.value ?? const AgendaState();
     final isEmpty = slots.isEmpty && prn.isEmpty;
 
     // C6: plan-changed detection — the medication set differs from what we
     // last rendered (first load never counts as a change).
     final hadData = current.slots.isNotEmpty || current.prn.isNotEmpty;
-    final previousMedIds = {
+    final previousMedIds = <String>{
       ...current.slots.map((s) => s.medicationId),
       ...current.prn.map((p) => p.medicationId),
     };
-    final newMedIds = {
+    final newMedIds = <String>{
       ...slots.map((s) => s.medicationId),
       ...prn.map((p) => p.medicationId),
     };
@@ -256,11 +256,11 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
   }
 
   Future<void> _handleFetchFailure(String errorClass) async {
-    var current = state.valueOrNull ?? const AgendaState();
+    var current = state.value ?? const AgendaState();
     if (current.slots.isEmpty && current.prn.isEmpty) {
       // Maybe we have a persisted cache that was never restored.
       final restored = await _restoreCacheIntoState();
-      current = state.valueOrNull ?? current;
+      current = state.value ?? current;
       if (!restored) {
         state = AsyncValue.data(
           current.copyWith(sourceState: AgendaSourceState.error),
@@ -295,7 +295,7 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
           .map((m) => _prnFromJson(m as Map<String, dynamic>))
           .toList();
       final timeRaw = _prefs.getString(_cacheTimeKey);
-      final current = state.valueOrNull ?? const AgendaState();
+      final current = state.value ?? const AgendaState();
       state = AsyncValue.data(
         current.copyWith(
           slots: slots,
@@ -317,7 +317,7 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
   // -- C9 empty-state poll (60s, only while empty) ----------------------------
 
   void _syncEmptyPoll() {
-    final isEmpty = (state.valueOrNull)?.sourceState == AgendaSourceState.empty;
+    final isEmpty = (state.value)?.sourceState == AgendaSourceState.empty;
     if (isEmpty && _emptyPollTimer == null) {
       _emptyPollTimer = Timer.periodic(emptyPollInterval, (_) {
         unawaited(loadAgenda());
@@ -355,14 +355,14 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
   // -- Write — single path, per-slot lock (spec §6) ---------------------------
 
   AgendaSlot? _slotById(String slotId) {
-    for (final slot in (state.valueOrNull)?.slots ?? const <AgendaSlot>[]) {
+    for (final slot in (state.value)?.slots ?? const <AgendaSlot>[]) {
       if (slot.slotId == slotId) return slot;
     }
     return null;
   }
 
   void _setSlot(AgendaSlot updated) {
-    final current = state.valueOrNull ?? const AgendaState();
+    final current = state.value ?? const AgendaState();
     state = AsyncValue.data(
       current.copyWith(
         slots: [
@@ -374,7 +374,7 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
   }
 
   void _markWriteInFlight(String slotId, bool inFlight) {
-    final current = state.valueOrNull ?? const AgendaState();
+    final current = state.value ?? const AgendaState();
     final ids = Set<String>.from(current.writeInFlightSlotIds);
     if (inFlight) {
       ids.add(slotId);
@@ -387,7 +387,7 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
   /// Log a dose against a scheduled slot. Double-taps while a write is
   /// staged/in flight are ignored (the screen gives haptic-only feedback).
   Future<void> logDose(AgendaSlot slot, DoseLogStatus status) async {
-    final current = state.valueOrNull ?? const AgendaState();
+    final current = state.value ?? const AgendaState();
     if (current.writeInFlightSlotIds.contains(slot.slotId)) return;
 
     _track('mobile.today.dose_log_tapped', {
@@ -517,37 +517,37 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
   void _rollback(String slotId, _StagedWrite staged, String errorClass) {
     _setSlot(staged.slotBefore);
     _markWriteInFlight(slotId, false);
-    final current = state.valueOrNull ?? const AgendaState();
+    final current = state.value ?? const AgendaState();
     state = AsyncValue.data(current.copyWith(rollbackErrorSlotId: slotId));
     _track('mobile.today.dose_log_rolled_back', {'error_class': errorClass});
   }
 
   /// Screen acknowledges the rollback error snackbar.
   void acknowledgeRollback() {
-    final current = state.valueOrNull ?? const AgendaState();
+    final current = state.value ?? const AgendaState();
     state = AsyncValue.data(current.copyWith(rollbackErrorSlotId: null));
   }
 
   void _setC8Prompt(String slotId) {
-    final current = state.valueOrNull ?? const AgendaState();
+    final current = state.value ?? const AgendaState();
     state = AsyncValue.data(current.copyWith(c8PromptSlotId: slotId));
   }
 
   /// Screen dismisses the C8 side-effect prompt.
   void dismissC8Prompt() {
-    final current = state.valueOrNull ?? const AgendaState();
+    final current = state.value ?? const AgendaState();
     state = AsyncValue.data(current.copyWith(c8PromptSlotId: null));
   }
 
   /// Screen dismisses the C6 plan-changed banner.
   void dismissPlanUpdated() {
-    final current = state.valueOrNull ?? const AgendaState();
+    final current = state.value ?? const AgendaState();
     state = AsyncValue.data(current.copyWith(planUpdated: false));
   }
 
   /// WI 14 sets this from the OS notification-permission check (C1).
   void setRemindersOff(bool off) {
-    final current = state.valueOrNull ?? const AgendaState();
+    final current = state.value ?? const AgendaState();
     if (current.remindersOff == off) return;
     state = AsyncValue.data(current.copyWith(remindersOff: off));
   }
@@ -555,14 +555,14 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
   /// WI 14 sets this once when the notification re-anchor pass (app start /
   /// timezone-change proxy) detects the device's UTC offset shifted (C5).
   void setTimezoneAdjusted(bool adjusted) {
-    final current = state.valueOrNull ?? const AgendaState();
+    final current = state.value ?? const AgendaState();
     if (current.timezoneAdjusted == adjusted) return;
     state = AsyncValue.data(current.copyWith(timezoneAdjusted: adjusted));
   }
 
   /// Screen dismisses the C5 timezone-adjusted banner.
   void dismissTimezoneAdjusted() {
-    final current = state.valueOrNull ?? const AgendaState();
+    final current = state.value ?? const AgendaState();
     state = AsyncValue.data(current.copyWith(timezoneAdjusted: false));
   }
 
@@ -633,7 +633,7 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
   }
 
   void _enqueue(OfflineQueueEntry entry) {
-    final current = state.valueOrNull ?? const AgendaState();
+    final current = state.value ?? const AgendaState();
     state = AsyncValue.data(
       current.copyWith(offlineQueue: [...current.offlineQueue, entry]),
     );
@@ -646,7 +646,7 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
   Future<void> correctLog(AgendaSlot slot, DoseLogStatus newStatus) async {
     final logId = slot.doseLogId;
     if (logId == null) return;
-    final current = state.valueOrNull ?? const AgendaState();
+    final current = state.value ?? const AgendaState();
     if (current.writeInFlightSlotIds.contains(slot.slotId)) return;
 
     _markWriteInFlight(slot.slotId, true);
@@ -685,7 +685,7 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
         _track('mobile.today.dose_log_corrected', const {});
       } else {
         _setSlot(slot);
-        final latest = state.valueOrNull ?? const AgendaState();
+        final latest = state.value ?? const AgendaState();
         state = AsyncValue.data(
           latest.copyWith(rollbackErrorSlotId: slot.slotId),
         );
@@ -714,7 +714,7 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
   /// Log a PRN ("as needed") medication. One idempotency key per user
   /// action; offline retries reuse the same key (spec §6).
   Future<void> logPrn(PrnMedication medication, DoseLogStatus status) async {
-    final current = state.valueOrNull ?? const AgendaState();
+    final current = state.value ?? const AgendaState();
     if (current.writeInFlightPrnIds.contains(medication.medicationId)) return;
 
     _track('mobile.today.dose_log_tapped', {
@@ -741,7 +741,7 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
           if (slot != null) _setC8Prompt(slot.slotId);
         }
       } else {
-        final latest = state.valueOrNull ?? const AgendaState();
+        final latest = state.value ?? const AgendaState();
         state = AsyncValue.data(
           latest.copyWith(rollbackErrorSlotId: medication.medicationId),
         );
@@ -764,7 +764,7 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
   }
 
   void _markPrnInFlight(String medicationId, bool inFlight) {
-    final current = state.valueOrNull ?? const AgendaState();
+    final current = state.value ?? const AgendaState();
     final ids = Set<String>.from(current.writeInFlightPrnIds);
     if (inFlight) {
       ids.add(medicationId);
@@ -790,7 +790,7 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
   void _applyAdhocCommit(String body) {
     final slot = _latestAdhocSlot(body);
     if (slot == null) return;
-    final current = state.valueOrNull ?? const AgendaState();
+    final current = state.value ?? const AgendaState();
     if (current.slots.any((s) => s.slotId == slot.slotId)) {
       _setSlot(slot);
       return;
@@ -807,7 +807,7 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
       final list = (jsonDecode(raw) as List<dynamic>)
           .map((m) => offlineQueueEntryFromJson(m as Map<String, dynamic>))
           .toList();
-      final current = state.valueOrNull ?? const AgendaState();
+      final current = state.value ?? const AgendaState();
       state = AsyncValue.data(current.copyWith(offlineQueue: list));
       _syncQueueRetry();
     } catch (e, st) {
@@ -819,7 +819,7 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
   }
 
   Future<void> _persistQueue() async {
-    final queue = (state.valueOrNull)?.offlineQueue ?? const [];
+    final queue = (state.value)?.offlineQueue ?? const [];
     await _prefs.setString(
       _queueKey,
       jsonEncode(queue.map(offlineQueueEntryToJson).toList()),
@@ -827,7 +827,7 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
   }
 
   void _syncQueueRetry() {
-    final hasEntries = ((state.valueOrNull)?.offlineQueue.isNotEmpty ?? false);
+    final hasEntries = ((state.value)?.offlineQueue.isNotEmpty ?? false);
     if (hasEntries && _queueRetryTimer == null) {
       _queueRetryTimer = Timer.periodic(queueRetryInterval, (_) {
         unawaited(flushOfflineQueue());
@@ -841,7 +841,7 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
   /// Flushes the offline queue in order — creates (and ad-hoc creates)
   /// before corrections (spec §6). Per-entry 409 reconciles, never errors.
   Future<void> flushOfflineQueue() async {
-    final current = state.valueOrNull ?? const AgendaState();
+    final current = state.value ?? const AgendaState();
     if (current.offlineQueue.isEmpty) return;
 
     final started = DateTime.now();
@@ -864,7 +864,7 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
       }
     }
 
-    final latest = state.valueOrNull ?? const AgendaState();
+    final latest = state.value ?? const AgendaState();
     state = AsyncValue.data(latest.copyWith(offlineQueue: remaining));
     await _persistQueue();
     _syncQueueRetry();

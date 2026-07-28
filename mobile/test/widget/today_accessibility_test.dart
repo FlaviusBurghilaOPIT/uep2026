@@ -100,7 +100,7 @@ void main() {
         ),
       ),
     );
-    await container.read(authProvider).fetchProfile();
+    await container.read(authProvider.notifier).fetchProfile();
     return container;
   }
 

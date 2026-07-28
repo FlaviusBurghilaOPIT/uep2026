@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers/app_providers.dart';
-import '../../core/shared_widgets/main_bottom_nav.dart';
+import '../../core/widgets/main_bottom_nav.dart';
 import '../today/today_screen.dart';
 import '../medications/medications_screen.dart';
 import '../recovery/recovery_screen.dart';

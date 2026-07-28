@@ -25,11 +25,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
-    final currentLocale = ref.watch(localeNotifierProvider);
+    final currentLocale = ref.watch(localeProvider);
     final l10n = AppLocalizations.of(context);
     final name = auth.fullName ?? 'Sarah Mitchell';
     final email = auth.email ?? 'sarah.mitchell@email.com';
-    final initials = name.split(' ').map((w) => w[0]).take(2).join().toUpperCase();
+    final initials = name
+        .split(' ')
+        .map((w) => w[0])
+        .take(2)
+        .join()
+        .toUpperCase();
 
     return Scaffold(
       body: SafeArea(
@@ -40,7 +45,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               _buildTopBar(),
               _buildHeader(l10n),
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppSpacing.screenPaddingH,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -53,7 +60,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         localeCode: 'en',
                         currentLocale: currentLocale,
                         onTap: () => ref
-                            .read(localeNotifierProvider.notifier)
+                            .read(localeProvider.notifier)
                             .setLocale(const Locale('en')),
                       ),
                       _languageRow(
@@ -61,7 +68,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         localeCode: 'it',
                         currentLocale: currentLocale,
                         onTap: () => ref
-                            .read(localeNotifierProvider.notifier)
+                            .read(localeProvider.notifier)
                             .setLocale(const Locale('it')),
                       ),
                       _languageRow(
@@ -69,7 +76,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         localeCode: 'es',
                         currentLocale: currentLocale,
                         onTap: () => ref
-                            .read(localeNotifierProvider.notifier)
+                            .read(localeProvider.notifier)
                             .setLocale(const Locale('es')),
                       ),
                       _languageRow(
@@ -77,7 +84,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         localeCode: 'fr',
                         currentLocale: currentLocale,
                         onTap: () => ref
-                            .read(localeNotifierProvider.notifier)
+                            .read(localeProvider.notifier)
                             .setLocale(const Locale('fr')),
                       ),
                       _languageRow(
@@ -85,7 +92,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         localeCode: 'de',
                         currentLocale: currentLocale,
                         onTap: () => ref
-                            .read(localeNotifierProvider.notifier)
+                            .read(localeProvider.notifier)
                             .setLocale(const Locale('de')),
                       ),
                     ]),
@@ -94,11 +101,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       _infoRow('Full name', name),
                       _infoRow('Email', email),
                       _infoRow('Phone', auth.phone ?? '+1 (555) 248-3901'),
-                      _infoRow('Date of birth', auth.dateOfBirth ?? 'Mar 14, 1988'),
+                      _infoRow(
+                        'Date of birth',
+                        auth.dateOfBirth ?? 'Mar 14, 1988',
+                      ),
                     ]),
                     SizedBox(height: AppSpacing.xl),
                     _buildSection('TREATMENT PLAN', [
-                      _infoRow('Condition', auth.primaryCondition ?? 'Post-surgical recovery'),
+                      _infoRow(
+                        'Condition',
+                        auth.primaryCondition ?? 'Post-surgical recovery',
+                      ),
                       _infoRow('Procedure', 'Knee Arthroscopy'),
                       _infoRow('Surgery date', 'Jun 18, 2025'),
                       _infoRow('Clinician', 'Dr. Claire Moreau'),
@@ -106,14 +119,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ]),
                     SizedBox(height: AppSpacing.xl),
                     _buildSection('NOTIFICATIONS', [
-                      _toggleRow('Medication reminders', _medReminders, (v) => setState(() => _medReminders = v)),
-                      _toggleRow('Daily check-in', _dailyCheckin, (v) => setState(() => _dailyCheckin = v)),
-                      _toggleRow('FDA safety alerts', _fdaAlerts, (v) => setState(() => _fdaAlerts = v)),
+                      _toggleRow(
+                        'Medication reminders',
+                        _medReminders,
+                        (v) => setState(() => _medReminders = v),
+                      ),
+                      _toggleRow(
+                        'Daily check-in',
+                        _dailyCheckin,
+                        (v) => setState(() => _dailyCheckin = v),
+                      ),
+                      _toggleRow(
+                        'FDA safety alerts',
+                        _fdaAlerts,
+                        (v) => setState(() => _fdaAlerts = v),
+                      ),
                     ]),
                     SizedBox(height: AppSpacing.xl),
                     _buildSection('SECURITY', [
                       _arrowRow('Change password', Icons.lock_outline),
-                      _arrowRow('Two-factor authentication', Icons.security_outlined),
+                      _arrowRow(
+                        'Two-factor authentication',
+                        Icons.security_outlined,
+                      ),
                       _arrowRow('Connected devices', Icons.devices_outlined),
                     ]),
                     SizedBox(height: AppSpacing.xl),
@@ -160,14 +188,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  Icon(Icons.notifications_outlined, color: AppColors.black, size: AppSpacing.iconLg),
+                  Icon(
+                    Icons.notifications_outlined,
+                    color: AppColors.black,
+                    size: AppSpacing.iconLg,
+                  ),
                   Positioned(
                     right: 8.w,
                     top: 8.h,
                     child: Container(
                       width: 8.w,
                       height: 8.w,
-                      decoration: const BoxDecoration(color: AppColors.errorRed, shape: BoxShape.circle),
+                      decoration: const BoxDecoration(
+                        color: AppColors.errorRed,
+                        shape: BoxShape.circle,
+                      ),
                     ),
                   ),
                 ],
@@ -183,7 +218,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               shape: BoxShape.circle,
               border: Border.all(color: AppColors.primaryGreen, width: 1.5),
             ),
-            child: Icon(Icons.person_outline, color: AppColors.primaryGreen, size: AppSpacing.iconMd),
+            child: Icon(
+              Icons.person_outline,
+              color: AppColors.primaryGreen,
+              size: AppSpacing.iconMd,
+            ),
           ),
         ],
       ),
@@ -209,7 +248,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 color: AppColors.inputFill,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.arrow_back, color: AppColors.black, size: AppSpacing.iconMd),
+              child: Icon(
+                Icons.arrow_back,
+                color: AppColors.black,
+                size: AppSpacing.iconMd,
+              ),
             ),
           ),
           SizedBox(width: AppSpacing.hMd),
@@ -254,7 +297,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               children: [
                 Text(
                   name,
-                  style: AppTextStyles.heading3.copyWith(color: AppColors.white),
+                  style: AppTextStyles.heading3.copyWith(
+                    color: AppColors.white,
+                  ),
                 ),
                 SizedBox(height: 2.h),
                 Text(
@@ -269,7 +314,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     Container(
                       width: 7.w,
                       height: 7.w,
-                      decoration: const BoxDecoration(color: AppColors.white, shape: BoxShape.circle),
+                      decoration: const BoxDecoration(
+                        color: AppColors.white,
+                        shape: BoxShape.circle,
+                      ),
                     ),
                     SizedBox(width: 5.w),
                     Text(
@@ -308,7 +356,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               for (int i = 0; i < children.length; i++) ...[
                 children[i],
                 if (i < children.length - 1)
-                  Divider(height: 1, indent: 16.w, endIndent: 16.w, color: AppColors.greyDivider),
+                  Divider(
+                    height: 1,
+                    indent: 16.w,
+                    endIndent: 16.w,
+                    color: AppColors.greyDivider,
+                  ),
               ],
             ],
           ),
@@ -330,11 +383,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         child: Row(
           children: [
-            Expanded(
-              child: Text(label, style: AppTextStyles.bodyMedium),
-            ),
+            Expanded(child: Text(label, style: AppTextStyles.bodyMedium)),
             if (isSelected)
-              Icon(Icons.check, color: AppColors.deepTeal, size: AppSpacing.iconMd),
+              Icon(
+                Icons.check,
+                color: AppColors.deepTeal,
+                size: AppSpacing.iconMd,
+              ),
           ],
         ),
       ),
@@ -346,14 +401,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
       child: Row(
         children: [
-          Expanded(
-            child: Text(label, style: AppTextStyles.bodyMedium),
-          ),
+          Expanded(child: Text(label, style: AppTextStyles.bodyMedium)),
           SizedBox(width: 8.w),
           Flexible(
             child: Text(
               value,
-              style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w500),
+              style: AppTextStyles.bodyLarge.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -367,9 +422,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       child: Row(
         children: [
-          Expanded(
-            child: Text(label, style: AppTextStyles.bodyMedium),
-          ),
+          Expanded(child: Text(label, style: AppTextStyles.bodyMedium)),
           Switch(
             value: value,
             onChanged: onChanged,
@@ -389,10 +442,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           children: [
             Icon(icon, color: AppColors.greyText, size: AppSpacing.iconLg),
             SizedBox(width: AppSpacing.hMd),
-            Expanded(
-              child: Text(label, style: AppTextStyles.bodyMedium),
+            Expanded(child: Text(label, style: AppTextStyles.bodyMedium)),
+            Icon(
+              Icons.chevron_right,
+              color: AppColors.greyLight,
+              size: AppSpacing.iconMd,
             ),
-            Icon(Icons.chevron_right, color: AppColors.greyLight, size: AppSpacing.iconMd),
           ],
         ),
       ),
@@ -405,7 +460,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       height: AppSpacing.buttonHeight,
       child: OutlinedButton(
         onPressed: () async {
-          await ref.read(authProvider).signOut();
+          await ref.read(authProvider.notifier).signOut();
           if (mounted) {
             AppRoutes.navigateAndClearStack(context, AppRoutes.boot);
           }
@@ -426,7 +481,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             Flexible(
               child: Text(
                 l10n.signOutButton,
-                style: AppTextStyles.buttonTextOutlined.copyWith(color: AppColors.errorRed),
+                style: AppTextStyles.buttonTextOutlined.copyWith(
+                  color: AppColors.errorRed,
+                ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),

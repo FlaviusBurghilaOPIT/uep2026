@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'api_service.dart';
+import '../network/api_service.dart';
 import 'notification_service.dart';
 
 /// PushNotificationService manages remote APNS/FCM device push token registration

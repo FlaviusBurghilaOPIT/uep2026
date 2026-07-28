@@ -793,7 +793,7 @@ void main() {
               jsonEncode({'name': 'Dr. Connor', 'phone': '+1 555-0122'}),
               200,
             );
-        await container.read(authProvider).fetchProfile();
+        await container.read(authProvider.notifier).fetchProfile();
 
         await commitSkipped();
         final phone = await notifier().answerC8Prompt(severeSymptoms: true);
@@ -813,7 +813,7 @@ void main() {
         seedAuthWithCase();
         fakeApi.getHandlers['/cases/case-1/emergency-contact'] = () =>
             http.Response(jsonEncode({'name': null, 'phone': null}), 200);
-        await container.read(authProvider).fetchProfile();
+        await container.read(authProvider.notifier).fetchProfile();
 
         await commitSkipped();
         final phone = await notifier().answerC8Prompt(severeSymptoms: true);

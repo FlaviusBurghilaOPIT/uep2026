@@ -56,7 +56,7 @@ void main() {
     addTearDown(container.dispose);
     if (preloadAuth) {
       // Ensure caseId is resolved before the C8 answer runs.
-      await container.read(authProvider).fetchProfile();
+      await container.read(authProvider.notifier).fetchProfile();
     }
 
     await tester.pumpWidget(

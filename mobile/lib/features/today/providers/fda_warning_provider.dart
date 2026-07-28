@@ -25,10 +25,10 @@ class FdaWarning {
 /// agenda (slots + PRN) and returns the first warning that comes back with
 /// content. Null when no plan med has data or every query fails.
 final fdaWarningProvider = FutureProvider<FdaWarning?>((ref) async {
-  final agenda = ref.watch(todayAgendaNotifierProvider).valueOrNull;
+  final agenda = ref.watch(todayAgendaNotifierProvider).value;
   if (agenda == null) return null;
 
-  final planMedNames = {
+  final planMedNames = <String>{
     ...agenda.slots.map((s) => s.medicationName),
     ...agenda.prn.map((p) => p.medicationName),
   }..removeWhere((name) => name.trim().isEmpty);

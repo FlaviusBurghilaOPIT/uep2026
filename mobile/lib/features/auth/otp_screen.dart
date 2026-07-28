@@ -34,7 +34,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final authState = ref.watch(demoAuthProvider).valueOrNull;
+    final authState = ref.watch(demoAuthProvider).value;
     final email = authState?.email ?? '';
     final emailText = email.isNotEmpty
         ? l10n.authOtpSentToEmail(email)

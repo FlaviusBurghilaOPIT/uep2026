@@ -58,7 +58,7 @@ class _CheckInCardState extends ConsumerState<CheckInCard> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final checkinState = ref.watch(symptomCheckinNotifierProvider);
-    final isSuccess = checkinState.valueOrNull == true;
+    final isSuccess = checkinState.value == true;
     final isSubmitting = checkinState.isLoading;
     final isError = checkinState.hasError;
 

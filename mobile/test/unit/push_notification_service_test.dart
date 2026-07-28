@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:remotecare/core/notifications/notification_service.dart';
-import 'package:remotecare/services/push_notification_service.dart';
+import 'package:remotecare/core/notifications/push_notification_service.dart';
 
 import 'fake_api_service.dart';
 

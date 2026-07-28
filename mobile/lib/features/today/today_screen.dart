@@ -212,15 +212,15 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
     final agendaAsync = ref.watch(todayAgendaNotifierProvider);
-    final agenda = agendaAsync.valueOrNull ?? const AgendaState();
+    final agenda = agendaAsync.value ?? const AgendaState();
     final l10n = AppLocalizations.of(context);
 
     ref.listen<AsyncValue<AgendaState>>(todayAgendaNotifierProvider, (
       previous,
       next,
     ) {
-      final prevState = previous?.valueOrNull;
-      final nextState = next.valueOrNull;
+      final prevState = previous?.value;
+      final nextState = next.value;
       if (nextState == null) return;
 
       // Reschedule notifications on every successful (fresh) agenda load
@@ -263,7 +263,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
 
   // -- Skeleton (loading, no cache) ------------------------------------------
 
-  Widget _buildSkeleton(AuthNotifier auth, AppLocalizations l10n) {
+  Widget _buildSkeleton(AuthState auth, AppLocalizations l10n) {
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.only(bottom: 100.h),
@@ -297,11 +297,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
 
   // -- Main body --------------------------------------------------------------
 
-  Widget _buildBody(
-    AuthNotifier auth,
-    AgendaState agenda,
-    AppLocalizations l10n,
-  ) {
+  Widget _buildBody(AuthState auth, AgendaState agenda, AppLocalizations l10n) {
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.only(bottom: 100.h),
@@ -337,7 +333,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
 
   // -- Top bar (spec §7: "RemoteCare" + real fullName, avatar → /profile) ----
 
-  Widget _buildTopBar(AuthNotifier auth) {
+  Widget _buildTopBar(AuthState auth) {
     final fullName = auth.fullName?.trim();
     return Padding(
       padding: EdgeInsets.fromLTRB(
@@ -558,7 +554,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
   // -- FDA card (spec §7: only when real data for an on-plan med) ------------
 
   Widget _buildFdaSection() {
-    final warning = ref.watch(fdaWarningProvider).valueOrNull;
+    final warning = ref.watch(fdaWarningProvider).value;
     if (warning == null) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context);
     return Padding(

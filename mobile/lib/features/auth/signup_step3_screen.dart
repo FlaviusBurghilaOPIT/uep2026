@@ -6,9 +6,9 @@ import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/providers/app_providers.dart';
-import '../../core/shared_widgets/app_button.dart';
-import '../../core/shared_widgets/step_progress_bar.dart';
-import '../../core/shared_widgets/security_badge.dart';
+import '../../core/widgets/app_button.dart';
+import '../../core/widgets/step_progress_bar.dart';
+import '../../core/widgets/security_badge.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/notifications/notification_service.dart';
 import '../../core/navigation/app_routes.dart';
@@ -61,17 +61,20 @@ class _SignupStep3ScreenState extends ConsumerState<SignupStep3Screen> {
   Future<void> _handleComplete() async {
     if (_selectedDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.authSelectDobError)),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.authSelectDobError),
+        ),
       );
       return;
     }
 
-    final auth = ref.read(authProvider);
+    final authState = ref.read(authProvider);
+    final auth = ref.read(authProvider.notifier);
     final success = await auth.completeOnboarding(
-      email: auth.email ?? '',
-      inviteCode: auth.inviteCode ?? '',
+      email: authState.email ?? '',
+      inviteCode: authState.inviteCode ?? '',
       dateOfBirth: _formattedIsoDate,
-      phone: auth.phone ?? '',
+      phone: authState.phone ?? '',
     );
 
     if (success && mounted) {
@@ -94,10 +97,13 @@ class _SignupStep3ScreenState extends ConsumerState<SignupStep3Screen> {
       if (mounted) {
         AppRoutes.navigateAndClearStack(context, AppRoutes.main);
       }
-    } else if (mounted && auth.errorMessage != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(auth.errorMessage!)));
+    } else if (mounted) {
+      final errorMessage = ref.read(authProvider).errorMessage;
+      if (errorMessage != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
+      }
     }
   }
 

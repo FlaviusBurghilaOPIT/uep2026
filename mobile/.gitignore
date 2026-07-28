@@ -33,6 +33,9 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Riverpod/codegen generated artifacts (regenerated via `dart run build_runner build`)
+*.g.dart
+
 # Symbolication related
 app.*.symbols
 

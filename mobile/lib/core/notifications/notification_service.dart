@@ -4,7 +4,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import '../network/api_service.dart';
-import '../../services/push_notification_service.dart';
+import 'push_notification_service.dart';
 
 // Top-level background handler — required for terminated app dose logging
 @pragma('vm:entry-point')
@@ -113,7 +113,7 @@ class NotificationService {
     );
 
     await _plugin.initialize(
-      initializationSettings,
+      settings: initializationSettings,
       onDidReceiveNotificationResponse: (response) async {
         if (response.actionId == 'take_dose') {
           final reminderId = parseReminderId(response.payload ?? '');
@@ -244,14 +244,12 @@ class NotificationService {
     final notificationId = reminderId.hashCode.abs();
 
     await _plugin.zonedSchedule(
-      notificationId,
-      'Medication Reminder',
-      'Time to take $medicationName — $doseAmount',
-      scheduledTzTime,
-      notificationDetails,
+      id: notificationId,
+      title: 'Medication Reminder',
+      body: 'Time to take $medicationName — $doseAmount',
+      scheduledDate: scheduledTzTime,
+      notificationDetails: notificationDetails,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
       payload: payload,
     );
   }

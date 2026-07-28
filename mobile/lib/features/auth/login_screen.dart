@@ -8,8 +8,8 @@ import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/providers/app_providers.dart';
-import '../../core/shared_widgets/app_text_field.dart';
-import '../../core/shared_widgets/app_button.dart';
+import '../../core/widgets/app_text_field.dart';
+import '../../core/widgets/app_button.dart';
 import '../../core/navigation/app_routes.dart';
 
 enum _AuthStage { email, code }
@@ -62,23 +62,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (_stage == _AuthStage.code && _secondsRemaining > 0) return;
     if (!_formKey.currentState!.validate()) return;
 
-    final auth = ref.read(authProvider);
+    final auth = ref.read(authProvider.notifier);
     final success = await auth.requestCode(email: _emailController.text.trim());
 
     if (success && mounted) {
       setState(() => _stage = _AuthStage.code);
       _startResendCooldown();
-    } else if (mounted && auth.errorMessage != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(auth.errorMessage!)));
+    } else if (mounted) {
+      final errorMessage = ref.read(authProvider).errorMessage;
+      if (errorMessage != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
+      }
     }
   }
 
   Future<void> _handleVerifyCode() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final auth = ref.read(authProvider);
+    final auth = ref.read(authProvider.notifier);
     final result = await auth.verifyCode(
       email: _emailController.text.trim(),
       code: _codeController.text.trim(),
@@ -89,10 +92,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       AppRoutes.navigateAndClearStack(context, AppRoutes.main);
     } else if (result == 'onboarding') {
       AppRoutes.navigateTo(context, AppRoutes.signupStep2);
-    } else if (auth.errorMessage != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(auth.errorMessage!)));
+    } else {
+      final errorMessage = ref.read(authProvider).errorMessage;
+      if (errorMessage != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
+      }
     }
   }
 

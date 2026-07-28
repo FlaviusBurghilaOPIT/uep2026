@@ -44,16 +44,15 @@ class _BootScreenState extends ConsumerState<BootScreen> {
   @override
   Widget build(BuildContext context) {
     // Listen for state changes in case data isn't ready on mount
-    ref.listen<AsyncValue<DemoAuthState>>(demoAuthProvider, (previous, next) {
+    ref.listen<AsyncValue<DemoAuthState>>(demoAuthProvider, (
+      previous,
+      next,
+    ) {
       if (!next.isLoading) {
         _checkAuthAndRoute();
       }
     });
 
-    return const Scaffold(
-      body: Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }
