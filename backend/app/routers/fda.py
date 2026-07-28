@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from datetime import datetime
 
@@ -13,6 +14,23 @@ from app.providers.fda import get_fda_provider
 from openai import AsyncOpenAI
 
 router = APIRouter(prefix="/fda", tags=["fda"])
+logger = logging.getLogger(__name__)
+
+
+def _raw_warnings_text(raw: dict) -> str:
+    """Best-effort plain-text fallback when the LLM summary is unavailable."""
+    warnings: list[str] = []
+    if isinstance(raw, dict):
+        results = raw.get("results")
+        if isinstance(results, list) and results and isinstance(results[0], dict):
+            first = results[0].get("warnings")
+            if isinstance(first, list):
+                warnings = [str(w) for w in first]
+        if not warnings and isinstance(raw.get("warnings"), list):
+            warnings = [str(w) for w in raw["warnings"]]
+    if warnings:
+        return "\n".join(f"- {w}" for w in warnings[:5])
+    return "Safety summary temporarily unavailable. Please consult the openFDA label directly."
 
 FDA_SUMMARY_SYSTEM_PROMPT = (
     "You are a patient-facing drug safety summarizer. Given raw openFDA label data, "
@@ -29,19 +47,39 @@ client_async = AsyncOpenAI(
 @router.get("/drug/{name}", response_model=schemas.FDADrugInfoResponse)
 async def get_drug_info(name: str, current_user: models.User = Depends(get_current_user)):
     provider = get_fda_provider()
-    raw = await provider.get_drug_info(name)
 
-    with using_attributes(metadata={"endpoint": "fda.summarize", "drug_name": name}):
-        response = await client_async.chat.completions.create(
-            model=os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3-8b-instruct"),
-            messages=[
-                {"role": "system", "content": FDA_SUMMARY_SYSTEM_PROMPT},
-                {"role": "user", "content": json.dumps(raw)[:4000]}
-            ]
+    try:
+        raw = await provider.get_drug_info(name)
+    except Exception:
+        # openFDA unreachable/slow — degrade gracefully rather than returning a 500.
+        logger.warning("openFDA lookup failed for drug=%s", name, exc_info=True)
+        return schemas.FDADrugInfoResponse(
+            drug_name=name,
+            summary="Could not reach openFDA right now. Please try again shortly.",
+            source=f"{provider.source} (unavailable)",
         )
-        summary = response.choices[0].message.content
 
-    return schemas.FDADrugInfoResponse(drug_name=name, summary=summary, source=provider.source)
+    try:
+        with using_attributes(metadata={"endpoint": "fda.summarize", "drug_name": name}):
+            response = await client_async.chat.completions.create(
+                model=os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3-8b-instruct"),
+                messages=[
+                    {"role": "system", "content": FDA_SUMMARY_SYSTEM_PROMPT},
+                    {"role": "user", "content": json.dumps(raw)[:4000]}
+                ],
+                timeout=float(os.getenv("OPENROUTER_TIMEOUT", "20")),
+            )
+        summary = response.choices[0].message.content
+        return schemas.FDADrugInfoResponse(drug_name=name, summary=summary, source=provider.source)
+    except Exception:
+        # Missing/invalid LLM key or a provider error — return the raw warnings
+        # unsummarized instead of failing the whole request.
+        logger.warning("LLM summary failed for drug=%s", name, exc_info=True)
+        return schemas.FDADrugInfoResponse(
+            drug_name=name,
+            summary=_raw_warnings_text(raw),
+            source=f"{provider.source} (unsummarized)",
+        )
 
 
 @router.get("/warnings", response_model=list[schemas.FDAWarningResponse])

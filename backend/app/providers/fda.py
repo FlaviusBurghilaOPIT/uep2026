@@ -14,12 +14,15 @@ class LiveFDAProvider(FDAProvider):
     source = "live"
 
     async def get_drug_info(self, drug_name: str) -> dict:
-        # calls the real openFDA public API
+        # calls the real openFDA public API (keyless). Bounded by a timeout so a
+        # slow/unreachable upstream degrades gracefully instead of hanging the request.
         import httpx
 
         url = f"https://api.fda.gov/drug/label.json?search=openfda.brand_name:{drug_name}&limit=1"
-        async with httpx.AsyncClient() as client:
+        timeout = httpx.Timeout(float(os.getenv("FDA_TIMEOUT", "8")))
+        async with httpx.AsyncClient(timeout=timeout) as client:
             response = await client.get(url)
+            response.raise_for_status()
             return response.json()
 
 
