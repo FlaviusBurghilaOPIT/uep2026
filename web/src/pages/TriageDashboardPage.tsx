@@ -82,21 +82,14 @@ type LatestResolution = {
 type OutreachMethod = 'Phone Call' | 'Secure SMS' | 'In-Person Visit'
 type FilterTab = 'all' | 'red' | 'amber'
 
-/** Throws if neither endpoint shape works — callers must handle failure honestly. */
+/** Adherence telemetry for a patient (backend route: /adherence/patients/{id}). */
 async function fetchPatientDoseLogs(patientId: string): Promise<DoseLog[]> {
-  try {
-    return await apiFetch<DoseLog[]>(`/patients/${patientId}/adherence`)
-  } catch {
-    return await apiFetch<DoseLog[]>(`/adherence/patients/${patientId}`)
-  }
+  return await apiFetch<DoseLog[]>(`/adherence/patients/${patientId}`)
 }
 
+/** Symptom check-ins for a patient (backend route: /symptoms/patients/{id}/symptoms). */
 async function fetchPatientSymptoms(patientId: string): Promise<SymptomCheckIn[]> {
-  try {
-    return await apiFetch<SymptomCheckIn[]>(`/patients/${patientId}/symptoms`)
-  } catch {
-    return await apiFetch<SymptomCheckIn[]>(`/symptoms/patients/${patientId}/symptoms`)
-  }
+  return await apiFetch<SymptomCheckIn[]>(`/symptoms/patients/${patientId}/symptoms`)
 }
 
 function TriageDashboardPage() {
@@ -112,6 +105,8 @@ function TriageDashboardPage() {
   // Filter & Search states
   const [activeTab, setActiveTab] = useState<FilterTab>('all')
   const [searchQuery, setSearchQuery] = useState('')
+  // Debounced copy of searchQuery that actually drives the server-side QBE fetch.
+  const [debouncedSearch, setDebouncedSearch] = useState('')
 
   // Resolution Modal states
   const [selectedPatientItem, setSelectedPatientItem] = useState<TriagePatient | null>(null)
@@ -136,11 +131,18 @@ function TriageDashboardPage() {
     setError('')
     try {
       // No silent fallbacks here: if the roster itself fails, the page must say so.
-      const [patientsRes, casesRes, resolutionsRes] = await Promise.all([
-        apiFetch<Patient[]>('/patients'),
+      // The roster comes from the server-side QBE endpoint (name/email/surgery
+      // match); a large size keeps severity prioritization client-side.
+      const params = new URLSearchParams({ size: '100' })
+      const term = debouncedSearch.trim()
+      if (term) params.set('search', term)
+
+      const [roster, casesRes, resolutionsRes] = await Promise.all([
+        apiFetch<{ items: Patient[]; total: number }>(`/patients/triage?${params.toString()}`),
         apiFetch<Case[]>('/cases'),
         apiFetch<LatestResolution[]>('/patients/triage-resolutions/latest').catch(() => [] as LatestResolution[])
       ])
+      const patientsRes = roster.items
 
       setPatients(patientsRes)
       const latestResolution = new Map<string, Date>(
@@ -283,7 +285,13 @@ function TriageDashboardPage() {
     } finally {
       setLoading(false)
     }
-  }, [t])
+  }, [t, debouncedSearch])
+
+  // Debounce keystrokes before hitting the server-side QBE endpoint.
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(searchQuery), 300)
+    return () => clearTimeout(id)
+  }, [searchQuery])
 
   useEffect(() => {
     fetchTriageData()
@@ -366,24 +374,13 @@ function TriageDashboardPage() {
     (item) => item.severity === 'red' || item.severity === 'amber'
   )
 
-  // Filter logic based on search query
-  const query = searchQuery.trim().toLowerCase()
-  const filterBySearch = (items: TriagePatient[]) => {
-    if (!query) return items
-    return items.filter((item) => {
-      const nameMatch = item.patient.full_name.toLowerCase().includes(query)
-      const surgeryMatch = (item.caseItem?.surgery_type || '').toLowerCase().includes(query)
-      const dobMatch = (item.patient.date_of_birth || '').toLowerCase().includes(query)
-      const reasonMatch = item.reasons.some((r) => r.toLowerCase().includes(query))
-      return nameMatch || surgeryMatch || dobMatch || reasonMatch
-    })
-  }
-
-  const filteredRed = filterBySearch(redQueue)
-  const filteredAmber = filterBySearch(amberQueue)
-  const filteredUnknown = filterBySearch(unknownQueue)
-  const filteredExceptions = filterBySearch(exceptionQueue)
-  const filteredNormal = filterBySearch(normalQueue)
+  // Search filtering happens server-side (QBE on /patients/triage); the queues
+  // are already scoped to the matched roster, so here we only split by severity.
+  const filteredRed = redQueue
+  const filteredAmber = amberQueue
+  const filteredUnknown = unknownQueue
+  const filteredExceptions = exceptionQueue
+  const filteredNormal = normalQueue
 
   const adherenceText = (item: TriagePatient) =>
     item.adherencePercentage === null ? t('triage.noLogsYet') : `${item.adherencePercentage}%`
