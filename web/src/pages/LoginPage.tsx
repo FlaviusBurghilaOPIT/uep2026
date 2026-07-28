@@ -4,6 +4,7 @@ import { useTranslation } from '../i18n'
 import { apiFetch } from '../api/client'
 import { trackEvent } from '../api/analytics'
 import { FormField } from '../components/ui'
+import { LanguageSwitcher } from '../components/LanguageSwitcher'
 
 function LoginPage() {
   const { t } = useTranslation()
@@ -38,6 +39,9 @@ function LoginPage() {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
+        <div style={styles.langRow}>
+          <LanguageSwitcher variant="light" />
+        </div>
         <h1 style={styles.title}>{t('login.title')}</h1>
         <p style={styles.subtitle}>{t('login.subtitle')}</p>
 
@@ -96,6 +100,10 @@ const styles = {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '16px'
+  },
+  langRow: {
+    display: 'flex',
+    justifyContent: 'flex-end'
   },
   title: {
     fontSize: '22px',

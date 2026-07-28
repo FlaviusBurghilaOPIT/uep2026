@@ -4,14 +4,14 @@ import {
   faUserGroup,
   faFileCirclePlus,
   faShieldHalved,
-  faRightFromBracket,
-  faGlobe
+  faRightFromBracket
 } from '@fortawesome/free-solid-svg-icons'
-import { useTranslation, type Language } from '../i18n'
-import { Icon, Select } from './ui'
+import { useTranslation } from '../i18n'
+import { Icon } from './ui'
+import { LanguageSwitcher } from './LanguageSwitcher'
 
 function NavBar() {
-  const { language, setLanguage, t } = useTranslation()
+  const { t } = useTranslation()
   const navigate = useNavigate()
 
   const email = localStorage.getItem('email') || ''
@@ -44,20 +44,7 @@ function NavBar() {
         <div style={styles.brand}>
           <span style={styles.brandPlus}>+</span> CarePro
         </div>
-        <div style={styles.langSelectorWrapper}>
-          <Icon icon={faGlobe} style={{ color: '#38bdf8', fontSize: '12px' }} />
-          <Select
-            value={language}
-            onChange={(v) => setLanguage(v as Language)}
-            options={[
-              { value: 'en', label: 'EN' },
-              { value: 'es', label: 'ES' },
-              { value: 'it', label: 'IT' }
-            ]}
-            aria-label={t('common.selectLanguage')}
-            style={styles.langSelectTrigger}
-          />
-        </div>
+        <LanguageSwitcher variant="dark" />
       </div>
 
       <ul style={styles.nav}>
@@ -129,24 +116,6 @@ const styles = {
   },
   brandPlus: {
     color: '#38bdf8'
-  },
-  langSelectorWrapper: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '4px',
-    backgroundColor: '#1e293b',
-    padding: '4px 6px',
-    borderRadius: '6px',
-    border: '1px solid #334155'
-  },
-  langSelectTrigger: {
-    backgroundColor: 'transparent',
-    color: '#38bdf8',
-    border: 'none',
-    fontSize: '12px',
-    fontWeight: '700' as const,
-    padding: '0',
-    width: 'auto'
   },
   nav: {
     display: 'flex',
