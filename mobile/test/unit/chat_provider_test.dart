@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:remotecare/core/network/api_service.dart';
 import 'package:remotecare/core/telemetry/telemetry_service.dart';
-import 'package:remotecare/features/assistant/providers/chat_assistant_notifier.dart';
+import 'package:remotecare/features/assistant/presentation/providers/chat_assistant_notifier.dart';
 
 import 'fake_api_service.dart';
 

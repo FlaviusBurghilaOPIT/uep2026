@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_text_styles.dart';
-import '../../core/constants/app_spacing.dart';
-import '../../core/constants/app_strings.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/constants/app_strings.dart';
 
 class RecoveryScreen extends StatefulWidget {
   const RecoveryScreen({super.key});

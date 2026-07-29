@@ -3,13 +3,13 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_text_styles.dart';
-import '../../core/constants/app_spacing.dart';
-import '../../core/l10n/app_localizations.dart';
-import '../../core/network/api_service.dart';
-import '../auth/presentation/providers/auth_provider.dart';
-import 'providers/symptom_checkin_notifier.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/l10n/app_localizations.dart';
+import '../../../../core/network/api_service.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../providers/symptom_checkin_notifier.dart';
 
 /// Top action card embedding the daily feeling check-in on `Today` — the
 /// one check-in surface in the app (the orphan full-screen `CheckInScreen`

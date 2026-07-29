@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../core/network/api_service.dart';
-import '../../../core/telemetry/telemetry_service.dart';
+import '../../../../core/network/api_service.dart';
+import '../../../../core/telemetry/telemetry_service.dart';
 
 part 'chat_assistant_notifier.freezed.dart';
 

@@ -19,7 +19,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../../core/settings/settings_opener.dart';
 import '../../../../core/widgets/app_skeleton_loader.dart';
-import '../../../checkin/checkin_card.dart';
+import '../../../checkin/presentation/widgets/checkin_card.dart';
 import '../widgets/correction_sheet.dart';
 import '../widgets/dose_format.dart';
 import '../widgets/dose_group.dart';

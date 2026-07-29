@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../core/l10n/app_localizations.dart';
-import '../../core/theme/app_colors.dart';
-import '../auth/presentation/providers/auth_provider.dart';
-import 'providers/chat_assistant_notifier.dart';
+import '../../../../core/l10n/app_localizations.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../providers/chat_assistant_notifier.dart';
 
 class AssistantScreen extends ConsumerStatefulWidget {
   const AssistantScreen({super.key});

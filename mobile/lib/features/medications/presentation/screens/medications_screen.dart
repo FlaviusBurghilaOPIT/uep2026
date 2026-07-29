@@ -2,17 +2,17 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_text_styles.dart';
-import '../../core/constants/app_spacing.dart';
-import '../../core/constants/app_strings.dart';
-import '../../core/l10n/app_localizations.dart';
-import '../../core/network/api_service.dart';
-import '../auth/presentation/providers/auth_provider.dart';
-import '../auth/domain/entities/auth_state.dart';
-import '../../core/widgets/app_empty_state.dart';
-import '../../core/widgets/app_skeleton_loader.dart';
-import 'providers/medications_notifier.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/constants/app_strings.dart';
+import '../../../../core/l10n/app_localizations.dart';
+import '../../../../core/network/api_service.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/domain/entities/auth_state.dart';
+import '../../../../core/widgets/app_empty_state.dart';
+import '../../../../core/widgets/app_skeleton_loader.dart';
+import '../providers/medications_notifier.dart';
 
 class MedicationsScreen extends ConsumerStatefulWidget {
   const MedicationsScreen({super.key});

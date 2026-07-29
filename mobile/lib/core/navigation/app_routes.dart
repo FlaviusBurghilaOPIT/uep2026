@@ -4,8 +4,8 @@ import '../../features/auth/presentation/screens/invitation_screen.dart';
 import '../../features/auth/presentation/screens/profile_setup_screen.dart';
 import '../../features/auth/presentation/screens/email_login_screen.dart';
 import '../../features/auth/presentation/screens/otp_screen.dart';
-import '../../features/main/main_shell_page.dart';
-import '../../features/profile/profile_screen.dart';
+import '../../features/main/presentation/screens/main_shell_page.dart';
+import '../../features/profile/presentation/screens/profile_screen.dart';
 
 class AppRoutes {
   AppRoutes._();

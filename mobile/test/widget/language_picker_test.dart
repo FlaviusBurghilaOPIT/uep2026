@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:remotecare/core/l10n/app_localizations.dart';
 import 'package:remotecare/core/l10n/locale_notifier.dart';
 import 'package:remotecare/core/providers/shared_preferences_provider.dart';
-import 'package:remotecare/features/profile/profile_screen.dart';
+import 'package:remotecare/features/profile/presentation/screens/profile_screen.dart';
 
 Widget _buildMaterialApp(BuildContext context, Widget? child) {
   return Consumer(

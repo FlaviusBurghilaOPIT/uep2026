@@ -8,7 +8,7 @@ import 'package:remotecare/core/l10n/app_localizations.dart';
 import 'package:remotecare/core/network/api_service.dart';
 import 'package:remotecare/core/providers/shared_preferences_provider.dart';
 import 'package:remotecare/core/telemetry/telemetry_service.dart';
-import 'package:remotecare/features/assistant/assistant_screen.dart';
+import 'package:remotecare/features/assistant/presentation/screens/assistant_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../unit/fake_api_service.dart';

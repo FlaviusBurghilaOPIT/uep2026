@@ -6,12 +6,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:remotecare/core/l10n/app_localizations.dart';
 import 'package:remotecare/core/network/api_service.dart';
-import 'package:remotecare/features/main/main_shell_page.dart';
+import 'package:remotecare/features/main/presentation/screens/main_shell_page.dart';
 import 'package:remotecare/features/today/presentation/screens/today_screen.dart';
-import 'package:remotecare/features/medications/medications_screen.dart';
-import 'package:remotecare/features/recovery/recovery_screen.dart';
-import 'package:remotecare/features/assistant/assistant_screen.dart';
-import 'package:remotecare/features/profile/profile_screen.dart';
+import 'package:remotecare/features/medications/presentation/screens/medications_screen.dart';
+import 'package:remotecare/features/recovery/presentation/screens/recovery_screen.dart';
+import 'package:remotecare/features/assistant/presentation/screens/assistant_screen.dart';
+import 'package:remotecare/features/profile/presentation/screens/profile_screen.dart';
 
 import '../unit/fake_api_service.dart';
 
