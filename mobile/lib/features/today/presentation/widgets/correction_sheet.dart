@@ -8,7 +8,6 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../widgets/dose_slot_card.dart' show localizedDoseStatus;
-import '../providers/today_agenda_notifier.dart';
 
 /// Correction sheet (C7): factual, never shaming. Offers exactly the two
 /// statuses that are NOT currently logged, plus "Keep as is" at equal

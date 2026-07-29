@@ -8,7 +8,6 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../widgets/dose_format.dart';
-import '../providers/today_agenda_notifier.dart';
 
 /// The core Today-screen dose slot (spec §7). Pure presentation — it emits
 /// intents via [onLog] / [onOpenCorrection] and never talks to services.
