@@ -6,7 +6,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/constants/app_strings.dart';
-import '../../core/providers/app_providers.dart';
+import '../auth/presentation/providers/auth_provider.dart';
 import '../../core/l10n/locale_notifier.dart';
 import '../../core/navigation/app_routes.dart';
 

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/providers/app_providers.dart';
+import '../auth/presentation/providers/auth_provider.dart';
 import 'providers/chat_assistant_notifier.dart';
 
 class AssistantScreen extends ConsumerStatefulWidget {

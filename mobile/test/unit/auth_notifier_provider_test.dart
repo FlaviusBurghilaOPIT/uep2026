@@ -3,18 +3,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:remotecare/core/network/api_service.dart';
-import 'package:remotecare/core/providers/app_providers.dart';
+import 'package:remotecare/core/providers/shared_preferences_provider.dart';
+import 'package:remotecare/features/auth/presentation/providers/auth_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fake_api_service.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late FakeApiService fakeApi;
   late ProviderContainer container;
 
-  setUp(() {
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
     fakeApi = FakeApiService();
     container = ProviderContainer(
-      overrides: [apiServiceProvider.overrideWithValue(fakeApi)],
+      overrides: [
+        apiServiceProvider.overrideWithValue(fakeApi),
+        sharedPreferencesProvider.overrideWithValue(prefs),
+      ],
     );
   });
 
@@ -119,7 +128,10 @@ void main() {
       );
 
       expect(result, null);
-      expect(container.read(authProvider).errorMessage, 'Invalid or expired code');
+      expect(
+        container.read(authProvider).errorMessage,
+        'Invalid or expired code',
+      );
     },
   );
 

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../features/auth/boot_screen.dart';
-import '../../features/auth/invitation_screen.dart';
-import '../../features/auth/profile_setup_screen.dart';
-import '../../features/auth/email_login_screen.dart';
-import '../../features/auth/otp_screen.dart';
+import '../../features/auth/presentation/screens/boot_screen.dart';
+import '../../features/auth/presentation/screens/invitation_screen.dart';
+import '../../features/auth/presentation/screens/profile_setup_screen.dart';
+import '../../features/auth/presentation/screens/email_login_screen.dart';
+import '../../features/auth/presentation/screens/otp_screen.dart';
 import '../../features/main/main_shell_page.dart';
 import '../../features/profile/profile_screen.dart';
 
@@ -15,7 +15,7 @@ class AppRoutes {
   static const String profileSetup = '/profile-setup';
   static const String emailLogin = '/email-login';
   static const String otp = '/otp';
-  
+
   static const String main = '/main';
   static const String profile = '/profile';
 

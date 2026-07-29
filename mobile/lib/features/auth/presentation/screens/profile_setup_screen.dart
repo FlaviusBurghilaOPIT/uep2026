@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/navigation/app_routes.dart';
-import 'demo_auth_state.dart';
-import '../../core/l10n/app_localizations.dart';
+import '../../../../core/navigation/app_routes.dart';
+import '../providers/demo_auth_provider.dart';
+import '../../../../core/l10n/app_localizations.dart';
 
 class ProfileSetupScreen extends ConsumerStatefulWidget {
   const ProfileSetupScreen({super.key});

@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_text_styles.dart';
-import '../../core/constants/app_spacing.dart';
-import '../../core/constants/app_strings.dart';
-import '../../core/providers/app_providers.dart';
-import '../../core/widgets/app_button.dart';
-import '../../core/widgets/step_progress_bar.dart';
-import '../../core/widgets/security_badge.dart';
-import '../../core/l10n/app_localizations.dart';
-import '../../core/notifications/notification_service.dart';
-import '../../core/navigation/app_routes.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/constants/app_strings.dart';
+import '../providers/auth_provider.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/step_progress_bar.dart';
+import '../../../../core/widgets/security_badge.dart';
+import '../../../../core/l10n/app_localizations.dart';
+import '../../../../core/notifications/notification_service.dart';
+import '../../../../core/navigation/app_routes.dart';
 
 class SignupStep3Screen extends ConsumerStatefulWidget {
   const SignupStep3Screen({super.key});

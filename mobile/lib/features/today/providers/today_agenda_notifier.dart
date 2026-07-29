@@ -8,7 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/network/api_service.dart';
-import '../../../core/providers/app_providers.dart';
+import '../../auth/presentation/providers/auth_provider.dart';
 import '../../../core/telemetry/telemetry_service.dart';
 import '../../../core/providers/shared_preferences_provider.dart';
 

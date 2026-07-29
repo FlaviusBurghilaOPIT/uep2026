@@ -8,7 +8,7 @@ import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_spacing.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/network/api_service.dart';
-import '../../core/providers/app_providers.dart';
+import '../auth/presentation/providers/auth_provider.dart';
 import 'providers/symptom_checkin_notifier.dart';
 
 /// Top action card embedding the daily feeling check-in on `Today` — the

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:remotecare/core/navigation/app_routes.dart';
-import 'package:remotecare/features/auth/invitation_screen.dart';
+import 'package:remotecare/features/auth/presentation/screens/invitation_screen.dart';
 import 'package:remotecare/core/l10n/app_localizations.dart';
 
 Widget buildTestApp(Widget child) {

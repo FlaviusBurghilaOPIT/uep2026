@@ -1,10 +1,10 @@
 import 'dart:convert';
 
+import 'package:remotecare/core/providers/shared_preferences_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:remotecare/core/network/api_service.dart';
-import 'package:remotecare/features/auth/demo_auth_state.dart';
 import 'package:remotecare/features/today/providers/fda_warning_provider.dart';
 import 'package:remotecare/features/today/providers/today_agenda_notifier.dart';
 import 'package:shared_preferences/shared_preferences.dart';

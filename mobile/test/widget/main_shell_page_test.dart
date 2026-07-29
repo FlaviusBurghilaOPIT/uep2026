@@ -1,3 +1,4 @@
+import 'package:remotecare/core/providers/shared_preferences_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -5,7 +6,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:remotecare/core/l10n/app_localizations.dart';
 import 'package:remotecare/core/network/api_service.dart';
-import 'package:remotecare/features/auth/demo_auth_state.dart';
 import 'package:remotecare/features/main/main_shell_page.dart';
 import 'package:remotecare/features/today/today_screen.dart';
 import 'package:remotecare/features/medications/medications_screen.dart';

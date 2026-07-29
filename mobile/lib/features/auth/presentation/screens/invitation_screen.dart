@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../core/navigation/app_routes.dart';
-import '../../core/l10n/app_localizations.dart';
+import '../../../../core/navigation/app_routes.dart';
+import '../../../../core/l10n/app_localizations.dart';
 
 class InvitationScreen extends StatefulWidget {
   const InvitationScreen({super.key});

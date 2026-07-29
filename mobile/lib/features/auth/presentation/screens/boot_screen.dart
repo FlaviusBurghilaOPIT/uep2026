@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/navigation/app_routes.dart';
-import 'demo_auth_state.dart';
+import '../../../../core/navigation/app_routes.dart';
+import '../providers/demo_auth_provider.dart';
 
 class BootScreen extends ConsumerStatefulWidget {
   const BootScreen({Key? key}) : super(key: key);

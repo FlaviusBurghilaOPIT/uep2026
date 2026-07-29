@@ -6,7 +6,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:remotecare/core/constants/app_strings.dart';
 import 'package:remotecare/core/network/api_service.dart';
-import 'package:remotecare/features/auth/login_screen.dart';
+import 'package:remotecare/core/providers/shared_preferences_provider.dart';
+import 'package:remotecare/features/auth/presentation/screens/login_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../unit/fake_api_service.dart';
 
@@ -14,9 +16,12 @@ Widget _buildMaterialApp(BuildContext context, Widget? child) {
   return const MaterialApp(home: LoginScreen());
 }
 
-Widget buildTestApp(FakeApiService fakeApi) {
+Widget buildTestApp(FakeApiService fakeApi, SharedPreferences prefs) {
   return ProviderScope(
-    overrides: [apiServiceProvider.overrideWithValue(fakeApi)],
+    overrides: [
+      apiServiceProvider.overrideWithValue(fakeApi),
+      sharedPreferencesProvider.overrideWithValue(prefs),
+    ],
     child: const ScreenUtilInit(
       designSize: Size(375, 812),
       minTextAdapt: true,
@@ -31,12 +36,14 @@ void main() {
   testWidgets(
     'email stage has no password field, sending a code moves to the code stage',
     (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
       final fakeApi = FakeApiService();
       fakeApi.postHandlers['/auth/patient/request-code'] = (body) {
         return http.Response(jsonEncode({'message': 'sent'}), 200);
       };
 
-      await tester.pumpWidget(buildTestApp(fakeApi));
+      await tester.pumpWidget(buildTestApp(fakeApi, prefs));
       await tester.pumpAndSettle();
 
       expect(find.text('PASSWORD'), findsNothing);
