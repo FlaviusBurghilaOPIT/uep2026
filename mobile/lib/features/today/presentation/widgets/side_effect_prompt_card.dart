@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_spacing.dart';
-import '../../core/constants/app_text_styles.dart';
-import '../../core/l10n/app_localizations.dart';
-import 'providers/today_agenda_notifier.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/l10n/app_localizations.dart';
+import '../providers/today_agenda_notifier.dart';
 
 /// C8 side-effect prompt (spec §7): one-tap, dismissible, non-blocking.
 /// "Yes" reveals the emergency CTA — or the honest no-contact note when the

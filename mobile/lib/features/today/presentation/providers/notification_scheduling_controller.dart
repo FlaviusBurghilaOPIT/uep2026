@@ -1,8 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../core/notifications/notification_scheduler.dart';
-import '../../../core/providers/shared_preferences_provider.dart';
+import '../../../../core/notifications/notification_scheduler.dart';
+import '../../../../core/providers/shared_preferences_provider.dart';
+import '../../domain/entities/agenda_entities.dart';
 import 'today_agenda_notifier.dart';
 
 /// Rebuilds local notification scheduling on server truth (WI 14 / spec §6).

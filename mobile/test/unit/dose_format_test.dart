@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:remotecare/features/today/dose_format.dart';
+import 'package:remotecare/features/today/presentation/widgets/dose_format.dart';
 
 void main() {
   group('formatDose (M-08)', () {

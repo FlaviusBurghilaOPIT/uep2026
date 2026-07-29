@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_spacing.dart';
-import '../../core/constants/app_text_styles.dart';
-import '../../core/l10n/app_localizations.dart';
-import 'dose_slot_card.dart' show localizedDoseStatus;
-import 'providers/today_agenda_notifier.dart';
+import '../../domain/entities/agenda_entities.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/l10n/app_localizations.dart';
+import '../widgets/dose_slot_card.dart' show localizedDoseStatus;
+import '../providers/today_agenda_notifier.dart';
 
 /// Correction sheet (C7): factual, never shaming. Offers exactly the two
 /// statuses that are NOT currently logged, plus "Keep as is" at equal

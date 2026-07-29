@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_spacing.dart';
-import '../../core/constants/app_text_styles.dart';
-import '../../core/l10n/app_localizations.dart';
-import 'dose_format.dart';
-import 'providers/today_agenda_notifier.dart';
+import '../../domain/entities/agenda_entities.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/l10n/app_localizations.dart';
+import '../widgets/dose_format.dart';
+import '../providers/today_agenda_notifier.dart';
 
 /// The core Today-screen dose slot (spec §7). Pure presentation — it emits
 /// intents via [onLog] / [onOpenCorrection] and never talks to services.

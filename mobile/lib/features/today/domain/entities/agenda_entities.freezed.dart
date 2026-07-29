@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'today_agenda_notifier.dart';
+part of 'agenda_entities.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -12,7 +12,7 @@ part of 'today_agenda_notifier.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$AgendaSlot implements DiagnosticableTreeMixin {
+mixin _$AgendaSlot {
 
  String get slotId; String get medicationId; String get medicationName; String get dose; String? get notes; DateTime get scheduledTime; SlotState get state; DateTime? get loggedAt; String? get doseLogId; String? get previousStatus;
 /// Create a copy of AgendaSlot
@@ -22,12 +22,6 @@ mixin _$AgendaSlot implements DiagnosticableTreeMixin {
 $AgendaSlotCopyWith<AgendaSlot> get copyWith => _$AgendaSlotCopyWithImpl<AgendaSlot>(this as AgendaSlot, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'AgendaSlot'))
-    ..add(DiagnosticsProperty('slotId', slotId))..add(DiagnosticsProperty('medicationId', medicationId))..add(DiagnosticsProperty('medicationName', medicationName))..add(DiagnosticsProperty('dose', dose))..add(DiagnosticsProperty('notes', notes))..add(DiagnosticsProperty('scheduledTime', scheduledTime))..add(DiagnosticsProperty('state', state))..add(DiagnosticsProperty('loggedAt', loggedAt))..add(DiagnosticsProperty('doseLogId', doseLogId))..add(DiagnosticsProperty('previousStatus', previousStatus));
-}
 
 @override
 bool operator ==(Object other) {
@@ -39,7 +33,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,slotId,medicationId,medicationName,dose,notes,scheduledTime,state,loggedAt,doseLogId,previousStatus);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'AgendaSlot(slotId: $slotId, medicationId: $medicationId, medicationName: $medicationName, dose: $dose, notes: $notes, scheduledTime: $scheduledTime, state: $state, loggedAt: $loggedAt, doseLogId: $doseLogId, previousStatus: $previousStatus)';
 }
 
@@ -220,7 +214,7 @@ return $default(_that.slotId,_that.medicationId,_that.medicationName,_that.dose,
 /// @nodoc
 
 
-class _AgendaSlot with DiagnosticableTreeMixin implements AgendaSlot {
+class _AgendaSlot implements AgendaSlot {
   const _AgendaSlot({required this.slotId, required this.medicationId, required this.medicationName, required this.dose, this.notes, required this.scheduledTime, required this.state, this.loggedAt, this.doseLogId, this.previousStatus});
   
 
@@ -242,12 +236,6 @@ class _AgendaSlot with DiagnosticableTreeMixin implements AgendaSlot {
 _$AgendaSlotCopyWith<_AgendaSlot> get copyWith => __$AgendaSlotCopyWithImpl<_AgendaSlot>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'AgendaSlot'))
-    ..add(DiagnosticsProperty('slotId', slotId))..add(DiagnosticsProperty('medicationId', medicationId))..add(DiagnosticsProperty('medicationName', medicationName))..add(DiagnosticsProperty('dose', dose))..add(DiagnosticsProperty('notes', notes))..add(DiagnosticsProperty('scheduledTime', scheduledTime))..add(DiagnosticsProperty('state', state))..add(DiagnosticsProperty('loggedAt', loggedAt))..add(DiagnosticsProperty('doseLogId', doseLogId))..add(DiagnosticsProperty('previousStatus', previousStatus));
-}
 
 @override
 bool operator ==(Object other) {
@@ -259,7 +247,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,slotId,medicationId,medicationName,dose,notes,scheduledTime,state,loggedAt,doseLogId,previousStatus);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'AgendaSlot(slotId: $slotId, medicationId: $medicationId, medicationName: $medicationName, dose: $dose, notes: $notes, scheduledTime: $scheduledTime, state: $state, loggedAt: $loggedAt, doseLogId: $doseLogId, previousStatus: $previousStatus)';
 }
 
@@ -308,7 +296,7 @@ as String?,
 }
 
 /// @nodoc
-mixin _$PrnMedication implements DiagnosticableTreeMixin {
+mixin _$PrnMedication {
 
  String get medicationId; String get medicationName; String get dose; String? get notes;
 /// Create a copy of PrnMedication
@@ -318,12 +306,6 @@ mixin _$PrnMedication implements DiagnosticableTreeMixin {
 $PrnMedicationCopyWith<PrnMedication> get copyWith => _$PrnMedicationCopyWithImpl<PrnMedication>(this as PrnMedication, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'PrnMedication'))
-    ..add(DiagnosticsProperty('medicationId', medicationId))..add(DiagnosticsProperty('medicationName', medicationName))..add(DiagnosticsProperty('dose', dose))..add(DiagnosticsProperty('notes', notes));
-}
 
 @override
 bool operator ==(Object other) {
@@ -335,7 +317,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,medicationId,medicationName,dose,notes);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'PrnMedication(medicationId: $medicationId, medicationName: $medicationName, dose: $dose, notes: $notes)';
 }
 
@@ -510,7 +492,7 @@ return $default(_that.medicationId,_that.medicationName,_that.dose,_that.notes);
 /// @nodoc
 
 
-class _PrnMedication with DiagnosticableTreeMixin implements PrnMedication {
+class _PrnMedication implements PrnMedication {
   const _PrnMedication({required this.medicationId, required this.medicationName, required this.dose, this.notes});
   
 
@@ -526,12 +508,6 @@ class _PrnMedication with DiagnosticableTreeMixin implements PrnMedication {
 _$PrnMedicationCopyWith<_PrnMedication> get copyWith => __$PrnMedicationCopyWithImpl<_PrnMedication>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'PrnMedication'))
-    ..add(DiagnosticsProperty('medicationId', medicationId))..add(DiagnosticsProperty('medicationName', medicationName))..add(DiagnosticsProperty('dose', dose))..add(DiagnosticsProperty('notes', notes));
-}
 
 @override
 bool operator ==(Object other) {
@@ -543,7 +519,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,medicationId,medicationName,dose,notes);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'PrnMedication(medicationId: $medicationId, medicationName: $medicationName, dose: $dose, notes: $notes)';
 }
 
@@ -586,7 +562,7 @@ as String?,
 }
 
 /// @nodoc
-mixin _$OfflineQueueEntry implements DiagnosticableTreeMixin {
+mixin _$OfflineQueueEntry {
 
  String get idempotencyKey; OfflineQueueKind get kind; DoseLogStatus get status; DateTime get enqueuedAt; String? get slotId; String? get doseLogId; String? get medicationId;
 /// Create a copy of OfflineQueueEntry
@@ -596,12 +572,6 @@ mixin _$OfflineQueueEntry implements DiagnosticableTreeMixin {
 $OfflineQueueEntryCopyWith<OfflineQueueEntry> get copyWith => _$OfflineQueueEntryCopyWithImpl<OfflineQueueEntry>(this as OfflineQueueEntry, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'OfflineQueueEntry'))
-    ..add(DiagnosticsProperty('idempotencyKey', idempotencyKey))..add(DiagnosticsProperty('kind', kind))..add(DiagnosticsProperty('status', status))..add(DiagnosticsProperty('enqueuedAt', enqueuedAt))..add(DiagnosticsProperty('slotId', slotId))..add(DiagnosticsProperty('doseLogId', doseLogId))..add(DiagnosticsProperty('medicationId', medicationId));
-}
 
 @override
 bool operator ==(Object other) {
@@ -613,7 +583,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,idempotencyKey,kind,status,enqueuedAt,slotId,doseLogId,medicationId);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'OfflineQueueEntry(idempotencyKey: $idempotencyKey, kind: $kind, status: $status, enqueuedAt: $enqueuedAt, slotId: $slotId, doseLogId: $doseLogId, medicationId: $medicationId)';
 }
 
@@ -791,7 +761,7 @@ return $default(_that.idempotencyKey,_that.kind,_that.status,_that.enqueuedAt,_t
 /// @nodoc
 
 
-class _OfflineQueueEntry with DiagnosticableTreeMixin implements OfflineQueueEntry {
+class _OfflineQueueEntry implements OfflineQueueEntry {
   const _OfflineQueueEntry({required this.idempotencyKey, required this.kind, required this.status, required this.enqueuedAt, this.slotId, this.doseLogId, this.medicationId});
   
 
@@ -810,12 +780,6 @@ class _OfflineQueueEntry with DiagnosticableTreeMixin implements OfflineQueueEnt
 _$OfflineQueueEntryCopyWith<_OfflineQueueEntry> get copyWith => __$OfflineQueueEntryCopyWithImpl<_OfflineQueueEntry>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'OfflineQueueEntry'))
-    ..add(DiagnosticsProperty('idempotencyKey', idempotencyKey))..add(DiagnosticsProperty('kind', kind))..add(DiagnosticsProperty('status', status))..add(DiagnosticsProperty('enqueuedAt', enqueuedAt))..add(DiagnosticsProperty('slotId', slotId))..add(DiagnosticsProperty('doseLogId', doseLogId))..add(DiagnosticsProperty('medicationId', medicationId));
-}
 
 @override
 bool operator ==(Object other) {
@@ -827,7 +791,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,idempotencyKey,kind,status,enqueuedAt,slotId,doseLogId,medicationId);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'OfflineQueueEntry(idempotencyKey: $idempotencyKey, kind: $kind, status: $status, enqueuedAt: $enqueuedAt, slotId: $slotId, doseLogId: $doseLogId, medicationId: $medicationId)';
 }
 
@@ -873,7 +837,7 @@ as String?,
 }
 
 /// @nodoc
-mixin _$AgendaState implements DiagnosticableTreeMixin {
+mixin _$AgendaState {
 
  List<AgendaSlot> get slots; List<PrnMedication> get prn; AgendaSourceState get sourceState; DateTime? get lastSyncedAt; List<OfflineQueueEntry> get offlineQueue; Set<String> get writeInFlightSlotIds; Set<String> get writeInFlightPrnIds; String? get c8PromptSlotId; String? get rollbackErrorSlotId; bool get planUpdated; bool get timezoneAdjusted; bool get remindersOff;
 /// Create a copy of AgendaState
@@ -883,12 +847,6 @@ mixin _$AgendaState implements DiagnosticableTreeMixin {
 $AgendaStateCopyWith<AgendaState> get copyWith => _$AgendaStateCopyWithImpl<AgendaState>(this as AgendaState, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'AgendaState'))
-    ..add(DiagnosticsProperty('slots', slots))..add(DiagnosticsProperty('prn', prn))..add(DiagnosticsProperty('sourceState', sourceState))..add(DiagnosticsProperty('lastSyncedAt', lastSyncedAt))..add(DiagnosticsProperty('offlineQueue', offlineQueue))..add(DiagnosticsProperty('writeInFlightSlotIds', writeInFlightSlotIds))..add(DiagnosticsProperty('writeInFlightPrnIds', writeInFlightPrnIds))..add(DiagnosticsProperty('c8PromptSlotId', c8PromptSlotId))..add(DiagnosticsProperty('rollbackErrorSlotId', rollbackErrorSlotId))..add(DiagnosticsProperty('planUpdated', planUpdated))..add(DiagnosticsProperty('timezoneAdjusted', timezoneAdjusted))..add(DiagnosticsProperty('remindersOff', remindersOff));
-}
 
 @override
 bool operator ==(Object other) {
@@ -900,7 +858,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(slots),const DeepCollectionEquality().hash(prn),sourceState,lastSyncedAt,const DeepCollectionEquality().hash(offlineQueue),const DeepCollectionEquality().hash(writeInFlightSlotIds),const DeepCollectionEquality().hash(writeInFlightPrnIds),c8PromptSlotId,rollbackErrorSlotId,planUpdated,timezoneAdjusted,remindersOff);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'AgendaState(slots: $slots, prn: $prn, sourceState: $sourceState, lastSyncedAt: $lastSyncedAt, offlineQueue: $offlineQueue, writeInFlightSlotIds: $writeInFlightSlotIds, writeInFlightPrnIds: $writeInFlightPrnIds, c8PromptSlotId: $c8PromptSlotId, rollbackErrorSlotId: $rollbackErrorSlotId, planUpdated: $planUpdated, timezoneAdjusted: $timezoneAdjusted, remindersOff: $remindersOff)';
 }
 
@@ -1083,7 +1041,7 @@ return $default(_that.slots,_that.prn,_that.sourceState,_that.lastSyncedAt,_that
 /// @nodoc
 
 
-class _AgendaState with DiagnosticableTreeMixin implements AgendaState {
+class _AgendaState implements AgendaState {
   const _AgendaState({final  List<AgendaSlot> slots = const [], final  List<PrnMedication> prn = const [], this.sourceState = AgendaSourceState.loading, this.lastSyncedAt, final  List<OfflineQueueEntry> offlineQueue = const [], final  Set<String> writeInFlightSlotIds = const {}, final  Set<String> writeInFlightPrnIds = const {}, this.c8PromptSlotId, this.rollbackErrorSlotId, this.planUpdated = false, this.timezoneAdjusted = false, this.remindersOff = false}): _slots = slots,_prn = prn,_offlineQueue = offlineQueue,_writeInFlightSlotIds = writeInFlightSlotIds,_writeInFlightPrnIds = writeInFlightPrnIds;
   
 
@@ -1137,12 +1095,6 @@ class _AgendaState with DiagnosticableTreeMixin implements AgendaState {
 _$AgendaStateCopyWith<_AgendaState> get copyWith => __$AgendaStateCopyWithImpl<_AgendaState>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'AgendaState'))
-    ..add(DiagnosticsProperty('slots', slots))..add(DiagnosticsProperty('prn', prn))..add(DiagnosticsProperty('sourceState', sourceState))..add(DiagnosticsProperty('lastSyncedAt', lastSyncedAt))..add(DiagnosticsProperty('offlineQueue', offlineQueue))..add(DiagnosticsProperty('writeInFlightSlotIds', writeInFlightSlotIds))..add(DiagnosticsProperty('writeInFlightPrnIds', writeInFlightPrnIds))..add(DiagnosticsProperty('c8PromptSlotId', c8PromptSlotId))..add(DiagnosticsProperty('rollbackErrorSlotId', rollbackErrorSlotId))..add(DiagnosticsProperty('planUpdated', planUpdated))..add(DiagnosticsProperty('timezoneAdjusted', timezoneAdjusted))..add(DiagnosticsProperty('remindersOff', remindersOff));
-}
 
 @override
 bool operator ==(Object other) {
@@ -1154,7 +1106,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_slots),const DeepCollectionEquality().hash(_prn),sourceState,lastSyncedAt,const DeepCollectionEquality().hash(_offlineQueue),const DeepCollectionEquality().hash(_writeInFlightSlotIds),const DeepCollectionEquality().hash(_writeInFlightPrnIds),c8PromptSlotId,rollbackErrorSlotId,planUpdated,timezoneAdjusted,remindersOff);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'AgendaState(slots: $slots, prn: $prn, sourceState: $sourceState, lastSyncedAt: $lastSyncedAt, offlineQueue: $offlineQueue, writeInFlightSlotIds: $writeInFlightSlotIds, writeInFlightPrnIds: $writeInFlightPrnIds, c8PromptSlotId: $c8PromptSlotId, rollbackErrorSlotId: $rollbackErrorSlotId, planUpdated: $planUpdated, timezoneAdjusted: $timezoneAdjusted, remindersOff: $remindersOff)';
 }
 

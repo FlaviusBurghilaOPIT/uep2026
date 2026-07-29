@@ -9,26 +9,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_spacing.dart';
-import '../../core/constants/app_text_styles.dart';
-import '../../core/l10n/app_localizations.dart';
-import '../../core/navigation/app_routes.dart';
-import '../../core/notifications/notification_service.dart';
-import '../auth/presentation/providers/auth_provider.dart';
-import '../auth/domain/entities/auth_state.dart';
-import '../../core/settings/settings_opener.dart';
-import '../../core/widgets/app_skeleton_loader.dart';
-import '../checkin/checkin_card.dart';
-import 'correction_sheet.dart';
-import 'dose_format.dart';
-import 'dose_group.dart';
-import 'dose_slot_card.dart';
-import 'fda_warning_card.dart';
-import 'providers/fda_warning_provider.dart';
-import 'providers/notification_scheduling_controller.dart';
-import 'providers/today_agenda_notifier.dart';
-import 'side_effect_prompt_card.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/l10n/app_localizations.dart';
+import '../../../../core/navigation/app_routes.dart';
+import '../../../../core/notifications/notification_service.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/domain/entities/auth_state.dart';
+import '../../../../core/settings/settings_opener.dart';
+import '../../../../core/widgets/app_skeleton_loader.dart';
+import '../../../checkin/checkin_card.dart';
+import '../widgets/correction_sheet.dart';
+import '../widgets/dose_format.dart';
+import '../widgets/dose_group.dart';
+import '../widgets/dose_slot_card.dart';
+import '../widgets/fda_warning_card.dart';
+import '../providers/fda_warning_provider.dart';
+import '../providers/notification_scheduling_controller.dart';
+import '../../domain/entities/agenda_entities.dart';
+import '../providers/today_agenda_notifier.dart';
+import '../widgets/side_effect_prompt_card.dart';
 
 /// The clinical home screen (spec §7). Server truth in, intents out — every
 /// dose write goes through [TodayAgendaNotifier]; this widget never talks to

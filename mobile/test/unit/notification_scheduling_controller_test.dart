@@ -1,6 +1,10 @@
+import 'package:remotecare/features/today/domain/entities/agenda_entities.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:remotecare/features/today/providers/notification_scheduling_controller.dart';
-import 'package:remotecare/features/today/providers/today_agenda_notifier.dart';
+import 'package:remotecare/features/today/domain/entities/agenda_entities.dart';
+import 'package:remotecare/features/today/presentation/providers/notification_scheduling_controller.dart';
+import 'package:remotecare/features/today/domain/entities/agenda_entities.dart';
+import 'package:remotecare/features/today/presentation/providers/today_agenda_notifier.dart';
+import 'package:remotecare/features/today/domain/entities/agenda_entities.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fake_notification_scheduler.dart';

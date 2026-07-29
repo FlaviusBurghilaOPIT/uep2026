@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/network/api_service.dart';
+import '../../../../core/network/api_service.dart';
 import 'today_agenda_notifier.dart';
 
 /// Real FDA warning data for a medication on the patient's plan (spec §7,

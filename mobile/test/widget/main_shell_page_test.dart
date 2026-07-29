@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:remotecare/core/l10n/app_localizations.dart';
 import 'package:remotecare/core/network/api_service.dart';
 import 'package:remotecare/features/main/main_shell_page.dart';
-import 'package:remotecare/features/today/today_screen.dart';
+import 'package:remotecare/features/today/presentation/screens/today_screen.dart';
 import 'package:remotecare/features/medications/medications_screen.dart';
 import 'package:remotecare/features/recovery/recovery_screen.dart';
 import 'package:remotecare/features/assistant/assistant_screen.dart';

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:remotecare/core/l10n/app_localizations.dart';
-import 'package:remotecare/features/today/fda_warning_card.dart';
+import 'package:remotecare/features/today/presentation/widgets/fda_warning_card.dart';
 
 // The former "TodayScreen FDA Source Badge Integration Tests" group here
 // exercised the hardcoded-Amoxicillin fallback the WI 13 rewrite deletes
