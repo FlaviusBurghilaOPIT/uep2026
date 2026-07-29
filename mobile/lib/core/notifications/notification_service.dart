@@ -15,10 +15,7 @@ void notificationTapBackground(NotificationResponse details) async {
     );
     if (reminderId != null && reminderId.isNotEmpty) {
       final api = HttpApiService();
-      await api.post('/adherence/log', {
-        'reminder_id': reminderId,
-        'status': 'taken',
-      });
+      await api.logAdherence(scheduledReminderId: reminderId, status: 'taken');
       await HapticFeedback.mediumImpact();
     }
   }
@@ -119,10 +116,10 @@ class NotificationService {
           final reminderId = parseReminderId(response.payload ?? '');
           if (reminderId != null && reminderId.isNotEmpty) {
             final api = HttpApiService();
-            await api.post('/adherence/log', {
-              'reminder_id': reminderId,
-              'status': 'taken',
-            });
+            await api.logAdherence(
+              scheduledReminderId: reminderId,
+              status: 'taken',
+            );
             await HapticFeedback.mediumImpact();
           }
         } else if (response.actionId == 'snooze') {
