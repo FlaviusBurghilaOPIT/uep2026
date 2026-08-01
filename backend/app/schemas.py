@@ -98,6 +98,9 @@ class CompleteOnboardingRequest(BaseModel):
     # Optional since DOB is pre-set at clinician intake; when supplied it
     # updates the stored value, when omitted the existing value is preserved.
     date_of_birth: str | None = None
+    # Optional: pre-filled from intake and editable at onboarding (Req 9);
+    # when supplied it updates the stored name, when omitted it is preserved.
+    full_name: str | None = None
     phone: str
     # Hybrid auth: when present, hashed to password_hash at onboarding.
     password: str | None = None

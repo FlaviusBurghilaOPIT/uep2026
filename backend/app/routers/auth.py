@@ -78,6 +78,10 @@ def complete_onboarding(req: schemas.CompleteOnboardingRequest, db: Session = De
     # otherwise preserve the existing value.
     if req.date_of_birth is not None:
         user.date_of_birth = req.date_of_birth
+    # full_name is optional (pre-filled from intake, editable at onboarding):
+    # update only when supplied, otherwise preserve the existing value.
+    if req.full_name is not None:
+        user.full_name = req.full_name
     user.phone = req.phone
     # Hybrid auth: hash the password when one is provided at onboarding.
     if req.password is not None:
@@ -156,10 +160,13 @@ def verify_patient_code(req: schemas.PatientVerifyCodeRequest, db: Session = Dep
         raise HTTPException(status_code=400, detail="Invalid or expired code")
 
     if user.status == "pending_onboarding":
+        # Surface the intake DOB so the patient app can pre-fill it (editable)
+        # at onboarding (Req 9) rather than re-typing clinic-held data.
         return {
             "result": "onboarding",
             "email": user.email,
             "full_name": user.full_name,
+            "date_of_birth": user.date_of_birth,
         }
 
     user.invite_code = None

@@ -345,3 +345,74 @@ def test_complete_onboarding_date_of_birth_updates_when_supplied(client, db_sess
     assert supplied.status_code == 200
     db_session.refresh(patient)
     assert patient.date_of_birth == "1995-05-05"
+
+
+# --- WI 04 gap closure: DOB pre-fill + persist name edits (Req 9) ---
+
+
+def test_verify_code_onboarding_response_includes_date_of_birth(client, db_session):
+    patient = _make_patient(db_session, status="pending_onboarding")
+    patient.date_of_birth = "1988-04-12"
+    db_session.commit()
+
+    response = client.post(
+        "/auth/patient/verify-code",
+        json={"email": "patient@example.com", "code": "111111"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["result"] == "onboarding"
+    assert body["date_of_birth"] == "1988-04-12"
+
+
+def test_verify_code_onboarding_response_date_of_birth_null_when_unset(client, db_session):
+    _make_patient(db_session, status="pending_onboarding")  # no DOB at intake
+
+    response = client.post(
+        "/auth/patient/verify-code",
+        json={"email": "patient@example.com", "code": "111111"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["date_of_birth"] is None
+
+
+def test_complete_onboarding_persists_full_name_when_supplied(client, db_session):
+    _make_patient(db_session, status="pending_onboarding")  # full_name="Jane Doe"
+
+    response = client.post(
+        "/auth/complete-onboarding",
+        json={
+            "email": "patient@example.com",
+            "invite_code": "111111",
+            "full_name": "Jane Smith",
+            "phone": "1234567890",
+        },
+    )
+
+    assert response.status_code == 200
+    patient = (
+        db_session.query(models.User).filter(models.User.email == "patient@example.com").first()
+    )
+    assert patient.full_name == "Jane Smith"
+    assert patient.status == "active"
+
+
+def test_complete_onboarding_preserves_full_name_when_omitted(client, db_session):
+    _make_patient(db_session, status="pending_onboarding")  # full_name="Jane Doe"
+
+    response = client.post(
+        "/auth/complete-onboarding",
+        json={
+            "email": "patient@example.com",
+            "invite_code": "111111",
+            "phone": "1234567890",
+        },
+    )
+
+    assert response.status_code == 200
+    patient = (
+        db_session.query(models.User).filter(models.User.email == "patient@example.com").first()
+    )
+    assert patient.full_name == "Jane Doe"
