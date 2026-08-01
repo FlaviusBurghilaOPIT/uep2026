@@ -8,11 +8,10 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:remotecare/core/l10n/app_localizations.dart';
-import 'package:remotecare/core/navigation/app_routes.dart';
 import 'package:remotecare/core/network/api_service.dart';
 import 'package:remotecare/core/providers/shared_preferences_provider.dart';
 import 'package:remotecare/features/auth/presentation/auth_strings.dart';
-import 'package:remotecare/features/auth/presentation/screens/boot_screen.dart';
+import 'package:remotecare/features/auth/presentation/screens/verify_code_screen.dart';
 
 import '../unit/fake_api_service.dart';
 
@@ -28,8 +27,7 @@ Widget buildTestApp(SharedPreferences prefs, FakeApiService fakeApi) {
       builder: (_, _) => const MaterialApp(
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
-        onGenerateRoute: AppRoutes.onGenerateRoute,
-        home: BootScreen(),
+        home: VerifyCodeScreen(email: 'jane@example.com'),
       ),
     ),
   );
@@ -48,55 +46,43 @@ void main() {
   });
 
   testWidgets(
-    'BootScreen routes to Welcome when no token is stored',
-    (WidgetTester tester) async {
-      await tester.pumpWidget(buildTestApp(prefs, fakeApi));
-      await tester.pumpAndSettle();
-
-      expect(find.text(AuthStrings.welcomeTitle), findsOneWidget);
-    },
-  );
-
-  testWidgets(
-    'BootScreen routes to Welcome when the stored JWT is invalid (401)',
-    (WidgetTester tester) async {
-      fakeApi.savedToken = 'jwt_expired';
-      fakeApi.getHandlers['/auth/me'] = () =>
-          http.Response(jsonEncode({'detail': 'Not authenticated'}), 401);
-
-      await tester.pumpWidget(buildTestApp(prefs, fakeApi));
-      await tester.pumpAndSettle();
-
-      expect(find.text(AuthStrings.welcomeTitle), findsOneWidget);
-      // The invalid token is cleared so it is not retried on next boot.
-      expect(fakeApi.savedToken, isNull);
-    },
-  );
-
-  testWidgets(
-    'BootScreen routes to the main app when the stored JWT is valid',
-    (WidgetTester tester) async {
+    'first-run flow pre-fills name + DOB from the verify-code response',
+    (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      fakeApi.savedToken = 'jwt_valid';
-      fakeApi.getHandlers['/auth/me'] = () => http.Response(
-        jsonEncode({'id': 'user_1', 'email': 'jane@example.com'}),
-        200,
-      );
-      fakeApi.getHandlers['/patients/user_1/case'] = () => http.Response(
-        jsonEncode({'id': 'case_1', 'surgery_type': 'Knee Replacement'}),
+      // verify-code returns the onboarding result WITH the intake DOB (Gap 1).
+      fakeApi.postHandlers['/auth/patient/verify-code'] = (body) => http.Response(
+        jsonEncode({
+          'result': 'onboarding',
+          'email': 'jane@example.com',
+          'full_name': 'Jane Doe',
+          'date_of_birth': '1988-03-14',
+        }),
         200,
       );
 
       await tester.pumpWidget(buildTestApp(prefs, fakeApi));
       await tester.pumpAndSettle();
 
-      // Main shell reached (Today tab present); Welcome is not shown.
-      expect(find.text(AuthStrings.welcomeTitle), findsNothing);
-      expect(find.byKey(const Key('navTab_today')), findsOneWidget);
+      // Verify the code -> advances to the create-password step.
+      await tester.enterText(find.byType(TextFormField).first, '123456');
+      await tester.tap(find.text(AuthStrings.verifyAndContinueButton));
+      await tester.pumpAndSettle();
+      expect(find.text(AuthStrings.createPasswordTitle), findsOneWidget);
+
+      // Create password -> advances to the pre-filled profile step.
+      await tester.enterText(find.byType(TextFormField).at(0), 'secret123');
+      await tester.enterText(find.byType(TextFormField).at(1), 'secret123');
+      await tester.tap(find.text(AuthStrings.continueButton));
+      await tester.pumpAndSettle();
+
+      expect(find.text(AuthStrings.profileTitle), findsOneWidget);
+      // Name AND DOB are pre-filled from the backend response (not empty).
+      expect(find.text('Jane Doe'), findsOneWidget);
+      expect(find.text('1988-03-14'), findsOneWidget);
     },
   );
 }

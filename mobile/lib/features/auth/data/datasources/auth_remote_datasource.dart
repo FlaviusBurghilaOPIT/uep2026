@@ -47,6 +47,24 @@ class AuthRemoteDatasource {
     return (caseId: null, primaryCondition: null);
   }
 
+  /// `POST /auth/login` (email + password) — hybrid auth returning-login.
+  Future<String?> login({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final res = await _api.post('/auth/login', {
+        'email': email,
+        'password': password,
+      });
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        return data['access_token'] as String?;
+      }
+    } catch (_) {}
+    return null;
+  }
+
   /// `POST /auth/patient/request-code`
   Future<bool> requestCode({required String email}) async {
     final res = await _api.post('/auth/patient/request-code', {'email': email});
@@ -69,24 +87,35 @@ class AuthRemoteDatasource {
         accessToken: data['access_token'] as String?,
         email: data['email'] as String?,
         fullName: data['full_name'] as String?,
+        dateOfBirth: data['date_of_birth'] as String?,
       );
     }
     return null;
   }
 
-  /// `POST /auth/complete-onboarding`
+  /// `POST /auth/complete-onboarding` — hybrid auth: [password] is hashed
+  /// server-side when present; [dateOfBirth] is sent only when supplied so
+  /// the backend preserves the intake value otherwise.
   Future<String?> completeOnboarding({
     required String email,
     required String inviteCode,
-    required String dateOfBirth,
+    String? dateOfBirth,
+    String? fullName,
     required String phone,
+    String? password,
   }) async {
-    final res = await _api.post('/auth/complete-onboarding', {
+    final body = <String, dynamic>{
       'email': email,
       'invite_code': inviteCode,
-      'date_of_birth': dateOfBirth,
       'phone': phone,
-    });
+    };
+    // Optional fields are omitted (not sent as null) so the backend preserves
+    // the intake values (DOB, name) and only hashes a password when one is
+    // actually provided.
+    if (dateOfBirth != null) body['date_of_birth'] = dateOfBirth;
+    if (fullName != null) body['full_name'] = fullName;
+    if (password != null) body['password'] = password;
+    final res = await _api.post('/auth/complete-onboarding', body);
     if (res.statusCode == 200) {
       final data = jsonDecode(res.body);
       return data['access_token'] as String?;

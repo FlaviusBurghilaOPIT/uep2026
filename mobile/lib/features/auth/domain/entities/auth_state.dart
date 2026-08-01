@@ -11,6 +11,11 @@ abstract class AuthState with _$AuthState {
   const factory AuthState({
     @Default(false) bool isSignedIn,
     @Default(false) bool isLoading,
+
+    /// True until the boot-time JWT check ([AuthNotifier.checkAuthStatus])
+    /// finishes. Boot routing waits for this to flip false before deciding
+    /// main vs Welcome, so a stored-but-invalid token is never routed around.
+    @Default(true) bool isInitializing,
     String? errorMessage,
     String? patientId,
     String? caseId,

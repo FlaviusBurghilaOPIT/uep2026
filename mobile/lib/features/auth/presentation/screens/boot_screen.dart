@@ -1,57 +1,51 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/navigation/app_routes.dart';
-import '../providers/demo_auth_provider.dart';
 
+import '../../../../core/navigation/app_routes.dart';
+import '../providers/auth_provider.dart';
+import 'welcome_screen.dart';
+
+/// Boot routing (WI 04, spec Req 3): decides main vs Welcome from the REAL
+/// JWT, not demo prefs. [AuthNotifier.checkAuthStatus] validates any stored
+/// token against `GET /auth/me`; this screen waits for that check
+/// ([AuthState.isInitializing]) to finish, then routes:
+/// - valid token (isSignedIn) -> main app (Today),
+/// - absent/invalid token (401) -> Welcome (two-method sign-in).
 class BootScreen extends ConsumerStatefulWidget {
-  const BootScreen({Key? key}) : super(key: key);
+  const BootScreen({super.key});
 
   @override
   ConsumerState<BootScreen> createState() => _BootScreenState();
 }
 
 class _BootScreenState extends ConsumerState<BootScreen> {
+  bool _navigated = false;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkAuthAndRoute();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _route());
   }
 
-  void _checkAuthAndRoute() {
-    if (!mounted) return;
-    final authState = ref.read(demoAuthProvider);
+  void _route() {
+    if (!mounted || _navigated) return;
+    final state = ref.read(authProvider);
+    if (state.isInitializing) return; // wait for the JWT check to finish
 
-    authState.when(
-      data: (state) {
-        if (state.isFirstTime) {
-          AppRoutes.navigateAndReplace(context, AppRoutes.invitation);
-        } else if (!state.hasActiveSession) {
-          AppRoutes.navigateAndReplace(context, AppRoutes.emailLogin);
-        } else {
-          AppRoutes.navigateAndReplace(context, AppRoutes.main);
-        }
-      },
-      loading: () {}, // Wait
-      error: (err, st) {
-        // Fallback to invitation on error for safety
-        AppRoutes.navigateAndReplace(context, AppRoutes.invitation);
-      },
-    );
+    _navigated = true;
+    if (state.isSignedIn) {
+      AppRoutes.navigateAndClearStack(context, AppRoutes.main);
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(builder: (_) => const WelcomeScreen()),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Listen for state changes in case data isn't ready on mount
-    ref.listen<AsyncValue<DemoAuthState>>(demoAuthProvider, (
-      previous,
-      next,
-    ) {
-      if (!next.isLoading) {
-        _checkAuthAndRoute();
-      }
-    });
+    // Re-route once the async JWT check flips isInitializing -> false.
+    ref.listen(authProvider, (_, _) => _route());
 
     return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }

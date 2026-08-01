@@ -135,37 +135,202 @@ void main() {
     },
   );
 
-  test('completeOnboarding no longer sends a password field', () async {
-    fakeApi.postHandlers['/auth/complete-onboarding'] = (body) {
-      expect(body?.containsKey('password'), false);
-      return http.Response(jsonEncode({'access_token': 'jwt_2'}), 200);
-    };
-    fakeApi.getHandlers['/auth/me'] = () {
+  test(
+    'completeOnboarding sends the hybrid-auth password and patient edits',
+    () async {
+      Map<String, dynamic>? captured;
+      fakeApi.postHandlers['/auth/complete-onboarding'] = (body) {
+        captured = body;
+        return http.Response(jsonEncode({'access_token': 'jwt_2'}), 200);
+      };
+      fakeApi.getHandlers['/auth/me'] = () {
+        return http.Response(
+          jsonEncode({
+            'id': 'user_2',
+            'email': 'jane@example.com',
+            'full_name': 'Jane Doe',
+          }),
+          200,
+        );
+      };
+      fakeApi.getHandlers['/patients/user_2/case'] = () {
+        return http.Response(
+          jsonEncode({'id': 'case_2', 'surgery_type': 'Knee Replacement'}),
+          200,
+        );
+      };
+
+      final auth = container.read(authProvider.notifier);
+      final success = await auth.completeOnboarding(
+        email: 'jane@example.com',
+        inviteCode: '123456',
+        dateOfBirth: '1990-01-01',
+        fullName: 'Jane Smith',
+        phone: '1234567890',
+        password: 'secret123',
+      );
+
+      expect(success, true);
+      expect(fakeApi.savedToken, 'jwt_2');
+      // Hybrid auth: the password is forwarded so the backend can hash it.
+      expect(captured?['password'], 'secret123');
+      // Patient edits (DOB + name) + patient-provided phone are persisted.
+      expect(captured?['date_of_birth'], '1990-01-01');
+      expect(captured?['full_name'], 'Jane Smith');
+      expect(captured?['phone'], '1234567890');
+      expect(captured?['invite_code'], '123456');
+    },
+  );
+
+  test(
+    'completeOnboarding omits date_of_birth when not supplied (preserve intake)',
+    () async {
+      Map<String, dynamic>? captured;
+      fakeApi.postHandlers['/auth/complete-onboarding'] = (body) {
+        captured = body;
+        return http.Response(jsonEncode({'access_token': 'jwt_3'}), 200);
+      };
+      fakeApi.getHandlers['/auth/me'] = () => http.Response(
+        jsonEncode({'id': 'user_3', 'email': 'jane@example.com'}),
+        200,
+      );
+
+      final auth = container.read(authProvider.notifier);
+      final success = await auth.completeOnboarding(
+        email: 'jane@example.com',
+        inviteCode: '123456',
+        phone: '1234567890',
+        password: 'secret123',
+      );
+
+      expect(success, true);
+      // Unchanged/absent optional fields are omitted so the backend preserves
+      // the intake values.
+      expect(captured?.containsKey('date_of_birth'), false);
+      expect(captured?.containsKey('full_name'), false);
+    },
+  );
+
+  test('login success stores token, loads profile, and signs in', () async {
+    fakeApi.postHandlers['/auth/login'] = (body) {
+      expect(body?['email'], 'jane@example.com');
+      expect(body?['password'], 'secret123');
       return http.Response(
-        jsonEncode({
-          'id': 'user_2',
-          'email': 'jane@example.com',
-          'full_name': 'Jane Doe',
-        }),
+        jsonEncode({'access_token': 'jwt_login', 'token_type': 'bearer'}),
         200,
       );
     };
-    fakeApi.getHandlers['/patients/user_2/case'] = () {
-      return http.Response(
-        jsonEncode({'id': 'case_2', 'surgery_type': 'Knee Replacement'}),
-        200,
-      );
-    };
+    fakeApi.getHandlers['/auth/me'] = () => http.Response(
+      jsonEncode({
+        'id': 'user_9',
+        'email': 'jane@example.com',
+        'full_name': 'Jane Doe',
+      }),
+      200,
+    );
+    fakeApi.getHandlers['/patients/user_9/case'] = () => http.Response(
+      jsonEncode({'id': 'case_9', 'surgery_type': 'Knee Replacement'}),
+      200,
+    );
 
     final auth = container.read(authProvider.notifier);
-    final success = await auth.completeOnboarding(
+    final success = await auth.login(
       email: 'jane@example.com',
-      inviteCode: '123456',
-      dateOfBirth: '1990-01-01',
-      phone: '1234567890',
+      password: 'secret123',
     );
 
     expect(success, true);
-    expect(fakeApi.savedToken, 'jwt_2');
+    expect(fakeApi.savedToken, 'jwt_login');
+    expect(container.read(authProvider).isSignedIn, true);
   });
+
+  test('login failure (401) returns false and sets errorMessage', () async {
+    fakeApi.postHandlers['/auth/login'] = (body) {
+      return http.Response(jsonEncode({'detail': 'Invalid credentials'}), 401);
+    };
+
+    final auth = container.read(authProvider.notifier);
+    final success = await auth.login(
+      email: 'jane@example.com',
+      password: 'wrong',
+    );
+
+    expect(success, false);
+    expect(container.read(authProvider).isSignedIn, false);
+    expect(container.read(authProvider).errorMessage, isNotNull);
+  });
+
+  test(
+    'verifyCode onboarding surfaces the backend date_of_birth for pre-fill',
+    () async {
+      fakeApi.postHandlers['/auth/patient/verify-code'] = (body) {
+        return http.Response(
+          jsonEncode({
+            'result': 'onboarding',
+            'email': 'jane@example.com',
+            'full_name': 'Jane Doe',
+            'date_of_birth': '1988-03-14',
+          }),
+          200,
+        );
+      };
+
+      final auth = container.read(authProvider.notifier);
+      final result = await auth.verifyCode(
+        email: 'jane@example.com',
+        code: '123456',
+      );
+
+      expect(result, 'onboarding');
+      expect(container.read(authProvider).dateOfBirth, '1988-03-14');
+      expect(container.read(authProvider).fullName, 'Jane Doe');
+    },
+  );
+
+  test(
+    'checkAuthStatus with a valid stored token signs in and clears initializing',
+    () async {
+      fakeApi.savedToken = 'jwt_stored';
+      fakeApi.getHandlers['/auth/me'] = () => http.Response(
+        jsonEncode({'id': 'user_5', 'email': 'jane@example.com'}),
+        200,
+      );
+
+      final auth = container.read(authProvider.notifier);
+      await auth.checkAuthStatus();
+
+      final state = container.read(authProvider);
+      expect(state.isInitializing, false);
+      expect(state.isSignedIn, true);
+    },
+  );
+
+  test(
+    'checkAuthStatus with an invalid stored token (401) clears it and signs out',
+    () async {
+      fakeApi.savedToken = 'jwt_expired';
+      fakeApi.getHandlers['/auth/me'] = () =>
+          http.Response(jsonEncode({'detail': 'Not authenticated'}), 401);
+
+      final auth = container.read(authProvider.notifier);
+      await auth.checkAuthStatus();
+
+      final state = container.read(authProvider);
+      expect(state.isInitializing, false);
+      expect(state.isSignedIn, false);
+      expect(fakeApi.savedToken, isNull);
+    },
+  );
+
+  test(
+    'checkAuthStatus with no stored token clears initializing only',
+    () async {
+      final auth = container.read(authProvider.notifier);
+      await auth.checkAuthStatus();
+
+      final state = container.read(authProvider);
+      expect(state.isInitializing, false);
+      expect(state.isSignedIn, false);
+    },
+  );
 }

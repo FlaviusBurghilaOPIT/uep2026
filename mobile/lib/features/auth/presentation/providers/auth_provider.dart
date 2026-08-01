@@ -37,15 +37,44 @@ class AuthNotifier extends Notifier<AuthState> {
     return const AuthState();
   }
 
+  /// Boot-time JWT check: a stored token is validated against `GET /auth/me`.
+  /// Valid -> [AuthState.isSignedIn] true; absent/invalid (401) -> token
+  /// cleared and signed-out. Always clears [AuthState.isInitializing] so boot
+  /// routing can decide main vs Welcome on the REAL JWT (not demo prefs).
   Future<void> checkAuthStatus() async {
-    final token = await _repo.getToken();
-    if (token != null && token.isNotEmpty) {
-      final success = await fetchProfile();
-      if (!success) {
-        await _repo.clearToken();
-        state = state.copyWith(isSignedIn: false);
+    try {
+      final token = await _repo.getToken();
+      if (token != null && token.isNotEmpty) {
+        final success = await fetchProfile();
+        if (!success) {
+          await _repo.clearToken();
+          state = state.copyWith(isSignedIn: false);
+        }
       }
+    } finally {
+      state = state.copyWith(isInitializing: false);
     }
+  }
+
+  /// Hybrid auth returning-login: `POST /auth/login` (email + password).
+  /// On success stores the JWT, loads the profile, and returns true.
+  Future<bool> login({required String email, required String password}) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      final token = await _repo.login(email: email, password: password);
+      if (token != null) {
+        await _repo.setToken(token);
+        await fetchProfile();
+        return state.isSignedIn;
+      } else {
+        state = state.copyWith(errorMessage: 'Invalid email or password');
+      }
+    } catch (e) {
+      state = state.copyWith(errorMessage: 'Network error: ${e.toString()}');
+    } finally {
+      state = state.copyWith(isLoading: false);
+    }
+    return false;
   }
 
   Future<bool> fetchProfile() async {
@@ -108,17 +137,18 @@ class AuthNotifier extends Notifier<AuthState> {
           }
           await fetchProfile();
         } else {
+          // First-run onboarding: pre-fill name + DOB from the backend so the
+          // patient confirms/edits rather than re-typing clinic-held data.
           state = state.copyWith(
             email: result.email,
             fullName: result.fullName,
+            dateOfBirth: result.dateOfBirth,
             inviteCode: code,
           );
         }
         return result.result;
       } else {
-        state = state.copyWith(
-          errorMessage: 'Invalid or expired code',
-        );
+        state = state.copyWith(errorMessage: 'Invalid or expired code');
       }
     } catch (e) {
       state = state.copyWith(errorMessage: 'Network error: ${e.toString()}');
@@ -128,11 +158,17 @@ class AuthNotifier extends Notifier<AuthState> {
     return null;
   }
 
+  /// First-run onboarding completion: `POST /auth/complete-onboarding`.
+  /// [password] (hybrid auth) is hashed server-side when present;
+  /// [dateOfBirth] and [fullName] are optional and only update the stored
+  /// values when given (otherwise the intake values are preserved).
   Future<bool> completeOnboarding({
     required String email,
     required String inviteCode,
-    required String dateOfBirth,
+    String? dateOfBirth,
+    String? fullName,
     required String phone,
+    String? password,
   }) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
@@ -140,7 +176,9 @@ class AuthNotifier extends Notifier<AuthState> {
         email: email,
         inviteCode: inviteCode,
         dateOfBirth: dateOfBirth,
+        fullName: fullName,
         phone: phone,
+        password: password,
       );
       if (token != null) {
         await _repo.setToken(token);
@@ -148,9 +186,7 @@ class AuthNotifier extends Notifier<AuthState> {
         state = state.copyWith(isLoading: false);
         return true;
       } else {
-        state = state.copyWith(
-          errorMessage: 'Failed to complete onboarding',
-        );
+        state = state.copyWith(errorMessage: 'Failed to complete onboarding');
       }
     } catch (e) {
       state = state.copyWith(errorMessage: 'Network error: ${e.toString()}');

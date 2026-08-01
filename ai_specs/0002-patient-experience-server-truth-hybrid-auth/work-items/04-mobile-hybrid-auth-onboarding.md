@@ -19,12 +19,12 @@ Implement hybrid patient auth and pre-filled onboarding on mobile. The Welcome s
 - Welcome two-method presentation — default: password form primary with an "or email me a one-time code" alternative. Confirm before building.
 
 ## Acceptance criteria
-- [ ] Welcome screen offers email+password (default) and a code fallback; both route to Today on success.
-- [ ] First-run flow: code verify → create-password (≥8 chars + confirmation, validated) → pre-filled editable name + DOB → phone → Today; `complete-onboarding` persists the password and edits.
-- [ ] A returning patient can sign in with password or code; boot routes via the real JWT (valid → main, absent/401 → Welcome).
-- [ ] Onboarding pre-fills name + DOB from the backend and persists patient edits; phone is patient-provided.
-- [ ] Widget/unit tests (FakeApiService) cover two-method login, create-password validation, and onboarding pre-fill + edit.
-- [ ] `golden_loop_test.dart` is extended (invited patient → set password → re-login with password) — coordinated with `05-mobile-recovery-server-truth.md`.
+- [x] Welcome screen offers email+password (default) and a code fallback; both route to Today on success.
+- [x] First-run flow: code verify → create-password (≥8 chars + confirmation, validated) → pre-filled editable name + DOB → phone → Today; `complete-onboarding` persists the password and edits.
+- [x] A returning patient can sign in with password or code; boot routes via the real JWT (valid → main, absent/401 → Welcome).
+- [x] Onboarding pre-fills name + DOB from the backend and persists patient edits; phone is patient-provided.
+- [x] Widget/unit tests (FakeApiService) cover two-method login, create-password validation, and onboarding pre-fill + edit.
+- [x] `golden_loop_test.dart` is extended (invited patient → set password → re-login with password) — coordinated with `05-mobile-recovery-server-truth.md`.
 
 ## Covers
 - User Stories: 1, 2, 3

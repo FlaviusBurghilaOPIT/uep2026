@@ -24,6 +24,10 @@ class AuthRepositoryImpl implements AuthRepository {
   ) => _remote.fetchCase(patientId);
 
   @override
+  Future<String?> login({required String email, required String password}) =>
+      _remote.login(email: email, password: password);
+
+  @override
   Future<bool> requestCode({required String email}) =>
       _remote.requestCode(email: email);
 
@@ -37,13 +41,17 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<String?> completeOnboarding({
     required String email,
     required String inviteCode,
-    required String dateOfBirth,
+    String? dateOfBirth,
+    String? fullName,
     required String phone,
+    String? password,
   }) => _remote.completeOnboarding(
     email: email,
     inviteCode: inviteCode,
     dateOfBirth: dateOfBirth,
+    fullName: fullName,
     phone: phone,
+    password: password,
   );
 
   @override
