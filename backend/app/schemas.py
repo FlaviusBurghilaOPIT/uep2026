@@ -66,6 +66,10 @@ class PatientInviteRequest(BaseModel):
     email: str
     full_name: str
     surgery_type: str
+    # Required at intake: the clinician is the source of truth for DOB.
+    date_of_birth: str
+    # Optional: captured at intake for new cases; existing cases pre-date it.
+    surgery_date: str | None = None
     emergency_contact_phone: str | None = None
 
 
@@ -91,8 +95,23 @@ class VerifyInviteResponse(BaseModel):
 class CompleteOnboardingRequest(BaseModel):
     email: str
     invite_code: str
-    date_of_birth: str
+    # Optional since DOB is pre-set at clinician intake; when supplied it
+    # updates the stored value, when omitted the existing value is preserved.
+    date_of_birth: str | None = None
     phone: str
+    # Hybrid auth: when present, hashed to password_hash at onboarding.
+    password: str | None = None
+
+
+class ChangePasswordRequest(BaseModel):
+    new_password: str
+    # Required only when the user already has a password_hash; a code-only
+    # (passwordless) user may set a password without supplying it.
+    current_password: str | None = None
+
+
+class ChangePasswordResponse(BaseModel):
+    message: str = "Password updated"
 
 
 class PatientRequestCodeRequest(BaseModel):
@@ -111,6 +130,7 @@ class PatientVerifyCodeRequest(BaseModel):
 class CaseCreate(BaseModel):
     patient_id: str
     surgery_type: str
+    surgery_date: str | None = None
     emergency_contact_name: str | None = None
     emergency_contact_phone: str | None = None
 
@@ -120,6 +140,9 @@ class CaseResponse(BaseModel):
     clinician_id: str
     patient_id: str
     surgery_type: str
+    surgery_date: str | None = None
+    # Patient DOB surfaced on the case response so clients can derive Day N.
+    patient_date_of_birth: str | None = None
     status: str
     emergency_contact_name: str | None
     emergency_contact_phone: str | None

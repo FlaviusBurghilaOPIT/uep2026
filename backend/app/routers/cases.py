@@ -25,6 +25,7 @@ def create_case(
         clinician_id=current_user.id,
         patient_id=case.patient_id,
         surgery_type=case.surgery_type,
+        surgery_date=case.surgery_date,
         emergency_contact_name=case.emergency_contact_name or current_user.full_name,
         emergency_contact_phone=case.emergency_contact_phone,
     )

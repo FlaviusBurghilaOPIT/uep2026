@@ -37,6 +37,8 @@ def test_patient_invite_and_onboarding_flow(client, db_session):
             "email": "invited_patient@example.com",
             "full_name": "John Doe",
             "surgery_type": "Knee Replacement",
+            "date_of_birth": "1985-05-15",
+            "surgery_date": "2025-06-18",
             "emergency_contact_phone": "+123456789",
         },
     )

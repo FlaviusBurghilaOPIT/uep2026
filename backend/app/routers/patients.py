@@ -38,6 +38,7 @@ def invite_patient(
         status="pending_onboarding",
         invite_code=invite_code,
         invite_code_expires_at=datetime.utcnow() + timedelta(minutes=15),
+        date_of_birth=req.date_of_birth,
     )
     db.add(patient)
     db.commit()
@@ -49,6 +50,7 @@ def invite_patient(
         clinician_id=current_user.id,
         patient_id=patient.id,
         surgery_type=req.surgery_type,
+        surgery_date=req.surgery_date,
         emergency_contact_name=current_user.full_name,
         emergency_contact_phone=req.emergency_contact_phone,
         status="active",

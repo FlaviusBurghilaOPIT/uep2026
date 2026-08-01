@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 from app import models
+from app.security import create_access_token, verify_password
 
 
 def _make_patient(db_session, status="pending_onboarding", code="111111", expires_delta=timedelta(minutes=15)):
@@ -98,7 +99,7 @@ def test_verify_code_for_active_user_returns_token_and_clears_code(client, db_se
     assert patient.invite_code_expires_at is None
 
 
-def test_complete_onboarding_does_not_accept_or_persist_password(client, db_session):
+def test_complete_onboarding_without_password_leaves_password_hash_unset(client, db_session):
     _make_patient(db_session, status="pending_onboarding")
 
     response = client.post(
@@ -160,6 +161,7 @@ def test_invite_patient_sends_code_via_email(client, db_session):
                 "email": "newpatient@example.com",
                 "full_name": "New Patient",
                 "surgery_type": "knee",
+                "date_of_birth": "1990-01-01",
             },
             headers={"Authorization": f"Bearer {token}"},
         )
@@ -170,3 +172,176 @@ def test_invite_patient_sends_code_via_email(client, db_session):
 
     patient = db_session.query(models.User).filter(models.User.email == "newpatient@example.com").first()
     assert patient.invite_code_expires_at is not None
+
+
+# --- WI 01: Hybrid patient auth (password at onboarding, login, change-password) ---
+
+
+def _patient_token(patient):
+    return create_access_token(
+        {"sub": patient.id, "role": patient.role.value, "email": patient.email}
+    )
+
+
+def test_complete_onboarding_with_password_stores_password_hash(client, db_session):
+    _make_patient(db_session, status="pending_onboarding")
+
+    response = client.post(
+        "/auth/complete-onboarding",
+        json={
+            "email": "patient@example.com",
+            "invite_code": "111111",
+            "date_of_birth": "1990-01-01",
+            "phone": "1234567890",
+            "password": "supersecret",
+        },
+    )
+
+    assert response.status_code == 200
+    patient = (
+        db_session.query(models.User).filter(models.User.email == "patient@example.com").first()
+    )
+    assert patient.password_hash is not None
+    assert verify_password("supersecret", patient.password_hash)
+    assert patient.status == "active"
+
+
+def test_login_for_patient_with_password_succeeds(client, db_session):
+    _make_patient(db_session, status="pending_onboarding")
+
+    onboarding = client.post(
+        "/auth/complete-onboarding",
+        json={
+            "email": "patient@example.com",
+            "invite_code": "111111",
+            "date_of_birth": "1990-01-01",
+            "phone": "1234567890",
+            "password": "supersecret",
+        },
+    )
+    assert onboarding.status_code == 200
+
+    ok = client.post(
+        "/auth/login", json={"email": "patient@example.com", "password": "supersecret"}
+    )
+    assert ok.status_code == 200
+    assert "access_token" in ok.json()
+
+    bad = client.post(
+        "/auth/login", json={"email": "patient@example.com", "password": "wrong-password"}
+    )
+    assert bad.status_code == 401
+
+
+def test_change_password_for_code_authenticated_user_without_existing_password(client, db_session):
+    patient = _make_patient(db_session, status="active")
+    patient.invite_code = None
+    patient.invite_code_expires_at = None
+    assert patient.password_hash is None
+    db_session.commit()
+
+    token = _patient_token(patient)
+    response = client.post(
+        "/auth/change-password",
+        json={"new_password": "brandnewpassword"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    db_session.refresh(patient)
+    assert patient.password_hash is not None
+    assert verify_password("brandnewpassword", patient.password_hash)
+
+
+def test_change_password_requires_current_password_when_one_exists(client, db_session):
+    patient = _make_patient(db_session, status="active")
+    patient.invite_code = None
+    patient.invite_code_expires_at = None
+    db_session.commit()
+
+    # Seed an existing password via the authenticated endpoint (no current needed yet).
+    token = _patient_token(patient)
+    seeded = client.post(
+        "/auth/change-password",
+        json={"new_password": "originalpassword"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert seeded.status_code == 200
+    db_session.refresh(patient)
+    assert verify_password("originalpassword", patient.password_hash)
+
+    # Missing current password -> rejected.
+    missing = client.post(
+        "/auth/change-password",
+        json={"new_password": "anotherpassword"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert missing.status_code == 400
+
+    # Wrong current password -> rejected and password unchanged.
+    wrong = client.post(
+        "/auth/change-password",
+        json={"current_password": "not-the-right-one", "new_password": "anotherpassword"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert wrong.status_code == 400
+    db_session.refresh(patient)
+    assert verify_password("originalpassword", patient.password_hash)
+
+    # Correct current password -> updated.
+    ok = client.post(
+        "/auth/change-password",
+        json={"current_password": "originalpassword", "new_password": "anotherpassword"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert ok.status_code == 200
+    db_session.refresh(patient)
+    assert verify_password("anotherpassword", patient.password_hash)
+    assert not verify_password("originalpassword", patient.password_hash)
+
+
+def test_change_password_requires_authentication(client, db_session):
+    _make_patient(db_session, status="active")
+
+    response = client.post("/auth/change-password", json={"new_password": "brandnewpassword"})
+    assert response.status_code in (401, 403)
+
+
+def test_complete_onboarding_date_of_birth_is_optional_but_updatable(client, db_session):
+    # Omitted -> existing DOB (pre-set at intake) is preserved.
+    patient = _make_patient(db_session, status="pending_onboarding")
+    patient.date_of_birth = "1980-01-01"
+    db_session.commit()
+
+    omitted = client.post(
+        "/auth/complete-onboarding",
+        json={
+            "email": "patient@example.com",
+            "invite_code": "111111",
+            "phone": "1234567890",
+        },
+    )
+    assert omitted.status_code == 200
+    db_session.refresh(patient)
+    assert patient.date_of_birth == "1980-01-01"
+    assert patient.phone == "1234567890"
+    assert patient.status == "active"
+
+
+def test_complete_onboarding_date_of_birth_updates_when_supplied(client, db_session):
+    patient = _make_patient(db_session, status="pending_onboarding")
+    patient.date_of_birth = "1980-01-01"
+    db_session.commit()
+
+    supplied = client.post(
+        "/auth/complete-onboarding",
+        json={
+            "email": "patient@example.com",
+            "invite_code": "111111",
+            "date_of_birth": "1995-05-05",
+            "phone": "1234567890",
+        },
+    )
+    assert supplied.status_code == 200
+    db_session.refresh(patient)
+    assert patient.date_of_birth == "1995-05-05"

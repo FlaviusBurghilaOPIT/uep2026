@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app import models, schemas
 from app.database import get_db
 from app.dependencies import get_current_user
-from app.security import create_access_token, verify_password
+from app.security import create_access_token, hash_password, verify_password
 from app.services.email_service import EmailService
 
 router = APIRouter(
@@ -74,8 +74,14 @@ def complete_onboarding(req: schemas.CompleteOnboardingRequest, db: Session = De
     ):
         raise HTTPException(status_code=400, detail="Invalid email or invite code")
 
-    user.date_of_birth = req.date_of_birth
+    # date_of_birth is optional (pre-set at intake): update only when supplied,
+    # otherwise preserve the existing value.
+    if req.date_of_birth is not None:
+        user.date_of_birth = req.date_of_birth
     user.phone = req.phone
+    # Hybrid auth: hash the password when one is provided at onboarding.
+    if req.password is not None:
+        user.password_hash = hash_password(req.password)
     user.status = "active"
     user.invite_code = None
     user.invite_code_expires_at = None
@@ -85,6 +91,26 @@ def complete_onboarding(req: schemas.CompleteOnboardingRequest, db: Session = De
 
     token = create_access_token({"sub": user.id, "role": user.role.value, "email": user.email})
     return {"access_token": token, "token_type": "bearer"}
+
+
+@router.post("/change-password", response_model=schemas.ChangePasswordResponse)
+def change_password(
+    req: schemas.ChangePasswordRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    # The current password is required only when the user already has one; a
+    # code-authenticated user (no password_hash) may set a password without it.
+    if current_user.password_hash:
+        if not req.current_password or not verify_password(
+            req.current_password, current_user.password_hash
+        ):
+            raise HTTPException(status_code=400, detail="Current password is incorrect")
+
+    current_user.password_hash = hash_password(req.new_password)
+    db.commit()
+
+    return schemas.ChangePasswordResponse()
 
 
 @router.get("/me", response_model=schemas.UserResponse)

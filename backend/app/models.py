@@ -97,6 +97,9 @@ class Case(Base):
     patient_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)
 
     surgery_type: Mapped[str] = mapped_column(String, nullable=False)
+    # Nullable: captured at clinician intake for new cases; existing/seeded
+    # cases pre-date it and remain valid with NULL.
+    surgery_date: Mapped[str | None] = mapped_column(String, nullable=True)
     status: Mapped[str] = mapped_column(String, default="active")
     emergency_contact_name: Mapped[str | None] = mapped_column(String, nullable=True)
     emergency_contact_phone: Mapped[str | None] = mapped_column(String, nullable=True)
@@ -122,6 +125,12 @@ class Case(Base):
     chat_messages: Mapped[list["ChatMessage"]] = relationship(
         back_populates="case", cascade="all, delete-orphan"
     )
+
+    @property
+    def patient_date_of_birth(self) -> str | None:
+        """The patient's DOB, exposed on case responses so clients can derive
+        Day N alongside surgery_date without a second round-trip."""
+        return self.patient.date_of_birth if self.patient is not None else None
 
 
 class Medication(Base):
