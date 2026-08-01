@@ -14,10 +14,10 @@ Extend the clinician "New Patient" form (`CreatePatientPage`) to capture the fac
 - Web has no test harness (per `0001` and the 2026-07-23 design); verify via build/analyze + manual QA and state this in the PR.
 
 ## Acceptance criteria
-- [ ] The new-patient form has required date-of-birth and surgery-date pickers; submission is blocked (with a clear message) if either is missing.
-- [ ] The invite request sends `date_of_birth` and `surgery_date` to the backend.
-- [ ] The invite action shows loading, success, and error states; the success screen still displays the invite code.
-- [ ] New field labels are added to all configured locales.
+- [x] The new-patient form has required date-of-birth and surgery-date pickers; submission is blocked (with a clear message) if either is missing.
+- [x] The invite request sends `date_of_birth` and `surgery_date` to the backend.
+- [x] The invite action shows loading, success, and error states; the success screen still displays the invite code.
+- [x] New field labels are added to all configured locales.
 - [ ] The form builds cleanly (build/analyze) and was manually QA'd (stated in the PR).
 
 ## Covers

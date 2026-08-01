@@ -17,7 +17,9 @@ function CreatePatientPage() {
   const navigate = useNavigate()
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
+  const [dateOfBirth, setDateOfBirth] = useState('')
   const [surgeryType, setSurgeryType] = useState('')
+  const [surgeryDate, setSurgeryDate] = useState('')
   const [emergencyContactPhone, setEmergencyContactPhone] = useState('')
   const [loading, setLoading] = useState(false)
   const [inviteCode, setInviteCode] = useState<string | null>(null)
@@ -31,7 +33,9 @@ function CreatePatientPage() {
     const missingFields: string[] = []
     if (!fullName.trim()) missingFields.push('full-name')
     if (!email.trim()) missingFields.push('patient-email')
+    if (!dateOfBirth.trim()) missingFields.push('date-of-birth')
     if (!surgeryType.trim()) missingFields.push('surgery-type')
+    if (!surgeryDate.trim()) missingFields.push('surgery-date')
     setMissing(missingFields)
     if (missingFields.length > 0) {
       setError(t('createPatient.errorMissingFields'))
@@ -46,7 +50,9 @@ function CreatePatientPage() {
         body: JSON.stringify({
           full_name: fullName.trim(),
           email: email.trim(),
+          date_of_birth: dateOfBirth.trim(),
           surgery_type: surgeryType.trim(),
+          surgery_date: surgeryDate.trim(),
           emergency_contact_phone: emergencyContactPhone.trim() || null
         })
       })
@@ -102,10 +108,15 @@ function CreatePatientPage() {
         <h1 style={styles.title}>{t('createPatient.title')}</h1>
 
         <form onSubmit={handleSubmit} style={styles.form} noValidate>
+          {error && (
+            <p style={styles.error} role="alert">
+              {error}
+            </p>
+          )}
+
           <FormField
             label={t('createPatient.fullName')}
             invalid={missing.includes('full-name')}
-            error={error || undefined}
           >
             {(control) => (
               <input
@@ -136,6 +147,22 @@ function CreatePatientPage() {
           </FormField>
 
           <FormField
+            label={t('createPatient.dateOfBirth')}
+            invalid={missing.includes('date-of-birth')}
+            hint={t('createPatient.dateOfBirthPlaceholder')}
+          >
+            {(control) => (
+              <input
+                {...control}
+                style={styles.input}
+                type="date"
+                value={dateOfBirth}
+                onChange={(e) => setDateOfBirth(e.target.value)}
+              />
+            )}
+          </FormField>
+
+          <FormField
             label={t('createPatient.surgeryType')}
             invalid={missing.includes('surgery-type')}
           >
@@ -147,6 +174,22 @@ function CreatePatientPage() {
                 placeholder={t('createPatient.surgeryTypePlaceholder')}
                 value={surgeryType}
                 onChange={(e) => setSurgeryType(e.target.value)}
+              />
+            )}
+          </FormField>
+
+          <FormField
+            label={t('createPatient.surgeryDate')}
+            invalid={missing.includes('surgery-date')}
+            hint={t('createPatient.surgeryDatePlaceholder')}
+          >
+            {(control) => (
+              <input
+                {...control}
+                style={styles.input}
+                type="date"
+                value={surgeryDate}
+                onChange={(e) => setSurgeryDate(e.target.value)}
               />
             )}
           </FormField>

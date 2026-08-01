@@ -204,8 +204,12 @@ export interface CreatePatientTranslations {
   fullNamePlaceholder: string
   email: string
   emailPlaceholder: string
+  dateOfBirth: string
+  dateOfBirthPlaceholder: string
   surgeryType: string
   surgeryTypePlaceholder: string
+  surgeryDate: string
+  surgeryDatePlaceholder: string
   emergencyContact: string
   emergencyContactPlaceholder: string
   inviting: string
