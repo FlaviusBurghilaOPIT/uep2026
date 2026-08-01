@@ -4,6 +4,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/network/api_service.dart';
 import '../../../../core/telemetry/telemetry_service.dart';
+import '../../data/assistant_stream_client.dart';
 
 part 'chat_assistant_notifier.freezed.dart';
 
@@ -13,6 +14,8 @@ part 'chat_assistant_notifier.freezed.dart';
 const List<String> _doseChangeKeywords = [
   // English
   'double dose',
+  'double my dose',
+  'double the dose',
   'extra dose',
   'stop taking',
   'change dose',
@@ -73,12 +76,27 @@ abstract class ChatState with _$ChatState {
   }) = _ChatState;
 }
 
+/// Intents the backend treats as out-of-scope (see `_check_guardrail` in
+/// `backend/app/routers/ai.py`). The backend's guardrail decision is a pure
+/// function of the `intent_category` the client sends, so the client can
+/// reliably route these to the JSON endpoint (which carries the authoritative
+/// `in_scope`/`escalate` flags) while streaming everything else.
+const Set<String> _outOfScopeIntents = {
+  'dose_change_request',
+  'diagnosis_request',
+};
+
 class ChatAssistantNotifier extends Notifier<ChatState> {
   @override
   ChatState build() => const ChatState();
 
   ApiService get _api => ref.read(apiServiceProvider);
   TelemetryService get _telemetry => ref.read(telemetryServiceProvider);
+  AssistantStreamClient get _streamClient =>
+      ref.read(assistantStreamClientProvider);
+
+  static const String _errorMessage =
+      'Could not reach assistant. Please try again.';
 
   Future<void> sendMessage({
     required String caseId,
@@ -100,11 +118,38 @@ class ChatAssistantNotifier extends Notifier<ChatState> {
       errorMessage: null,
     );
 
+    final intentCategory = _classifyIntent(trimmed);
+    if (_outOfScopeIntents.contains(intentCategory)) {
+      // Out-of-scope: use the JSON endpoint so we keep the backend's
+      // authoritative in_scope/escalate flags + emergency-contact lookup that
+      // power the refusal box and emergency CTA.
+      await _sendViaJson(
+        caseId: caseId,
+        message: trimmed,
+        intentCategory: intentCategory,
+      );
+    } else {
+      // In-scope: render the reply progressively via the streaming endpoint.
+      await _sendViaStream(
+        caseId: caseId,
+        message: trimmed,
+        intentCategory: intentCategory,
+      );
+    }
+  }
+
+  /// JSON `POST /ai/chat` path — used for out-of-scope intents so the refusal
+  /// box can render the backend's authoritative `in_scope`/`escalate` flags and
+  /// the fetched emergency-contact phone.
+  Future<void> _sendViaJson({
+    required String caseId,
+    required String message,
+    required String intentCategory,
+  }) async {
     try {
-      final intentCategory = _classifyIntent(trimmed);
       final res = await _api.post('/ai/chat', {
         'case_id': caseId,
-        'message': trimmed,
+        'message': message,
         'intent_category': intentCategory,
       });
 
@@ -149,17 +194,68 @@ class ChatAssistantNotifier extends Notifier<ChatState> {
           isLoading: false,
         );
       } else {
-        state = state.copyWith(
-          errorMessage: 'Could not reach assistant. Please try again.',
-          isLoading: false,
-        );
+        state = state.copyWith(errorMessage: _errorMessage, isLoading: false);
       }
     } catch (_) {
-      state = state.copyWith(
-        errorMessage: 'Could not reach assistant. Please try again.',
-        isLoading: false,
-      );
+      state = state.copyWith(errorMessage: _errorMessage, isLoading: false);
     }
+  }
+
+  /// Streaming `POST /ai/chat/stream` path — appends the Assistant message on
+  /// the first chunk and grows its text on each subsequent chunk so the UI
+  /// renders the reply progressively. The typing indicator stays visible until
+  /// the first chunk arrives (the last message is still the user's).
+  Future<void> _sendViaStream({
+    required String caseId,
+    required String message,
+    required String intentCategory,
+  }) async {
+    final aiMsgId = (DateTime.now().microsecondsSinceEpoch + 1).toString();
+    final buffer = StringBuffer();
+    var created = false;
+
+    try {
+      final stream = _streamClient.streamReply(
+        caseId: caseId,
+        message: message,
+        intentCategory: intentCategory,
+      );
+
+      await for (final chunk in stream) {
+        buffer.write(chunk);
+        if (!created) {
+          final aiMsg = ChatMessage(
+            id: aiMsgId,
+            text: buffer.toString(),
+            isFromUser: false,
+            timestamp: DateTime.now(),
+          );
+          state = state.copyWith(messages: [...state.messages, aiMsg]);
+          created = true;
+        } else {
+          _updateMessageText(aiMsgId, buffer.toString());
+        }
+      }
+
+      state = state.copyWith(isLoading: false);
+    } catch (_) {
+      // Honest error: stop loading and surface the message. If nothing was
+      // streamed yet, only the user's message remains (no empty AI bubble).
+      state = state.copyWith(errorMessage: _errorMessage, isLoading: false);
+    }
+  }
+
+  /// Replaces the text of the message with [id] in place (immutable copy),
+  /// used to grow the streaming Assistant bubble chunk-by-chunk.
+  void _updateMessageText(String id, String text) {
+    final messages = state.messages.toList();
+    for (var i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].id == id) {
+        messages[i] = messages[i].copyWith(text: text);
+        break;
+      }
+    }
+    state = state.copyWith(messages: messages);
   }
 
   Future<void> onEmergencyCtaTapped(String caseId, String phone) async {

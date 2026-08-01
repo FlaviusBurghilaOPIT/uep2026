@@ -68,12 +68,28 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
         );
         ref.read(chatAssistantNotifierProvider.notifier).clearError();
       }
-      if (next.messages.length != (previous?.messages.length ?? 0)) {
+      // Scroll when a message is added OR when the streaming Assistant bubble
+      // grows (message count stays constant while its text is updated).
+      final previousLastText = (previous?.messages.isNotEmpty ?? false)
+          ? previous!.messages.last.text
+          : null;
+      final nextLastText = next.messages.isNotEmpty
+          ? next.messages.last.text
+          : null;
+      if (next.messages.length != (previous?.messages.length ?? 0) ||
+          previousLastText != nextLastText) {
         _scrollToBottom();
       }
     });
 
     final caseId = _getCaseId();
+
+    // The typing indicator shows only while awaiting the FIRST chunk. Once the
+    // streaming Assistant bubble appears (last message is no longer the user's)
+    // the growing bubble replaces it — no duplicated "thinking" affordances.
+    final isAwaitingFirstChunk =
+        chatState.isLoading &&
+        (chatState.messages.isEmpty || chatState.messages.last.isFromUser);
 
     return Scaffold(
       appBar: AppBar(
@@ -124,8 +140,8 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
                     ),
             ),
 
-            // 3. Typing indicator
-            if (chatState.isLoading) const TypingIndicator(),
+            // 3. Typing indicator (only while awaiting the first streamed chunk)
+            if (isAwaitingFirstChunk) const TypingIndicator(),
 
             // 4. Suggestion chips row (visible when messages is empty)
             if (chatState.messages.isEmpty) SuggestionChips(caseId: caseId),

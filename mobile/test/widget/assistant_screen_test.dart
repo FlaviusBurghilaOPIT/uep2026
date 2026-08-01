@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,10 +9,12 @@ import 'package:remotecare/core/l10n/app_localizations.dart';
 import 'package:remotecare/core/network/api_service.dart';
 import 'package:remotecare/core/providers/shared_preferences_provider.dart';
 import 'package:remotecare/core/telemetry/telemetry_service.dart';
+import 'package:remotecare/features/assistant/data/assistant_stream_client.dart';
 import 'package:remotecare/features/assistant/presentation/screens/assistant_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../unit/fake_api_service.dart';
+import '../unit/fake_assistant_stream_client.dart';
 
 Widget _buildMaterialApp(BuildContext context, Widget? child) {
   return const MaterialApp(
@@ -23,12 +26,14 @@ Widget _buildMaterialApp(BuildContext context, Widget? child) {
 
 Widget buildTestApp(
   FakeApiService fakeApi,
+  FakeAssistantStreamClient fakeStream,
   TelemetryService telemetryService,
   SharedPreferences prefs,
 ) {
   return ProviderScope(
     overrides: [
       apiServiceProvider.overrideWithValue(fakeApi),
+      assistantStreamClientProvider.overrideWithValue(fakeStream),
       telemetryServiceProvider.overrideWithValue(telemetryService),
       sharedPreferencesProvider.overrideWithValue(prefs),
     ],
@@ -44,6 +49,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late FakeApiService fakeApi;
+  late FakeAssistantStreamClient fakeStream;
   late TelemetryService telemetryService;
   late SharedPreferences prefs;
 
@@ -51,6 +57,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     prefs = await SharedPreferences.getInstance();
     fakeApi = FakeApiService();
+    fakeStream = FakeAssistantStreamClient();
     telemetryService = TelemetryService(fakeApi);
   });
 
@@ -62,7 +69,9 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(buildTestApp(fakeApi, telemetryService, prefs));
+    await tester.pumpWidget(
+      buildTestApp(fakeApi, fakeStream, telemetryService, prefs),
+    );
     await tester.pumpAndSettle();
 
     expect(
@@ -79,11 +88,11 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      fakeApi.postHandlers['/ai/chat'] = (body) {
-        return http.Response(jsonEncode({'reply': 'Chip reply'}), 200);
-      };
+      fakeStream.handler = (c, m, i) => Stream.value('Chip reply');
 
-      await tester.pumpWidget(buildTestApp(fakeApi, telemetryService, prefs));
+      await tester.pumpWidget(
+        buildTestApp(fakeApi, fakeStream, telemetryService, prefs),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Medication side effects'), findsOneWidget);
@@ -99,19 +108,19 @@ void main() {
   );
 
   testWidgets(
-    'Typing indicator visible when isLoading; hidden when not loading',
+    'Typing indicator visible while awaiting first chunk; hidden once streaming starts',
     (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      fakeApi.postHandlers['/ai/chat'] = (body) async {
-        await Future.delayed(const Duration(milliseconds: 200));
-        return http.Response(jsonEncode({'reply': 'Done'}), 200);
-      };
+      final controller = StreamController<String>();
+      fakeStream.handler = (c, m, i) => controller.stream;
 
-      await tester.pumpWidget(buildTestApp(fakeApi, telemetryService, prefs));
+      await tester.pumpWidget(
+        buildTestApp(fakeApi, fakeStream, telemetryService, prefs),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('typing_indicator')), findsNothing);
@@ -120,9 +129,16 @@ void main() {
       await tester.tap(find.byIcon(Icons.send_rounded));
       await tester.pump();
 
+      // Awaiting the first chunk: typing indicator is visible.
       expect(find.byKey(const Key('typing_indicator')), findsOneWidget);
 
-      await tester.pump(const Duration(milliseconds: 300));
+      // First chunk arrives: the streaming bubble replaces the indicator.
+      controller.add('Done');
+      await tester.pump();
+      expect(find.byKey(const Key('typing_indicator')), findsNothing);
+      expect(find.text('Done'), findsOneWidget);
+
+      await controller.close();
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('typing_indicator')), findsNothing);
     },
@@ -134,11 +150,11 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    fakeApi.postHandlers['/ai/chat'] = (body) {
-      return http.Response(jsonEncode({'reply': 'Here is your info.'}), 200);
-    };
+    fakeStream.handler = (c, m, i) => Stream.value('Here is your info.');
 
-    await tester.pumpWidget(buildTestApp(fakeApi, telemetryService, prefs));
+    await tester.pumpWidget(
+      buildTestApp(fakeApi, fakeStream, telemetryService, prefs),
+    );
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), 'Can I take ibuprofen?');
@@ -148,6 +164,85 @@ void main() {
     expect(find.text('Can I take ibuprofen?'), findsOneWidget);
     expect(find.text('Here is your info.'), findsOneWidget);
   });
+
+  testWidgets('Assistant reply renders progressively as chunks stream in', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final controller = StreamController<String>();
+    fakeStream.handler = (c, m, i) => controller.stream;
+
+    await tester.pumpWidget(
+      buildTestApp(fakeApi, fakeStream, telemetryService, prefs),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'Tell me about recovery');
+    await tester.tap(find.byIcon(Icons.send_rounded));
+    await tester.pump();
+
+    // Partial chunk renders before the full reply exists.
+    controller.add('Rest ');
+    await tester.pump();
+    expect(find.text('Rest '), findsOneWidget);
+    expect(find.text('Rest and hydrate.'), findsNothing);
+
+    // The next chunk grows the same bubble in place.
+    controller.add('and hydrate.');
+    await tester.pump();
+    expect(find.text('Rest and hydrate.'), findsOneWidget);
+    expect(find.text('Rest '), findsNothing);
+
+    await controller.close();
+    await tester.pumpAndSettle();
+    expect(find.text('Rest and hydrate.'), findsOneWidget);
+  });
+
+  testWidgets(
+    'Streaming error shows honest error state, keeps user message, no dead controls',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      fakeStream.handler = (c, m, i) =>
+          Stream.error(const AssistantStreamException('network down'));
+
+      await tester.pumpWidget(
+        buildTestApp(fakeApi, fakeStream, telemetryService, prefs),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'Hello?');
+      await tester.tap(find.byIcon(Icons.send_rounded));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      // Honest error surfaced; loading stopped; user message retained.
+      expect(
+        find.text('Could not reach assistant. Please try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('Hello?'), findsOneWidget);
+      expect(find.byKey(const Key('typing_indicator')), findsNothing);
+
+      // No dead controls: input + send re-enabled after the error.
+      final field = tester.widget<TextField>(find.byType(TextField));
+      expect(field.enabled, isTrue);
+      final sendButton = tester.widget<IconButton>(
+        find.ancestor(
+          of: find.byIcon(Icons.send_rounded),
+          matching: find.byType(IconButton),
+        ),
+      );
+      expect(sendButton.onPressed, isNotNull);
+    },
+  );
 
   testWidgets(
     'Out-of-scope response renders refusal box + emergency CTA + tel link + telemetry',
@@ -174,7 +269,9 @@ void main() {
         );
       };
 
-      await tester.pumpWidget(buildTestApp(fakeApi, telemetryService, prefs));
+      await tester.pumpWidget(
+        buildTestApp(fakeApi, fakeStream, telemetryService, prefs),
+      );
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField), 'Can I double my dose?');
