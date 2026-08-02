@@ -45,6 +45,16 @@ def get_recommendations(
     current_user: models.User = Depends(get_current_user),
 ):
 
+    # Authorization: the patient who owns the case or the clinician who owns
+    # the case may read its recommendations; anyone else gets 404 (same
+    # convention as create_recommendation above).
+    case = db.query(models.Case).filter(models.Case.id == case_id).first()
+
+    if not case or (
+        case.patient_id != current_user.id and case.clinician_id != current_user.id
+    ):
+        raise HTTPException(status_code=404, detail="Case not found")
+
     recommendations = (
         db.query(models.Recommendation).filter(models.Recommendation.case_id == case_id).all()
     )

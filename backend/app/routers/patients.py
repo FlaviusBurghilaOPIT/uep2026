@@ -171,9 +171,21 @@ def get_patient(patient_id: str, db: Session = Depends(get_db_for_user)):
 
 
 @router.get("/{patient_id}/case", response_model=schemas.CaseResponse)
-def get_patient_case(patient_id: str, db: Session = Depends(get_db_for_user)):
+def get_patient_case(
+    patient_id: str,
+    db: Session = Depends(get_db_for_user),
+    current_user: models.User = Depends(get_current_user),
+):
+    # Authorization: a patient may read only their own case; a clinician only
+    # cases they own. Unauthorized access is indistinguishable from a missing
+    # case (404), matching create_recommendation's convention.
+    query = db.query(models.Case).filter(models.Case.patient_id == patient_id)
+    if current_user.role == models.UserRole.patient:
+        query = query.filter(models.Case.patient_id == current_user.id)
+    else:
+        query = query.filter(models.Case.clinician_id == current_user.id)
 
-    case = db.query(models.Case).filter(models.Case.patient_id == patient_id).first()
+    case = query.first()
 
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")

@@ -1,7 +1,7 @@
 import enum
 from datetime import date, datetime, timezone
 
-from pydantic import BaseModel, field_serializer
+from pydantic import BaseModel, Field, field_serializer
 
 from app.models import DoseStatus
 
@@ -114,11 +114,13 @@ class CompleteOnboardingRequest(BaseModel):
     full_name: str | None = None
     phone: str
     # Hybrid auth: when present, hashed to password_hash at onboarding.
-    password: str | None = None
+    # Min length 8 enforced server-side per spec Req 1; None stays valid.
+    password: str | None = Field(default=None, min_length=8)
 
 
 class ChangePasswordRequest(BaseModel):
-    new_password: str
+    # Min length 8 enforced server-side per spec Req 1.
+    new_password: str = Field(min_length=8)
     # Required only when the user already has a password_hash; a code-only
     # (passwordless) user may set a password without supplying it.
     current_password: str | None = None

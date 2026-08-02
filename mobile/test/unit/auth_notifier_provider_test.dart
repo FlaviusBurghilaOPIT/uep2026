@@ -451,4 +451,42 @@ void main() {
     expect(error, 'Current password is incorrect');
     expect(container.read(authProvider).hasPassword, false);
   });
+
+  test(
+    'signOut clears the session and leaves isInitializing false (no boot dead-end)',
+    () async {
+      fakeApi.postHandlers['/auth/login'] = (body) => http.Response(
+        jsonEncode({'access_token': 'jwt_signout', 'token_type': 'bearer'}),
+        200,
+      );
+      fakeApi.getHandlers['/auth/me'] = () => http.Response(
+        jsonEncode({'id': 'user_so', 'email': 'jane@example.com'}),
+        200,
+      );
+      fakeApi.getHandlers['/patients/user_so/case'] = () => http.Response(
+        jsonEncode({'id': 'case_so', 'surgery_type': 'Knee Replacement'}),
+        200,
+      );
+
+      final auth = container.read(authProvider.notifier);
+      final signedIn = await auth.login(
+        email: 'jane@example.com',
+        password: 'secret123',
+      );
+      expect(signedIn, true);
+
+      await auth.signOut();
+
+      final state = container.read(authProvider);
+      // Regression: isInitializing must stay false — checkAuthStatus() runs
+      // only once at boot, so a true value here strands BootScreen on the
+      // spinner after sign-out.
+      expect(state.isInitializing, false);
+      expect(state.isSignedIn, false);
+      expect(state.patientId, isNull);
+      expect(state.caseId, isNull);
+      expect(state.email, isNull);
+      expect(fakeApi.savedToken, isNull);
+    },
+  );
 }

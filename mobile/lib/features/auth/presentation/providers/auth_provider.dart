@@ -244,6 +244,9 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<void> signOut() async {
     await _repo.clearToken();
-    state = const AuthState();
+    // Keep isInitializing false: checkAuthStatus() runs only once from
+    // build(), so resetting to a fresh AuthState (isInitializing defaults to
+    // true) would leave BootScreen waiting forever on the boot spinner.
+    state = const AuthState(isInitializing: false);
   }
 }

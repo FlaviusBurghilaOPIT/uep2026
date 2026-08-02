@@ -504,3 +504,75 @@ def test_patch_me_requires_authentication(client, db_session):
     response = client.patch("/auth/me", json={"phone": "123"})
 
     assert response.status_code in (401, 403)
+
+
+# --- Final review (0002): server-side password min-length (spec Req 1) ---
+
+
+def test_complete_onboarding_rejects_password_shorter_than_8(client, db_session):
+    _make_patient(db_session, status="pending_onboarding")
+
+    response = client.post(
+        "/auth/complete-onboarding",
+        json={
+            "email": "patient@example.com",
+            "invite_code": "111111",
+            "phone": "1234567890",
+            "password": "short7c",
+        },
+    )
+
+    assert response.status_code == 422
+    patient = (
+        db_session.query(models.User).filter(models.User.email == "patient@example.com").first()
+    )
+    assert patient.password_hash is None
+    assert patient.status == "pending_onboarding"
+
+
+def test_complete_onboarding_accepts_password_of_exactly_8(client, db_session):
+    _make_patient(db_session, status="pending_onboarding")
+
+    response = client.post(
+        "/auth/complete-onboarding",
+        json={
+            "email": "patient@example.com",
+            "invite_code": "111111",
+            "phone": "1234567890",
+            "password": "exactly8",
+        },
+    )
+
+    assert response.status_code == 200
+    patient = (
+        db_session.query(models.User).filter(models.User.email == "patient@example.com").first()
+    )
+    assert verify_password("exactly8", patient.password_hash)
+
+
+def test_change_password_rejects_new_password_shorter_than_8(client, db_session):
+    patient = _active_patient(db_session)
+
+    response = client.post(
+        "/auth/change-password",
+        json={"new_password": "short7c"},
+        headers={"Authorization": f"Bearer {_patient_token(patient)}"},
+    )
+
+    assert response.status_code == 422
+    db_session.refresh(patient)
+    assert patient.password_hash is None
+
+
+def test_change_password_accepts_new_password_of_exactly_8(client, db_session):
+    patient = _active_patient(db_session)
+
+    response = client.post(
+        "/auth/change-password",
+        json={"new_password": "exactly8"},
+        headers={"Authorization": f"Bearer {_patient_token(patient)}"},
+    )
+
+    assert response.status_code == 200
+    db_session.refresh(patient)
+    assert verify_password("exactly8", patient.password_hash)
