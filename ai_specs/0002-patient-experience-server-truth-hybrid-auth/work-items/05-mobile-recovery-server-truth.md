@@ -15,13 +15,13 @@ Make the Recovery screen render only server truth. Care instructions render as a
 - Test seam: `mobile/test/unit/fake_api_service.dart`.
 
 ## Acceptance criteria
-- [ ] Care instructions render as a flat list of recommendation text; the categorized icon-cards are gone.
-- [ ] The adherence chart is derived from real adherence logs (7-day taken/total); with no logs it shows an honest empty state.
-- [ ] "Day N" and the surgery date derive from the server-provided `surgery_date`; if absent, honest absence (no fabricated number).
-- [ ] The header uses real surgery type / patient name / clinician name (honest absence where unavailable); no hardcoded names.
-- [ ] The milestone timeline, warning-signs box, "Day 19", and dead notification bell are removed.
-- [ ] Loading uses `AppSkeletonLoader`; empty and error states render.
-- [ ] Widget/unit tests (FakeApiService) assert real-data rendering vs honest absence (no fabricated meds/Day-19/milestones); `golden_loop_test.dart` covers Recovery showing real data after password login.
+- [x] Care instructions render as a flat list of recommendation text; the categorized icon-cards are gone.
+- [x] The adherence chart is derived from real adherence logs (7-day taken/total); with no logs it shows an honest empty state.
+- [x] "Day N" and the surgery date derive from the server-provided `surgery_date`; if absent, honest absence (no fabricated number).
+- [x] The header uses real surgery type / patient name / clinician name (honest absence where unavailable); no hardcoded names.
+- [x] The milestone timeline, warning-signs box, "Day 19", and dead notification bell are removed.
+- [x] Loading uses `AppSkeletonLoader`; empty and error states render.
+- [x] Widget/unit tests (FakeApiService) assert real-data rendering vs honest absence (no fabricated meds/Day-19/milestones); `golden_loop_test.dart` covers Recovery showing real data after password login.
 
 ## Covers
 - User Stories: 5

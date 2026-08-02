@@ -15,11 +15,11 @@ Clean up the Profile so it only shows what the backend supports. Remove the "Two
 - `shared_preferences` for toggle persistence.
 
 ## Acceptance criteria
-- [ ] The 2FA row, Connected-devices row, and dead notification bell / fake badge are removed.
-- [ ] "Change password" invokes the new endpoint (current password required only if one exists).
-- [ ] No hardcoded fallbacks remain; personal info comes from `/auth/me` and is editable; unsupported fields (e.g. Condition) show honest absence; the Invite-code row is gone.
-- [ ] Med-reminders and Daily-check-in toggles persist to shared_preferences and gate scheduling only while OS permission is granted; the FDA-alerts toggle is removed.
-- [ ] Widget tests (FakeApiService) assert the removed rows are absent and real data renders.
+- [x] The 2FA row, Connected-devices row, and dead notification bell / fake badge are removed.
+- [x] "Change password" invokes the new endpoint (current password required only if one exists).
+- [x] No hardcoded fallbacks remain; personal info comes from `/auth/me` and is editable; unsupported fields (e.g. Condition) show honest absence; the Invite-code row is gone.
+- [x] Med-reminders and Daily-check-in toggles persist to shared_preferences and gate scheduling only while OS permission is granted; the FDA-alerts toggle is removed.
+- [x] Widget tests (FakeApiService) assert the removed rows are absent and real data renders.
 
 ## Covers
 - User Stories: 6, 7
