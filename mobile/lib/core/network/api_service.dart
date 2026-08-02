@@ -41,6 +41,14 @@ abstract class ApiService {
     required String logId,
     required String status,
   });
+
+  /// WI 05 · `GET /patients/{patientId}/case` — the patient's case
+  /// (surgery type/date) for the Recovery screen.
+  Future<http.Response> getPatientCase({required String patientId});
+
+  /// WI 05 · `GET /cases/{caseId}/recommendations` — free-text care
+  /// instructions for the Recovery screen.
+  Future<http.Response> getCaseRecommendations({required String caseId});
 }
 
 // ---------------------------------------------------------------------------
@@ -142,6 +150,16 @@ class HttpApiService implements ApiService {
     required String status,
   }) {
     return _patch('/adherence/logs/$logId', {'status': status});
+  }
+
+  @override
+  Future<http.Response> getPatientCase({required String patientId}) {
+    return get('/patients/$patientId/case');
+  }
+
+  @override
+  Future<http.Response> getCaseRecommendations({required String caseId}) {
+    return get('/cases/$caseId/recommendations');
   }
 }
 

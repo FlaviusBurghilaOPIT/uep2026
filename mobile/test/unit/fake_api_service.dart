@@ -20,6 +20,10 @@ class FakeApiService implements ApiService {
   FutureOr<http.Response> Function(String logId, Map<String, dynamic> body)?
   correctionHandler;
 
+  /// WI 05 recovery fakes. Handlers may throw to simulate a network failure.
+  FutureOr<http.Response> Function(String patientId)? caseHandler;
+  FutureOr<http.Response> Function(String caseId)? recommendationsHandler;
+
   String? savedToken;
   final List<Map<String, dynamic>> requestsLog = [];
 
@@ -134,6 +138,26 @@ class FakeApiService implements ApiService {
     final handler = correctionHandler;
     if (handler != null) {
       return await handler(logId, body);
+    }
+    return http.Response(jsonEncode({'detail': 'Not found'}), 404);
+  }
+
+  @override
+  Future<http.Response> getPatientCase({required String patientId}) async {
+    requestsLog.add({'method': 'GET', 'path': '/patients/$patientId/case'});
+    final handler = caseHandler;
+    if (handler != null) {
+      return await handler(patientId);
+    }
+    return http.Response(jsonEncode({'detail': 'Not found'}), 404);
+  }
+
+  @override
+  Future<http.Response> getCaseRecommendations({required String caseId}) async {
+    requestsLog.add({'method': 'GET', 'path': '/cases/$caseId/recommendations'});
+    final handler = recommendationsHandler;
+    if (handler != null) {
+      return await handler(caseId);
     }
     return http.Response(jsonEncode({'detail': 'Not found'}), 404);
   }

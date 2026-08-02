@@ -164,13 +164,26 @@ void main() {
       await prefs.clear();
 
       // --- Arrange: create an invited (pending_onboarding) patient directly
-      // against the backend so this test is self-contained (no seed change). ---
+      // against the backend so this test is self-contained (no seed change).
+      // WI 05: the invite carries a surgery_date 10 days back ("Day 11" on
+      // the Recovery screen) and the clinician authors one recommendation,
+      // so Recovery has real server data to render after the password login.
       const email = 'invited.patient@example.com';
       const password = 'password123';
-      final inviteCode = await _createInvitedPatient(
+      const surgeryType = 'Total Knee Arthroplasty (TKA)';
+      const recommendationText = 'Keep the wound clean and dry';
+      final surgeryDate = DateTime.now().subtract(const Duration(days: 10));
+      final surgeryDateIso =
+          '${surgeryDate.year}-'
+          '${surgeryDate.month.toString().padLeft(2, '0')}-'
+          '${surgeryDate.day.toString().padLeft(2, '0')}';
+      final invite = await _createInvitedPatient(
         email: email,
         fullName: 'Invited Patient',
+        surgeryDate: surgeryDateIso,
+        recommendationText: recommendationText,
       );
+      final inviteCode = invite.inviteCode;
 
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 2));
@@ -224,16 +237,35 @@ void main() {
 
       // POST /auth/login (email+password) succeeds -> Today.
       await pumpUntilFound(tester, find.text('Today'));
+
+      // =========================================================================
+      // WI 05 — Recovery server-truth after the password login: real Day N,
+      // surgery type, and the clinician-authored recommendation; none of the
+      // removed fabrications.
+      // =========================================================================
+      await tester.tap(find.text('Recovery'));
+      await tester.pumpAndSettle();
+
+      await pumpUntilFound(tester, find.text('Day 11 of Recovery'));
+      expect(find.textContaining(surgeryType), findsOneWidget);
+      expect(find.text(recommendationText), findsOneWidget);
+      expect(find.text('Day 19 of Recovery'), findsNothing);
+      expect(find.text('Recovery Milestones'), findsNothing);
+      expect(find.textContaining('Seek Care Immediately'), findsNothing);
     },
   );
 }
 
-/// Creates a pending_onboarding patient via the clinician invite endpoint and
-/// returns the generated invite_code (a 6-digit code, also emailed to the
-/// patient). Self-contained test setup against the live backend.
-Future<String> _createInvitedPatient({
+/// Creates a pending_onboarding patient via the clinician invite endpoint.
+/// Returns the generated invite_code (a 6-digit code, also emailed to the
+/// patient) plus the patient_id. Self-contained test setup against the live
+/// backend. When [recommendationText] is given, the clinician also authors
+/// one recommendation on the new case so the Recovery screen has real data.
+Future<({String inviteCode, String patientId})> _createInvitedPatient({
   required String email,
   required String fullName,
+  String? surgeryDate,
+  String? recommendationText,
 }) async {
   final base = AppConfig.baseUrl;
 
@@ -247,20 +279,38 @@ Future<String> _createInvitedPatient({
     }),
   );
   final token = jsonDecode(loginRes.body)['access_token'] as String;
+  final headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer $token',
+  };
 
   // Create the patient invite (date_of_birth required at intake per WI 02).
   final inviteRes = await http.post(
     Uri.parse('$base/patients/invite'),
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    },
+    headers: headers,
     body: jsonEncode({
       'email': email,
       'full_name': fullName,
       'surgery_type': 'Total Knee Arthroplasty (TKA)',
       'date_of_birth': '1990-01-01',
+      'surgery_date': ?surgeryDate,
     }),
   );
-  return jsonDecode(inviteRes.body)['invite_code'] as String;
+  final inviteBody = jsonDecode(inviteRes.body) as Map<String, dynamic>;
+  final patientId = inviteBody['patient_id'] as String;
+
+  if (recommendationText != null) {
+    final caseRes = await http.get(
+      Uri.parse('$base/patients/$patientId/case'),
+      headers: headers,
+    );
+    final caseId = jsonDecode(caseRes.body)['id'] as String;
+    await http.post(
+      Uri.parse('$base/cases/$caseId/recommendations'),
+      headers: headers,
+      body: jsonEncode({'text': recommendationText}),
+    );
+  }
+
+  return (inviteCode: inviteBody['invite_code'] as String, patientId: patientId);
 }
