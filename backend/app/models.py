@@ -78,6 +78,11 @@ class User(Base):
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
+    @property
+    def has_password(self) -> bool:
+        """Derived for UserResponse — never a stored column."""
+        return self.password_hash is not None
+
     cases_as_clinician: Mapped[list["Case"]] = relationship(
         back_populates="clinician", foreign_keys="Case.clinician_id"
     )

@@ -122,6 +122,26 @@ def get_me(current_user: models.User = Depends(get_current_user)):
     return current_user
 
 
+@router.patch("/me", response_model=schemas.UserResponse)
+def update_me(
+    req: schemas.UserUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    # Partial profile update (WI 06): only supplied fields change; omitted
+    # fields keep their stored values (same convention as complete-onboarding).
+    if req.full_name is not None:
+        current_user.full_name = req.full_name
+    if req.phone is not None:
+        current_user.phone = req.phone
+    if req.date_of_birth is not None:
+        current_user.date_of_birth = req.date_of_birth
+
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+
 @router.post("/patient/request-code", response_model=schemas.PatientRequestCodeResponse)
 def request_patient_code(req: schemas.PatientRequestCodeRequest, db: Session = Depends(get_db)):
     user = (

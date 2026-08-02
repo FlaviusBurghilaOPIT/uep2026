@@ -416,3 +416,91 @@ def test_complete_onboarding_preserves_full_name_when_omitted(client, db_session
         db_session.query(models.User).filter(models.User.email == "patient@example.com").first()
     )
     assert patient.full_name == "Jane Doe"
+
+
+# --- WI 06: Profile update (PATCH /auth/me) + has_password on GET /auth/me ---
+
+
+def _active_patient(db_session):
+    patient = _make_patient(db_session, status="active")
+    patient.invite_code = None
+    patient.invite_code_expires_at = None
+    db_session.commit()
+    return patient
+
+
+def test_get_me_reports_has_password_false_for_code_only_patient(client, db_session):
+    patient = _active_patient(db_session)
+    assert patient.password_hash is None
+
+    response = client.get(
+        "/auth/me", headers={"Authorization": f"Bearer {_patient_token(patient)}"}
+    )
+
+    assert response.status_code == 200
+    assert response.json()["has_password"] is False
+
+
+def test_get_me_reports_has_password_true_after_password_set(client, db_session):
+    patient = _active_patient(db_session)
+    token = _patient_token(patient)
+    seeded = client.post(
+        "/auth/change-password",
+        json={"new_password": "brandnewpassword"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert seeded.status_code == 200
+
+    response = client.get("/auth/me", headers={"Authorization": f"Bearer {token}"})
+
+    assert response.status_code == 200
+    assert response.json()["has_password"] is True
+
+
+def test_patch_me_updates_only_supplied_fields_and_round_trips(client, db_session):
+    patient = _active_patient(db_session)  # full_name="Jane Doe", phone=None
+    token = _patient_token(patient)
+
+    response = client.patch(
+        "/auth/me",
+        json={"phone": "+39 333 1234567"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["phone"] == "+39 333 1234567"
+    # Untouched fields are preserved.
+    assert body["full_name"] == "Jane Doe"
+
+    # Persists and round-trips via GET /auth/me.
+    refreshed = client.get("/auth/me", headers={"Authorization": f"Bearer {token}"})
+    assert refreshed.status_code == 200
+    assert refreshed.json()["phone"] == "+39 333 1234567"
+    assert refreshed.json()["full_name"] == "Jane Doe"
+
+    db_session.refresh(patient)
+    assert patient.phone == "+39 333 1234567"
+    assert patient.full_name == "Jane Doe"
+
+
+def test_patch_me_updates_full_name_and_date_of_birth(client, db_session):
+    patient = _active_patient(db_session)
+    token = _patient_token(patient)
+
+    response = client.patch(
+        "/auth/me",
+        json={"full_name": "Jane Smith", "date_of_birth": "1988-03-14"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    db_session.refresh(patient)
+    assert patient.full_name == "Jane Smith"
+    assert patient.date_of_birth == "1988-03-14"
+
+
+def test_patch_me_requires_authentication(client, db_session):
+    response = client.patch("/auth/me", json={"phone": "123"})
+
+    assert response.status_code in (401, 403)

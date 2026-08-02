@@ -38,9 +38,20 @@ class UserResponse(BaseModel):
     date_of_birth: str | None = None
     invite_code: str | None = None
     created_at: datetime
+    # Derived from password_hash (User.has_password property) so clients know
+    # whether change-password must supply the current password.
+    has_password: bool = False
 
     class Config:
         from_attributes = True
+
+
+class UserUpdateRequest(BaseModel):
+    """PATCH /auth/me — all fields optional; only supplied fields update."""
+
+    full_name: str | None = None
+    phone: str | None = None
+    date_of_birth: str | None = None
 
 
 class TriageRosterPage(BaseModel):
