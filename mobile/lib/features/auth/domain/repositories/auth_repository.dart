@@ -65,6 +65,22 @@ abstract class AuthRepository {
     String? password,
   });
 
+  /// `PATCH /auth/me` (WI 06) — partial profile update; only non-null
+  /// fields are sent. Returns `true` on success.
+  Future<bool> updateProfile({
+    String? fullName,
+    String? phone,
+    String? dateOfBirth,
+  });
+
+  /// `POST /auth/change-password` (WI 06) — returns `null` on success or
+  /// the backend error detail on failure. [currentPassword] is required
+  /// only when the user already has a password.
+  Future<String?> changePassword({
+    required String newPassword,
+    String? currentPassword,
+  });
+
   // --- Token management ---
 
   Future<String?> getToken();

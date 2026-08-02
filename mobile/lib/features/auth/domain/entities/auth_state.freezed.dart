@@ -18,7 +18,9 @@ mixin _$AuthState {
  bool get isSignedIn; bool get isLoading;/// True until the boot-time JWT check ([AuthNotifier.checkAuthStatus])
 /// finishes. Boot routing waits for this to flip false before deciding
 /// main vs Welcome, so a stored-but-invalid token is never routed around.
- bool get isInitializing; String? get errorMessage; String? get patientId; String? get caseId; String? get fullName; String? get email; String? get phone; String? get dateOfBirth; String? get primaryCondition; String? get inviteCode;
+ bool get isInitializing; String? get errorMessage; String? get patientId; String? get caseId; String? get fullName; String? get email; String? get phone; String? get dateOfBirth; String? get primaryCondition; String? get inviteCode;/// From `GET /auth/me` `has_password` — whether the change-password form
+/// must require the current password (WI 06).
+ bool get hasPassword;
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -31,16 +33,16 @@ $AuthStateCopyWith<AuthState> get copyWith => _$AuthStateCopyWithImpl<AuthState>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthState&&(identical(other.isSignedIn, isSignedIn) || other.isSignedIn == isSignedIn)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.isInitializing, isInitializing) || other.isInitializing == isInitializing)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.patientId, patientId) || other.patientId == patientId)&&(identical(other.caseId, caseId) || other.caseId == caseId)&&(identical(other.fullName, fullName) || other.fullName == fullName)&&(identical(other.email, email) || other.email == email)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.dateOfBirth, dateOfBirth) || other.dateOfBirth == dateOfBirth)&&(identical(other.primaryCondition, primaryCondition) || other.primaryCondition == primaryCondition)&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthState&&(identical(other.isSignedIn, isSignedIn) || other.isSignedIn == isSignedIn)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.isInitializing, isInitializing) || other.isInitializing == isInitializing)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.patientId, patientId) || other.patientId == patientId)&&(identical(other.caseId, caseId) || other.caseId == caseId)&&(identical(other.fullName, fullName) || other.fullName == fullName)&&(identical(other.email, email) || other.email == email)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.dateOfBirth, dateOfBirth) || other.dateOfBirth == dateOfBirth)&&(identical(other.primaryCondition, primaryCondition) || other.primaryCondition == primaryCondition)&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode)&&(identical(other.hasPassword, hasPassword) || other.hasPassword == hasPassword));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,isSignedIn,isLoading,isInitializing,errorMessage,patientId,caseId,fullName,email,phone,dateOfBirth,primaryCondition,inviteCode);
+int get hashCode => Object.hash(runtimeType,isSignedIn,isLoading,isInitializing,errorMessage,patientId,caseId,fullName,email,phone,dateOfBirth,primaryCondition,inviteCode,hasPassword);
 
 @override
 String toString() {
-  return 'AuthState(isSignedIn: $isSignedIn, isLoading: $isLoading, isInitializing: $isInitializing, errorMessage: $errorMessage, patientId: $patientId, caseId: $caseId, fullName: $fullName, email: $email, phone: $phone, dateOfBirth: $dateOfBirth, primaryCondition: $primaryCondition, inviteCode: $inviteCode)';
+  return 'AuthState(isSignedIn: $isSignedIn, isLoading: $isLoading, isInitializing: $isInitializing, errorMessage: $errorMessage, patientId: $patientId, caseId: $caseId, fullName: $fullName, email: $email, phone: $phone, dateOfBirth: $dateOfBirth, primaryCondition: $primaryCondition, inviteCode: $inviteCode, hasPassword: $hasPassword)';
 }
 
 
@@ -51,7 +53,7 @@ abstract mixin class $AuthStateCopyWith<$Res>  {
   factory $AuthStateCopyWith(AuthState value, $Res Function(AuthState) _then) = _$AuthStateCopyWithImpl;
 @useResult
 $Res call({
- bool isSignedIn, bool isLoading, bool isInitializing, String? errorMessage, String? patientId, String? caseId, String? fullName, String? email, String? phone, String? dateOfBirth, String? primaryCondition, String? inviteCode
+ bool isSignedIn, bool isLoading, bool isInitializing, String? errorMessage, String? patientId, String? caseId, String? fullName, String? email, String? phone, String? dateOfBirth, String? primaryCondition, String? inviteCode, bool hasPassword
 });
 
 
@@ -68,7 +70,7 @@ class _$AuthStateCopyWithImpl<$Res>
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? isSignedIn = null,Object? isLoading = null,Object? isInitializing = null,Object? errorMessage = freezed,Object? patientId = freezed,Object? caseId = freezed,Object? fullName = freezed,Object? email = freezed,Object? phone = freezed,Object? dateOfBirth = freezed,Object? primaryCondition = freezed,Object? inviteCode = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? isSignedIn = null,Object? isLoading = null,Object? isInitializing = null,Object? errorMessage = freezed,Object? patientId = freezed,Object? caseId = freezed,Object? fullName = freezed,Object? email = freezed,Object? phone = freezed,Object? dateOfBirth = freezed,Object? primaryCondition = freezed,Object? inviteCode = freezed,Object? hasPassword = null,}) {
   return _then(_self.copyWith(
 isSignedIn: null == isSignedIn ? _self.isSignedIn : isSignedIn // ignore: cast_nullable_to_non_nullable
 as bool,isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
@@ -82,7 +84,8 @@ as String?,phone: freezed == phone ? _self.phone : phone // ignore: cast_nullabl
 as String?,dateOfBirth: freezed == dateOfBirth ? _self.dateOfBirth : dateOfBirth // ignore: cast_nullable_to_non_nullable
 as String?,primaryCondition: freezed == primaryCondition ? _self.primaryCondition : primaryCondition // ignore: cast_nullable_to_non_nullable
 as String?,inviteCode: freezed == inviteCode ? _self.inviteCode : inviteCode // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,hasPassword: null == hasPassword ? _self.hasPassword : hasPassword // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -167,10 +170,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isSignedIn,  bool isLoading,  bool isInitializing,  String? errorMessage,  String? patientId,  String? caseId,  String? fullName,  String? email,  String? phone,  String? dateOfBirth,  String? primaryCondition,  String? inviteCode)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isSignedIn,  bool isLoading,  bool isInitializing,  String? errorMessage,  String? patientId,  String? caseId,  String? fullName,  String? email,  String? phone,  String? dateOfBirth,  String? primaryCondition,  String? inviteCode,  bool hasPassword)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AuthState() when $default != null:
-return $default(_that.isSignedIn,_that.isLoading,_that.isInitializing,_that.errorMessage,_that.patientId,_that.caseId,_that.fullName,_that.email,_that.phone,_that.dateOfBirth,_that.primaryCondition,_that.inviteCode);case _:
+return $default(_that.isSignedIn,_that.isLoading,_that.isInitializing,_that.errorMessage,_that.patientId,_that.caseId,_that.fullName,_that.email,_that.phone,_that.dateOfBirth,_that.primaryCondition,_that.inviteCode,_that.hasPassword);case _:
   return orElse();
 
 }
@@ -188,10 +191,10 @@ return $default(_that.isSignedIn,_that.isLoading,_that.isInitializing,_that.erro
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isSignedIn,  bool isLoading,  bool isInitializing,  String? errorMessage,  String? patientId,  String? caseId,  String? fullName,  String? email,  String? phone,  String? dateOfBirth,  String? primaryCondition,  String? inviteCode)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isSignedIn,  bool isLoading,  bool isInitializing,  String? errorMessage,  String? patientId,  String? caseId,  String? fullName,  String? email,  String? phone,  String? dateOfBirth,  String? primaryCondition,  String? inviteCode,  bool hasPassword)  $default,) {final _that = this;
 switch (_that) {
 case _AuthState():
-return $default(_that.isSignedIn,_that.isLoading,_that.isInitializing,_that.errorMessage,_that.patientId,_that.caseId,_that.fullName,_that.email,_that.phone,_that.dateOfBirth,_that.primaryCondition,_that.inviteCode);case _:
+return $default(_that.isSignedIn,_that.isLoading,_that.isInitializing,_that.errorMessage,_that.patientId,_that.caseId,_that.fullName,_that.email,_that.phone,_that.dateOfBirth,_that.primaryCondition,_that.inviteCode,_that.hasPassword);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -208,10 +211,10 @@ return $default(_that.isSignedIn,_that.isLoading,_that.isInitializing,_that.erro
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isSignedIn,  bool isLoading,  bool isInitializing,  String? errorMessage,  String? patientId,  String? caseId,  String? fullName,  String? email,  String? phone,  String? dateOfBirth,  String? primaryCondition,  String? inviteCode)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isSignedIn,  bool isLoading,  bool isInitializing,  String? errorMessage,  String? patientId,  String? caseId,  String? fullName,  String? email,  String? phone,  String? dateOfBirth,  String? primaryCondition,  String? inviteCode,  bool hasPassword)?  $default,) {final _that = this;
 switch (_that) {
 case _AuthState() when $default != null:
-return $default(_that.isSignedIn,_that.isLoading,_that.isInitializing,_that.errorMessage,_that.patientId,_that.caseId,_that.fullName,_that.email,_that.phone,_that.dateOfBirth,_that.primaryCondition,_that.inviteCode);case _:
+return $default(_that.isSignedIn,_that.isLoading,_that.isInitializing,_that.errorMessage,_that.patientId,_that.caseId,_that.fullName,_that.email,_that.phone,_that.dateOfBirth,_that.primaryCondition,_that.inviteCode,_that.hasPassword);case _:
   return null;
 
 }
@@ -223,7 +226,7 @@ return $default(_that.isSignedIn,_that.isLoading,_that.isInitializing,_that.erro
 @JsonSerializable()
 
 class _AuthState implements AuthState {
-  const _AuthState({this.isSignedIn = false, this.isLoading = false, this.isInitializing = true, this.errorMessage, this.patientId, this.caseId, this.fullName, this.email, this.phone, this.dateOfBirth, this.primaryCondition, this.inviteCode});
+  const _AuthState({this.isSignedIn = false, this.isLoading = false, this.isInitializing = true, this.errorMessage, this.patientId, this.caseId, this.fullName, this.email, this.phone, this.dateOfBirth, this.primaryCondition, this.inviteCode, this.hasPassword = false});
   factory _AuthState.fromJson(Map<String, dynamic> json) => _$AuthStateFromJson(json);
 
 @override@JsonKey() final  bool isSignedIn;
@@ -241,6 +244,9 @@ class _AuthState implements AuthState {
 @override final  String? dateOfBirth;
 @override final  String? primaryCondition;
 @override final  String? inviteCode;
+/// From `GET /auth/me` `has_password` — whether the change-password form
+/// must require the current password (WI 06).
+@override@JsonKey() final  bool hasPassword;
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
@@ -255,16 +261,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthState&&(identical(other.isSignedIn, isSignedIn) || other.isSignedIn == isSignedIn)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.isInitializing, isInitializing) || other.isInitializing == isInitializing)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.patientId, patientId) || other.patientId == patientId)&&(identical(other.caseId, caseId) || other.caseId == caseId)&&(identical(other.fullName, fullName) || other.fullName == fullName)&&(identical(other.email, email) || other.email == email)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.dateOfBirth, dateOfBirth) || other.dateOfBirth == dateOfBirth)&&(identical(other.primaryCondition, primaryCondition) || other.primaryCondition == primaryCondition)&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthState&&(identical(other.isSignedIn, isSignedIn) || other.isSignedIn == isSignedIn)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.isInitializing, isInitializing) || other.isInitializing == isInitializing)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.patientId, patientId) || other.patientId == patientId)&&(identical(other.caseId, caseId) || other.caseId == caseId)&&(identical(other.fullName, fullName) || other.fullName == fullName)&&(identical(other.email, email) || other.email == email)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.dateOfBirth, dateOfBirth) || other.dateOfBirth == dateOfBirth)&&(identical(other.primaryCondition, primaryCondition) || other.primaryCondition == primaryCondition)&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode)&&(identical(other.hasPassword, hasPassword) || other.hasPassword == hasPassword));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,isSignedIn,isLoading,isInitializing,errorMessage,patientId,caseId,fullName,email,phone,dateOfBirth,primaryCondition,inviteCode);
+int get hashCode => Object.hash(runtimeType,isSignedIn,isLoading,isInitializing,errorMessage,patientId,caseId,fullName,email,phone,dateOfBirth,primaryCondition,inviteCode,hasPassword);
 
 @override
 String toString() {
-  return 'AuthState(isSignedIn: $isSignedIn, isLoading: $isLoading, isInitializing: $isInitializing, errorMessage: $errorMessage, patientId: $patientId, caseId: $caseId, fullName: $fullName, email: $email, phone: $phone, dateOfBirth: $dateOfBirth, primaryCondition: $primaryCondition, inviteCode: $inviteCode)';
+  return 'AuthState(isSignedIn: $isSignedIn, isLoading: $isLoading, isInitializing: $isInitializing, errorMessage: $errorMessage, patientId: $patientId, caseId: $caseId, fullName: $fullName, email: $email, phone: $phone, dateOfBirth: $dateOfBirth, primaryCondition: $primaryCondition, inviteCode: $inviteCode, hasPassword: $hasPassword)';
 }
 
 
@@ -275,7 +281,7 @@ abstract mixin class _$AuthStateCopyWith<$Res> implements $AuthStateCopyWith<$Re
   factory _$AuthStateCopyWith(_AuthState value, $Res Function(_AuthState) _then) = __$AuthStateCopyWithImpl;
 @override @useResult
 $Res call({
- bool isSignedIn, bool isLoading, bool isInitializing, String? errorMessage, String? patientId, String? caseId, String? fullName, String? email, String? phone, String? dateOfBirth, String? primaryCondition, String? inviteCode
+ bool isSignedIn, bool isLoading, bool isInitializing, String? errorMessage, String? patientId, String? caseId, String? fullName, String? email, String? phone, String? dateOfBirth, String? primaryCondition, String? inviteCode, bool hasPassword
 });
 
 
@@ -292,7 +298,7 @@ class __$AuthStateCopyWithImpl<$Res>
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? isSignedIn = null,Object? isLoading = null,Object? isInitializing = null,Object? errorMessage = freezed,Object? patientId = freezed,Object? caseId = freezed,Object? fullName = freezed,Object? email = freezed,Object? phone = freezed,Object? dateOfBirth = freezed,Object? primaryCondition = freezed,Object? inviteCode = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? isSignedIn = null,Object? isLoading = null,Object? isInitializing = null,Object? errorMessage = freezed,Object? patientId = freezed,Object? caseId = freezed,Object? fullName = freezed,Object? email = freezed,Object? phone = freezed,Object? dateOfBirth = freezed,Object? primaryCondition = freezed,Object? inviteCode = freezed,Object? hasPassword = null,}) {
   return _then(_AuthState(
 isSignedIn: null == isSignedIn ? _self.isSignedIn : isSignedIn // ignore: cast_nullable_to_non_nullable
 as bool,isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
@@ -306,7 +312,8 @@ as String?,phone: freezed == phone ? _self.phone : phone // ignore: cast_nullabl
 as String?,dateOfBirth: freezed == dateOfBirth ? _self.dateOfBirth : dateOfBirth // ignore: cast_nullable_to_non_nullable
 as String?,primaryCondition: freezed == primaryCondition ? _self.primaryCondition : primaryCondition // ignore: cast_nullable_to_non_nullable
 as String?,inviteCode: freezed == inviteCode ? _self.inviteCode : inviteCode // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,hasPassword: null == hasPassword ? _self.hasPassword : hasPassword // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

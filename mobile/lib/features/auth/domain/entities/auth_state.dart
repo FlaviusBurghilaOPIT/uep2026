@@ -25,6 +25,10 @@ abstract class AuthState with _$AuthState {
     String? dateOfBirth,
     String? primaryCondition,
     String? inviteCode,
+
+    /// From `GET /auth/me` `has_password` — whether the change-password form
+    /// must require the current password (WI 06).
+    @Default(false) bool hasPassword,
   }) = _AuthState;
 
   factory AuthState.fromJson(Map<String, dynamic> json) =>

@@ -333,4 +333,122 @@ void main() {
       expect(state.isSignedIn, false);
     },
   );
+
+  // --- WI 06: profile update + change password + has_password ---
+
+  test('fetchProfile surfaces has_password from /auth/me', () async {
+    fakeApi.getHandlers['/auth/me'] = () => http.Response(
+      jsonEncode({
+        'id': 'user_pw',
+        'email': 'jane@example.com',
+        'full_name': 'Jane Doe',
+        'has_password': true,
+      }),
+      200,
+    );
+
+    final auth = container.read(authProvider.notifier);
+    final success = await auth.fetchProfile();
+
+    expect(success, true);
+    expect(container.read(authProvider).hasPassword, true);
+  });
+
+  test('updateProfile patches only supplied fields and refreshes state', () async {
+    fakeApi.profileUpdateHandler = (body) => http.Response(
+      jsonEncode({
+        'id': 'user_6',
+        'email': 'jane@example.com',
+        'full_name': 'Jane Smith',
+        'phone': '+39 333 1234567',
+        'has_password': false,
+      }),
+      200,
+    );
+    fakeApi.getHandlers['/auth/me'] = () => http.Response(
+      jsonEncode({
+        'id': 'user_6',
+        'email': 'jane@example.com',
+        'full_name': 'Jane Smith',
+        'phone': '+39 333 1234567',
+        'has_password': false,
+      }),
+      200,
+    );
+
+    final auth = container.read(authProvider.notifier);
+    final success = await auth.updateProfile(
+      fullName: 'Jane Smith',
+      phone: '+39 333 1234567',
+    );
+
+    expect(success, true);
+    final patch = fakeApi.requestsTo('/auth/me', method: 'PATCH').single;
+    expect(patch['body'], {
+      'full_name': 'Jane Smith',
+      'phone': '+39 333 1234567',
+    });
+    // Auth state refreshed from the updated /auth/me.
+    final state = container.read(authProvider);
+    expect(state.fullName, 'Jane Smith');
+    expect(state.phone, '+39 333 1234567');
+  });
+
+  test('updateProfile failure returns false and leaves state untouched', () async {
+    fakeApi.profileUpdateHandler = (body) =>
+        http.Response(jsonEncode({'detail': 'boom'}), 500);
+
+    final auth = container.read(authProvider.notifier);
+    final success = await auth.updateProfile(phone: '123');
+
+    expect(success, false);
+    expect(container.read(authProvider).phone, isNull);
+  });
+
+  test('changePassword success returns null and marks hasPassword', () async {
+    fakeApi.changePasswordHandler = (body) =>
+        http.Response(jsonEncode({'message': 'Password updated'}), 200);
+
+    final auth = container.read(authProvider.notifier);
+    final error = await auth.changePassword(newPassword: 'brandnewpassword');
+
+    expect(error, isNull);
+    final posts = fakeApi.requestsTo('/auth/change-password').single;
+    expect(posts['body'], {'new_password': 'brandnewpassword'});
+    expect(container.read(authProvider).hasPassword, true);
+  });
+
+  test('changePassword forwards the current password when supplied', () async {
+    fakeApi.changePasswordHandler = (body) =>
+        http.Response(jsonEncode({'message': 'Password updated'}), 200);
+
+    final auth = container.read(authProvider.notifier);
+    final error = await auth.changePassword(
+      newPassword: 'brandnewpassword',
+      currentPassword: 'oldpassword',
+    );
+
+    expect(error, isNull);
+    final posts = fakeApi.requestsTo('/auth/change-password').single;
+    expect(posts['body'], {
+      'new_password': 'brandnewpassword',
+      'current_password': 'oldpassword',
+    });
+  });
+
+  test('changePassword surfaces the backend error detail', () async {
+    fakeApi.changePasswordHandler = (body) => http.Response(
+      jsonEncode({'detail': 'Current password is incorrect'}),
+      400,
+    );
+
+    final auth = container.read(authProvider.notifier);
+    final error = await auth.changePassword(
+      newPassword: 'brandnewpassword',
+      currentPassword: 'wrong',
+    );
+
+    expect(error, 'Current password is incorrect');
+    expect(container.read(authProvider).hasPassword, false);
+  });
 }

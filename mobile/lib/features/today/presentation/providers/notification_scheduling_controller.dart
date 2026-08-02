@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/notifications/notification_prefs_keys.dart';
 import '../../../../core/notifications/notification_scheduler.dart';
 import '../../../../core/providers/shared_preferences_provider.dart';
 import '../../domain/entities/agenda_entities.dart';
@@ -37,6 +38,10 @@ class NotificationSchedulingController {
   /// slot times never linger.
   Future<void> scheduleForSlots(List<AgendaSlot> slots) async {
     await scheduler.cancelAll();
+    // WI 06 / Req 25: the Profile "Medication reminders" toggle gates local
+    // scheduling — when off, the previous batch stays cancelled and nothing
+    // new is scheduled.
+    if (!(prefs.getBool(NotificationPrefsKeys.medReminders) ?? true)) return;
     for (final slot in slots) {
       if (!_remindable.contains(slot.state)) continue;
       await scheduler.scheduleOne(

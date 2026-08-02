@@ -1,3 +1,4 @@
+import 'package:remotecare/core/notifications/notification_prefs_keys.dart';
 import 'package:remotecare/features/today/domain/entities/agenda_entities.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:remotecare/features/today/domain/entities/agenda_entities.dart';
@@ -130,4 +131,24 @@ void main() {
       expect(await controller().permissionsGranted(), isTrue);
     },
   );
+
+  group('WI 06 profile toggle gating (Req 25)', () {
+    test('schedules nothing when the med-reminders pref is off', () async {
+      await prefs.setBool(NotificationPrefsKeys.medReminders, false);
+
+      await controller().scheduleForSlots([_slot()]);
+
+      expect(scheduler.cancelAllCalls, 1);
+      expect(scheduler.scheduled, isEmpty);
+    });
+
+    test('schedules normally when the pref is on or absent (default)', () async {
+      await controller().scheduleForSlots([_slot()]);
+      expect(scheduler.scheduled, hasLength(1));
+
+      await prefs.setBool(NotificationPrefsKeys.medReminders, true);
+      await controller().scheduleForSlots([_slot()]);
+      expect(scheduler.scheduled, hasLength(1));
+    });
+  });
 }

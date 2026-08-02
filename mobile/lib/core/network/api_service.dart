@@ -49,6 +49,21 @@ abstract class ApiService {
   /// WI 05 · `GET /cases/{caseId}/recommendations` — free-text care
   /// instructions for the Recovery screen.
   Future<http.Response> getCaseRecommendations({required String caseId});
+
+  /// WI 06 · `PATCH /auth/me` — partial profile update; only non-null
+  /// fields are sent so the backend preserves omitted values.
+  Future<http.Response> updateProfile({
+    String? fullName,
+    String? phone,
+    String? dateOfBirth,
+  });
+
+  /// WI 06 · `POST /auth/change-password` — [currentPassword] is required
+  /// only when the user already has a password (`has_password` on /auth/me).
+  Future<http.Response> changePassword({
+    required String newPassword,
+    String? currentPassword,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -160,6 +175,31 @@ class HttpApiService implements ApiService {
   @override
   Future<http.Response> getCaseRecommendations({required String caseId}) {
     return get('/cases/$caseId/recommendations');
+  }
+
+  @override
+  Future<http.Response> updateProfile({
+    String? fullName,
+    String? phone,
+    String? dateOfBirth,
+  }) {
+    final body = <String, dynamic>{
+      'full_name': ?fullName,
+      'phone': ?phone,
+      'date_of_birth': ?dateOfBirth,
+    };
+    return _patch('/auth/me', body);
+  }
+
+  @override
+  Future<http.Response> changePassword({
+    required String newPassword,
+    String? currentPassword,
+  }) {
+    return post('/auth/change-password', {
+      'new_password': newPassword,
+      'current_password': ?currentPassword,
+    });
   }
 }
 

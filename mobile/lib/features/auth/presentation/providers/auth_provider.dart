@@ -87,6 +87,7 @@ class AuthNotifier extends Notifier<AuthState> {
           fullName: profile.fullName,
           phone: profile.phone,
           dateOfBirth: profile.dateOfBirth,
+          hasPassword: profile.hasPassword,
           isSignedIn: true,
         );
 
@@ -202,6 +203,43 @@ class AuthNotifier extends Notifier<AuthState> {
     required String phone,
   }) {
     state = state.copyWith(fullName: fullName, email: email, phone: phone);
+  }
+
+  /// WI 06 · `PATCH /auth/me` — partial profile update. Only non-null
+  /// fields are sent; on success the auth state is refreshed from
+  /// `GET /auth/me` so the UI renders server truth.
+  Future<bool> updateProfile({
+    String? fullName,
+    String? phone,
+    String? dateOfBirth,
+  }) async {
+    final success = await _repo.updateProfile(
+      fullName: fullName,
+      phone: phone,
+      dateOfBirth: dateOfBirth,
+    );
+    if (success) {
+      await fetchProfile();
+    }
+    return success;
+  }
+
+  /// WI 06 · `POST /auth/change-password` — returns `null` on success or
+  /// the backend error detail (e.g. "Current password is incorrect") for
+  /// honest display. [currentPassword] is required only when
+  /// [AuthState.hasPassword] is true.
+  Future<String?> changePassword({
+    required String newPassword,
+    String? currentPassword,
+  }) async {
+    final error = await _repo.changePassword(
+      newPassword: newPassword,
+      currentPassword: currentPassword,
+    );
+    if (error == null) {
+      state = state.copyWith(hasPassword: true);
+    }
+    return error;
   }
 
   Future<void> signOut() async {

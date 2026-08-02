@@ -24,6 +24,12 @@ class FakeApiService implements ApiService {
   FutureOr<http.Response> Function(String patientId)? caseHandler;
   FutureOr<http.Response> Function(String caseId)? recommendationsHandler;
 
+  /// WI 06 profile fakes. Handlers may throw to simulate a network failure.
+  FutureOr<http.Response> Function(Map<String, dynamic> body)?
+  profileUpdateHandler;
+  FutureOr<http.Response> Function(Map<String, dynamic> body)?
+  changePasswordHandler;
+
   String? savedToken;
   final List<Map<String, dynamic>> requestsLog = [];
 
@@ -158,6 +164,46 @@ class FakeApiService implements ApiService {
     final handler = recommendationsHandler;
     if (handler != null) {
       return await handler(caseId);
+    }
+    return http.Response(jsonEncode({'detail': 'Not found'}), 404);
+  }
+
+  @override
+  Future<http.Response> updateProfile({
+    String? fullName,
+    String? phone,
+    String? dateOfBirth,
+  }) async {
+    final body = <String, dynamic>{
+      'full_name': ?fullName,
+      'phone': ?phone,
+      'date_of_birth': ?dateOfBirth,
+    };
+    requestsLog.add({'method': 'PATCH', 'path': '/auth/me', 'body': body});
+    final handler = profileUpdateHandler;
+    if (handler != null) {
+      return await handler(body);
+    }
+    return http.Response(jsonEncode({'detail': 'Not found'}), 404);
+  }
+
+  @override
+  Future<http.Response> changePassword({
+    required String newPassword,
+    String? currentPassword,
+  }) async {
+    final body = <String, dynamic>{
+      'new_password': newPassword,
+      'current_password': ?currentPassword,
+    };
+    requestsLog.add({
+      'method': 'POST',
+      'path': '/auth/change-password',
+      'body': body,
+    });
+    final handler = changePasswordHandler;
+    if (handler != null) {
+      return await handler(body);
     }
     return http.Response(jsonEncode({'detail': 'Not found'}), 404);
   }

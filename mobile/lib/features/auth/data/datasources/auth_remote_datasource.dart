@@ -23,11 +23,51 @@ class AuthRemoteDatasource {
           fullName: data['full_name'] as String?,
           phone: data['phone'] as String?,
           dateOfBirth: data['date_of_birth'] as String?,
+          hasPassword: data['has_password'] as bool? ?? false,
           isSignedIn: true,
         );
       }
     } catch (_) {}
     return null;
+  }
+
+  /// `PATCH /auth/me` (WI 06) — partial profile update; only non-null
+  /// fields are sent so the backend preserves omitted values.
+  Future<bool> updateProfile({
+    String? fullName,
+    String? phone,
+    String? dateOfBirth,
+  }) async {
+    try {
+      final res = await _api.updateProfile(
+        fullName: fullName,
+        phone: phone,
+        dateOfBirth: dateOfBirth,
+      );
+      return res.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// `POST /auth/change-password` (WI 06) — returns `null` on success or
+  /// the backend `detail` message on failure (e.g. "Current password is
+  /// incorrect") so callers can surface honest feedback.
+  Future<String?> changePassword({
+    required String newPassword,
+    String? currentPassword,
+  }) async {
+    try {
+      final res = await _api.changePassword(
+        newPassword: newPassword,
+        currentPassword: currentPassword,
+      );
+      if (res.statusCode == 200) return null;
+      final data = jsonDecode(res.body);
+      return data['detail'] as String? ?? 'Password change failed';
+    } catch (_) {
+      return 'Network error';
+    }
   }
 
   /// `GET /patients/{patientId}/case`

@@ -58,6 +58,26 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<String?> getToken() => _remote.getToken();
 
   @override
+  Future<bool> updateProfile({
+    String? fullName,
+    String? phone,
+    String? dateOfBirth,
+  }) => _remote.updateProfile(
+    fullName: fullName,
+    phone: phone,
+    dateOfBirth: dateOfBirth,
+  );
+
+  @override
+  Future<String?> changePassword({
+    required String newPassword,
+    String? currentPassword,
+  }) => _remote.changePassword(
+    newPassword: newPassword,
+    currentPassword: currentPassword,
+  );
+
+  @override
   Future<void> setToken(String token) => _remote.setToken(token);
 
   @override
