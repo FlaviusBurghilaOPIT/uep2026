@@ -13,3 +13,6 @@ openai==1.30.0
 boto3==1.34.144
 tiktoken==0.7.0
 numpy==1.26.4
+openinference-instrumentation==0.1.21
+wrapt==1.16.0
+pytest==8.2.0
