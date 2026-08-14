@@ -1,6 +1,25 @@
-from datetime import datetime
+import enum
+from datetime import date, datetime, timezone
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_serializer
+
+from app.models import DoseStatus
+
+
+class FrequencyCode(str, enum.Enum):
+    QD  = "QD"
+    BID = "BID"
+    TID = "TID"
+    QID = "QID"
+    PRN = "PRN"
+
+
+class IntentCategory(str, enum.Enum):
+    general_question    = "general_question"
+    medication_query    = "medication_query"
+    dose_change_request = "dose_change_request"
+    diagnosis_request   = "diagnosis_request"
+
 
 
 class UserCreate(BaseModel):
@@ -14,10 +33,34 @@ class UserResponse(BaseModel):
     email: str
     full_name: str
     role: str
+    status: str | None = None
+    phone: str | None = None
+    date_of_birth: str | None = None
+    invite_code: str | None = None
     created_at: datetime
+    # Derived from password_hash (User.has_password property) so clients know
+    # whether change-password must supply the current password.
+    has_password: bool = False
 
     class Config:
         from_attributes = True
+
+
+class UserUpdateRequest(BaseModel):
+    """PATCH /auth/me — all fields optional; only supplied fields update."""
+
+    full_name: str | None = None
+    phone: str | None = None
+    date_of_birth: str | None = None
+
+
+class TriageRosterPage(BaseModel):
+    """Paginated query-by-example roster for the triage dashboard."""
+
+    items: list[UserResponse]
+    total: int
+    page: int
+    size: int
 
 
 class LoginRequest(BaseModel):
@@ -30,9 +73,80 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
+class PatientInviteRequest(BaseModel):
+    email: str
+    full_name: str
+    surgery_type: str
+    # Required at intake: the clinician is the source of truth for DOB.
+    date_of_birth: str
+    # Optional: captured at intake for new cases; existing cases pre-date it.
+    surgery_date: str | None = None
+    emergency_contact_phone: str | None = None
+
+
+class PatientInviteResponse(BaseModel):
+    patient_id: str
+    invite_code: str
+    email: str
+    full_name: str
+
+
+class VerifyInviteRequest(BaseModel):
+    email: str
+    invite_code: str
+
+
+class VerifyInviteResponse(BaseModel):
+    email: str
+    full_name: str
+    invite_code: str
+    status: str
+
+
+class CompleteOnboardingRequest(BaseModel):
+    email: str
+    invite_code: str
+    # Optional since DOB is pre-set at clinician intake; when supplied it
+    # updates the stored value, when omitted the existing value is preserved.
+    date_of_birth: str | None = None
+    # Optional: pre-filled from intake and editable at onboarding (Req 9);
+    # when supplied it updates the stored name, when omitted it is preserved.
+    full_name: str | None = None
+    phone: str
+    # Hybrid auth: when present, hashed to password_hash at onboarding.
+    # Min length 8 enforced server-side per spec Req 1; None stays valid.
+    password: str | None = Field(default=None, min_length=8)
+
+
+class ChangePasswordRequest(BaseModel):
+    # Min length 8 enforced server-side per spec Req 1.
+    new_password: str = Field(min_length=8)
+    # Required only when the user already has a password_hash; a code-only
+    # (passwordless) user may set a password without supplying it.
+    current_password: str | None = None
+
+
+class ChangePasswordResponse(BaseModel):
+    message: str = "Password updated"
+
+
+class PatientRequestCodeRequest(BaseModel):
+    email: str
+
+
+class PatientRequestCodeResponse(BaseModel):
+    message: str = "If that email exists, a code was sent."
+
+
+class PatientVerifyCodeRequest(BaseModel):
+    email: str
+    code: str
+
+
 class CaseCreate(BaseModel):
     patient_id: str
     surgery_type: str
+    surgery_date: str | None = None
     emergency_contact_name: str | None = None
     emergency_contact_phone: str | None = None
 
@@ -42,31 +156,12 @@ class CaseResponse(BaseModel):
     clinician_id: str
     patient_id: str
     surgery_type: str
+    surgery_date: str | None = None
+    # Patient DOB surfaced on the case response so clients can derive Day N.
+    patient_date_of_birth: str | None = None
     status: str
     emergency_contact_name: str | None
     emergency_contact_phone: str | None
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class MedicationCreate(BaseModel):
-    name: str
-    dose: str
-    schedule_text: str
-    duration: str
-    notes: str | None = None
-
-
-class MedicationResponse(BaseModel):
-    id: str
-    case_id: str
-    name: str
-    dose: str
-    schedule_text: str
-    duration: str
-    notes: str | None
     created_at: datetime
 
     class Config:
@@ -89,9 +184,34 @@ class ReminderResponse(BaseModel):
         from_attributes = True
 
 
+class MedicationCreate(BaseModel):
+    name:      str
+    dose:      str
+    frequency: FrequencyCode
+    duration:  str
+    notes:     str | None = None
+
+
+class MedicationResponse(BaseModel):
+    id:             str
+    case_id:        str
+    name:           str
+    dose:           str
+    frequency:      FrequencyCode
+    schedule_times: list[str] = []
+    duration:       str
+    notes:          str | None
+    created_at:     datetime
+    scheduled_reminders: list[ReminderResponse] = []
+
+    class Config:
+        from_attributes = True
+
+
 class ChatRequest(BaseModel):
-    case_id: str
-    message: str
+    case_id:         str
+    message:         str
+    intent_category: IntentCategory = IntentCategory.general_question
 
 
 class ChatResponse(BaseModel):
@@ -136,3 +256,160 @@ class WikiArticleResponse(BaseModel):
 class WikiArticleUpdate(BaseModel):
     content_md: str | None = None
     status: str | None = None
+
+
+class RecommendationCreate(BaseModel):
+    text: str | None = None
+    content: str | None = None
+
+
+class RecommendationResponse(BaseModel):
+    id: str
+    case_id: str
+    text: str
+    content: str | None = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class DeviceTokenRegisterRequest(BaseModel):
+    token: str
+    platform: str = "ios"
+
+
+class DeviceTokenResponse(BaseModel):
+    id: int
+    user_id: str
+    token: str
+    platform: str
+    is_active: bool
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class SendTestPushRequest(BaseModel):
+    user_id: str
+    title: str
+    body: str
+    data_payload: dict | None = None
+
+
+
+
+class TriageResolveRequest(BaseModel):
+    outreach_method: str
+    clinical_note: str
+
+
+class TriageResolutionResponse(BaseModel):
+    id: str
+    patient_id: str
+    clinician_id: str
+    outreach_method: str
+    clinical_note: str
+    resolved_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class TriageResolutionLatest(BaseModel):
+    patient_id: str
+    resolved_at: datetime
+
+
+class DoseLogDetailResponse(BaseModel):
+    id: str
+    scheduled_reminder_id: str
+    status: str
+    logged_at: datetime | None
+    medication_name: str | None
+    scheduled_time: datetime | None
+
+
+class AnalyticsEventIn(BaseModel):
+    event_name: str
+    properties: dict | None = None
+
+
+class TriageResponseStats(BaseModel):
+    median_seconds: float | None
+    samples: int
+    resolutions_total: int
+
+
+# --- Adherence pipeline (spec: ai_specs/2026-07-26-adherence-pipeline-backend-spec.md §6) ---
+
+
+class SlotState(str, enum.Enum):
+    upcoming = "upcoming"
+    due = "due"
+    overdue = "overdue"
+    missed = "missed"
+    taken = "taken"
+    skipped = "skipped"
+
+
+class AgendaSlot(BaseModel):
+    slot_id: str
+    medication_id: str
+    medication_name: str
+    dose: str
+    notes: str | None
+    scheduled_time: datetime
+    state: SlotState
+    logged_at: datetime | None = None
+    dose_log_id: str | None = None
+    previous_status: DoseStatus | None = None
+
+    @field_serializer("scheduled_time", "logged_at")
+    def _serialize_as_utc_z(self, value: datetime | None) -> str | None:
+        # Spec E2: stored naive datetimes are interpreted as UTC and
+        # serialized with a trailing Z.
+        if value is None:
+            return None
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        return value.isoformat().replace("+00:00", "Z")
+
+
+class AgendaPrnMedication(BaseModel):
+    medication_id: str
+    medication_name: str
+    dose: str
+    notes: str | None = None
+
+
+class AgendaResponse(BaseModel):
+    date: date
+    slots: list[AgendaSlot] = []
+    prn: list[AgendaPrnMedication] = []
+
+
+class AdhocLogRequest(BaseModel):
+    medication_id: str
+    status: DoseStatus
+    taken_at: datetime | None = None
+    idempotency_key: str
+
+
+class AdhocLogResponse(BaseModel):
+    slot: AgendaSlot
+    dose_log: "DoseLogCorrectResponse"
+
+
+class DoseLogCorrectRequest(BaseModel):
+    status: DoseStatus
+
+
+class DoseLogCorrectResponse(BaseModel):
+    id: str
+    scheduled_reminder_id: str
+    status: DoseStatus
+    previous_status: DoseStatus | None = None
+    logged_at: datetime | None = None
+    corrected_at: datetime | None = None

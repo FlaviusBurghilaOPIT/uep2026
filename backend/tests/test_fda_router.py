@@ -168,7 +168,21 @@ def test_approve_does_not_duplicate_case_link_for_multiple_matching_medications(
 
 def test_drug_info_returns_llm_summary_with_source(client, db_session, monkeypatch):
     monkeypatch.setenv("FDA_PROVIDER", "fixture")
-    monkeypatch.setenv("LLM_PROVIDER", "mock")
+    
+    class MockMessage:
+        content = "This is a mock AI response. The real AI will answer here."
+        
+    class MockChoice:
+        message = MockMessage()
+        
+    class MockResponse:
+        choices = [MockChoice()]
+        
+    async def mock_create(*args, **kwargs):
+        return MockResponse()
+        
+    monkeypatch.setattr("app.routers.fda.client_async.chat.completions.create", mock_create)
+    
     clinician = _make_clinician(db_session)
 
     response = client.get("/fda/drug/aspirin", headers=_auth_headers(clinician))

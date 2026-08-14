@@ -40,3 +40,11 @@ build/
 # Database
 *.sqlite3
 *.db
+
+# AI coding tools / local agent state (not app source, machine-specific)
+.claude/
+.agents/
+.serena/
+agent/
+skills-lock.json
+.superpowers/

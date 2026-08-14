@@ -1,70 +1,104 @@
-import { useState } from 'react'
-import axios from 'axios'
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { apiFetch } from '../api/client'
+import { trackEvent } from '../api/analytics'
+import { useTranslation } from '../i18n/useTranslation'
+import { FormField, NumberField, Select } from '../components/ui'
 
-const API_URL = 'http://localhost:8001'
+const FREQUENCY_TIMES: Record<string, string[]> = {
+  QD:  ['08:00'],
+  BID: ['08:00', '20:00'],
+  TID: ['08:00', '13:00', '20:00'],
+  QID: ['08:00', '12:00', '16:00', '20:00'],
+  PRN: [],
+}
+
+type CaseInfo = {
+  id: string
+  surgery_type: string
+}
 
 function MedicationsPage() {
+  const { caseId } = useParams<{ caseId: string }>()
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const [caseInfo, setCaseInfo] = useState<CaseInfo | null>(null)
   const [name, setName] = useState('')
   const [dose, setDose] = useState('')
-  const [frequency, setFrequency] = useState('')
-  const [durationDays, setDurationDays] = useState('')
+  const [frequency, setFrequency] = useState<'QD'|'BID'|'TID'|'QID'|'PRN'>('QD')
+  const [durationDays, setDurationDays] = useState<number | null>(null)
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
+  const [missing, setMissing] = useState<string[]>([])
 
-  const handleSubmit = async () => {
-    if (!name || !dose || !frequency || !durationDays) {
-      setError('Please fill in all required fields')
+  useEffect(() => {
+    if (!caseId) return
+    apiFetch<CaseInfo>(`/cases/${caseId}`)
+      .then(setCaseInfo)
+      .catch(() => setCaseInfo(null))
+  }, [caseId])
+
+  const reminderTimes = FREQUENCY_TIMES[frequency] ?? []
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    const missingFields: string[] = []
+    if (!name.trim()) missingFields.push('drug-name')
+    if (!dose.trim()) missingFields.push('dose')
+    if (durationDays === null || durationDays < 1) missingFields.push('duration-days')
+    setMissing(missingFields)
+    if (missingFields.length > 0) {
+      setError(t('medication.errorMissingFields'))
       return
     }
+
     setLoading(true)
+    setError('')
     try {
-      const token = localStorage.getItem('token') || 'faketoken'
-      await axios.post(
-        API_URL + '/cases/case-001/medications',
-        {
-          name,
-          dose,
+      await apiFetch(`/cases/${caseId}/medications`, {
+        method: 'POST',
+        body: JSON.stringify({
+          name: name.trim(),
+          dose: dose.trim(),
           frequency,
-          duration_days: parseInt(durationDays),
-          notes
-        },
-        { headers: { Authorization: 'Bearer ' + token } }
-      )
+          duration: `${durationDays} days`,
+          notes: notes.trim(),
+        }),
+      })
       setSuccess(true)
-    } catch (err) {
-      setError('Failed to add medication. Please try again.')
+      if (caseId) trackEvent('web.medication.prescribed', { case_id: caseId })
+    } catch (err: unknown) {
+      setError((err as Error).message || t('medication.errorAddFailed'))
     } finally {
       setLoading(false)
     }
   }
 
   const openFDA = () => {
-    window.open('/fda?drug=' + name.toLowerCase(), '_blank')
-  }
-
-  const openFDAWebsite = () => {
-    window.open('https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=BasicSearch.process&query=' + name.toLowerCase(), '_blank')
+    // New tab so the in-progress prescription form is not lost
+    window.open(`/fda?drug=${encodeURIComponent(name.trim().toLowerCase())}`, '_blank')
   }
 
   if (success) {
     return (
       <div style={styles.container}>
         <div style={styles.card}>
-          <h1 style={styles.title}>Medication Added</h1>
-          <p style={styles.subtitle}>The medication has been prescribed successfully.</p>
+          <h1 style={styles.title}>{t('medication.successTitle')}</h1>
+          <p style={styles.subtitle}>{t('medication.successSubtitle')}</p>
           <button
             style={styles.button}
-            onClick={() => window.location.href = '/cases/case-001/medications/list'}
+            onClick={() => navigate(`/cases/${caseId}/medications/list`)}
           >
-            View All Medications
+            {t('medication.viewAll')}
           </button>
           <button
             style={styles.backButton}
-            onClick={() => window.location.href = '/patients'}
+            onClick={() => navigate('/patients')}
           >
-            Back to Patients
+            {t('medication.backToPatients')}
           </button>
         </div>
       </div>
@@ -74,75 +108,112 @@ function MedicationsPage() {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>Prescribe Medication</h1>
-        <p style={styles.subtitle}>Case: Knee Replacement</p>
-
-        <label style={styles.label}>Drug Name</label>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <input
-            style={{ ...styles.input, flex: 1 }}
-            type="text"
-            placeholder="e.g. Ibuprofen"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          {name && (
-            <button style={styles.fdaButton} onClick={openFDA}>
-              FDA Check
-            </button>
-          )}
-        </div>
-
-        {name && (
-          <button style={styles.fdaExternalLink} onClick={openFDAWebsite}>
-            View on FDA Website
-          </button>
+        <h1 style={styles.title}>{t('medication.title')}</h1>
+        {caseInfo && (
+          <p style={styles.subtitle}>
+            {t('medication.caseSubtitle').replace('{surgery}', caseInfo.surgery_type)}
+          </p>
         )}
 
-        <label style={styles.label}>Dose</label>
-        <input
-          style={styles.input}
-          type="text"
-          placeholder="e.g. 400mg"
-          value={dose}
-          onChange={(e) => setDose(e.target.value)}
-        />
+        <form onSubmit={handleSubmit} style={styles.form} noValidate>
+          <FormField
+            label={t('medication.drugName')}
+            invalid={missing.includes('drug-name')}
+            error={error || undefined}
+          >
+            {(control) => (
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <input
+                  {...control}
+                  style={{ ...styles.input, flex: 1 }}
+                  type="text"
+                  placeholder={t('medication.drugNamePlaceholder')}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+                {name.trim() && (
+                  <button type="button" style={styles.fdaWarningButton} onClick={openFDA}>
+                    {t('medication.viewFdaSafety')}
+                  </button>
+                )}
+              </div>
+            )}
+          </FormField>
 
-        <label style={styles.label}>Frequency</label>
-        <input
-          style={styles.input}
-          type="text"
-          placeholder="e.g. 3x daily"
-          value={frequency}
-          onChange={(e) => setFrequency(e.target.value)}
-        />
+          <FormField
+            label={t('medication.dose')}
+            invalid={missing.includes('dose')}
+          >
+            {(control) => (
+              <input
+                {...control}
+                style={styles.input}
+                type="text"
+                placeholder={t('medication.dosePlaceholder')}
+                value={dose}
+                onChange={(e) => setDose(e.target.value)}
+              />
+            )}
+          </FormField>
 
-        <label style={styles.label}>Duration (days)</label>
-        <input
-          style={styles.input}
-          type="number"
-          placeholder="e.g. 14"
-          value={durationDays}
-          onChange={(e) => setDurationDays(e.target.value)}
-        />
+          <FormField
+            label={t('medication.frequencyLabel')}
+            hint={
+              reminderTimes.length > 0
+                ? `${t('medication.remindersAt')} ${reminderTimes.join(', ')}`
+                : t('medication.noReminders')
+            }
+          >
+            {(control) => (
+              <Select
+                {...control}
+                value={frequency}
+                onChange={(v) => setFrequency(v as 'QD'|'BID'|'TID'|'QID'|'PRN')}
+                options={[
+                  { value: 'QD', label: t('medication.frequencyQD') },
+                  { value: 'BID', label: t('medication.frequencyBID') },
+                  { value: 'TID', label: t('medication.frequencyTID') },
+                  { value: 'QID', label: t('medication.frequencyQID') },
+                  { value: 'PRN', label: t('medication.frequencyPRN') },
+                ]}
+              />
+            )}
+          </FormField>
 
-        <label style={styles.label}>Notes (optional)</label>
-        <textarea
-          style={styles.textarea}
-          placeholder="e.g. Take with food"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-        />
+          <FormField
+            label={t('medication.durationDays')}
+            invalid={missing.includes('duration-days')}
+          >
+            {(control) => (
+              <NumberField
+                {...control}
+                value={durationDays}
+                onChange={setDurationDays}
+                placeholder={t('medication.durationPlaceholder')}
+              />
+            )}
+          </FormField>
 
-        {error && <p style={styles.error}>{error}</p>}
+          <FormField label={t('medication.notesOptional')}>
+            {(control) => (
+              <textarea
+                {...control}
+                style={styles.textarea}
+                placeholder={t('medication.notesPlaceholder')}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
+            )}
+          </FormField>
 
-        <button style={styles.button} onClick={handleSubmit} disabled={loading}>
-          {loading ? 'Adding...' : 'Add Medication'}
-        </button>
+          <button style={styles.button} type="submit" disabled={loading}>
+            {loading ? t('medication.adding') : t('medication.addMedication')}
+          </button>
 
-        <button style={styles.backButton} onClick={() => window.location.href = '/patients'}>
-          Cancel
-        </button>
+          <button style={styles.backButton} type="button" onClick={() => navigate('/patients')}>
+            {t('medication.cancel')}
+          </button>
+        </form>
       </div>
     </div>
   )
@@ -177,24 +248,22 @@ const styles = {
     color: '#6b7280',
     margin: 0
   },
-  label: {
-    fontSize: '13px',
-    fontWeight: '500',
-    color: '#111827'
+  form: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '16px'
   },
   input: {
     padding: '10px 12px',
     borderRadius: '8px',
     border: '1px solid #e5e7eb',
-    fontSize: '15px',
-    outline: 'none'
+    fontSize: '15px'
   },
   textarea: {
     padding: '10px 12px',
     borderRadius: '8px',
     border: '1px solid #e5e7eb',
     fontSize: '15px',
-    outline: 'none',
     resize: 'vertical' as const,
     minHeight: '80px'
   },
@@ -216,31 +285,16 @@ const styles = {
     fontSize: '15px',
     cursor: 'pointer'
   },
-  fdaButton: {
+  fdaWarningButton: {
     padding: '8px 12px',
-    backgroundColor: '#fef9f0',
+    backgroundColor: '#fffbe6',
     color: '#d97706',
     border: '1px solid #fde68a',
     borderRadius: '8px',
     fontSize: '13px',
     cursor: 'pointer',
-    fontWeight: '500' as const
-  },
-  fdaExternalLink: {
-    padding: '6px 12px',
-    backgroundColor: '#f0fdf4',
-    color: '#16a34a',
-    border: '1px solid #bbf7d0',
-    borderRadius: '8px',
-    fontSize: '12px',
-    cursor: 'pointer',
     fontWeight: '500' as const,
-    textAlign: 'left' as const
-  },
-  error: {
-    color: '#dc2626',
-    fontSize: '13px',
-    margin: 0
+    whiteSpace: 'nowrap' as const
   }
 }
 

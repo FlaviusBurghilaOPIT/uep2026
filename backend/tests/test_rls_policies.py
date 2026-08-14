@@ -5,9 +5,21 @@ import pytest
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
+def _is_postgres_available() -> bool:
+    db_url = os.getenv("DATABASE_URL", "")
+    if "postgresql" not in db_url:
+        return False
+    try:
+        engine = create_engine(_app_role_url(db_url), connect_args={"connect_timeout": 2})
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        return True
+    except Exception:
+        return False
+
 pytestmark = pytest.mark.skipif(
-    "postgresql" not in os.getenv("DATABASE_URL", ""),
-    reason="RLS policies only exist on Postgres; run with the dev docker-compose db up",
+    not _is_postgres_available(),
+    reason="RLS policies require a running PostgreSQL instance with remotecare_app role",
 )
 
 # The migration's RLS policies apply to any ordinary (non-superuser,

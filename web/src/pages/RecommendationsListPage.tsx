@@ -1,68 +1,99 @@
-import { useEffect, useState } from 'react'
-import axios from 'axios'
-
-const API_URL = 'http://localhost:8001'
+import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from '../i18n'
+import { useNavigate, useParams } from 'react-router-dom'
+import { apiFetch } from '../api/client'
 
 type Recommendation = {
   id: string
-  content: string
+  content?: string
+  text?: string
   created_at: string
 }
 
+type CaseInfo = {
+  id: string
+  surgery_type: string
+}
+
 function RecommendationsListPage() {
+  const { t, language } = useTranslation()
+  const { caseId } = useParams<{ caseId: string }>()
+  const navigate = useNavigate()
   const [recommendations, setRecommendations] = useState<Recommendation[]>([])
+  const [caseInfo, setCaseInfo] = useState<CaseInfo | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+
+  const fetchRecommendations = useCallback(async () => {
+    setLoading(true)
+    setError(false)
+    try {
+      const data = await apiFetch<Recommendation[]>(`/cases/${caseId}/recommendations`)
+      setRecommendations(data)
+    } catch (err) {
+      console.error('Failed to fetch recommendations', err)
+      setError(true)
+    } finally {
+      setLoading(false)
+    }
+  }, [caseId])
 
   useEffect(() => {
-    const fetchRecommendations = async () => {
-      try {
-        const token = localStorage.getItem('token') || 'faketoken'
-        const response = await axios.get(`${API_URL}/cases/case-001/recommendations`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        setRecommendations(response.data)
-      } catch (err) {
-        console.error('Failed to fetch recommendations', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchRecommendations()
-  }, [])
+    apiFetch<CaseInfo>(`/cases/${caseId}`)
+      .then(setCaseInfo)
+      .catch(() => setCaseInfo(null))
+  }, [caseId, fetchRecommendations])
 
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h1 style={styles.title}>Recovery Recommendations</h1>
-        <p style={styles.subtitle}>Case: Knee Replacement — Maria Rossi</p>
+        <h1 style={styles.title}>{t('recommendationsList.title')}</h1>
+        {caseInfo && (
+          <p style={styles.subtitle}>{t('recommendationsList.case')}: {caseInfo.surgery_type}</p>
+        )}
       </div>
 
       <button
         style={styles.addButton}
-        onClick={() => window.location.href = '/cases/case-001/recommendations'}
+        onClick={() => navigate(`/cases/${caseId}/recommendations`)}
       >
-        + Add Recommendation
+        + {t('recommendationsList.addRecommendation')}
       </button>
 
-      {loading && <p style={styles.loading}>Loading...</p>}
+      {loading && <p style={styles.loading}>{t('recommendationsList.loading')}</p>}
 
-      <div style={styles.list}>
-        {recommendations.map((rec) => (
-          <div key={rec.id} style={styles.card}>
-            <p style={styles.content}>{rec.content}</p>
-            <p style={styles.date}>
-              Added: {new Date(rec.created_at).toLocaleDateString()}
-            </p>
-          </div>
-        ))}
-      </div>
+      {!loading && error && (
+        <div style={styles.errorBox} role="alert">
+          <p style={styles.errorText}>{t('common.errorLoading')}</p>
+          <button style={styles.retryButton} onClick={fetchRecommendations}>
+            {t('common.retry')}
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && recommendations.length === 0 && (
+        <p style={styles.empty}>{t('recommendationsList.empty')}</p>
+      )}
+
+      {!loading && !error && (
+        <div style={styles.list}>
+          {recommendations.map((rec) => (
+            <div key={rec.id} style={styles.card}>
+              <p style={styles.content}>{rec.content || rec.text || ''}</p>
+              <p style={styles.date}>
+                {t('recommendationsList.added')}: {new Date(rec.created_at).toLocaleDateString(language)}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
 
       <button
         style={styles.backButton}
-        onClick={() => window.location.href = '/patients'}
+        onClick={() => navigate('/patients')}
       >
-        Back to Patients
+        {t('recommendationsList.backToPatients')}
       </button>
     </div>
   )
@@ -101,6 +132,34 @@ const styles = {
   loading: {
     color: '#6b7280',
     fontSize: '14px'
+  },
+  errorBox: {
+    backgroundColor: '#fef2f2',
+    border: '1px solid #fecaca',
+    borderRadius: '12px',
+    padding: '24px',
+    textAlign: 'center' as const,
+    marginBottom: '24px'
+  },
+  errorText: {
+    color: '#b91c1c',
+    fontSize: '14px',
+    margin: '0 0 12px 0'
+  },
+  retryButton: {
+    padding: '8px 20px',
+    backgroundColor: '#b91c1c',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '14px',
+    cursor: 'pointer'
+  },
+  empty: {
+    color: '#64748b',
+    fontSize: '14px',
+    fontStyle: 'italic' as const,
+    marginBottom: '24px'
   },
   list: {
     display: 'flex',

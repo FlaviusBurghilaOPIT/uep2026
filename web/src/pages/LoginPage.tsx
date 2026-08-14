@@ -1,56 +1,83 @@
 import { useState } from 'react'
-import axios from 'axios'
-
-const API_URL = 'http://localhost:8001'
+import { useNavigate } from 'react-router-dom'
+import { useTranslation } from '../i18n'
+import { apiFetch } from '../api/client'
+import { trackEvent } from '../api/analytics'
+import { FormField } from '../components/ui'
+import { LanguageSwitcher } from '../components/LanguageSwitcher'
 
 function LoginPage() {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleLogin = async () => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (loading) return
+    setError('')
+    setLoading(true)
     try {
-      const response = await axios.post(`${API_URL}/auth/dev-login`, {
-        email,
-        role: 'clinician'
+      const data = await apiFetch<{ access_token: string }>('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password })
       })
-      // save the token
-      localStorage.setItem('token', response.data.token)
-      localStorage.setItem('role', response.data.role)
-      // go to patients page
-      window.location.href = '/patients'
-    } catch (err) {
-      setError('Invalid email or password')
+      localStorage.setItem('token', data.access_token)
+      localStorage.setItem('role', 'clinician')
+      localStorage.setItem('email', email)
+      trackEvent('web.auth.login_succeeded')
+      navigate('/')
+    } catch (err: unknown) {
+      setError((err as Error).message || t('login.errorInvalid'))
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>Remote CarePro</h1>
-        <p style={styles.subtitle}>Clinician Portal</p>
+        <div style={styles.langRow}>
+          <LanguageSwitcher variant="light" />
+        </div>
+        <h1 style={styles.title}>{t('login.title')}</h1>
+        <p style={styles.subtitle}>{t('login.subtitle')}</p>
 
-        <input
-          style={styles.input}
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <form onSubmit={handleLogin} style={styles.form}>
+          <FormField label={t('login.emailPlaceholder')} error={error || undefined}>
+            {(control) => (
+              <input
+                {...control}
+                style={styles.input}
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            )}
+          </FormField>
 
-        <input
-          style={styles.input}
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+          <FormField label={t('login.passwordPlaceholder')} invalid={!!error}>
+            {(control) => (
+              <input
+                {...control}
+                style={styles.input}
+                type="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            )}
+          </FormField>
 
-        {error && <p style={styles.error}>{error}</p>}
-
-        <button style={styles.button} onClick={handleLogin}>
-          Log in
-        </button>
+          <button style={styles.button} type="submit" disabled={loading}>
+            {loading ? t('login.loggingIn') : t('login.button')}
+          </button>
+        </form>
       </div>
     </div>
   )
@@ -74,6 +101,10 @@ const styles = {
     flexDirection: 'column' as const,
     gap: '16px'
   },
+  langRow: {
+    display: 'flex',
+    justifyContent: 'flex-end'
+  },
   title: {
     fontSize: '22px',
     fontWeight: '600',
@@ -85,12 +116,22 @@ const styles = {
     color: '#6b7280',
     margin: 0
   },
+  form: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '8px'
+  },
+  label: {
+    fontSize: '13px',
+    fontWeight: '500',
+    color: '#374151',
+    marginTop: '8px'
+  },
   input: {
     padding: '10px 12px',
     borderRadius: '8px',
     border: '1px solid #e5e7eb',
-    fontSize: '15px',
-    outline: 'none'
+    fontSize: '15px'
   },
   button: {
     padding: '10px',
@@ -99,7 +140,8 @@ const styles = {
     border: 'none',
     borderRadius: '8px',
     fontSize: '15px',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    marginTop: '8px'
   },
   error: {
     color: '#dc2626',

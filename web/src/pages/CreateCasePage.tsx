@@ -1,86 +1,107 @@
-import { useState, useEffect } from 'react'
-import axios from 'axios'
-
-const API_URL = 'http://localhost:8001'
+import { useState, useEffect, useCallback } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useTranslation } from '../i18n'
+import { apiFetch } from '../api/client'
+import { trackEvent } from '../api/analytics'
+import { FormField, Select } from '../components/ui'
 
 type Patient = {
   id: string
   full_name: string
 }
 
+type CreatedCase = {
+  id: string
+  patient_id: string
+  surgery_type: string
+}
+
 function CreateCasePage() {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [patients, setPatients] = useState<Patient[]>([])
-  const [patientId, setPatientId] = useState('')
+  const [patientId, setPatientId] = useState(searchParams.get('patient') || '')
   const [surgeryType, setSurgeryType] = useState('')
   const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
+  const [createdCaseId, setCreatedCaseId] = useState<string | null>(null)
   const [error, setError] = useState('')
+  const [loadError, setLoadError] = useState(false)
+  const [loadingPatients, setLoadingPatients] = useState(true)
+  const [missing, setMissing] = useState<string[]>([])
 
-  useEffect(() => {
-    const fetchPatients = async () => {
-      try {
-        const token = localStorage.getItem('token') || 'faketoken'
-        const response = await axios.get(`${API_URL}/patients`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        setPatients(response.data)
-      } catch (err) {
-        console.error('Failed to fetch patients', err)
-      }
+  const fetchPatients = useCallback(async () => {
+    setLoadingPatients(true)
+    setLoadError(false)
+    try {
+      const data = await apiFetch<Patient[]>('/patients')
+      setPatients(data)
+    } catch (err) {
+      console.error('Failed to fetch patients', err)
+      setLoadError(true)
+    } finally {
+      setLoadingPatients(false)
     }
-    fetchPatients()
   }, [])
 
-  const handleCreateCase = async () => {
-    if (!patientId || !surgeryType) {
-      setError('Please select a patient and enter a surgery type')
+  useEffect(() => {
+    fetchPatients()
+  }, [fetchPatients])
+
+  const handleCreateCase = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    const missingFields: string[] = []
+    if (!patientId) missingFields.push('patient-select')
+    if (!surgeryType.trim()) missingFields.push('surgery-type')
+    setMissing(missingFields)
+    if (missingFields.length > 0) {
+      setError(t('createCase.errorMissingFields'))
       return
     }
 
     setLoading(true)
+    setError('')
     try {
-      const token = localStorage.getItem('token') || 'faketoken'
-      await axios.post(
-        `${API_URL}/cases`,
-        {
+      const res = await apiFetch<CreatedCase>('/cases', {
+        method: 'POST',
+        body: JSON.stringify({
           patient_id: patientId,
-          surgery_type: surgeryType
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      )
-      setSuccess(true)
-    } catch (err) {
-      setError('Failed to create case. Please try again.')
+          surgery_type: surgeryType.trim()
+        })
+      })
+      setCreatedCaseId(res.id)
+      trackEvent('web.case.created', { case_id: res.id, patient_id: patientId })
+    } catch (err: unknown) {
+      setError((err as Error).message || t('createCase.errorCreateFailed'))
     } finally {
       setLoading(false)
     }
   }
 
-  if (success) {
+  if (createdCaseId) {
     return (
       <div style={styles.container}>
         <div style={styles.card}>
-          <h1 style={styles.title}>Case Created ✓</h1>
-          <p style={styles.subtitle}>The case has been created successfully.</p>
+          <h1 style={styles.title}>{t('createCase.successTitle')}</h1>
+          <p style={styles.subtitle}>{t('createCase.successSubtitle')}</p>
           <button
             style={styles.button}
-            onClick={() => window.location.href = '/cases/case-001/medications'}
+            onClick={() => navigate(`/cases/${createdCaseId}/medications`)}
           >
-            Prescribe Medications
+            {t('createCase.prescribeMedications')}
           </button>
           <button
             style={styles.button}
-            onClick={() => window.location.href = '/cases/case-001/recommendations'}
+            onClick={() => navigate(`/cases/${createdCaseId}/recommendations`)}
           >
-            Add Recovery Recommendations
+            {t('createCase.addRecommendations')}
           </button>
           <button
             style={styles.backButton}
-            onClick={() => window.location.href = '/patients'}
+            onClick={() => navigate('/patients')}
           >
-            Back to Patients
+            {t('createCase.backToPatients')}
           </button>
         </div>
       </div>
@@ -90,47 +111,67 @@ function CreateCasePage() {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>New Case</h1>
+        <h1 style={styles.title}>{t('createCase.title')}</h1>
 
-        <label style={styles.label}>Select Patient</label>
-        <select
-          style={styles.input}
-          value={patientId}
-          onChange={(e) => setPatientId(e.target.value)}
-        >
-          <option value="">-- Select a patient --</option>
-          {patients.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.full_name}
-            </option>
-          ))}
-        </select>
+        {loadError ? (
+          <div role="alert" style={styles.loadErrorBox}>
+            <p style={styles.error}>{t('createCase.errorLoadPatients')}</p>
+            <button style={styles.backButton} onClick={fetchPatients}>
+              {t('common.retry')}
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleCreateCase} style={styles.form} noValidate>
+            <FormField
+              label={t('createCase.selectPatient')}
+              invalid={missing.includes('patient-select')}
+              error={error || undefined}
+            >
+              {(control) => (
+                <Select
+                  {...control}
+                  value={patientId}
+                  onChange={setPatientId}
+                  placeholder={t('createCase.selectPatientPlaceholder')}
+                  disabled={loadingPatients}
+                  options={patients.map((p) => ({ value: p.id, label: p.full_name }))}
+                />
+              )}
+            </FormField>
 
-        <label style={styles.label}>Surgery Type</label>
-        <input
-          style={styles.input}
-          type="text"
-          placeholder="e.g. knee replacement"
-          value={surgeryType}
-          onChange={(e) => setSurgeryType(e.target.value)}
-        />
+            <FormField
+              label={t('createCase.surgeryType')}
+              invalid={missing.includes('surgery-type')}
+            >
+              {(control) => (
+                <input
+                  {...control}
+                  style={styles.input}
+                  type="text"
+                  placeholder={t('createCase.surgeryTypePlaceholder')}
+                  value={surgeryType}
+                  onChange={(e) => setSurgeryType(e.target.value)}
+                />
+              )}
+            </FormField>
 
-        {error && <p style={styles.error}>{error}</p>}
+            <button
+              style={styles.button}
+              type="submit"
+              disabled={loading || loadingPatients}
+            >
+              {loading ? t('createCase.creating') : t('createCase.createCase')}
+            </button>
 
-        <button
-          style={styles.button}
-          onClick={handleCreateCase}
-          disabled={loading}
-        >
-          {loading ? 'Creating...' : 'Create Case'}
-        </button>
-
-        <button
-          style={styles.backButton}
-          onClick={() => window.location.href = '/patients'}
-        >
-          Cancel
-        </button>
+            <button
+              style={styles.backButton}
+              type="button"
+              onClick={() => navigate('/patients')}
+            >
+              {t('createCase.cancel')}
+            </button>
+          </form>
+        )}
       </div>
     </div>
   )
@@ -165,17 +206,22 @@ const styles = {
     color: '#6b7280',
     margin: 0
   },
+  form: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '16px'
+  },
   label: {
     fontSize: '13px',
     fontWeight: '500',
-    color: '#111827'
+    color: '#111827',
+    marginBottom: '-10px'
   },
   input: {
     padding: '10px 12px',
     borderRadius: '8px',
     border: '1px solid #e5e7eb',
     fontSize: '15px',
-    outline: 'none',
     width: '100%'
   },
   button: {
@@ -195,6 +241,12 @@ const styles = {
     borderRadius: '8px',
     fontSize: '15px',
     cursor: 'pointer'
+  },
+  loadErrorBox: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '12px',
+    alignItems: 'center'
   },
   error: {
     color: '#dc2626',

@@ -9,10 +9,12 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
+    Boolean,
     Date,
     DateTime,
     Enum,
     ForeignKey,
+    Integer,
     String,
     Text,
 )
@@ -68,13 +70,27 @@ class User(Base):
     password_hash: Mapped[str | None] = mapped_column(String, nullable=True)
     cognito_sub: Mapped[str | None] = mapped_column(String, unique=True, nullable=True)
 
+    invite_code: Mapped[str | None] = mapped_column(String, nullable=True)
+    invite_code_expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    status: Mapped[str] = mapped_column(String, default="active")
+    phone: Mapped[str | None] = mapped_column(String, nullable=True)
+    date_of_birth: Mapped[str | None] = mapped_column(String, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    @property
+    def has_password(self) -> bool:
+        """Derived for UserResponse — never a stored column."""
+        return self.password_hash is not None
 
     cases_as_clinician: Mapped[list["Case"]] = relationship(
         back_populates="clinician", foreign_keys="Case.clinician_id"
     )
     cases_as_patient: Mapped[list["Case"]] = relationship(
         back_populates="patient", foreign_keys="Case.patient_id"
+    )
+    device_tokens: Mapped[list["DeviceToken"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
     )
 
 
@@ -86,6 +102,9 @@ class Case(Base):
     patient_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)
 
     surgery_type: Mapped[str] = mapped_column(String, nullable=False)
+    # Nullable: captured at clinician intake for new cases; existing/seeded
+    # cases pre-date it and remain valid with NULL.
+    surgery_date: Mapped[str | None] = mapped_column(String, nullable=True)
     status: Mapped[str] = mapped_column(String, default="active")
     emergency_contact_name: Mapped[str | None] = mapped_column(String, nullable=True)
     emergency_contact_phone: Mapped[str | None] = mapped_column(String, nullable=True)
@@ -112,6 +131,12 @@ class Case(Base):
         back_populates="case", cascade="all, delete-orphan"
     )
 
+    @property
+    def patient_date_of_birth(self) -> str | None:
+        """The patient's DOB, exposed on case responses so clients can derive
+        Day N alongside surgery_date without a second round-trip."""
+        return self.patient.date_of_birth if self.patient is not None else None
+
 
 class Medication(Base):
     __tablename__ = "medications"
@@ -126,6 +151,9 @@ class Medication(Base):
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    # Soft-delete marker (spec E4): set instead of deleting so adherence
+    # history is preserved; read paths filter `discontinued_at IS NULL`.
+    discontinued_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     case: Mapped["Case"] = relationship(back_populates="medications")
     scheduled_reminders: Mapped[list["ScheduledReminder"]] = relationship(
@@ -144,6 +172,12 @@ class ScheduledReminder(Base):
 
     status: Mapped[str] = mapped_column(String, default="pending")
 
+    # Client-supplied UUID for ad-hoc (PRN) log retries; null for parser-created
+    # slots. Unique-indexed — Postgres NULLs don't collide.
+    idempotency_key: Mapped[str | None] = mapped_column(
+        String, unique=True, index=True, nullable=True
+    )
+
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     medication: Mapped["Medication"] = relationship(back_populates="scheduled_reminders")
@@ -159,8 +193,30 @@ class DoseLog(Base):
     )
     status: Mapped[DoseStatus] = mapped_column(Enum(DoseStatus), default=DoseStatus.pending)
     logged_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    corrected_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     scheduled_reminder: Mapped["ScheduledReminder"] = relationship(back_populates="dose_log")
+    events: Mapped[list["DoseLogEvent"]] = relationship(back_populates="dose_log")
+
+
+class DoseLogEvent(Base):
+    """Correction audit trail for DoseLog.
+
+    Append-only by convention: application code only ever INSERTs rows here
+    (one per status change); there are no UPDATE/DELETE paths.
+    """
+
+    __tablename__ = "dose_log_events"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
+    dose_log_id: Mapped[str] = mapped_column(
+        ForeignKey("dose_logs.id"), index=True, nullable=False
+    )
+    old_status: Mapped[DoseStatus] = mapped_column(Enum(DoseStatus), nullable=False)
+    new_status: Mapped[DoseStatus] = mapped_column(Enum(DoseStatus), nullable=False)
+    changed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    dose_log: Mapped["DoseLog"] = relationship(back_populates="events")
 
 
 class Recommendation(Base):
@@ -196,6 +252,8 @@ class ChatMessage(Base):
 
     role: Mapped[ChatRole] = mapped_column(Enum(ChatRole), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
+    in_scope: Mapped[bool] = mapped_column(Boolean, default=True)
+    escalate: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     case: Mapped["Case"] = relationship(back_populates="chat_messages")
@@ -255,3 +313,51 @@ class WikiArticle(Base):
     source_case_ids: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     approved_by: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+
+
+class DeviceToken(Base):
+    __tablename__ = "device_tokens"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)
+    token: Mapped[str] = mapped_column(String(512), unique=True, index=True, nullable=False)
+    platform: Mapped[str] = mapped_column(String(32), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+    user: Mapped["User"] = relationship(back_populates="device_tokens")
+
+
+
+class TriageResolution(Base):
+    __tablename__ = "triage_resolutions"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
+    patient_id: Mapped[str] = mapped_column(
+        ForeignKey("users.id"), nullable=False, index=True
+    )
+    clinician_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)
+
+    outreach_method: Mapped[str] = mapped_column(String, nullable=False)
+    clinical_note: Mapped[str] = mapped_column(Text, nullable=False)
+    resolved_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class AnalyticsEvent(Base):
+    """UX telemetry. HIPAA boundary: event names, actor IDs, enum/timestamp
+    properties only — never names, drug names, doses, or free text."""
+
+    __tablename__ = "analytics_events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    event_name: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    actor_id: Mapped[str | None] = mapped_column(
+        ForeignKey("users.id"), nullable=True, index=True
+    )
+    properties: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, index=True
+    )

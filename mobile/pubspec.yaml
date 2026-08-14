@@ -1,0 +1,51 @@
+name: remotecare
+description: "RemoteCare Pro — Post-surgery recovery companion app."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  flutter_screenutil: ^5.9.3
+  google_fonts: ^8.1.0
+  flutter_riverpod: ^3.1.0
+  riverpod_annotation: ^4.0.0
+  intl: ^0.20.2
+  http: ^1.2.0
+  shared_preferences: ^2.2.2
+  freezed_annotation: ^3.1.0
+  json_annotation: ^4.9.0
+  flutter_local_notifications: ^22.2.0
+  timezone: ^0.11.1
+  url_launcher: ^6.3.2
+  uuid: ^4.6.0
+  app_settings: ^8.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+  riverpod_generator: ^4.0.0+1
+  build_runner: ^2.4.0
+  # custom_lint / riverpod_lint removed: they pin analyzer ^8.0.0, which blocks
+  # freezed >=3.2.5 (requires analyzer >=9 for Dart 3.12-compatible codegen).
+  # Neither was enabled in analysis_options.yaml, so this changes no active linting.
+  freezed: ^3.2.5
+  json_serializable: ^6.8.0
+
+flutter:
+  uses-material-design: true
+  generate: true
+  assets:
+    - assets/images/

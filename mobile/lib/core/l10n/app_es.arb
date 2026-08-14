@@ -1,0 +1,313 @@
+{
+  "@@locale": "es",
+  "appTitle": "Remote CarePro",
+  "loginTitle": "Bienvenido de nuevo",
+  "loginEmailLabel": "Correo electrónico",
+  "loginPasswordLabel": "Contraseña",
+  "loginButton": "Iniciar sesión",
+  "onboardingTitle": "Has sido invitado",
+  "onboardingSubtitle": "Ingresa tu correo y el código enviado por tu médico.",
+  "inviteCodeLabel": "Código de invitación",
+  "verifyButton": "Verificar código",
+  "completeSetupButton": "Completar configuración",
+  "todayTitle": "Hoy",
+  "greetingMorning": "Buenos días",
+  "greetingAfternoon": "Buenas tardes",
+  "greetingEvening": "Buenas noches",
+  "medicationCardTitle": "Toma {medicationName}",
+  "@medicationCardTitle": {
+    "placeholders": {
+      "medicationName": {
+        "type": "String"
+      }
+    }
+  },
+  "doseAmount": "Dosis {doseAmount}",
+  "@doseAmount": {
+    "placeholders": {
+      "doseAmount": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduledAt": "Programado a las {scheduledTime}",
+  "@scheduledAt": {
+    "placeholders": {
+      "scheduledTime": {
+        "type": "String"
+      }
+    }
+  },
+  "doseStatusTaken": "Tomado",
+  "doseStatusMissed": "Omitido",
+  "doseStatusSkipped": "Saltado",
+  "takeDoseButton": "Tomar dosis",
+  "skipDoseButton": "Saltar",
+  "missedDoseButton": "Omitido",
+  "checkinTitle": "Control diario",
+  "symptomQuestion": "¿Cómo te sientes hoy?",
+  "severityMild": "Leve",
+  "severityModerate": "Moderado",
+  "severitySevere": "Grave",
+  "submitCheckinButton": "Enviar",
+  "checkinGreatOption": "Me siento genial 🙂",
+  "checkinOkOption": "Me siento bien 😐",
+  "checkinNotGreatOption": "No me siento muy bien 😟",
+  "checkinBadOption": "Me siento mal 😣",
+  "checkinSuccessBanner": "Control diario registrado. Gracias por actualizar a tu equipo médico.",
+  "assistantTitle": "Asistente del Equipo Médico",
+  "assistantGuardrailBanner": "Asistente del Equipo Médico • Solo informativo, nunca diagnóstico",
+  "typeMessagePlaceholder": "Escribe tu pregunta...",
+  "chipMedicationSideEffects": "Efectos secundarios de medicamentos",
+  "chipWoundCareTips": "Consejos para el cuidado de heridas",
+  "chipPhysioTargets": "Objetivos de fisioterapia",
+  "chipEmergencyContact": "Contacto de emergencia",
+  "emergencyCallCta": "Llamar al contacto de emergencia",
+  "emergencyCallCtaWithPhone": "Llamar al contacto de emergencia ({phone})",
+  "@emergencyCallCtaWithPhone": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "emergencyWarningTitle": "No puedo asesorar sobre cambios de dosis o síntomas urgentes",
+  "fdaSafetyAlertTitle": "Información oficial de seguridad de medicamentos de la FDA",
+  "fdaSourceLive": "📋 Fuente: Información oficial de la FDA",
+  "fdaSourceFixture": "📋 Fuente: Caché reglamentario",
+  "fdaRetrievedTimestamp": "Obtenido: {date}",
+  "@fdaRetrievedTimestamp": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "fdaWarningMessage": "Nueva advertencia de interacción de medicamentos para Amoxicilina. Toca para saber más.",
+  "profileTitle": "Perfil",
+  "languageSectionTitle": "Idioma",
+  "languageEnglish": "Inglés",
+  "languageItalian": "Italiano",
+  "languageSpanish": "Español",
+  "languageFrench": "Francés",
+  "languageGerman": "Alemán",
+  "signOutButton": "Cerrar sesión",
+  "notificationReminderTitle": "Recordatorio de medicamento",
+  "notificationReminderBody": "Hora de tomar {medicationName} — {doseAmount}",
+  "@notificationReminderBody": {
+    "placeholders": {
+      "medicationName": {
+        "type": "String"
+      },
+      "doseAmount": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationActionTake": "Tomar dosis",
+  "notificationActionSnooze": "Posponer 15 min",
+  "notificationPermissionRationale": "Active las notificaciones para recibir recordatorios de medicamentos a tiempo.",
+  "errorGeneric": "Algo salió mal. Inténtalo de nuevo.",
+  "errorNetwork": "Sin conexión. Comprueba tu internet.",
+  "loadingLabel": "Cargando...",
+  "navTabToday": "Hoy",
+  "navTabMedications": "Medicamentos",
+  "navTabRecovery": "Recuperación",
+  "navTabAssistant": "Asistente",
+  "navTabProfile": "Perfil",
+  "medicationsScreenTitle": "Medicamentos",
+  "medCardDoseLabel": "Dosis: {dose}",
+  "@medCardDoseLabel": {
+    "placeholders": {
+      "dose": {
+        "type": "String"
+      }
+    }
+  },
+  "medCardScheduleLabel": "Horario: {schedule}",
+  "@medCardScheduleLabel": {
+    "placeholders": {
+      "schedule": {
+        "type": "String"
+      }
+    }
+  },
+  "medCardDurationLabel": "Duración: {duration}",
+  "@medCardDurationLabel": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "medCardNotesHeader": "Instrucciones del médico:",
+  "medCardReadOnlyBadge": "🔒 Recetado por el equipo médico — Solo lectura",
+  "medicationsEmptyState": "Aún no hay medicamentos activos en tu plan de cuidado.",
+  "frequencyQD": "Una vez al día",
+  "frequencyBID": "Dos veces al día",
+  "frequencyTID": "Tres veces al día",
+  "frequencyQID": "Cuatro veces al día",
+  "frequencyPRN": "Según sea necesario",
+  "authEmailLoginTitle": "Login",
+  "authEmailLabel": "Email",
+  "authRequiredError": "Required",
+  "authInvalidEmailError": "Enter a valid email",
+  "authSendOtpButton": "Send OTP",
+  "authErrorSendingOtp": "Error sending OTP: {error}",
+  "@authErrorSendingOtp": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "authEnterInvitationCodeTitle": "Enter Invitation Code",
+  "authWelcomeTitle": "Welcome!",
+  "authInvitationCodeSubtitle": "Please enter your invitation code to continue.",
+  "authInvitationCodeLabel": "Invitation Code",
+  "authInvalidInvitationCodeError": "Please enter a valid invitation code",
+  "authContinueButton": "Continue",
+  "authEnterOtpTitle": "Enter OTP",
+  "authVerifyIdentityTitle": "Verify Identity",
+  "authOtpSentToEmail": "Please enter the 6-digit code sent to {email}.",
+  "@authOtpSentToEmail": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "authOtpSentToEmailFallback": "Please enter the 6-digit code sent to your email.",
+  "authOtpCodeLabel": "OTP Code",
+  "authOtpCodeLengthError": "Code must be exactly 6 digits",
+  "authOtpCodeNumericError": "Code must be numeric",
+  "authVerifyAndLogInButton": "Verify and Log In",
+  "authProfileSetupTitle": "Profile Setup",
+  "authNameLabel": "Name",
+  "authSurnameLabel": "Surname",
+  "authAgeLabel": "Age",
+  "authInvalidAgeError": "Enter a valid positive integer",
+  "authSaveAndEnterAppButton": "Save and Enter App",
+  "authSelectDobError": "Please select your date of birth",
+  "okButton": "OK",
+  "authCompleteProfileSetupSubtitle": "Complete your patient profile setup",
+  "todayAgendaError": "No pudimos cargar tu plan de cuidados. Revisa tu conexión e inténtalo de nuevo.",
+  "todayRetry": "Reintentar",
+  "todayStaleBanner": "Actualizado {relativeTime} — sincronizando el plan más reciente…",
+  "@todayStaleBanner": {
+    "placeholders": {
+      "relativeTime": {
+        "type": "String"
+      }
+    }
+  },
+  "todayOfflineBanner": "Registro guardado en tu dispositivo. Avisaremos a tu equipo de cuidados cuando vuelvas a estar en línea.",
+  "todayPlanUpdatedBanner": "Tu equipo de cuidados actualizó tus medicamentos recetados.",
+  "todayTimezoneAdjusted": "Los horarios de tus recordatorios se ajustaron a tu zona horaria actual.",
+  "todayLogUndo": "Deshacer",
+  "todayLoggedAs": "Registrado como {status}.",
+  "@todayLoggedAs": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "todayLogRollbackError": "No pudimos guardar ese registro. Tu dosis aparece como no registrada — toca para intentarlo de nuevo.",
+  "todayCorrectionTitle": "Registrado como {status} a las {time}. ¿Quieres corregir lo que pasó?",
+  "@todayCorrectionTitle": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "todayCorrectionKeep": "Dejar como está",
+  "todaySkipPrompt": "¿Tienes síntomas graves o preocupantes?",
+  "todaySkipPromptYes": "Sí",
+  "todaySkipPromptNo": "No, estoy bien",
+  "todayNoEmergencyContact": "No hay contacto de emergencia registrado — contacta a tu clínica.",
+  "todayGroupMorning": "Mañana",
+  "todayGroupMidday": "Mediodía",
+  "todayGroupEvening": "Tarde",
+  "todayGroupBedtime": "Noche",
+  "todayPrnSection": "Según sea necesario",
+  "todayDueNow": "Toca ahora",
+  "todayUpcoming": "Próximo",
+  "todayScheduledFor": "Programada {time}",
+  "@todayScheduledFor": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "todaySlotTimes": "Programada para {scheduledTime} — Registrada a las {loggedTime}.",
+  "@todaySlotTimes": {
+    "placeholders": {
+      "scheduledTime": {
+        "type": "String"
+      },
+      "loggedTime": {
+        "type": "String"
+      }
+    }
+  },
+  "todayPreviouslyLogged": "Anterior: {status}",
+  "@todayPreviouslyLogged": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "todaySyncPending": "Guardado en el dispositivo",
+  "todayCelebrationNext": "Próxima dosis: {weekday} a las {time}",
+  "@todayCelebrationNext": {
+    "placeholders": {
+      "weekday": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "todayCelebration": "¡Todas las dosis de hoy completadas! Gracias por mantener informado a tu equipo de cuidados.",
+  "todayProgressDoses": "{taken}/{total} dosis",
+  "@todayProgressDoses": {
+    "placeholders": {
+      "taken": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "todayPullToRefreshHint": "Desliza hacia abajo para comprobar de nuevo.",
+  "todayOpenSettings": "Abrir Ajustes",
+  "remindersOffBanner": "Los recordatorios están desactivados. Puedes registrar dosis manualmente — o activar los recordatorios en Ajustes.",
+  "emptyPlanMessage": "Tu equipo de cuidados está preparando tu plan. No necesitas hacer nada por ahora.",
+  "checkinErrorRetry": "No pudimos guardar tu registro diario. Toca para intentarlo de nuevo.",
+  "todayTimeJustNow": "ahora mismo",
+  "todayTimeMinutesAgo": "hace {count} min",
+  "@todayTimeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "todayTimeHoursAgo": "hace {count} h",
+  "@todayTimeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
+}

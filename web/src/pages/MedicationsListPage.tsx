@@ -1,74 +1,114 @@
-import { useEffect, useState } from 'react'
-import axios from 'axios'
-
-const API_URL = 'http://localhost:8001'
+import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from '../i18n'
+import { useNavigate, useParams } from 'react-router-dom'
+import { apiFetch } from '../api/client'
 
 type Medication = {
   id: string
   name: string
   dose: string
-  frequency: string
-  duration_days: number
-  notes: string
+  schedule_text?: string
+  frequency?: string
+  duration?: string
+  duration_days?: number
+  notes?: string
+}
+
+type CaseInfo = {
+  id: string
+  surgery_type: string
 }
 
 function MedicationsListPage() {
+  const { t } = useTranslation()
+  const { caseId } = useParams<{ caseId: string }>()
+  const navigate = useNavigate()
   const [medications, setMedications] = useState<Medication[]>([])
+  const [caseInfo, setCaseInfo] = useState<CaseInfo | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+
+  const fetchMedications = useCallback(async () => {
+    setLoading(true)
+    setError(false)
+    try {
+      const data = await apiFetch<Medication[]>(`/cases/${caseId}/medications`)
+      setMedications(data)
+    } catch (err) {
+      console.error('Failed to fetch medications', err)
+      setError(true)
+    } finally {
+      setLoading(false)
+    }
+  }, [caseId])
 
   useEffect(() => {
-    const fetchMedications = async () => {
-      try {
-        const token = localStorage.getItem('token') || 'faketoken'
-        const response = await axios.get(`${API_URL}/cases/case-001/medications`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        setMedications(response.data)
-      } catch (err) {
-        console.error('Failed to fetch medications', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchMedications()
-  }, [])
+    apiFetch<CaseInfo>(`/cases/${caseId}`)
+      .then(setCaseInfo)
+      .catch(() => setCaseInfo(null))
+  }, [caseId, fetchMedications])
 
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h1 style={styles.title}>Medications</h1>
-        <p style={styles.subtitle}>Case: Knee Replacement — Maria Rossi</p>
+        <h1 style={styles.title}>{t('medicationsList.title')}</h1>
+        {caseInfo && (
+          <p style={styles.subtitle}>{t('medicationsList.case')}: {caseInfo.surgery_type}</p>
+        )}
       </div>
 
       <button
         style={styles.addButton}
-        onClick={() => window.location.href = '/cases/case-001/medications'}
+        onClick={() => navigate(`/cases/${caseId}/medications`)}
       >
-        + Add Medication
+        + {t('medicationsList.addMedication')}
       </button>
 
-      {loading && <p style={styles.loading}>Loading...</p>}
+      {loading && <p style={styles.loading}>{t('medicationsList.loading')}</p>}
 
-      <div style={styles.list}>
-        {medications.map((med) => (
-          <div key={med.id} style={styles.card}>
-            <div style={styles.cardHeader}>
-              <p style={styles.medName}>{med.name}</p>
-              <span style={styles.badge}>{med.frequency}</span>
+      {!loading && error && (
+        <div style={styles.errorBox} role="alert">
+          <p style={styles.errorText}>{t('common.errorLoading')}</p>
+          <button style={styles.retryButton} onClick={fetchMedications}>
+            {t('common.retry')}
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && medications.length === 0 && (
+        <p style={styles.empty}>{t('medicationsList.empty')}</p>
+      )}
+
+      {!loading && !error && (
+        <div style={styles.list}>
+          {medications.map((med) => (
+            <div key={med.id} style={styles.card}>
+              <div style={styles.cardHeader}>
+                <p style={styles.medName}>{med.name}</p>
+                <span style={styles.badge}>{med.schedule_text || med.frequency || ''}</span>
+              </div>
+              <p style={styles.detail}>{t('medicationsList.dose')}: {med.dose}</p>
+              <p style={styles.detail}>
+                {t('medicationsList.duration')}: {med.duration || (med.duration_days ? `${med.duration_days} ${t('medicationsList.days')}` : '—')}
+              </p>
+              {med.notes && <p style={styles.notes}>{med.notes}</p>}
+              <button
+                style={styles.fdaButton}
+                onClick={() => navigate(`/fda?drug=${encodeURIComponent(med.name.toLowerCase())}`)}
+              >
+                {t('medicationsList.viewFdaSafety')}
+              </button>
             </div>
-            <p style={styles.detail}>Dose: {med.dose}</p>
-            <p style={styles.detail}>Duration: {med.duration_days} days</p>
-            {med.notes && <p style={styles.notes}>{med.notes}</p>}
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       <button
         style={styles.backButton}
-        onClick={() => window.location.href = '/patients'}
+        onClick={() => navigate('/patients')}
       >
-        Back to Patients
+        {t('medicationsList.backToPatients')}
       </button>
     </div>
   )
@@ -108,6 +148,34 @@ const styles = {
     color: '#6b7280',
     fontSize: '14px'
   },
+  errorBox: {
+    backgroundColor: '#fef2f2',
+    border: '1px solid #fecaca',
+    borderRadius: '12px',
+    padding: '24px',
+    textAlign: 'center' as const,
+    marginBottom: '24px'
+  },
+  errorText: {
+    color: '#b91c1c',
+    fontSize: '14px',
+    margin: '0 0 12px 0'
+  },
+  retryButton: {
+    padding: '8px 20px',
+    backgroundColor: '#b91c1c',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '14px',
+    cursor: 'pointer'
+  },
+  empty: {
+    color: '#64748b',
+    fontSize: '14px',
+    fontStyle: 'italic' as const,
+    marginBottom: '24px'
+  },
   list: {
     display: 'flex',
     flexDirection: 'column' as const,
@@ -139,6 +207,17 @@ const styles = {
     borderRadius: '20px',
     fontSize: '12px',
     fontWeight: '500'
+  },
+  fdaButton: {
+    padding: '6px 12px',
+    backgroundColor: '#fffbe6',
+    color: '#d97706',
+    border: '1px solid #fde68a',
+    borderRadius: '6px',
+    fontSize: '13px',
+    fontWeight: '500' as const,
+    cursor: 'pointer',
+    marginTop: '8px'
   },
   detail: {
     fontSize: '13px',

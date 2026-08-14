@@ -1,9 +1,14 @@
+import secrets
+from datetime import datetime, timedelta
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app import models, schemas
 from app.database import get_db
-from app.security import create_access_token, verify_password
+from app.dependencies import get_current_user
+from app.security import create_access_token, hash_password, verify_password
+from app.services.email_service import EmailService
 
 router = APIRouter(
     prefix="/auth",
@@ -11,12 +16,12 @@ router = APIRouter(
 )
 
 
+@router.post("/login", response_model=schemas.TokenResponse)
 @router.post("/dev-login", response_model=schemas.TokenResponse)
-def dev_login(login: schemas.LoginRequest, db: Session = Depends(get_db)):
-
+def login(login: schemas.LoginRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == login.email).first()
 
-    if not user:
+    if not user or not user.password_hash:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     if not verify_password(login.password, user.password_hash):
@@ -25,3 +30,168 @@ def dev_login(login: schemas.LoginRequest, db: Session = Depends(get_db)):
     token = create_access_token({"sub": user.id, "role": user.role.value, "email": user.email})
 
     return {"access_token": token, "token_type": "bearer"}
+
+
+@router.post("/verify-invite", response_model=schemas.VerifyInviteResponse)
+def verify_invite(req: schemas.VerifyInviteRequest, db: Session = Depends(get_db)):
+    user = (
+        db.query(models.User)
+        .filter(
+            models.User.email == req.email,
+            models.User.invite_code == req.invite_code,
+            models.User.status == "pending_onboarding",
+        )
+        .first()
+    )
+
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid email or invite code")
+
+    return schemas.VerifyInviteResponse(
+        email=user.email,
+        full_name=user.full_name,
+        invite_code=user.invite_code,
+        status=user.status,
+    )
+
+
+@router.post("/complete-onboarding", response_model=schemas.TokenResponse)
+def complete_onboarding(req: schemas.CompleteOnboardingRequest, db: Session = Depends(get_db)):
+    user = (
+        db.query(models.User)
+        .filter(
+            models.User.email == req.email,
+            models.User.invite_code == req.invite_code,
+            models.User.status == "pending_onboarding",
+        )
+        .first()
+    )
+
+    if (
+        not user
+        or not user.invite_code_expires_at
+        or user.invite_code_expires_at < datetime.utcnow()
+    ):
+        raise HTTPException(status_code=400, detail="Invalid email or invite code")
+
+    # date_of_birth is optional (pre-set at intake): update only when supplied,
+    # otherwise preserve the existing value.
+    if req.date_of_birth is not None:
+        user.date_of_birth = req.date_of_birth
+    # full_name is optional (pre-filled from intake, editable at onboarding):
+    # update only when supplied, otherwise preserve the existing value.
+    if req.full_name is not None:
+        user.full_name = req.full_name
+    user.phone = req.phone
+    # Hybrid auth: hash the password when one is provided at onboarding.
+    if req.password is not None:
+        user.password_hash = hash_password(req.password)
+    user.status = "active"
+    user.invite_code = None
+    user.invite_code_expires_at = None
+
+    db.commit()
+    db.refresh(user)
+
+    token = create_access_token({"sub": user.id, "role": user.role.value, "email": user.email})
+    return {"access_token": token, "token_type": "bearer"}
+
+
+@router.post("/change-password", response_model=schemas.ChangePasswordResponse)
+def change_password(
+    req: schemas.ChangePasswordRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    # The current password is required only when the user already has one; a
+    # code-authenticated user (no password_hash) may set a password without it.
+    if current_user.password_hash:
+        if not req.current_password or not verify_password(
+            req.current_password, current_user.password_hash
+        ):
+            raise HTTPException(status_code=400, detail="Current password is incorrect")
+
+    current_user.password_hash = hash_password(req.new_password)
+    db.commit()
+
+    return schemas.ChangePasswordResponse()
+
+
+@router.get("/me", response_model=schemas.UserResponse)
+def get_me(current_user: models.User = Depends(get_current_user)):
+    return current_user
+
+
+@router.patch("/me", response_model=schemas.UserResponse)
+def update_me(
+    req: schemas.UserUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    # Partial profile update (WI 06): only supplied fields change; omitted
+    # fields keep their stored values (same convention as complete-onboarding).
+    if req.full_name is not None:
+        current_user.full_name = req.full_name
+    if req.phone is not None:
+        current_user.phone = req.phone
+    if req.date_of_birth is not None:
+        current_user.date_of_birth = req.date_of_birth
+
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+
+@router.post("/patient/request-code", response_model=schemas.PatientRequestCodeResponse)
+def request_patient_code(req: schemas.PatientRequestCodeRequest, db: Session = Depends(get_db)):
+    user = (
+        db.query(models.User)
+        .filter(models.User.email == req.email, models.User.role == models.UserRole.patient)
+        .first()
+    )
+
+    if user:
+        code = f"{secrets.randbelow(900000) + 100000}"
+        user.invite_code = code
+        user.invite_code_expires_at = datetime.utcnow() + timedelta(minutes=15)
+        db.commit()
+
+        email_service = EmailService()
+        email_service.send_patient_code(user.email, code)
+
+    return schemas.PatientRequestCodeResponse()
+
+
+@router.post("/patient/verify-code")
+def verify_patient_code(req: schemas.PatientVerifyCodeRequest, db: Session = Depends(get_db)):
+    user = (
+        db.query(models.User)
+        .filter(models.User.email == req.email, models.User.role == models.UserRole.patient)
+        .first()
+    )
+
+    if (
+        not user
+        or not user.invite_code
+        or user.invite_code != req.code
+        or not user.invite_code_expires_at
+        or user.invite_code_expires_at < datetime.utcnow()
+    ):
+        raise HTTPException(status_code=400, detail="Invalid or expired code")
+
+    if user.status == "pending_onboarding":
+        # Surface the intake DOB so the patient app can pre-fill it (editable)
+        # at onboarding (Req 9) rather than re-typing clinic-held data.
+        return {
+            "result": "onboarding",
+            "email": user.email,
+            "full_name": user.full_name,
+            "date_of_birth": user.date_of_birth,
+        }
+
+    user.invite_code = None
+    user.invite_code_expires_at = None
+    db.commit()
+
+    token = create_access_token({"sub": user.id, "role": user.role.value, "email": user.email})
+    return {"result": "authenticated", "access_token": token, "token_type": "bearer"}

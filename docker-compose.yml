@@ -1,8 +1,4 @@
-version: "3.9"
-
 services:
-
-  # The database — stores all patients, cases, medications etc.
   db:
     image: pgvector/pgvector:pg16
     environment:
@@ -20,7 +16,6 @@ services:
       retries: 40
       start_period: 30s
 
-  # The real backend — P5 builds this (FastAPI)
   backend:
     build: ./backend
     ports:
@@ -33,17 +28,6 @@ services:
       - ./backend:/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
-  # The mock server — fake backend, ready immediately
-  # P2, P3, P4 use this while P5 builds the real thing
-  mock:
-    image: stoplight/prism:4
-    command: mock -h 0.0.0.0 -p 8001 /tmp/openapi.yaml
-    volumes:
-      - ./mock/openapi.yaml:/tmp/openapi.yaml
-    ports:
-      - "8001:8001"
-
-  # The React web app — clinician dashboard
   web:
     build: ./web
     ports:
@@ -51,7 +35,7 @@ services:
     volumes:
       - ./web:/app
     environment:
-      VITE_API_URL: http://localhost:8001
+      VITE_API_URL: http://localhost:8000
 
 volumes:
   pgdata:
