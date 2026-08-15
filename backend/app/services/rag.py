@@ -122,3 +122,24 @@ Always end with: "Please review and adjust based on your clinical judgment."
     async for chunk in response:
         if chunk.choices and chunk.choices[0].delta.content:
             yield chunk.choices[0].delta.content
+
+
+async def generate_patients_summary(patients_context: str) -> str:
+    """Summarize a clinician's full patient roster (plain chat completion,
+    no retrieval/embeddings involved)."""
+    system_prompt = (
+        "You are a clinical assistant summarizing a clinician's full patient roster. "
+        "Write a concise, well-organized summary of overall status across all patients, "
+        "followed by a 'Things to consider' section flagging any patients who may need "
+        "extra attention (e.g. negative check-in feelings, no recent check-ins, or missing "
+        "recovery recommendations). Never give diagnostic advice or suggest medication "
+        "changes. Base your answer only on the data provided below."
+    )
+    response = await client_async.chat.completions.create(
+        model=os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini"),
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": f"Patient roster:\n\n{patients_context}\n\nPlease provide the summary."},
+        ],
+    )
+    return response.choices[0].message.content

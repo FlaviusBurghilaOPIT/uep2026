@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.database import SessionLocal
 from app import models, schemas
 from app.dependencies import get_current_user, get_db_for_user
-from app.services.rag import generate_recommendation_stream
+from app.services.rag import generate_recommendation_stream, generate_patients_summary
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
@@ -147,3 +147,42 @@ async def chat_stream(
                 await _save_assistant_message_shielded(case.id, "".join(chunks))
 
     return StreamingResponse(stream_and_save(), media_type="text/plain")
+
+
+@router.get("/patients-summary")
+async def patients_summary(
+    db: Session = Depends(get_db_for_user),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Summarize the clinician's full patient roster using the LLM, with a
+    'things to consider' section. Bypasses the RAG/embeddings pipeline
+    entirely (chat completion only) since embeddings are unavailable."""
+    cases = (
+        db.query(models.Case)
+        .filter(models.Case.clinician_id == current_user.id)
+        .all()
+    )
+
+    if not cases:
+        return {"summary": "You have no patients yet.", "patient_count": 0}
+
+    lines = []
+    for case in cases:
+        patient = case.patient
+        active_meds = [m.name for m in case.medications if m.discontinued_at is None]
+        sorted_checkins = sorted(case.checkins, key=lambda c: c.created_at, reverse=True)
+        latest_checkin = sorted_checkins[0] if sorted_checkins else None
+        sorted_recs = sorted(case.recommendations, key=lambda r: r.created_at, reverse=True)
+        latest_rec = sorted_recs[0] if sorted_recs else None
+
+        lines.append(
+            f"Patient: {patient.full_name}\n"
+            f"Surgery: {case.surgery_type} (status: {case.status})\n"
+            f"Active medications: {', '.join(active_meds) if active_meds else 'none'}\n"
+            f"Latest check-in feeling: {latest_checkin.feeling.value if latest_checkin else 'no check-ins yet'}\n"
+            f"Latest recommendation: {latest_rec.text if latest_rec else 'none'}"
+        )
+
+    patients_context = "\n\n---\n\n".join(lines)
+    summary = await generate_patients_summary(patients_context)
+    return {"summary": summary, "patient_count": len(cases)}
