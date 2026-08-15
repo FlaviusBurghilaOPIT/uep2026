@@ -8,6 +8,7 @@ import {
   faFilePdf,
   faMagnifyingGlass,
   faPhone,
+  faRobot,
   faRotate,
   faTriangleExclamation
 } from '@fortawesome/free-solid-svg-icons'
@@ -98,6 +99,22 @@ function TriageDashboardPage() {
   const [patients, setPatients] = useState<Patient[]>([])
   const [triageItems, setTriageItems] = useState<TriagePatient[]>([])
   const [loading, setLoading] = useState(true)
+  const [aiSummary, setAiSummary] = useState<string | null>(null)
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false)
+  const [aiSummaryError, setAiSummaryError] = useState<string | null>(null)
+
+  const handleGenerateSummary = useCallback(async () => {
+    setAiSummaryLoading(true)
+    setAiSummaryError(null)
+    try {
+      const result = await apiFetch<{ summary: string; patient_count: number }>('/ai/patients-summary')
+      setAiSummary(result.summary)
+    } catch (err) {
+      setAiSummaryError(err instanceof Error ? err.message : 'Failed to generate summary')
+    } finally {
+      setAiSummaryLoading(false)
+    }
+  }, [])
   const [error, setError] = useState('')
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [responseStats, setResponseStats] = useState<TriageResponseStats | null>(null)
@@ -496,8 +513,24 @@ function TriageDashboardPage() {
           <button style={styles.refreshButton} onClick={fetchTriageData} disabled={loading}>
             <Icon icon={faRotate} /> {t('triage.refresh')}
           </button>
+          <button style={styles.aiSummaryButton} onClick={handleGenerateSummary} disabled={aiSummaryLoading}>
+            <Icon icon={faRobot} /> {aiSummaryLoading ? 'Generating...' : 'AI Summary'}
+          </button>
         </div>
       </div>
+
+      {(aiSummary || aiSummaryLoading || aiSummaryError) && (
+        <div style={styles.aiSummaryCard}>
+          <h3 style={styles.aiSummaryTitle}>
+            <Icon icon={faRobot} /> AI Patient Summary
+          </h3>
+          {aiSummaryLoading && <p style={styles.loadingText}>Generating summary...</p>}
+          {aiSummaryError && <p style={styles.errorText}>{aiSummaryError}</p>}
+          {aiSummary && !aiSummaryLoading && (
+            <div style={styles.aiSummaryText}>{aiSummary}</div>
+          )}
+        </div>
+      )}
 
       {loading && <p style={styles.loadingText}>{t('triage.loadingTriage')}</p>}
 
@@ -1324,6 +1357,41 @@ const styles = {
     fontSize: '13px',
     fontWeight: '600',
     cursor: 'pointer'
+  },
+  aiSummaryButton: {
+    padding: '8px 14px',
+    backgroundColor: '#4f46e5',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '13px',
+    fontWeight: '600' as const,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px'
+  },
+  aiSummaryCard: {
+    backgroundColor: '#ffffff',
+    border: '1px solid #e0e7ff',
+    borderRadius: '12px',
+    padding: '20px',
+    marginBottom: '24px'
+  },
+  aiSummaryTitle: {
+    fontSize: '16px',
+    fontWeight: '700' as const,
+    color: '#0f172a',
+    margin: '0 0 12px 0',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  },
+  aiSummaryText: {
+    fontSize: '14px',
+    color: '#1e293b',
+    whiteSpace: 'pre-wrap' as const,
+    lineHeight: '1.6'
   }
 }
 
