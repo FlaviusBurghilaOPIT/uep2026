@@ -7,6 +7,8 @@ ScheduledReminder, DoseLog, Recommendation, CheckIn, ChatMessage.
 import enum
 import uuid
 from datetime import datetime
+from sqlalchemy.dialects.postgresql import UUID
+from pgvector.sqlalchemy import Vector
 
 from sqlalchemy import (
     Boolean,
@@ -361,3 +363,17 @@ class AnalyticsEvent(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, index=True
     )
+from pgvector.sqlalchemy import Vector
+from sqlalchemy.dialects.postgresql import UUID
+
+
+class Embedding(Base):
+    __tablename__ = "embeddings"
+
+    id = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    content = mapped_column(Text, nullable=False)
+    source = mapped_column(String, nullable=False)
+    source_type = mapped_column(String, nullable=False)
+    surgery_type = mapped_column(String, nullable=True)
+    embedding = mapped_column(Vector(1536), nullable=False)
+    created_at = mapped_column(DateTime, default=datetime.utcnow)

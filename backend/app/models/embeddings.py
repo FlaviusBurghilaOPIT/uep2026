@@ -3,7 +3,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from pgvector.sqlalchemy import Vector
 from datetime import datetime
 import uuid
-from .base import Base
+from app.models import Base
 
 class Embedding(Base):
     __tablename__ = "embeddings"

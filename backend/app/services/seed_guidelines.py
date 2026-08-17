@@ -8,7 +8,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 from app.core.database import SessionLocal, init_db
-from app.models.embeddings import Embedding
+from app.models import Embedding
 from app.services.rag import get_embedding
 
 # Clinical guidelines as text chunks
