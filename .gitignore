@@ -48,3 +48,5 @@ build/
 agent/
 skills-lock.json
 .superpowers/
+token
+.token
