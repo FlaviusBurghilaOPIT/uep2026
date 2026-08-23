@@ -1,0 +1,72 @@
+---
+import Layout from './Layout.astro'
+import NavBar from '../components/NavBar.astro'
+import '../index.css'
+
+interface Props {
+  title?: string
+  description?: string
+}
+
+const { title, description } = Astro.props
+const currentPath = Astro.url.pathname
+---
+
+<Layout title={title} description={description}>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <div class="app-container">
+    <NavBar currentPath={currentPath} />
+    <main id="main-content" class="app-content">
+      <slot />
+    </main>
+  </div>
+</Layout>
+
+<style>
+  .skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #0284c7;
+    color: #ffffff;
+    padding: 8px 16px;
+    text-decoration: none;
+    font-weight: 600;
+    z-index: 1000;
+    transition: top 0.2s;
+  }
+  .skip-link:focus {
+    top: 0;
+  }
+  .app-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--page-bg, #f8fafc);
+  }
+  .app-content {
+    margin-left: 220px;
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+  }
+  @media (max-width: 768px) {
+    .app-container {
+      flex-direction: column;
+    }
+    .app-content {
+      margin-left: 0;
+    }
+  }
+</style>
+
+<script>
+  // Require auth on protected application routes
+  function checkAuth() {
+    const token = localStorage.getItem('token')
+    if (!token && !window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/landing')) {
+      window.location.href = '/login'
+    }
+  }
+
+  checkAuth()
+</script>

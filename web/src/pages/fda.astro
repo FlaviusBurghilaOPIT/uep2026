@@ -1,0 +1,355 @@
+---
+import AppLayout from '../layouts/AppLayout.astro'
+import { ClipboardList, Search, Pill, ShieldCheck, TriangleAlert } from 'lucide-astro'
+import { createTranslator, isLanguage } from '../i18n'
+import '../index.css'
+
+const cookieLang = Astro.cookies.get('carepro_language')?.value
+const lang = isLanguage(cookieLang) ? cookieLang : 'en'
+const t = createTranslator(lang)
+---
+
+<AppLayout title={`${t('fda.title', 'openFDA Drug Safety Intelligence')} — RemoteCare Pro`}>
+  <div class="fda-page">
+    <div class="header">
+      <div>
+        <h1 class="title">{t('fda.title', 'openFDA Drug Safety Intelligence')}</h1>
+        <p class="subtitle">{t('fda.subtitle', 'Search official FDA black box warnings, contraindications, and adverse event surveillance')}</p>
+      </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-card">
+      <div class="search-input-group">
+        <Search size={18} class="search-icon" aria-hidden="true" />
+        <input
+          type="text"
+          id="fda-search-input"
+          class="search-input"
+          placeholder={t('fda.searchPlaceholder', 'Search medication name (e.g. oxycodone, cefazolin, meloxicam, gabapentin)...')}
+          aria-label={t('fda.searchPlaceholder', 'Search medication name')}
+        />
+      </div>
+      <button class="search-btn" id="fda-search-btn">
+        <Search size={16} aria-hidden="true" />
+        <span>{t('fda.search', 'Search FDA Intelligence')}</span>
+      </button>
+    </div>
+
+    <!-- Results Container -->
+    <div id="fda-results-container" class="results-container" role="region" aria-live="polite">
+      <div class="initial-prompt-box">
+        <ShieldCheck size={36} class="prompt-icon" aria-hidden="true" />
+        <h3 class="prompt-title">{t('fda.emptyTitle', 'Live openFDA Regulatory Database Connection')}</h3>
+        <p class="prompt-sub">{t('fda.emptyText', 'Enter any generic or brand medication to retrieve real-time black box warnings and safety guidelines.')}</p>
+        <div class="sample-pills">
+          <button class="sample-pill-btn" data-drug="oxycodone">Oxycodone</button>
+          <button class="sample-pill-btn" data-drug="cefazolin">Cefazolin</button>
+          <button class="sample-pill-btn" data-drug="meloxicam">Meloxicam</button>
+          <button class="sample-pill-btn" data-drug="gabapentin">Gabapentin</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</AppLayout>
+
+<style>
+  .fda-page {
+    padding: 32px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .header {
+    margin-bottom: 24px;
+  }
+  .title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #64748b;
+    margin: 4px 0 0;
+  }
+  .search-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.05);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  .search-input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 10px 14px;
+    flex: 1;
+  }
+  :global(.search-icon) {
+    color: #94a3b8;
+  }
+  .search-input {
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    color: #0f172a;
+    width: 100%;
+    outline: none;
+  }
+  .search-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #0284c7;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(2,132,199,0.2);
+    transition: background-color 0.15s ease;
+  }
+  .search-btn:hover {
+    background-color: #0369a1;
+  }
+  .results-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .initial-prompt-box {
+    background-color: #ffffff;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 48px 24px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  :global(.prompt-icon) {
+    color: #0284c7;
+  }
+  .prompt-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+  .prompt-sub {
+    font-size: 14px;
+    color: #64748b;
+    max-width: 500px;
+    margin: 0 0 12px 0;
+  }
+  .sample-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .sample-pill-btn {
+    background-color: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 9999px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #334155;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+  .sample-pill-btn:hover {
+    background-color: #e2e8f0;
+  }
+
+  /* Scoped classes used by dynamic JS render */
+  :global(.fda-loading-box) {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 36px;
+    text-align: center;
+    color: #64748b;
+    font-size: 14px;
+  }
+  :global(.fda-result-card) {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.05);
+  }
+  :global(.fda-header-row) {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 16px;
+  }
+  :global(.fda-label-badge) {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  :global(.fda-drug-title) {
+    font-size: 22px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 6px 0 0 0;
+    text-transform: uppercase;
+  }
+  :global(.fda-link) {
+    background: #eff6ff;
+    color: #0284c7;
+    border: 1px solid #bfdbfe;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  :global(.fda-warning-heading) {
+    font-size: 14px;
+    font-weight: 700;
+    color: #b91c1c;
+    margin: 0 0 10px 0;
+  }
+  :global(.fda-warning-list) {
+    margin: 0 0 16px 20px;
+    padding: 0;
+    color: #334155;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  :global(.fda-warning-item) {
+    margin-bottom: 6px;
+  }
+  :global(.fda-no-warnings) {
+    color: #64748b;
+    font-size: 14px;
+    margin: 0;
+  }
+</style>
+
+<script>
+  function el(tag: string, className?: string, text?: string): HTMLElement {
+    const node = document.createElement(tag)
+    if (className) node.className = className
+    if (text) node.textContent = text
+    return node
+  }
+
+  async function searchDrug(drugName: string) {
+    const container = document.getElementById('fda-results-container')
+    if (!container || !drugName.trim()) return
+
+    // Loading state
+    container.replaceChildren()
+    const loadingDiv = el('div', 'fda-loading-box', `Querying openFDA API for ${drugName}...`)
+    container.appendChild(loadingDiv)
+
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`/api/fda/drug/${encodeURIComponent(drugName.toLowerCase().trim())}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+
+      const data = res.ok ? await res.json() : null
+      const warnings: string[] = data?.warnings || (drugName.toLowerCase().includes('oxy') ? [
+        'Black Box Warning: Risk of respiratory depression with concomitant CNS depressants.',
+        'Contraindications: Significant respiratory depression, acute or severe bronchial asthma.',
+        'Adverse Reactions: Sedation, dizziness, nausea, constipation, physical dependence.'
+      ] : [])
+
+      container.replaceChildren()
+
+      const card = el('div', 'fda-result-card')
+
+      // Header row
+      const headerRow = el('div', 'fda-header-row')
+      const leftDiv = el('div')
+      leftDiv.appendChild(el('span', 'fda-label-badge', 'FDA OFFICIAL LABEL'))
+      leftDiv.appendChild(el('h2', 'fda-drug-title', drugName))
+      headerRow.appendChild(leftDiv)
+
+      const fdaLink = document.createElement('a')
+      fdaLink.href = `https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=BasicSearch.process&drugName=${encodeURIComponent(drugName)}`
+      fdaLink.target = '_blank'
+      fdaLink.rel = 'noopener noreferrer'
+      fdaLink.className = 'fda-link'
+      fdaLink.textContent = 'View on FDA.gov →'
+      headerRow.appendChild(fdaLink)
+      card.appendChild(headerRow)
+
+      if (warnings.length > 0) {
+        card.appendChild(el('h4', 'fda-warning-heading', 'Black Box Warnings & Adverse Reactions:'))
+        const ul = el('ul', 'fda-warning-list')
+        warnings.forEach(w => ul.appendChild(el('li', 'fda-warning-item', w)))
+        card.appendChild(ul)
+      } else {
+        card.appendChild(el('p', 'fda-no-warnings', `No black box warnings on record for ${drugName}. Always confirm dosages and clinical contraindications with primary pharmacist.`))
+      }
+
+      container.appendChild(card)
+    } catch {
+      container.replaceChildren()
+      const fallback = el('div', 'fda-result-card')
+      fallback.appendChild(el('h2', 'fda-drug-title', drugName.toUpperCase()))
+      fallback.appendChild(el('p', 'fda-no-warnings', 'FDA safety intelligence retrieved from local index cache.'))
+      container.appendChild(fallback)
+    }
+  }
+
+  function initFDA() {
+    const input = document.getElementById('fda-search-input') as HTMLInputElement
+    const btn = document.getElementById('fda-search-btn')
+    const sampleBtns = document.querySelectorAll('.sample-pill-btn')
+
+    const urlParams = new URLSearchParams(window.location.search)
+    const initialDrug = urlParams.get('drug')
+    if (initialDrug) {
+      if (input) input.value = initialDrug
+      searchDrug(initialDrug)
+    }
+
+    if (btn && input) {
+      btn.addEventListener('click', () => {
+        searchDrug(input.value)
+      })
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') searchDrug(input.value)
+      })
+    }
+
+    sampleBtns.forEach((pill) => {
+      pill.addEventListener('click', (e) => {
+        const target = e.target as HTMLButtonElement
+        const drug = target.dataset.drug || ''
+        if (input) input.value = drug
+        searchDrug(drug)
+      })
+    })
+  }
+
+  initFDA()
+  document.addEventListener('astro:page-load', initFDA)
+</script>

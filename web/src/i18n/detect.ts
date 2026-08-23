@@ -1,9 +1,10 @@
-import type { Language } from './types'
+import type { Language, Translations } from './types'
 import { translations } from './translations'
 
 export const LANGUAGE_STORAGE_KEY = 'carepro_language'
+export const SUPPORTED_LANGUAGES: Language[] = ['en', 'es', 'it']
 
-function isLanguage(value: string | null | undefined): value is Language {
+export function isLanguage(value: string | null | undefined): value is Language {
   return value === 'en' || value === 'es' || value === 'it'
 }
 
@@ -15,6 +16,10 @@ export function detectDefaultLanguage(): Language {
   if (typeof localStorage !== 'undefined') {
     const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY)
     if (isLanguage(saved)) return saved
+  }
+  if (typeof document !== 'undefined') {
+    const match = document.cookie.match(new RegExp(`(?:^|; )${LANGUAGE_STORAGE_KEY}=([^;]*)`))
+    if (match && isLanguage(match[1])) return match[1]
   }
   if (typeof navigator !== 'undefined') {
     const browser = (navigator.languages?.[0] ?? navigator.language ?? '').slice(0, 2).toLowerCase()
@@ -32,7 +37,26 @@ export function currentLanguage(): Language {
   return detectDefaultLanguage()
 }
 
-function resolve(lang: Language, path: string, fallback?: string): string {
+/**
+ * Resolves a dot-notation key (e.g. 'landing.headline') in the specified language,
+ * falling back to English and then to the provided fallback or path itself.
+ * Supports placeholder interpolation: {count}, {name}, {email}, etc.
+ */
+export function resolve(
+  lang: Language,
+  path: string,
+  paramsOrFallback?: Record<string, string | number> | string,
+  fallback?: string
+): string {
+  let params: Record<string, string | number> | undefined
+  let actualFallback = fallback
+
+  if (typeof paramsOrFallback === 'string') {
+    actualFallback = paramsOrFallback
+  } else if (paramsOrFallback && typeof paramsOrFallback === 'object') {
+    params = paramsOrFallback
+  }
+
   const keys = path.split('.')
   const walk = (root: unknown): string | undefined => {
     let current: unknown = root
@@ -45,13 +69,34 @@ function resolve(lang: Language, path: string, fallback?: string): string {
     }
     return typeof current === 'string' ? current : undefined
   }
-  return walk(translations[lang]) ?? walk(translations.en) ?? fallback ?? path
+
+  let text = walk(translations[lang]) ?? walk(translations.en) ?? actualFallback ?? path
+
+  if (params) {
+    for (const [k, v] of Object.entries(params)) {
+      text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v))
+    }
+  }
+
+  return text
 }
 
 /**
- * Non-hook translator for code that runs outside React components (e.g. the API
- * client). Mirrors the resolution logic of the LanguageProvider's `t`.
+ * Creates a scoped translator `t(path, paramsOrFallback?, fallback?)` for a given language.
  */
-export function translate(path: string, fallback?: string): string {
-  return resolve(currentLanguage(), path, fallback)
+export function createTranslator(lang: Language = currentLanguage()) {
+  return (path: string, paramsOrFallback?: Record<string, string | number> | string, fallback?: string): string => {
+    return resolve(lang, path, paramsOrFallback, fallback)
+  }
+}
+
+/**
+ * Universal translator using active language.
+ */
+export function translate(
+  path: string,
+  paramsOrFallback?: Record<string, string | number> | string,
+  fallback?: string
+): string {
+  return resolve(currentLanguage(), path, paramsOrFallback, fallback)
 }

@@ -25,8 +25,16 @@ function extractDetail(errorData: unknown, status: number): string {
   return `Request failed with status ${status}`;
 }
 
-export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const token = localStorage.getItem('token');
+export interface ApiFetchOptions extends RequestInit {
+  token?: string;
+}
+
+export async function apiFetch<T>(endpoint: string, options: ApiFetchOptions = {}): Promise<T> {
+  let token = options.token;
+  if (!token && typeof window !== 'undefined') {
+    token = localStorage.getItem('token') || undefined;
+  }
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string> || {}),
@@ -36,23 +44,22 @@ export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): 
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const response = await fetch(`${BASE_URL}${cleanEndpoint}`, {
     ...options,
     headers,
   });
 
-  // A 401 on the login endpoint itself means "bad credentials", not an expired
-  // session — let the backend detail (e.g. "Invalid credentials") surface below
-  // instead of hijacking it with the session-expired flow.
   const isLoginRequest = endpoint.includes('/auth/login');
 
   if (response.status === 401 && !isLoginRequest) {
-    // Expired or invalid session on an authenticated call — force re-login
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
-    localStorage.removeItem('email');
-    if (window.location.pathname !== '/login') {
-      window.location.href = '/login';
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+      localStorage.removeItem('role');
+      localStorage.removeItem('email');
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     }
     throw new ApiError(translate('auth.sessionExpired', 'Session expired. Please log in again.'), 401);
   }

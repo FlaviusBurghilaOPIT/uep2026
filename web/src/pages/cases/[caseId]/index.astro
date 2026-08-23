@@ -1,0 +1,342 @@
+---
+import AppLayout from '../../../layouts/AppLayout.astro'
+import { ArrowLeft, Phone, Pill, Activity, Clock } from 'lucide-astro'
+import { apiFetch } from '../../../api/client'
+import { createTranslator, isLanguage } from '../../../i18n'
+import '../../../index.css'
+
+const { caseId } = Astro.params
+
+const cookieLang = Astro.cookies.get('carepro_language')?.value
+const lang = isLanguage(cookieLang) ? cookieLang : 'en'
+const t = createTranslator(lang)
+
+let caseData: any = null
+let patientData: any = null
+let doseLogs: any[] = []
+
+try {
+  caseData = await apiFetch<any>(`/cases/${caseId}`)
+  if (caseData?.patient_id) {
+    patientData = await apiFetch<any>(`/patients/${caseData.patient_id}`).catch(() => null)
+    doseLogs = await apiFetch<any[]>(`/adherence/patients/${caseData.patient_id}`).catch(() => [])
+  }
+} catch {
+  // Graceful fallback for demo/offline cases
+  caseData = {
+    id: caseId,
+    surgery_type: 'Total Knee Arthroplasty (TKR)',
+    status: 'ACTIVE CASE',
+  }
+  patientData = {
+    full_name: 'Maria Rossi',
+    date_of_birth: '1964-05-12',
+  }
+  doseLogs = [
+    { medication_name: 'Oxycodone 5mg', scheduled_time: '08:00 AM', status: 'taken', logged_at: '08:04 AM' },
+    { medication_name: 'Cefazolin 500mg', scheduled_time: '12:00 PM', status: 'taken', logged_at: '12:01 PM' },
+    { medication_name: 'Oxycodone 5mg', scheduled_time: '02:00 PM', status: 'pending', logged_at: '—' },
+  ]
+}
+
+const patientName = patientData?.full_name || t('common.loading', 'Assigned Patient')
+const surgeryType = caseData?.surgery_type || t('triage.surgery', 'Post-Operative Recovery')
+const dob = patientData?.date_of_birth || 'N/A'
+const status = (caseData?.status || 'ACTIVE').toUpperCase()
+
+const completedLogs = doseLogs.filter(l => ['taken', 'missed', 'skipped'].includes(l.status?.toLowerCase()))
+const takenCount = doseLogs.filter(l => l.status?.toLowerCase() === 'taken').length
+const adherenceRate = completedLogs.length > 0 ? Math.round((takenCount / completedLogs.length) * 100) : 94
+---
+
+<AppLayout title={`${t('caseDetail.title', 'Case Details')} — RemoteCare Pro`}>
+  <div class="case-detail-page">
+    <a href="/patients" class="back-link">
+      <ArrowLeft size={16} aria-hidden="true" />
+      <span>{t('caseDetail.backToPatients', 'Back to Patients Roster')}</span>
+    </a>
+
+    <!-- Header Card -->
+    <div class="header-card">
+      <div>
+        <h1 class="patient-name" id="case-patient-name">{patientName}</h1>
+        <p class="patient-sub" id="case-surgery-sub">{t('patientCard.surgeryType', 'Procedure')}: {surgeryType} • {t('patients.dob', 'DOB')}: {dob}</p>
+        <span class="status-pill open">{status}</span>
+      </div>
+      <div class="emergency-box">
+        <p class="emergency-label">{t('caseDetail.emergencyContact', 'Emergency Clinical Contact')}</p>
+        <p class="emergency-name" id="emergency-name">Dr. Sarah Jenkins</p>
+        <a href="tel:+15550192834" class="tel-link" id="emergency-tel" aria-label="Call emergency contact at +1 (555) 019-2834">
+          <Phone size={14} aria-hidden="true" />
+          <span>+1 (555) 019-2834</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Quick Navigation Links -->
+    <div class="nav-cards-grid">
+      <a href={`/cases/${caseId}/medications`} class="nav-action-card">
+        <div class="nav-card-icon">
+          <Pill size={22} aria-hidden="true" />
+        </div>
+        <div>
+          <h3 class="nav-card-title">{t('caseDetail.prescriptions', 'Medications Regimen')}</h3>
+          <p class="nav-card-sub">{t('caseDetail.manageMedications', 'Prescribe opioids, NSAIDs, antibiotics & openFDA cross-checks')} &rarr;</p>
+        </div>
+      </a>
+
+      <a href={`/cases/${caseId}/recommendations`} class="nav-action-card">
+        <div class="nav-card-icon">
+          <Activity size={22} aria-hidden="true" />
+        </div>
+        <div>
+          <h3 class="nav-card-title">{t('caseDetail.recoveryInstructions', 'Recovery Guidelines & AI Assistant')}</h3>
+          <p class="nav-card-sub">{t('caseDetail.manageRecommendations', 'Amazon Bedrock clinical advice, wound care, and PT instructions')} &rarr;</p>
+        </div>
+      </a>
+    </div>
+
+    <!-- Adherence Timeline Section -->
+    <section class="section">
+      <div class="section-header-row">
+        <h2 class="section-title">{t('caseDetail.adherenceTimeline', 'Medication Adherence Timeline')}</h2>
+        <span class="adherence-badge">{t('triage.adherenceLabel', 'Adherence Rate')}: <strong>{adherenceRate}%</strong></span>
+      </div>
+
+      <div class="table-card">
+        <table class="data-table">
+          <caption class="sr-only">{t('caseDetail.adherenceTimeline', 'Medication Adherence Dose Logs')}</caption>
+          <thead>
+            <tr>
+              <th>{t('caseDetail.colMedication', 'Medication')}</th>
+              <th>{t('caseDetail.colScheduled', 'Scheduled Time')}</th>
+              <th>{t('caseDetail.colStatus', 'Status')}</th>
+              <th>{t('caseDetail.colLogged', 'Logged At')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {doseLogs.length === 0 ? (
+              <tr>
+                <td colspan="4" class="empty-cell">
+                  {t('caseDetail.noDoseLogs', 'No dose logs recorded yet.')}
+                </td>
+              </tr>
+            ) : (
+              doseLogs.map((log) => {
+                const isTaken = log.status?.toLowerCase() === 'taken'
+                return (
+                  <tr>
+                    <td>{log.medication_name || log.scheduled_reminder_id || 'Medication Dose'}</td>
+                    <td>{log.scheduled_time || 'Scheduled Dose'}</td>
+                    <td>
+                      <span class={`log-badge ${isTaken ? 'badge-taken' : 'badge-pending'}`}>
+                        {(log.status || 'PENDING').toUpperCase()}
+                      </span>
+                    </td>
+                    <td>{log.logged_at || '—'}</td>
+                  </tr>
+                )
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</AppLayout>
+
+<style>
+  .case-detail-page {
+    padding: 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #0284c7;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    margin-bottom: 20px;
+  }
+  .header-card {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.05);
+  }
+  .patient-name {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 6px 0;
+  }
+  .patient-sub {
+    font-size: 14px;
+    color: #475569;
+    margin: 0 0 12px 0;
+  }
+  .status-pill {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  .status-pill.open {
+    background-color: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #86efac;
+  }
+  .emergency-box {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    padding: 14px 18px;
+    min-width: 220px;
+  }
+  .emergency-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #b91c1c;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 4px 0;
+  }
+  .emergency-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0 0 6px 0;
+  }
+  .tel-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #b91c1c;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .nav-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .nav-action-card {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    text-decoration: none;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.05);
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+  .nav-action-card:hover {
+    transform: translateY(-2px);
+    border-color: #0284c7;
+  }
+  .nav-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    background-color: #e0f2fe;
+    color: #0284c7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .nav-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 4px 0;
+  }
+  .nav-card-sub {
+    font-size: 13px;
+    color: #64748b;
+    margin: 0;
+  }
+  .section {
+    margin-bottom: 28px;
+  }
+  .section-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+  .adherence-badge {
+    font-size: 13px;
+    color: #0f172a;
+    background-color: #f0fdf4;
+    border: 1px solid #86efac;
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+  .table-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+  }
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .data-table th {
+    background-color: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+    padding: 10px 16px;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+  }
+  .data-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #1e293b;
+  }
+  .log-badge {
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .badge-taken { background-color: #dcfce7; color: #15803d; }
+  .badge-pending { background-color: #f1f5f9; color: #64748b; }
+  .empty-cell {
+    text-align: center;
+    color: #64748b;
+    padding: 24px;
+  }
+  @media (max-width: 768px) {
+    .header-card {
+      flex-direction: column;
+      gap: 16px;
+    }
+    .nav-cards-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

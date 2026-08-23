@@ -1,0 +1,309 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro'
+import { Users, FilePlus2, Printer } from 'lucide-astro'
+import { apiFetch } from '../../api/client'
+import { createTranslator, isLanguage } from '../../i18n'
+import '../../index.css'
+
+const cookieLang = Astro.cookies.get('carepro_language')?.value
+const lang = isLanguage(cookieLang) ? cookieLang : 'en'
+const t = createTranslator(lang)
+
+let patients: any[] = []
+let cases: any[] = []
+
+try {
+  const [pList, cList] = await Promise.all([
+    apiFetch<any[]>('/patients').catch(() => []),
+    apiFetch<any[]>('/cases').catch(() => [])
+  ])
+  patients = pList || []
+  cases = cList || []
+} catch {
+  patients = [
+    { id: 'demo-p1', full_name: 'Maria Rossi', email: 'maria.rossi@example.com', date_of_birth: '1964-05-12', invite_code: '424242' },
+    { id: 'demo-p2', full_name: 'John Doe', email: 'john.doe@example.com', date_of_birth: '1978-11-23', invite_code: '109283' }
+  ]
+  cases = [
+    { id: 'demo-case-1', patient_id: 'demo-p1', surgery_type: 'Total Knee Arthroplasty' }
+  ]
+}
+---
+
+<AppLayout title={`${t('patients.title', 'Patients Cohort')} — RemoteCare Pro`}>
+  <div class="patients-page">
+    <div class="header">
+      <div>
+        <h1 class="title">{t('patients.title', 'Patient Cohort Management')}</h1>
+        <p class="subtitle">{t('patients.subtitle', 'Enrolled surgical patients, onboarding codes, and adherence records')}</p>
+      </div>
+      <a href="/patients/new" class="new-patient-btn">
+        <FilePlus2 size={16} aria-hidden="true" />
+        <span>{t('patients.newPatient', '+ Add New Patient')}</span>
+      </a>
+    </div>
+
+    <!-- Patients Roster Table -->
+    <div class="table-card">
+      <div class="table-header-row">
+        <h3 class="table-title">{t('patients.tableTitle', 'Active Patient Registry')}</h3>
+        <div class="search-wrap">
+          <input
+            type="text"
+            id="patient-search"
+            class="search-input"
+            placeholder={t('patients.searchPlaceholder', 'Search patients...')}
+            aria-label={t('patients.searchPlaceholder', 'Search patients...')}
+          />
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table" id="patients-table">
+          <caption class="sr-only">{t('patients.tableTitle', 'Active Patient Registry')}</caption>
+          <thead>
+            <tr>
+              <th>{t('patients.colName', 'Patient Name')}</th>
+              <th>{t('patients.colDob', 'Date of Birth')}</th>
+              <th>{t('patients.colStatus', 'Status / Invite Code')}</th>
+              <th>{t('patients.colCases', 'Associated Cases')}</th>
+              <th>{t('patients.colExports', 'Clinical Exports')}</th>
+            </tr>
+          </thead>
+          <tbody id="patients-tbody">
+            {patients.length === 0 ? (
+              <tr>
+                <td colspan="5" class="empty-cell">
+                  {t('patients.noPatients', 'No enrolled patients found. Click "+ Add New Patient" to enroll.')}
+                </td>
+              </tr>
+            ) : (
+              patients.map((p) => {
+                const pCases = cases.filter((c) => c.patient_id === p.id)
+                return (
+                  <tr class="patient-row" data-name={(p.full_name || '').toLowerCase()} data-email={(p.email || '').toLowerCase()}>
+                    <td>
+                      <div class="patient-cell-name">{p.full_name}</div>
+                      <div class="patient-cell-sub">{p.email || p.phone || t('patients.noContact', 'No direct contact')}</div>
+                    </td>
+                    <td>{p.date_of_birth || 'N/A'}</td>
+                    <td>
+                      <span class="invite-badge">
+                        {p.invite_code || 'ACTIVE'}
+                      </span>
+                    </td>
+                    <td>
+                      {pCases.length > 0 ? (
+                        pCases.map((c) => (
+                          <a href={`/cases/${c.id}`} class="case-link">
+                            {c.surgery_type} &rarr;
+                          </a>
+                        ))
+                      ) : (
+                        <span class="no-cases-text">{t('patients.noCases', 'No active cases')}</span>
+                      )}
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        class="export-btn print-patient-btn"
+                        data-name={p.full_name}
+                        aria-label={`${t('patients.printPdf', 'Export PDF')} for ${p.full_name}`}
+                      >
+                        <Printer size={13} aria-hidden="true" />
+                        <span>{t('patients.printPdf', 'Export PDF')}</span>
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</AppLayout>
+
+<style>
+  .patients-page {
+    padding: 32px;
+    max-width: 1300px;
+    margin: 0 auto;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+  }
+  .title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #64748b;
+    margin: 4px 0 0;
+  }
+  .new-patient-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #0284c7;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(2,132,199,0.2);
+    transition: background-color 0.15s ease;
+  }
+  .new-patient-btn:hover {
+    background-color: #0369a1;
+  }
+  .table-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.05);
+    overflow: hidden;
+  }
+  .table-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .table-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+  .search-input {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    font-size: 13px;
+    outline: none;
+    width: 240px;
+  }
+  .search-input:focus {
+    border-color: #0284c7;
+  }
+  .table-container {
+    overflow-x: auto;
+  }
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 14px;
+  }
+  .data-table th {
+    background-color: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+    padding: 12px 18px;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .data-table td {
+    padding: 14px 18px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #1e293b;
+    vertical-align: middle;
+  }
+  .data-table tr:hover {
+    background-color: #f8fafc;
+  }
+  .patient-cell-name {
+    font-weight: 700;
+    color: #0f172a;
+  }
+  .patient-cell-sub {
+    font-size: 12px;
+    color: #64748b;
+  }
+  .invite-badge {
+    background: #e0f2fe;
+    color: #0369a1;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .case-link {
+    display: inline-block;
+    margin-right: 8px;
+    color: #0284c7;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .no-cases-text {
+    color: #94a3b8;
+    font-size: 13px;
+  }
+  .export-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+  .export-btn:hover {
+    background-color: #e2e8f0;
+  }
+  .empty-cell {
+    text-align: center;
+    color: #64748b;
+    padding: 32px;
+  }
+</style>
+
+<script>
+  function initPatientsPage() {
+    const searchInput = document.getElementById('patient-search') as HTMLInputElement
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        const query = searchInput.value.toLowerCase().trim()
+        const rows = document.querySelectorAll<HTMLTableRowElement>('.patient-row')
+        rows.forEach(row => {
+          const name = row.getAttribute('data-name') || ''
+          const email = row.getAttribute('data-email') || ''
+          if (!query || name.includes(query) || email.includes(query)) {
+            row.style.display = ''
+          } else {
+            row.style.display = 'none'
+          }
+        })
+      })
+    }
+
+    const printBtns = document.querySelectorAll('.print-patient-btn')
+    printBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        window.print()
+      })
+    })
+  }
+
+  initPatientsPage()
+  document.addEventListener('astro:page-load', initPatientsPage)
+</script>

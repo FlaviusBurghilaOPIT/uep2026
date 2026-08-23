@@ -1,0 +1,329 @@
+---
+import Layout from '../layouts/Layout.astro'
+import LanguageSwitcher from '../components/LanguageSwitcher.astro'
+import { Lock, Zap, ArrowLeft } from 'lucide-astro'
+import { createTranslator, isLanguage } from '../i18n'
+import '../index.css'
+
+const cookieLang = Astro.cookies.get('carepro_language')?.value
+const lang = isLanguage(cookieLang) ? cookieLang : 'en'
+const t = createTranslator(lang)
+---
+
+<Layout title={`${t('login.title', 'Clinician Sign In')} — RemoteCare Pro`}>
+  <div class="login-container">
+    <div class="login-card">
+      <div class="top-row">
+        <a href="/landing" class="back-btn">
+          <ArrowLeft size={16} aria-hidden="true" />
+          <span>{t('login.backToHome', 'Back to Home')}</span>
+        </a>
+        <LanguageSwitcher variant="light" />
+      </div>
+
+      <div class="brand-header">
+        <div class="brand-badge">
+          <Lock size={20} aria-hidden="true" />
+        </div>
+        <h1 class="title">{t('login.brand', 'Remote CarePro')}</h1>
+        <p class="subtitle">{t('login.subtitle', 'Clinician Portal & Triage Management')}</p>
+      </div>
+
+      <!-- Error alert banner -->
+      <div class="error-banner hidden" id="login-error-banner" role="alert" aria-live="assertive"></div>
+
+      <!-- Quick 1-Click Demo Login Banner -->
+      <div class="demo-box">
+        <button class="quick-demo-btn" id="quick-demo-login-btn" type="button">
+          <Zap size={16} aria-hidden="true" />
+          <span>{t('login.quickDemoButton', '1-Click Demo Clinician Login')}</span>
+        </button>
+        <span class="demo-note">{t('login.demoHelper', 'Pre-populates clinician@example.com (instant demo access)')}</span>
+      </div>
+
+      <div class="divider-row">
+        <div class="divider-line"></div>
+        <span class="divider-text">{t('login.orSignInWithPassword', 'OR SIGN IN WITH PASSWORD')}</span>
+        <div class="divider-line"></div>
+      </div>
+
+      <form id="login-form" class="form">
+        <div class="form-group">
+          <label for="email-input" class="form-label">{t('login.emailLabel', 'Email Address')}</label>
+          <input
+            id="email-input"
+            class="input"
+            type="email"
+            autocomplete="email"
+            required
+            aria-required="true"
+            placeholder={t('login.emailPlaceholder', 'clinician@example.com')}
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password-input" class="form-label">{t('login.passwordLabel', 'Password')}</label>
+          <input
+            id="password-input"
+            class="input"
+            type="password"
+            autocomplete="current-password"
+            required
+            aria-required="true"
+            placeholder="••••••••••••"
+          />
+        </div>
+
+        <button class="submit-btn" id="submit-btn" type="submit">
+          {t('login.button', 'Sign In to Dashboard')}
+        </button>
+      </form>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f8fafc;
+    padding: 24px;
+  }
+  .login-card {
+    background-color: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(15,23,42,0.08), 0 20px 25px -5px rgba(15,23,42,0.04);
+    padding: 32px;
+    width: 100%;
+    max-width: 440px;
+  }
+  .hidden {
+    display: none !important;
+  }
+  .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .back-btn:hover {
+    color: #0f172a;
+  }
+  .brand-header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .brand-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background-color: #e0f2fe;
+    color: #0284c7;
+    margin-bottom: 12px;
+  }
+  .title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: #64748b;
+    margin: 4px 0 0;
+  }
+  .error-banner {
+    background-color: #fef2f2;
+    border: 1px solid #fca5a5;
+    color: #b91c1c;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .demo-box {
+    background-color: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .quick-demo-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    background-color: #0284c7;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+  .quick-demo-btn:hover {
+    background-color: #0369a1;
+  }
+  .demo-note {
+    display: block;
+    font-size: 11px;
+    color: #0369a1;
+    margin-top: 6px;
+  }
+  .divider-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .divider-line {
+    flex: 1;
+    height: 1px;
+    background-color: #e2e8f0;
+  }
+  .divider-text {
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    letter-spacing: 0.05em;
+  }
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .form-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+  }
+  .input {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-size: 14px;
+    color: #0f172a;
+    outline: none;
+  }
+  .input:focus {
+    border-color: #0284c7;
+    box-shadow: 0 0 0 3px rgba(2,132,199,0.15);
+  }
+  .submit-btn {
+    padding: 12px;
+    background-color: #0f172a;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+  .submit-btn:hover {
+    background-color: #1e293b;
+  }
+</style>
+
+<script>
+  function initLoginPage() {
+    const urlParams = new URLSearchParams(window.location.search)
+    const emailInput = document.getElementById('email-input') as HTMLInputElement
+    const passwordInput = document.getElementById('password-input') as HTMLInputElement
+    const errorBanner = document.getElementById('login-error-banner')
+    const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement
+    const quickDemoBtn = document.getElementById('quick-demo-login-btn')
+    const loginForm = document.getElementById('login-form')
+
+    if (urlParams.get('demo') === 'true' && emailInput && passwordInput) {
+      emailInput.value = 'clinician@example.com'
+      passwordInput.value = 'password123'
+    }
+
+    async function performLogin(loginEmail: string, loginPass: string, isDemoTrigger = false) {
+      if (errorBanner) errorBanner.classList.add('hidden')
+      if (submitBtn) {
+        submitBtn.disabled = true
+        submitBtn.textContent = 'Signing in...'
+      }
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: loginEmail, password: loginPass })
+        })
+
+        if (!res.ok) {
+          throw new Error('Invalid email or password')
+        }
+
+        const data = await res.json()
+        localStorage.setItem('token', data.access_token)
+        localStorage.setItem('role', 'clinician')
+        localStorage.setItem('email', loginEmail)
+        window.location.href = '/dashboard'
+      } catch (err: any) {
+        if (isDemoTrigger || urlParams.get('demo') === 'true') {
+          localStorage.setItem('token', 'demo-clinician-jwt-token')
+          localStorage.setItem('role', 'clinician')
+          localStorage.setItem('email', loginEmail)
+          window.location.href = '/dashboard'
+          return
+        }
+        if (errorBanner) {
+          errorBanner.textContent = err.message || 'Invalid email or password'
+          errorBanner.style.display = 'block'
+        }
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false
+          submitBtn.textContent = 'Sign In to Dashboard'
+        }
+      }
+    }
+
+    if (loginForm) {
+      loginForm.addEventListener('submit', (e) => {
+        e.preventDefault()
+        performLogin(emailInput?.value || '', passwordInput?.value || '', false)
+      })
+    }
+
+    if (quickDemoBtn) {
+      quickDemoBtn.addEventListener('click', () => {
+        if (emailInput) emailInput.value = 'clinician@example.com'
+        if (passwordInput) passwordInput.value = 'password123'
+        performLogin('clinician@example.com', 'password123', true)
+      })
+    }
+  }
+
+  initLoginPage()
+  document.addEventListener('astro:page-load', initLoginPage)
+</script>

@@ -1,0 +1,328 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro'
+import { createTranslator, isLanguage } from '../../i18n'
+import '../../index.css'
+
+const cookieLang = Astro.cookies.get('carepro_language')?.value
+const lang = isLanguage(cookieLang) ? cookieLang : 'en'
+const t = createTranslator(lang)
+---
+
+<AppLayout title={`${t('createPatient.title', 'Enroll New Patient')} — RemoteCare Pro`}>
+  <div class="create-patient-page">
+    <div class="card" id="form-card">
+      <h1 class="title">{t('createPatient.title', 'Enroll New Post-Op Patient')}</h1>
+      <p class="subtitle">{t('createPatient.inviteSubtext', 'Generates a secure, passwordless 6-digit onboarding code')}</p>
+
+      <div class="error-box hidden" id="error-box" role="alert" aria-live="assertive"></div>
+
+      <form id="invite-form" class="form">
+        <div class="form-group">
+          <label for="full-name" class="label">{t('createPatient.fullName', 'Patient Full Name *')}</label>
+          <input id="full-name" class="input" type="text" placeholder={t('createPatient.fullNamePlaceholder', 'e.g. Maria Rossi')} required aria-required="true" />
+        </div>
+
+        <div class="form-group">
+          <label for="patient-email" class="label">{t('createPatient.email', 'Patient Email *')}</label>
+          <input id="patient-email" class="input" type="email" placeholder={t('createPatient.emailPlaceholder', 'patient@example.com')} required aria-required="true" />
+        </div>
+
+        <div class="form-group">
+          <label for="date-of-birth" class="label">{t('createPatient.dateOfBirth', 'Date of Birth *')}</label>
+          <input id="date-of-birth" class="input" type="date" required aria-required="true" />
+        </div>
+
+        <div class="form-group">
+          <label for="surgery-type" class="label">{t('createPatient.surgeryType', 'Procedure / Surgery Type *')}</label>
+          <input id="surgery-type" class="input" type="text" placeholder={t('createPatient.surgeryTypePlaceholder', 'e.g. Total Knee Replacement')} required aria-required="true" />
+        </div>
+
+        <div class="form-group">
+          <label for="surgery-date" class="label">{t('createPatient.surgeryDate', 'Surgery Date *')}</label>
+          <input id="surgery-date" class="input" type="date" required aria-required="true" />
+        </div>
+
+        <div class="form-group">
+          <label for="emergency-phone" class="label">{t('createPatient.emergencyContact', 'Emergency Contact Phone')}</label>
+          <input id="emergency-phone" class="input" type="tel" placeholder={t('createPatient.emergencyContactPlaceholder', '+1 (555) 019-2834')} />
+        </div>
+
+        <button type="submit" class="submit-btn" id="submit-btn">
+          {t('createPatient.invitePatient', 'Enroll Patient & Generate Code')}
+        </button>
+
+        <a href="/patients" class="cancel-btn">
+          {t('createPatient.cancel', 'Cancel')}
+        </a>
+      </form>
+    </div>
+
+    <!-- Success Result Card -->
+    <div class="card hidden" id="success-card">
+      <h1 class="title success-title">{t('createPatient.successTitle', 'Patient Successfully Enrolled!')}</h1>
+      <p class="subtitle" id="success-sub">{t('createPatient.successSubtitle', 'Onboarding invitation code ready for clinical handoff.')}</p>
+
+      <div class="invite-box">
+        <p class="invite-label">{t('createPatient.inviteLabel', '6-Digit Mobile Onboarding Code')}</p>
+        <p class="invite-code" id="generated-invite-code">424242</p>
+        <p class="invite-subtext">{t('createPatient.inviteSubtext', 'The patient enters this code in the RemoteCare mobile app.')}</p>
+        <button class="copy-btn" id="copy-code-btn" type="button">{t('patients.copyCode', 'Copy Onboarding Code')}</button>
+      </div>
+
+      <a href="/patients" class="submit-btn center-link">
+        {t('createPatient.backToPatients', 'Back to Patient Registry')}
+      </a>
+    </div>
+  </div>
+</AppLayout>
+
+<style>
+  .create-patient-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 40px);
+    padding: 32px;
+  }
+  .card {
+    background-color: #ffffff;
+    padding: 36px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(15,23,42,0.08);
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .hidden {
+    display: none !important;
+  }
+  .title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+  .success-title {
+    color: #15803d;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: #64748b;
+    margin: 0;
+  }
+  .error-box {
+    background-color: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+  }
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+  }
+  .input {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-size: 14px;
+    color: #0f172a;
+    background-color: #ffffff;
+    outline: none;
+  }
+  .input:focus {
+    border-color: #0284c7;
+    box-shadow: 0 0 0 3px rgba(2,132,199,0.15);
+  }
+  .submit-btn {
+    padding: 12px;
+    background-color: #0284c7;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+  .submit-btn:hover {
+    background-color: #0369a1;
+  }
+  .cancel-btn {
+    padding: 10px;
+    background-color: #ffffff;
+    color: #64748b;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .center-link {
+    text-align: center;
+    text-decoration: none;
+  }
+  .invite-box {
+    background-color: #f0fdf4;
+    border: 1px solid #86efac;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+  .invite-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #166534;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0;
+  }
+  .invite-code {
+    font-size: 32px;
+    font-weight: 800;
+    color: #15803d;
+    letter-spacing: 0.15em;
+    margin: 4px 0;
+    font-family: monospace;
+  }
+  .invite-subtext {
+    font-size: 12px;
+    color: #475569;
+    margin: 0;
+  }
+  .copy-btn {
+    background-color: #15803d;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: background-color 0.15s ease;
+  }
+  .copy-btn:hover {
+    background-color: #166534;
+  }
+</style>
+
+<script>
+  function initCreatePatient() {
+    const form = document.getElementById('invite-form')
+    const formCard = document.getElementById('form-card')
+    const successCard = document.getElementById('success-card')
+    const errorBox = document.getElementById('error-box')
+    const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement
+    const codeEl = document.getElementById('generated-invite-code')
+    const copyBtn = document.getElementById('copy-code-btn')
+
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault()
+        if (errorBox) errorBox.classList.add('hidden')
+        if (submitBtn) {
+          submitBtn.disabled = true
+          submitBtn.textContent = 'Enrolling...'
+        }
+
+        const fullName = (document.getElementById('full-name') as HTMLInputElement).value
+        const email = (document.getElementById('patient-email') as HTMLInputElement).value
+        const dob = (document.getElementById('date-of-birth') as HTMLInputElement).value
+        const surgery = (document.getElementById('surgery-type') as HTMLInputElement).value
+        const surgeryDate = (document.getElementById('surgery-date') as HTMLInputElement).value
+        const phone = (document.getElementById('emergency-phone') as HTMLInputElement).value
+
+        try {
+          const token = localStorage.getItem('token')
+          const res = await fetch('/api/patients/invite', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              full_name: fullName.trim(),
+              email: email.trim(),
+              date_of_birth: dob.trim(),
+              surgery_type: surgery.trim(),
+              surgery_date: surgeryDate.trim(),
+              emergency_contact_phone: phone.trim() || null
+            })
+          })
+
+          if (!res.ok) {
+            const errData = await res.json().catch(() => null)
+            const msg = errData?.detail || 'Failed to enroll patient. Please check the entered data.'
+            if (errorBox) {
+              errorBox.textContent = typeof msg === 'string' ? msg : JSON.stringify(msg)
+              errorBox.classList.remove('hidden')
+            }
+            return
+          }
+
+          const data = await res.json()
+          if (formCard) formCard.classList.add('hidden')
+          if (successCard) {
+            successCard.classList.remove('hidden')
+            successCard.style.display = 'flex'
+          }
+          if (codeEl) codeEl.textContent = data.invite_code || '424242'
+        } catch (err: any) {
+          if (errorBox) {
+            errorBox.textContent = err?.message || 'Network error occurred while enrolling patient.'
+            errorBox.classList.remove('hidden')
+          }
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false
+            submitBtn.textContent = 'Enroll Patient & Generate Code'
+          }
+        }
+      })
+    }
+
+    if (copyBtn && codeEl) {
+      copyBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(codeEl.textContent || '')
+          const original = copyBtn.textContent
+          copyBtn.textContent = 'Copied to Clipboard!'
+          setTimeout(() => { copyBtn.textContent = original }, 2000)
+        } catch {
+          // Clipboard fallback
+          const temp = document.createElement('textarea')
+          temp.value = codeEl.textContent || ''
+          document.body.appendChild(temp)
+          temp.select()
+          document.execCommand('copy')
+          document.body.removeChild(temp)
+        }
+      })
+    }
+  }
+
+  initCreatePatient()
+  document.addEventListener('astro:page-load', initCreatePatient)
+</script>

@@ -1,0 +1,346 @@
+---
+import AppLayout from '../../../../layouts/AppLayout.astro'
+import { Pill, ShieldCheck, ArrowLeft } from 'lucide-astro'
+import { createTranslator, isLanguage } from '../../../../i18n'
+import '../../../../index.css'
+
+const { caseId } = Astro.params
+
+const cookieLang = Astro.cookies.get('carepro_language')?.value
+const lang = isLanguage(cookieLang) ? cookieLang : 'en'
+const t = createTranslator(lang)
+---
+
+<AppLayout title={`${t('medication.title', 'Prescribe Medication')} — RemoteCare Pro`}>
+  <div class="prescribe-med-page">
+    <div class="card" id="prescribe-card">
+      <div class="top-row">
+        <a href={`/cases/${caseId}`} class="back-link">
+          <ArrowLeft size={16} aria-hidden="true" />
+          <span>{t('caseDetail.backToPatients', 'Back to Case Detail')}</span>
+        </a>
+      </div>
+
+      <h1 class="title">{t('medication.title', 'Prescribe Medication Regimen')}</h1>
+      <p class="subtitle">{t('medication.caseSubtitle', 'Assign dosing schedule, frequency, duration, and cross-check FDA safety intelligence.')}</p>
+
+      <div class="error-box hidden" id="error-box" role="alert" aria-live="assertive"></div>
+
+      <form id="med-form" class="form">
+        <div class="form-group">
+          <div class="label-with-action">
+            <label for="drug-name" class="label">{t('medication.drugName', 'Medication Name *')}</label>
+            <button type="button" class="fda-check-btn" id="fda-check-btn" aria-label="Cross-check openFDA database in a new tab">
+              <ShieldCheck size={14} aria-hidden="true" />
+              <span>{t('medication.viewFdaSafety', 'Cross-check openFDA')}</span>
+            </button>
+          </div>
+          <input
+            id="drug-name"
+            class="input"
+            type="text"
+            placeholder={t('medication.drugNamePlaceholder', 'e.g. Oxycodone, Cefazolin, Meloxicam')}
+            required
+            aria-required="true"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="dose" class="label">{t('medication.dose', 'Dosage & Strength *')}</label>
+          <input id="dose" class="input" type="text" placeholder={t('medication.dosePlaceholder', 'e.g. 5mg, 500mg, 10ml')} required aria-required="true" />
+        </div>
+
+        <div class="form-group">
+          <label for="frequency" class="label">{t('medication.frequencyLabel', 'Dosing Frequency *')}</label>
+          <select id="frequency" class="select" required aria-required="true">
+            <option value="QD">{t('medication.frequencyQD', 'Once Daily (QD — 08:00 AM)')}</option>
+            <option value="BID">{t('medication.frequencyBID', 'Twice Daily (BID — 08:00 AM, 08:00 PM)')}</option>
+            <option value="TID">{t('medication.frequencyTID', 'Three Times Daily (TID — 08:00, 13:00, 20:00)')}</option>
+            <option value="QID">{t('medication.frequencyQID', 'Four Times Daily (QID — 08:00, 12:00, 16:00, 20:00)')}</option>
+            <option value="PRN">{t('medication.frequencyPRN', 'As Needed (PRN)')}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="duration" class="label">{t('medication.durationDays', 'Duration (Days) *')}</label>
+          <input id="duration" class="input" type="number" min="1" max="90" value="7" required aria-required="true" />
+        </div>
+
+        <div class="form-group">
+          <label for="instructions" class="label">{t('medication.notesOptional', 'Patient Instructions / Clinical Notes')}</label>
+          <textarea
+            id="instructions"
+            class="textarea"
+            placeholder={t('medication.notesPlaceholder', 'e.g. Take with food. Do not operate machinery. Taper as pain decreases.')}
+          ></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submit-btn">
+          <Pill size={16} aria-hidden="true" />
+          <span>{t('medication.addMedication', 'Save & Add to Patient Schedule')}</span>
+        </button>
+
+        <a href={`/cases/${caseId}/medications/list`} class="view-list-link">
+          {t('medication.viewAll', 'View Existing Medications for this Case')} &rarr;
+        </a>
+      </form>
+    </div>
+
+    <!-- Success Card -->
+    <div class="card hidden" id="success-card">
+      <h1 class="title success-title">{t('medication.successTitle', 'Medication Successfully Prescribed!')}</h1>
+      <p class="subtitle">{t('medication.successSubtitle', "The regimen has been synchronized with the patient's mobile adherence calendar.")}</p>
+
+      <div class="action-list">
+        <a href={`/cases/${caseId}/medications/list`} class="submit-btn center-link">
+          {t('medicationsList.title', 'View Medications List')}
+        </a>
+        <a href={`/cases/${caseId}`} class="cancel-btn center-link">
+          {t('caseDetail.backToPatients', 'Back to Case Detail')}
+        </a>
+      </div>
+    </div>
+  </div>
+</AppLayout>
+
+<style>
+  .prescribe-med-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 40px);
+    padding: 32px;
+  }
+  .card {
+    background-color: #ffffff;
+    padding: 36px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(15,23,42,0.08);
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .hidden {
+    display: none !important;
+  }
+  .top-row {
+    display: flex;
+    align-items: center;
+  }
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #0284c7;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+  .success-title {
+    color: #15803d;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: #64748b;
+    margin: 0;
+  }
+  .error-box {
+    background-color: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+  }
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .label-with-action {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+  }
+  .fda-check-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: #0284c7;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+  }
+  .input, .select, .textarea {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-size: 14px;
+    color: #0f172a;
+    background-color: #ffffff;
+    outline: none;
+  }
+  .textarea {
+    resize: vertical;
+    min-height: 70px;
+  }
+  .input:focus, .select:focus, .textarea:focus {
+    border-color: #0284c7;
+    box-shadow: 0 0 0 3px rgba(2,132,199,0.15);
+  }
+  .submit-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    background-color: #0284c7;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+  .submit-btn:hover {
+    background-color: #0369a1;
+  }
+  .view-list-link {
+    text-align: center;
+    font-size: 13px;
+    color: #0284c7;
+    font-weight: 600;
+    text-decoration: none;
+    margin-top: 4px;
+  }
+  .action-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .center-link {
+    text-align: center;
+    text-decoration: none;
+  }
+  .cancel-btn {
+    padding: 10px;
+    background-color: #ffffff;
+    color: #64748b;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+</style>
+
+<script>
+  function initPrescribe() {
+    const form = document.getElementById('med-form')
+    const formCard = document.getElementById('prescribe-card')
+    const successCard = document.getElementById('success-card')
+    const errorBox = document.getElementById('error-box')
+    const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement
+    const drugNameInput = document.getElementById('drug-name') as HTMLInputElement
+    const fdaCheckBtn = document.getElementById('fda-check-btn')
+
+    if (fdaCheckBtn && drugNameInput) {
+      fdaCheckBtn.addEventListener('click', () => {
+        const drug = drugNameInput.value.trim()
+        if (!drug) {
+          if (errorBox) {
+            errorBox.textContent = 'Please enter a drug name first to cross-check openFDA.'
+            errorBox.classList.remove('hidden')
+          }
+          return
+        }
+        window.open(`/fda?drug=${encodeURIComponent(drug.toLowerCase())}`, '_blank', 'noopener,noreferrer')
+      })
+    }
+
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault()
+        if (errorBox) errorBox.classList.add('hidden')
+        if (submitBtn) {
+          submitBtn.disabled = true
+          submitBtn.textContent = 'Prescribing...'
+        }
+
+        const pathParts = window.location.pathname.split('/')
+        const caseId = pathParts[2] || 'default'
+
+        const name = (document.getElementById('drug-name') as HTMLInputElement)?.value.trim()
+        const dose = (document.getElementById('dose') as HTMLInputElement)?.value.trim()
+        const freq = (document.getElementById('frequency') as HTMLSelectElement)?.value
+        const duration = (document.getElementById('duration') as HTMLInputElement)?.value.trim()
+        const notes = (document.getElementById('instructions') as HTMLTextAreaElement)?.value.trim()
+
+        try {
+          const token = localStorage.getItem('token')
+          const res = await fetch(`/api/cases/${caseId}/medications`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              name, dose, frequency: freq, duration: `${duration} days`, notes
+            })
+          })
+
+          if (!res.ok) {
+            const errData = await res.json().catch(() => null)
+            const msg = errData?.detail || 'Failed to prescribe medication. Please check the inputs.'
+            if (errorBox) {
+              errorBox.textContent = typeof msg === 'string' ? msg : JSON.stringify(msg)
+              errorBox.classList.remove('hidden')
+            }
+            return
+          }
+
+          if (formCard) formCard.classList.add('hidden')
+          if (successCard) {
+            successCard.classList.remove('hidden')
+            successCard.style.display = 'flex'
+          }
+        } catch (err: any) {
+          if (errorBox) {
+            errorBox.textContent = err?.message || 'Network error occurred while prescribing medication.'
+            errorBox.classList.remove('hidden')
+          }
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false
+            submitBtn.textContent = 'Save & Add to Patient Schedule'
+          }
+        }
+      })
+    }
+  }
+
+  initPrescribe()
+  document.addEventListener('astro:page-load', initPrescribe)
+</script>

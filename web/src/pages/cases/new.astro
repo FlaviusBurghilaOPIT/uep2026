@@ -1,0 +1,306 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro'
+import { createTranslator, isLanguage } from '../../i18n'
+import '../../index.css'
+
+const cookieLang = Astro.cookies.get('carepro_language')?.value
+const lang = isLanguage(cookieLang) ? cookieLang : 'en'
+const t = createTranslator(lang)
+---
+
+<AppLayout title={`${t('createCase.title', 'Create Surgical Case')} — RemoteCare Pro`}>
+  <div class="create-case-page">
+    <div class="card" id="form-card">
+      <h1 class="title">{t('createCase.title', 'Create Surgical Recovery Case')}</h1>
+      <p class="subtitle">{t('createCase.subtitle', 'Assign a surgical procedure and post-op care plan to a patient')}</p>
+
+      <div class="error-box hidden" id="error-box" role="alert" aria-live="assertive"></div>
+
+      <form id="create-case-form" class="form">
+        <div class="form-group">
+          <label for="patient-select" class="label">{t('createCase.selectPatient', 'Select Patient *')}</label>
+          <select id="patient-select" class="select" required aria-required="true">
+            <option value="">{t('createCase.selectPatientPlaceholder', 'Loading patients...')}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="surgery-type" class="label">{t('createCase.surgeryType', 'Surgical Procedure *')}</label>
+          <input
+            id="surgery-type"
+            class="input"
+            type="text"
+            placeholder={t('createCase.surgeryTypePlaceholder', 'e.g. Total Knee Arthroplasty (TKR)')}
+            required
+            aria-required="true"
+          />
+        </div>
+
+        <button type="submit" class="submit-btn" id="submit-btn">
+          {t('createCase.createCase', 'Create Case & Proceed')}
+        </button>
+
+        <a href="/patients" class="cancel-btn">
+          {t('createCase.cancel', 'Cancel')}
+        </a>
+      </form>
+    </div>
+
+    <!-- Success Card -->
+    <div class="card hidden" id="success-card">
+      <h1 class="title success-title">{t('createCase.successTitle', 'Case Created Successfully!')}</h1>
+      <p class="subtitle">{t('createCase.successSubtitle', 'Next step: Configure medication regimen and recovery instructions.')}</p>
+
+      <div class="action-list">
+        <a id="link-meds" href="/cases" class="action-btn">
+          <span>{t('createCase.prescribeMedications', 'Prescribe Medications Regimen')} &rarr;</span>
+        </a>
+        <a id="link-recs" href="/cases" class="action-btn secondary">
+          <span>{t('createCase.addRecommendations', 'Add Clinical AI Recommendations')} &rarr;</span>
+        </a>
+        <a href="/patients" class="cancel-btn center-text">
+          {t('createCase.backToPatients', 'Back to Patients Roster')}
+        </a>
+      </div>
+    </div>
+  </div>
+</AppLayout>
+
+<style>
+  .create-case-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 40px);
+    padding: 32px;
+  }
+  .card {
+    background-color: #ffffff;
+    padding: 36px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(15,23,42,0.08);
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .hidden {
+    display: none !important;
+  }
+  .title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+  .success-title {
+    color: #15803d;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: #64748b;
+    margin: 0;
+  }
+  .error-box {
+    background-color: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+  }
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+  }
+  .input, .select {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-size: 14px;
+    color: #0f172a;
+    background-color: #ffffff;
+    outline: none;
+  }
+  .input:focus, .select:focus {
+    border-color: #0284c7;
+    box-shadow: 0 0 0 3px rgba(2,132,199,0.15);
+  }
+  .submit-btn {
+    padding: 12px;
+    background-color: #0284c7;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+  .submit-btn:hover {
+    background-color: #0369a1;
+  }
+  .cancel-btn {
+    padding: 10px;
+    background-color: #ffffff;
+    color: #64748b;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .center-text {
+    text-align: center;
+  }
+  .action-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .action-btn {
+    display: block;
+    padding: 12px 16px;
+    background-color: #0284c7;
+    color: #ffffff;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    text-align: center;
+  }
+  .action-btn.secondary {
+    background-color: #0f172a;
+  }
+</style>
+
+<script>
+  async function initCreateCase() {
+    const patientSelect = document.getElementById('patient-select') as HTMLSelectElement
+    const form = document.getElementById('create-case-form')
+    const formCard = document.getElementById('form-card')
+    const successCard = document.getElementById('success-card')
+    const linkMeds = document.getElementById('link-meds') as HTMLAnchorElement
+    const linkRecs = document.getElementById('link-recs') as HTMLAnchorElement
+    const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement
+    const errorBox = document.getElementById('error-box')
+
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch('/api/patients', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (res.ok) {
+        const patients = await res.json()
+        if (patientSelect) {
+          patientSelect.replaceChildren()
+          const placeholder = document.createElement('option')
+          placeholder.value = ''
+          placeholder.textContent = 'Select a patient...'
+          patientSelect.appendChild(placeholder)
+          patients.forEach((p: any) => {
+            const opt = document.createElement('option')
+            opt.value = p.id
+            opt.textContent = p.full_name
+            patientSelect.appendChild(opt)
+          })
+        }
+      }
+    } catch {
+      if (patientSelect) {
+        patientSelect.replaceChildren()
+        const demos = [
+          { id: 'demo-p1', name: 'Maria Rossi (Demo)' },
+          { id: 'demo-p2', name: 'John Doe (Demo)' }
+        ]
+        demos.forEach(d => {
+          const opt = document.createElement('option')
+          opt.value = d.id
+          opt.textContent = d.name
+          patientSelect.appendChild(opt)
+        })
+      }
+    }
+
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault()
+        const pId = patientSelect?.value
+        const surgery = (document.getElementById('surgery-type') as HTMLInputElement)?.value
+
+        if (!pId || !surgery) {
+          if (errorBox) {
+            errorBox.textContent = 'Please select a patient and specify the procedure.'
+            errorBox.classList.remove('hidden')
+          }
+          return
+        }
+
+        if (submitBtn) {
+          submitBtn.disabled = true
+          submitBtn.textContent = 'Creating Case...'
+        }
+        if (errorBox) errorBox.classList.add('hidden')
+
+        try {
+          const token = localStorage.getItem('token')
+          const res = await fetch('/api/cases', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ patient_id: pId, surgery_type: surgery })
+          })
+
+          if (!res.ok) {
+            const errData = await res.json().catch(() => null)
+            const errMsg = errData?.detail || 'Failed to create case. Please check your inputs.'
+            if (errorBox) {
+              errorBox.textContent = typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg)
+              errorBox.classList.remove('hidden')
+            }
+            return
+          }
+
+          const data = await res.json()
+          if (formCard) formCard.classList.add('hidden')
+          if (successCard) {
+            successCard.classList.remove('hidden')
+            successCard.style.display = 'flex'
+          }
+          if (linkMeds) linkMeds.href = `/cases/${data.id}/medications`
+          if (linkRecs) linkRecs.href = `/cases/${data.id}/recommendations`
+        } catch (err: any) {
+          if (errorBox) {
+            errorBox.textContent = err?.message || 'Network error occurred while creating case.'
+            errorBox.classList.remove('hidden')
+          }
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false
+            submitBtn.textContent = 'Create Case & Proceed'
+          }
+        }
+      })
+    }
+  }
+
+  initCreateCase()
+  document.addEventListener('astro:page-load', initCreateCase)
+</script>

@@ -65,7 +65,7 @@ DONE
 Command: `cd mobile && flutter test test/widget/boot_screen_test.dart`
 Output:
 ```
-00:00 +0: loading /Users/flavius/OPIT/uep2026/mobile/test/widget/boot_screen_test.dart
+00:00 +0: loading ./mobile/test/widget/boot_screen_test.dart
 00:00 +0: BootScreen routes to InvitationScreen on first time user
 00:00 +1: BootScreen routes to EmailLoginScreen when not first time and no active session
 00:00 +2: BootScreen routes to MainShellPage when active session exists

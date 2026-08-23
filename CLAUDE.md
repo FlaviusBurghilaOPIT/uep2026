@@ -7,8 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Remote CarePro is a post-surgery care platform with three components sharing one FastAPI + Postgres backend:
 
 - **`backend/`** — FastAPI + SQLAlchemy + Postgres (pgvector), Alembic migrations
-- **`web/`** — React + TypeScript clinician dashboard (Vite)
-- **`mobile/`** — Flutter patient app (Riverpod)
+- **`web/`** — Astro 7.2 + React clinician dashboard (with Lucide icons)
+- **`mobile/`** — Flutter patient app (Dart 3.12+, Riverpod)
 
 There is no mock server — the backend (with Postgres) is required for the web app, the mobile app, and any integration/e2e test. Unit/widget tests on both backend and mobile are self-contained (in-memory SQLite / fake API client) and need nothing running.
 
@@ -29,17 +29,18 @@ Note: `app/scripts/seed.py` also exists but is a separate, older seed script —
 
 ### Web (`web/`)
 ```bash
-npm run dev      # Vite dev server, http://localhost:5173
-npm run build    # tsc -b && vite build — this IS the type-check step
+npm run dev      # Astro 7.2 dev server, http://localhost:3000
+npm run build    # astro build — static entrypoints and bundles in dist/
+npm run preview  # astro preview — preview production build
+npm test         # vitest run — component, landing page, and i18n tests
 npm run lint     # eslint .
 ```
-No test suite exists yet (`vitest` is an installed but unused dependency) — `build` + `lint` are the only checks.
 
 ### Mobile (`mobile/`)
 ```bash
-flutter test                                   # unit/widget tests, fake API client, no backend
+flutter test                                   # unit/widget tests (207 tests), fake API client, no backend
 flutter test test/some_test.dart               # single test file
-flutter analyze                                # lints (flutter_lints + riverpod_lint via custom_lint)
+flutter analyze                                # static analyzer (0 issues)
 flutter test integration_test/golden_loop_test.dart   # e2e — needs backend + seeded DB + booted simulator
 dart run build_runner build --delete-conflicting-outputs   # regenerate freezed/json_serializable/riverpod code after touching @freezed or @riverpod classes
 ```

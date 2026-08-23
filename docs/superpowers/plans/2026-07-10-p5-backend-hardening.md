@@ -25,22 +25,22 @@
 
 - [ ] **Step 1: Fetch and create the local branch**
 
-Run: `git -C /Users/flavius/OPIT/git/uep2026 fetch origin`
+Run: `git -C . fetch origin`
 Expected: updates for `p5/backend` (or "up to date").
 
 - [ ] **Step 2: Create local `p5/backend` tracking the remote**
 
-Run: `git -C /Users/flavius/OPIT/git/uep2026 checkout -b p5/backend origin/p5/backend`
+Run: `git -C . checkout -b p5/backend origin/p5/backend`
 Expected: `Switched to a new branch 'p5/backend'`.
 
 - [ ] **Step 3: Merge main in**
 
-Run: `git -C /Users/flavius/OPIT/git/uep2026 merge origin/main --no-edit`
+Run: `git -C . merge origin/main --no-edit`
 Expected: `Fast-forward` (confirmed ancestor relationship — no conflicts expected). If it is not a fast-forward when this runs (branch state may have changed since this plan was written), stop and report the conflict instead of resolving it unilaterally.
 
 - [ ] **Step 4: Verify working tree matches main**
 
-Run: `git -C /Users/flavius/OPIT/git/uep2026 diff origin/main -- backend/ | head -5`
+Run: `git -C . diff origin/main -- backend/ | head -5`
 Expected: empty output (no diff).
 
 Do not commit — this is a merge commit that already exists from Step 3's fast-forward; no separate commit is needed or permitted beyond that.
@@ -112,12 +112,12 @@ In `web/Dockerfile`, change `FROM node:20-alpine` to `FROM node:24-alpine`.
 
 - [ ] **Step 4: Validate compose file syntax**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026 && docker compose config --quiet`
+Run: `cd . && docker compose config --quiet`
 Expected: no output, exit code 0.
 
 - [ ] **Step 5: Bring the stack up and confirm auto-migration works**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026 && docker compose up -d --build && sleep 3 && docker compose logs backend | tail -20`
+Run: `cd . && docker compose up -d --build && sleep 3 && docker compose logs backend | tail -20`
 Expected: log shows Alembic running migrations to `1b0581fc4e9c` (or later, once Task 6/14/17/19 migrations exist) followed by `Uvicorn running on http://0.0.0.0:8000`.
 
 - [ ] **Step 6: Confirm tables exist without manual alembic step**
@@ -151,7 +151,7 @@ ruff
 
 - [ ] **Step 2: Install them**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && pip install -r requirements.txt`
+Run: `cd ./backend && pip install -r requirements.txt`
 Expected: successful install, no errors.
 
 - [ ] **Step 3: Create the tests package**
@@ -208,7 +208,7 @@ def test_client_fixture_loads(client):
     assert response.json()["status"] == "ok"
 ```
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_smoke.py -v`
+Run: `cd ./backend && python -m pytest tests/test_smoke.py -v`
 Expected: `1 passed`.
 
 Keep `tests/test_smoke.py` — it's a legitimate root-endpoint test, not scaffolding to delete.
@@ -241,7 +241,7 @@ def test_user_role_has_admin():
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_models.py -v`
+Run: `cd ./backend && python -m pytest tests/test_models.py -v`
 Expected: FAIL with `AttributeError: admin`.
 
 - [ ] **Step 3: Add the role**
@@ -262,14 +262,14 @@ class UserRole(str, enum.Enum):
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_models.py -v`
+Run: `cd ./backend && python -m pytest tests/test_models.py -v`
 Expected: `1 passed`.
 
 - [ ] **Step 5: Generate and apply the migration**
 
 Run (with the dev Postgres up from Task 2, `DATABASE_URL` pointed at it):
 ```bash
-cd /Users/flavius/OPIT/git/uep2026/backend && alembic revision --autogenerate -m "add admin role"
+cd ./backend && alembic revision --autogenerate -m "add admin role"
 ```
 Expected: a new file `backend/alembic/versions/<hash>_add_admin_role.py` is created. Postgres enums require `ALTER TYPE ... ADD VALUE` rather than a plain column alter — open the generated file and confirm/replace its `upgrade()` body with:
 ```python
@@ -284,7 +284,7 @@ def downgrade() -> None:
 
 - [ ] **Step 6: Apply it**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && alembic upgrade head`
+Run: `cd ./backend && alembic upgrade head`
 Expected: `Running upgrade ... -> <hash>, add admin role`, no errors.
 
 Do not commit.
@@ -351,7 +351,7 @@ def test_get_llm_provider_bedrock(monkeypatch):
 
 - [ ] **Step 2: Run test to verify it passes already**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_providers.py -v`
+Run: `cd ./backend && python -m pytest tests/test_providers.py -v`
 Expected: `7 passed` — the factories already exist and work standalone; this locks their contract in place before Step 3 changes how they're consumed.
 
 - [ ] **Step 3: Implement real Cognito token verification**
@@ -425,7 +425,7 @@ Note: this uses `pyjwt` (`import jwt`), not `python-jose`. Add it to `backend/re
 ```
 pyjwt[crypto]
 ```
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && pip install -r requirements.txt`
+Run: `cd ./backend && pip install -r requirements.txt`
 
 - [ ] **Step 4: Wire dependencies.get_current_user to the factory**
 
@@ -505,7 +505,7 @@ def test_get_current_user_via_local_provider(client, db_session, monkeypatch):
 
 - [ ] **Step 6: Run the full provider test file**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_providers.py -v`
+Run: `cd ./backend && python -m pytest tests/test_providers.py -v`
 Expected: `8 passed`.
 
 Do not commit.
@@ -551,7 +551,7 @@ def test_get_db_for_user_sets_session_vars(db_session):
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_rls_session.py -v`
+Run: `cd ./backend && python -m pytest tests/test_rls_session.py -v`
 Expected: FAIL with `ImportError: cannot import name 'get_db_for_user'`.
 
 - [ ] **Step 3: Implement the dependency**
@@ -582,7 +582,7 @@ Note `get_db_for_user`'s own `db` parameter still depends on the real `get_db` �
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_rls_session.py -v`
+Run: `cd ./backend && python -m pytest tests/test_rls_session.py -v`
 Expected: `1 passed`.
 
 Do not commit.
@@ -667,7 +667,7 @@ Note `medications`/`scheduled_reminders`/`dose_logs` are two joins deep from `ca
 
 - [ ] **Step 2: Apply it**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && alembic upgrade head`
+Run: `cd ./backend && alembic upgrade head`
 Expected: `Running upgrade ... -> <hash>, enable rls`, no errors.
 
 - [ ] **Step 3: Write the integration test (requires the dev Postgres container running from Task 2)**
@@ -728,7 +728,7 @@ def test_patient_cannot_see_other_patients_case(pg_session):
 
 - [ ] **Step 4: Run it against the dev container**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && DATABASE_URL=postgresql://caredev:caredev@localhost:5432/remotecare python -m pytest tests/test_rls_policies.py -v`
+Run: `cd ./backend && DATABASE_URL=postgresql://caredev:caredev@localhost:5432/remotecare python -m pytest tests/test_rls_policies.py -v`
 Expected: `1 passed`.
 
 - [ ] **Step 5: Switch read routes to the RLS-scoped dependency**
@@ -737,7 +737,7 @@ In `backend/app/routers/cases.py`, `patients.py`, `adherence.py`, `checkins.py`,
 
 - [ ] **Step 6: Re-run the full suite to confirm nothing broke**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest -v`
+Run: `cd ./backend && python -m pytest -v`
 Expected: all tests pass.
 
 Do not commit.
@@ -780,7 +780,7 @@ def test_seed_is_idempotent(db_session):
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_seed.py -v`
+Run: `cd ./backend && python -m pytest tests/test_seed.py -v`
 Expected: FAIL with `ModuleNotFoundError: No module named 'app.scripts'`.
 
 - [ ] **Step 3: Implement the seed script**
@@ -838,12 +838,12 @@ if __name__ == "__main__":
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_seed.py -v`
+Run: `cd ./backend && python -m pytest tests/test_seed.py -v`
 Expected: `2 passed`.
 
 - [ ] **Step 5: Run it against the dev container**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && DATABASE_URL=postgresql://caredev:caredev@localhost:5432/remotecare python -m app.scripts.seed`
+Run: `cd ./backend && DATABASE_URL=postgresql://caredev:caredev@localhost:5432/remotecare python -m app.scripts.seed`
 Expected: prints the three seeded email/password pairs.
 
 Do not commit.
@@ -858,7 +858,7 @@ Do not commit.
 
 - [ ] **Step 1: Update .env with the new variables**
 
-Replace `/Users/flavius/OPIT/git/uep2026/.env` in full:
+Replace `./.env` in full:
 ```
 # Database
 DATABASE_URL=postgresql://caredev:caredev@db:5432/remotecare
@@ -882,7 +882,7 @@ FDA_PROVIDER=live
 
 - [ ] **Step 2: Populate .env.example mirroring it with placeholders**
 
-Replace `/Users/flavius/OPIT/git/uep2026/.env.example` in full:
+Replace `./.env.example` in full:
 ```
 # Database
 DATABASE_URL=postgresql://caredev:caredev@db:5432/remotecare
@@ -912,7 +912,7 @@ FDA_PROVIDER=live
 
 - [ ] **Step 3: Confirm docker compose still reads it correctly**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026 && docker compose config | grep -A2 DATABASE_URL`
+Run: `cd . && docker compose config | grep -A2 DATABASE_URL`
 Expected: shows the resolved `DATABASE_URL` value from `.env`.
 
 Do not commit.
@@ -958,7 +958,7 @@ Apply the same pattern (one short, accurate sentence per router) to `cases.py`, 
 
 - [ ] **Step 3: Verify Swagger renders**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026 && docker compose up -d backend && curl -s http://localhost:8000/openapi.json | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['info']['title'], d['info']['version'])"`
+Run: `cd . && docker compose up -d backend && curl -s http://localhost:8000/openapi.json | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['info']['title'], d['info']['version'])"`
 Expected: `Remote CarePro API 0.2.0`
 
 Do not commit.
@@ -989,17 +989,17 @@ select = ["E", "F", "I"]
 
 - [ ] **Step 2: Run black**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && black app tests`
+Run: `cd ./backend && black app tests`
 Expected: reports N files reformatted.
 
 - [ ] **Step 3: Run ruff and fix auto-fixable issues**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && ruff check app tests --fix`
+Run: `cd ./backend && ruff check app tests --fix`
 Expected: reports fixed issues or "All checks passed!".
 
 - [ ] **Step 4: Re-run the full test suite to confirm formatting didn't break anything**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest -v`
+Run: `cd ./backend && python -m pytest -v`
 Expected: all tests still pass.
 
 Do not commit.
@@ -1009,11 +1009,11 @@ Do not commit.
 ## Task 12: README
 
 **Files:**
-- Create/Modify: `/Users/flavius/OPIT/git/uep2026/README.md` (currently `REadme.md` — see Step 1)
+- Create/Modify: `./README.md` (currently `REadme.md` — see Step 1)
 
 - [ ] **Step 1: Check the existing misnamed file, then replace it**
 
-Run: `cat /Users/flavius/OPIT/git/uep2026/REadme.md` to see current content, then create `/Users/flavius/OPIT/git/uep2026/README.md` (new, correctly-cased file — leave `REadme.md` in place untouched since deleting/renaming tracked files is a git operation outside this task's scope; note the duplicate for the user to clean up in their own commit) with:
+Run: `cat ./REadme.md` to see current content, then create `./README.md` (new, correctly-cased file — leave `REadme.md` in place untouched since deleting/renaming tracked files is a git operation outside this task's scope; note the duplicate for the user to clean up in their own commit) with:
 ```markdown
 # Remote CarePro
 
@@ -1080,7 +1080,7 @@ cd backend && DATABASE_URL=postgresql://caredev:caredev@localhost:5432/remotecar
 
 - [ ] **Step 2: Verify it renders sensibly**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026 && head -5 README.md`
+Run: `cd . && head -5 README.md`
 Expected: shows the `# Remote CarePro` heading.
 
 Do not commit.
@@ -1138,7 +1138,7 @@ def test_case_fda_warning_links_case_and_warning(db_session):
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_fda_models.py -v`
+Run: `cd ./backend && python -m pytest tests/test_fda_models.py -v`
 Expected: FAIL with `ImportError: cannot import name 'FDAWarning'`.
 
 - [ ] **Step 3: Add the models**
@@ -1184,14 +1184,14 @@ class CaseFDAWarning(Base):
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_fda_models.py -v`
+Run: `cd ./backend && python -m pytest tests/test_fda_models.py -v`
 Expected: `2 passed`.
 
 - [ ] **Step 5: Generate and apply the migration**
 
 Run:
 ```bash
-cd /Users/flavius/OPIT/git/uep2026/backend && alembic revision --autogenerate -m "add fda warnings"
+cd ./backend && alembic revision --autogenerate -m "add fda warnings"
 alembic upgrade head
 ```
 Expected: new migration file created, then `Running upgrade ... -> <hash>, add fda warnings` with no errors. Inspect the generated file to confirm it creates `fda_warnings` and `case_fda_warnings` tables — Alembic autogenerate reliably picks up new tables/columns from ORM models, no manual edit expected here (unlike Task 4/7, which needed Postgres-specific enum/RLS SQL).
@@ -1323,7 +1323,7 @@ def test_dismiss_does_not_propagate(client, db_session):
 
 - [ ] **Step 3: Run tests to verify they fail**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_fda_router.py -v`
+Run: `cd ./backend && python -m pytest tests/test_fda_router.py -v`
 Expected: FAIL — `404 Not Found` for `/fda/warnings` (route doesn't exist yet).
 
 - [ ] **Step 4: Implement the endpoints**
@@ -1467,12 +1467,12 @@ async def refresh_warnings(
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_fda_router.py -v`
+Run: `cd ./backend && python -m pytest tests/test_fda_router.py -v`
 Expected: `3 passed`.
 
 - [ ] **Step 6: Run the full suite**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest -v`
+Run: `cd ./backend && python -m pytest -v`
 Expected: all pass.
 
 Do not commit.
@@ -1582,7 +1582,7 @@ def test_chat_flags_dosage_change_language_as_out_of_scope(client, db_session, m
 
 - [ ] **Step 3: Run tests to verify they fail**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_ai_router.py -v`
+Run: `cd ./backend && python -m pytest tests/test_ai_router.py -v`
 Expected: FAIL — only 1 `ChatMessage` persisted (none today), `in_scope`/`escalate` keys missing.
 
 - [ ] **Step 4: Implement**
@@ -1683,7 +1683,7 @@ async def chat(
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_ai_router.py -v`
+Run: `cd ./backend && python -m pytest tests/test_ai_router.py -v`
 Expected: `2 passed`.
 
 Do not commit.
@@ -1739,7 +1739,7 @@ def test_trend_counts_checkins_by_feeling(client, db_session):
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_checkins_trend.py -v`
+Run: `cd ./backend && python -m pytest tests/test_checkins_trend.py -v`
 Expected: FAIL with `404 Not Found`.
 
 - [ ] **Step 3: Implement**
@@ -1779,7 +1779,7 @@ Note the route path is `/symptoms/patients/{patient_id}/symptoms/trend` because 
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_checkins_trend.py -v`
+Run: `cd ./backend && python -m pytest tests/test_checkins_trend.py -v`
 Expected: `1 passed`.
 
 Do not commit.
@@ -1925,7 +1925,7 @@ def test_patch_approves_article(client, db_session):
 
 - [ ] **Step 4: Run tests to verify they fail**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_wiki_router.py -v`
+Run: `cd ./backend && python -m pytest tests/test_wiki_router.py -v`
 Expected: FAIL — `404 Not Found` (no `/wiki` routes registered yet).
 
 - [ ] **Step 5: Implement the router**
@@ -2031,14 +2031,14 @@ In `backend/app/main.py`, add `from app.routers import wiki` alongside the other
 
 - [ ] **Step 7: Run tests to verify they pass**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_wiki_router.py -v`
+Run: `cd ./backend && python -m pytest tests/test_wiki_router.py -v`
 Expected: `3 passed`.
 
 - [ ] **Step 8: Generate and apply the migration**
 
 Run:
 ```bash
-cd /Users/flavius/OPIT/git/uep2026/backend && alembic revision --autogenerate -m "add wiki articles"
+cd ./backend && alembic revision --autogenerate -m "add wiki articles"
 alembic upgrade head
 ```
 Expected: migration created and applied with no errors.
@@ -2139,7 +2139,7 @@ def test_emergency_contact_endpoint_returns_name_and_phone(client, db_session):
 
 - [ ] **Step 4: Run tests to verify they fail**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_emergency_contact.py -v`
+Run: `cd ./backend && python -m pytest tests/test_emergency_contact.py -v`
 Expected: FAIL — response missing `emergency_contact_name` key, and `404` on the new route.
 
 - [ ] **Step 5: Implement**
@@ -2189,14 +2189,14 @@ def get_emergency_contact(
 
 - [ ] **Step 6: Run tests to verify they pass**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_emergency_contact.py -v`
+Run: `cd ./backend && python -m pytest tests/test_emergency_contact.py -v`
 Expected: `2 passed`.
 
 - [ ] **Step 7: Generate and apply the migration**
 
 Run:
 ```bash
-cd /Users/flavius/OPIT/git/uep2026/backend && alembic revision --autogenerate -m "add case emergency contact"
+cd ./backend && alembic revision --autogenerate -m "add case emergency contact"
 alembic upgrade head
 ```
 Expected: migration created and applied with no errors.
@@ -2211,14 +2211,14 @@ Do not commit.
 
 - [ ] **Step 1: Run the entire test suite**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest -v`
+Run: `cd ./backend && python -m pytest -v`
 Expected: all tests pass (unit tests; Postgres-only RLS test auto-skips without a `postgresql://` `DATABASE_URL`).
 
 - [ ] **Step 2: Run the Postgres-dependent tests against the dev container**
 
 Run:
 ```bash
-cd /Users/flavius/OPIT/git/uep2026 && docker compose up -d --build
+cd . && docker compose up -d --build
 sleep 5
 cd backend && DATABASE_URL=postgresql://caredev:caredev@localhost:5432/remotecare python -m pytest -v
 ```
@@ -2226,7 +2226,7 @@ Expected: all tests pass, including `test_rls_policies.py`.
 
 - [ ] **Step 3: Confirm formatting is clean**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && black --check app tests && ruff check app tests`
+Run: `cd ./backend && black --check app tests && ruff check app tests`
 Expected: no output from black (already formatted), `All checks passed!` from ruff.
 
 - [ ] **Step 4: Confirm the seed script + a full manual smoke flow**

@@ -1,0 +1,164 @@
+---
+import AppLayout from '../../../../layouts/AppLayout.astro'
+import { Plus, ArrowLeft, Bot } from 'lucide-astro'
+import { apiFetch } from '../../../../api/client'
+import { createTranslator, isLanguage } from '../../../../i18n'
+import '../../../../index.css'
+
+const { caseId } = Astro.params
+
+const cookieLang = Astro.cookies.get('carepro_language')?.value
+const lang = isLanguage(cookieLang) ? cookieLang : 'en'
+const t = createTranslator(lang)
+
+let recommendations: any[] = []
+try {
+  recommendations = await apiFetch<any[]>(`/cases/${caseId}/recommendations`)
+} catch {
+  recommendations = [
+    { title: 'Bedrock Clinical Protocol', date: 'Today, 09:30 AM', content: 'Initiate continuous passive motion (CPM) 2 hours twice daily. Apply cold compression pack for 20 minutes post-exercise. Do not pivot or bear unassisted weight until post-op week 2 evaluation.' },
+    { title: 'Surgical Wound Care', date: 'Yesterday, 04:15 PM', content: 'Keep surgical dressing clean and dry. Do not immerse operative leg in water or tub bath. Inspect daily for erythema or unexpected drainage.' }
+  ]
+}
+---
+
+<AppLayout title={`${t('recommendationsList.title', 'Clinical Recovery Instructions')} — RemoteCare Pro`}>
+  <div class="recommendations-list-page">
+    <div class="header">
+      <div>
+        <a href={`/cases/${caseId}`} class="back-link">
+          <ArrowLeft size={16} aria-hidden="true" />
+          <span>{t('caseDetail.backToPatients', 'Back to Case Detail')}</span>
+        </a>
+        <h1 class="title">{t('recommendationsList.title', 'Clinical Recovery Instructions')}</h1>
+        <p class="subtitle">{t('recommendations.caseSubtitle', 'Published physical therapy milestones and Amazon Bedrock clinical advice')}</p>
+      </div>
+
+      <a href={`/cases/${caseId}/recommendations`} class="add-rec-btn">
+        <Plus size={16} aria-hidden="true" />
+        <span>{t('recommendationsList.addRecommendation', 'Add Recovery Guideline')}</span>
+      </a>
+    </div>
+
+    <!-- Recommendations List -->
+    <div class="recs-list" id="recs-list-container" role="region" aria-label={t('recommendationsList.title', 'Clinical Recovery Instructions')}>
+      {recommendations.length === 0 ? (
+        <div class="empty-recs-card">
+          {t('recommendationsList.empty', 'No clinical recommendations published yet. Click "Add Recovery Guideline" to create one.')}
+        </div>
+      ) : (
+        recommendations.map((rec) => (
+          <div class="rec-card">
+            <div class="rec-card-header">
+              <span class="rec-badge">
+                <Bot size={14} aria-hidden="true" />
+                <span>{rec.title || 'Bedrock Clinical Protocol'}</span>
+              </span>
+              <span class="rec-date">{rec.date || rec.created_at || 'Recent'}</span>
+            </div>
+            <p class="rec-content">{rec.content || rec.text}</p>
+          </div>
+        ))
+      )}
+    </div>
+  </div>
+</AppLayout>
+
+<style>
+  .recommendations-list-page {
+    padding: 32px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 28px;
+  }
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #0284c7;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    margin-bottom: 12px;
+  }
+  .title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #64748b;
+    margin: 4px 0 0;
+  }
+  .add-rec-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #0284c7;
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 2px 4px rgba(2,132,199,0.2);
+  }
+  .recs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .rec-card {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.05);
+  }
+  .rec-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .rec-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: #e0f2fe;
+    color: #0369a1;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .rec-badge.standard {
+    background-color: #f1f5f9;
+    color: #475569;
+  }
+  .rec-date {
+    font-size: 12px;
+    color: #94a3b8;
+  }
+  .rec-content {
+    font-size: 14px;
+    color: #1e293b;
+    line-height: 1.6;
+    margin: 0;
+  }
+  .empty-recs-card {
+    background-color: #ffffff;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 36px;
+    text-align: center;
+    color: #64748b;
+  }
+</style>

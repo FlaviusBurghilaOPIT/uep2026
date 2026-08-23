@@ -1,0 +1,13 @@
+---
+import Landing from './landing.astro'
+---
+
+<Landing />
+
+<script>
+  // If user is already authenticated with clinician credentials, direct to dashboard
+  const token = localStorage.getItem('token')
+  if (token) {
+    window.location.href = '/dashboard'
+  }
+</script>

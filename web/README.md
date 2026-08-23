@@ -1,75 +1,46 @@
-# React + TypeScript + Vite
+# RemoteCare Pro — Clinician Web Portal (Pure Astro SSR)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project provides the clinician web portal for RemoteCare Pro, powered by **Astro 5+ SSR** with **Lucide Icons** (`lucide-astro`).
 
-Currently, two official plugins are available:
+## Architecture
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Framework**: [Astro](https://astro.build) with standalone SSR Node.js adapter (`@astrojs/node`)
+- **Icons**: [Lucide Icons](https://lucide.dev) (`lucide-astro`)
+- **i18n**: Multilingual support (English, Spanish, Italian) with dynamic parameter interpolation and SSR cookie detection
+- **Testing**: Vitest (`vitest`) with JSDOM
 
-## React Compiler
+## Available Scripts
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+In the `web/` directory, you can run:
 
-## Expanding the ESLint configuration
+### `npm run dev`
+Starts the Astro local development server at `http://localhost:3000` (or `http://localhost:5173` if configured).
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### `npm run build`
+Builds static HTML entrypoints and optimized client bundles into the `dist/` directory.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### `npm run preview`
+Locally preview the production build in `dist/`.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### `npm test`
+Runs the Vitest unit and integration test suite (`vitest run`).
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### `npm run lint`
+Runs ESLint across TypeScript and TSX source files.
+
+## Project Structure
 
 ```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+web/
+├── astro.config.mjs        # Astro 7.2 configuration with @astrojs/react
+├── tsconfig.json           # TypeScript configuration extending astro/tsconfigs/strict
+├── eslint.config.js        # ESLint flat config
+├── public/                 # Static assets (favicons, images)
+└── src/
+    ├── layouts/            # Astro layout components (Layout.astro, AppLayout.astro)
+    ├── pages/              # Native Astro routes (index.astro, landing.astro, login.astro, dashboard.astro, patients/, cases/, fda.astro, 404.astro)
+    ├── components/         # Astro navigation & UI components (NavBar.astro, LanguageSwitcher.astro)
+    ├── i18n/               # Localization dictionaries (en, es, it)
+    ├── api/                # API client and analytics instrumentation
+    └── __tests__/          # Vitest test suites
 ```

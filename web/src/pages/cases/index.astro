@@ -1,0 +1,185 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro'
+import { Plus, ArrowRight } from 'lucide-astro'
+import { apiFetch } from '../../api/client'
+import { createTranslator, isLanguage } from '../../i18n'
+import '../../index.css'
+
+const cookieLang = Astro.cookies.get('carepro_language')?.value
+const lang = isLanguage(cookieLang) ? cookieLang : 'en'
+const t = createTranslator(lang)
+
+let cases: any[] = []
+let patients: any[] = []
+
+try {
+  const [cRes, pRes] = await Promise.all([
+    apiFetch<any[]>('/cases').catch(() => []),
+    apiFetch<any[]>('/patients').catch(() => []),
+  ])
+  cases = cRes || []
+  patients = pRes || []
+} catch {
+  cases = [
+    { id: 'demo-case-1', patient_id: 'demo-p1', surgery_type: 'Total Knee Arthroplasty (TKR)', status: 'active' }
+  ]
+  patients = [
+    { id: 'demo-p1', full_name: 'Maria Rossi' }
+  ]
+}
+---
+
+<AppLayout title={`${t('patients.cases', 'Surgical Cases')} — RemoteCare Pro`}>
+  <div class="cases-page">
+    <div class="header">
+      <div>
+        <h1 class="title">{t('patients.cases', 'Surgical Cases')}</h1>
+        <p class="subtitle">{t('triage.subtitle', 'Active post-operative patient recovery cases')}</p>
+      </div>
+      <a href="/cases/new" class="new-case-btn">
+        <Plus size={16} aria-hidden="true" />
+        <span>{t('createCase.title', 'Create Surgical Case')}</span>
+      </a>
+    </div>
+
+    <div class="cases-grid">
+      {cases.length === 0 ? (
+        <div class="empty-card">
+          <p class="empty-text">{t('patients.noCases', 'No active surgical cases found.')}</p>
+          <a href="/patients" class="primary-link">{t('patients.title', 'View Patients Roster')} &rarr;</a>
+        </div>
+      ) : (
+        cases.map((c) => {
+          const patient = patients.find((p) => p.id === c.patient_id)
+          return (
+            <div class="case-card">
+              <div class="case-card-header">
+                <h3 class="case-patient">{patient?.full_name || t('common.loading', 'Assigned Patient')}</h3>
+                <span class="status-badge">{(c.status || 'ACTIVE').toUpperCase()}</span>
+              </div>
+              <p class="case-procedure">{c.surgery_type}</p>
+              <div class="case-actions">
+                <a href={`/cases/${c.id}`} class="view-case-link">
+                  <span>{t('patientCard.viewCase', 'View Case')}</span>
+                  <ArrowRight size={14} aria-hidden="true" />
+                </a>
+              </div>
+            </div>
+          )
+        })
+      )}
+    </div>
+  </div>
+</AppLayout>
+
+<style>
+  .cases-page {
+    padding: 32px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+  }
+  .title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 6px 0;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #64748b;
+    margin: 0;
+  }
+  .new-case-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #0284c7;
+    color: #ffffff;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.15s ease;
+  }
+  .new-case-btn:hover {
+    background-color: #0369a1;
+  }
+  .cases-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+  }
+  .case-card {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .case-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .case-patient {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+  .status-badge {
+    background-color: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #86efac;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .case-procedure {
+    font-size: 13px;
+    color: #64748b;
+    margin: 0;
+  }
+  .case-actions {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+  }
+  .view-case-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #0284c7;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .empty-card {
+    grid-column: 1 / -1;
+    background-color: #ffffff;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 36px;
+    text-align: center;
+  }
+  .empty-text {
+    color: #64748b;
+    margin-bottom: 16px;
+  }
+  .primary-link {
+    color: #0284c7;
+    font-weight: 600;
+    text-decoration: none;
+  }
+</style>

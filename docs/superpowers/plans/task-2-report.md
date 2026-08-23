@@ -24,7 +24,7 @@ tests/test_ai_router.py::test_chat_streaming FAILED                      [100%]
 =================================== FAILURES ===================================
 _____________________________ test_chat_streaming ______________________________
 
-obj = <module 'app.routers.ai' from '/Users/flavius/OPIT/uep2026/backend/app/routers/ai.py'>
+obj = <module 'app.routers.ai' from './backend/app/routers/ai.py'>
 name = 'generate_recommendation_stream', ann = 'app.routers.ai'
 
     def annotated_getattr(obj: object, name: str, ann: str) -> object:
@@ -67,9 +67,9 @@ pytest backend/tests/test_ai_router.py -v
 ```
 ```text
 ============================= test session starts ==============================
-platform darwin -- Python 3.11.11, pytest-9.0.3, pluggy-1.6.0 -- /Users/flavius/.pyenv/versions/3.11.11/bin/python3.11
+platform darwin -- Python 3.11.11, pytest-9.0.3, pluggy-1.6.0 -- python3.11
 cachedir: .pytest_cache
-rootdir: /Users/flavius/OPIT/uep2026/backend
+rootdir: ./backend
 configfile: pyproject.toml
 plugins: anyio-4.12.1, langsmith-0.7.1, cov-7.1.0
 collecting ... collected 8 items
@@ -96,9 +96,9 @@ pytest backend/tests/test_ai_router.py -v
 ```
 ```text
 ============================= test session starts ==============================
-platform darwin -- Python 3.11.11, pytest-9.0.3, pluggy-1.6.0 -- /Users/flavius/.pyenv/versions/3.11.11/bin/python3.11
+platform darwin -- Python 3.11.11, pytest-9.0.3, pluggy-1.6.0 -- python3.11
 cachedir: .pytest_cache
-rootdir: /Users/flavius/OPIT/uep2026/backend
+rootdir: ./backend
 configfile: pyproject.toml
 plugins: anyio-4.12.1, langsmith-0.7.1, cov-7.1.0
 collecting ... collected 8 items
@@ -126,9 +126,9 @@ pytest backend/tests/test_ai_router.py -v
 ```
 ```text
 ============================= test session starts ==============================
-platform darwin -- Python 3.11.11, pytest-9.0.3, pluggy-1.6.0 -- /Users/flavius/.pyenv/versions/3.11.11/bin/python3.11
+platform darwin -- Python 3.11.11, pytest-9.0.3, pluggy-1.6.0 -- python3.11
 cachedir: .pytest_cache
-rootdir: /Users/flavius/OPIT/uep2026/backend
+rootdir: ./backend
 configfile: pyproject.toml
 plugins: anyio-4.12.1, langsmith-0.7.1, cov-7.1.0
 collecting ... collected 8 items
@@ -156,9 +156,9 @@ pytest backend/tests/test_ai_router.py -v
 ```
 ```text
 ============================= test session starts ==============================
-platform darwin -- Python 3.11.11, pytest-9.0.3, pluggy-1.6.0 -- /Users/flavius/.pyenv/versions/3.11.11/bin/python3.11
+platform darwin -- Python 3.11.11, pytest-9.0.3, pluggy-1.6.0 -- python3.11
 cachedir: .pytest_cache
-rootdir: /Users/flavius/OPIT/uep2026/backend
+rootdir: ./backend
 configfile: pyproject.toml
 plugins: anyio-4.12.1, langsmith-0.7.1, cov-7.1.0
 collecting ... collected 8 items

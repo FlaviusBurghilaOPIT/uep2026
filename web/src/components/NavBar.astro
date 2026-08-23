@@ -1,0 +1,235 @@
+---
+import { TriangleAlert, Users, FilePlus2, ShieldCheck, LogOut } from 'lucide-astro'
+import LanguageSwitcher from './LanguageSwitcher.astro'
+import { createTranslator, isLanguage } from '../i18n'
+
+interface Props {
+  currentPath?: string
+}
+
+const { currentPath = Astro.url.pathname } = Astro.props
+
+const cookieLang = Astro.cookies.get('carepro_language')?.value
+const lang = isLanguage(cookieLang) ? cookieLang : 'en'
+const t = createTranslator(lang)
+
+const links = [
+  { href: '/dashboard', label: t('nav.triageDashboard', 'Triage Dashboard'), icon: TriangleAlert, active: currentPath === '/' || currentPath === '/dashboard' },
+  { href: '/patients', label: t('nav.patients', 'Patients'), icon: Users, active: currentPath.startsWith('/patients') },
+  { href: '/cases/new', label: t('nav.newCase', 'New Case'), icon: FilePlus2, active: currentPath.startsWith('/cases') },
+  { href: '/fda', label: t('nav.fdaSafety', 'openFDA Safety'), icon: ShieldCheck, active: currentPath.startsWith('/fda') },
+]
+---
+
+<nav class="sidebar" aria-label="Main navigation">
+  <div class="brand-header">
+    <a href="/dashboard" class="brand">
+      <span class="brand-plus" aria-hidden="true">+</span> CarePro
+    </a>
+    <LanguageSwitcher variant="dark" />
+  </div>
+
+  <ul class="nav-links">
+    {links.map((link) => {
+      const IconComponent = link.icon
+      return (
+        <li>
+          <a href={link.href} class={`nav-link ${link.active ? 'active' : ''}`}>
+            <IconComponent size={18} aria-hidden="true" />
+            <span>{link.label}</span>
+          </a>
+        </li>
+      )
+    })}
+  </ul>
+
+  <div class="bottom-section">
+    <div class="divider"></div>
+    <button id="nav-logout-btn" class="logout-btn" aria-label={t('nav.logout', 'Sign Out')}>
+      <LogOut size={18} aria-hidden="true" />
+      <span>{t('nav.logout', 'Sign Out')}</span>
+    </button>
+    <div class="user-card">
+      <div class="avatar" id="nav-user-avatar">CL</div>
+      <div class="user-details">
+        <div class="user-name" id="nav-user-email">clinician@example.com</div>
+        <div class="user-role">{t('nav.clinicianRole', 'Clinician Admin')}</div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<style>
+  .sidebar {
+    width: 220px;
+    min-height: 100vh;
+    background-color: #0f172a;
+    border-right: 1px solid #1e293b;
+    display: flex;
+    flex-direction: column;
+    padding: 24px 16px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+  }
+  .brand-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding: 0 4px;
+  }
+  .brand {
+    font-size: 20px;
+    font-weight: 700;
+    color: #ffffff;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .brand-plus {
+    color: #38bdf8;
+  }
+  .nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #cbd5e1;
+    text-decoration: none;
+    transition: all 0.15s ease;
+  }
+  .nav-link:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  .nav-link.active {
+    color: #ffffff;
+    background-color: #0284c7;
+  }
+  .bottom-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .divider {
+    height: 1px;
+    background-color: #1e293b;
+    margin: 8px 0;
+  }
+  .logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #cbd5e1;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    transition: color 0.15s ease;
+  }
+  .logout-btn:hover {
+    color: #f87171;
+  }
+  .user-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 8px;
+    border-radius: 8px;
+    background-color: #1e293b;
+    overflow: hidden;
+  }
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: #0284c7;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .user-details {
+    overflow: hidden;
+  }
+  .user-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: #ffffff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 130px;
+  }
+  .user-role {
+    font-size: 11px;
+    color: #94a3b8;
+  }
+  @media (max-width: 768px) {
+    .sidebar {
+      position: static;
+      width: 100%;
+      min-height: auto;
+      flex-direction: column;
+      padding: 16px;
+    }
+    .nav-links {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .nav-link {
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+    .bottom-section {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  function initNavAuth() {
+    const email = localStorage.getItem('email') || 'clinician@example.com'
+    const emailEl = document.getElementById('nav-user-email')
+    const avatarEl = document.getElementById('nav-user-avatar')
+    if (emailEl) emailEl.textContent = email
+    if (avatarEl) avatarEl.textContent = email.slice(0, 2).toUpperCase()
+
+    const logoutBtn = document.getElementById('nav-logout-btn')
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('token')
+        localStorage.removeItem('role')
+        localStorage.removeItem('email')
+        window.location.href = '/login'
+      })
+    }
+  }
+
+  initNavAuth()
+  document.addEventListener('astro:page-load', initNavAuth)
+</script>

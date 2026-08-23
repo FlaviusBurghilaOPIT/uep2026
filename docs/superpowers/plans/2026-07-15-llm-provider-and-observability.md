@@ -16,7 +16,7 @@
 - The `/ai/chat` request/response contract is unchanged. The FDA warnings queue endpoints (`/fda/warnings*`) are unchanged.
 - `LLM_PROVIDER` accepts only `mock` (default) and `openrouter` after this change — every `bedrock` mention in code, tests, `.env.example`, and `README.md` is removed. `docs/PLAN.md` (pitch doc) is intentionally NOT edited.
 - Follow existing code style: `black`/`ruff` with line-length 100 (config in `backend/pyproject.toml`), no docstrings in routers, multi-line `Depends(...)` args.
-- Working directory for all backend commands: `/Users/flavius/OPIT/git/uep2026/backend`. Postgres from the dev compose stack must be up for the full-suite run (RLS tests need `localhost:5432`; `tests/conftest.py` defaults the URL).
+- Working directory for all backend commands: `./backend`. Postgres from the dev compose stack must be up for the full-suite run (RLS tests need `localhost:5432`; `tests/conftest.py` defaults the URL).
 - Verified library facts (do not re-derive): `phoenix.otel.register()` takes `project_name=` and reads `PHOENIX_COLLECTOR_ENDPOINT` from the environment on its own; `OpenAIInstrumentor().instrument(tracer_provider=...)` is the instrumentation entry point; `using_attributes(session_id=..., metadata=...)` imports from `openinference.instrumentation`; the `openai` `AsyncOpenAI` constructor raises `OpenAIError` if it resolves no API key, and it normalizes `base_url` to end with a trailing slash.
 
 ## File Structure
@@ -66,7 +66,7 @@ openinference-instrumentation-openai
 
 - [ ] **Step 2: Install them**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && pip install -r requirements.txt`
+Run: `cd ./backend && pip install -r requirements.txt`
 Expected: successful install of `openai`, `arize-phoenix-otel`, `openinference-instrumentation-openai` and their OpenTelemetry dependencies, no errors. (There is a known harmless `RequestsDependencyWarning` about urllib3/chardet in this environment — ignore it.)
 
 - [ ] **Step 3: Write the failing tests for the real provider**
@@ -123,7 +123,7 @@ def test_chat_sends_system_first_and_returns_content(monkeypatch):
 
 - [ ] **Step 4: Run them to verify they fail**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_llm_provider.py -v`
+Run: `cd ./backend && python -m pytest tests/test_llm_provider.py -v`
 Expected: 2 FAILED — `OpenRouterProvider` has no `_client` attribute (its `__init__` doesn't exist yet; `chat()` is a `pass` stub).
 
 - [ ] **Step 5: Implement the provider (and delete Bedrock)**
@@ -208,18 +208,18 @@ def test_get_llm_provider_bedrock(monkeypatch):
 
 - [ ] **Step 7: Run both provider test files to verify green**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_llm_provider.py tests/test_providers.py -v`
+Run: `cd ./backend && python -m pytest tests/test_llm_provider.py tests/test_providers.py -v`
 Expected: 9 passed (2 new + 7 remaining in test_providers.py), 0 failed.
 
 - [ ] **Step 8: Run the full suite to confirm no collateral damage**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest -v`
+Run: `cd ./backend && python -m pytest -v`
 Expected: 33 passed (was 32: −1 bedrock test, +2 new). `test_ai_router.py` still passes because it monkeypatches `LLM_PROVIDER=mock`.
 
 - [ ] **Step 9: Commit**
 
 ```bash
-cd /Users/flavius/OPIT/git/uep2026 && git add backend/requirements.txt backend/app/providers/llm.py backend/tests/test_providers.py backend/tests/test_llm_provider.py && git commit -m "feat: implement OpenRouterProvider for real, remove Bedrock stub
+cd . && git add backend/requirements.txt backend/app/providers/llm.py backend/tests/test_providers.py backend/tests/test_llm_provider.py && git commit -m "feat: implement OpenRouterProvider for real, remove Bedrock stub
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
@@ -260,7 +260,7 @@ def test_drug_info_returns_llm_summary_with_source(client, db_session, monkeypat
 
 - [ ] **Step 2: Run it to verify it fails**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_fda_router.py::test_drug_info_returns_llm_summary_with_source -v`
+Run: `cd ./backend && python -m pytest tests/test_fda_router.py::test_drug_info_returns_llm_summary_with_source -v`
 Expected: FAIL — response body is the raw fixture dict (`{"drug": ..., "warnings": [...], "source": "fixture"}`), so `body["drug_name"]` raises `KeyError` / assertion fails.
 
 - [ ] **Step 3: Add the `source` attribute to the FDA providers**
@@ -360,18 +360,18 @@ In `backend/app/main.py`, the `fda` tag entry currently reads `"Provides openFDA
 
 - [ ] **Step 7: Run the FDA tests to verify green**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_fda_router.py -v`
+Run: `cd ./backend && python -m pytest tests/test_fda_router.py -v`
 Expected: 7 passed (6 existing + 1 new).
 
 - [ ] **Step 8: Run the full suite**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest -v`
+Run: `cd ./backend && python -m pytest -v`
 Expected: 34 passed.
 
 - [ ] **Step 9: Commit**
 
 ```bash
-cd /Users/flavius/OPIT/git/uep2026 && git add backend/app/providers/fda.py backend/app/schemas.py backend/app/routers/fda.py backend/app/main.py backend/tests/test_fda_router.py && git commit -m "feat: LLM plain-language summary for FDA drug lookups
+cd . && git add backend/app/providers/fda.py backend/app/schemas.py backend/app/routers/fda.py backend/app/main.py backend/tests/test_fda_router.py && git commit -m "feat: LLM plain-language summary for FDA drug lookups
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
@@ -436,7 +436,7 @@ def test_setup_tracing_registers_and_instruments(monkeypatch):
 
 - [ ] **Step 2: Run them to verify they fail**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_observability.py -v`
+Run: `cd ./backend && python -m pytest tests/test_observability.py -v`
 Expected: FAIL at collection with `ModuleNotFoundError: No module named 'app.observability'`.
 
 - [ ] **Step 3: Implement the module**
@@ -463,7 +463,7 @@ def setup_tracing() -> None:
 
 - [ ] **Step 4: Run the observability tests to verify green**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest tests/test_observability.py -v`
+Run: `cd ./backend && python -m pytest tests/test_observability.py -v`
 Expected: 2 passed.
 
 - [ ] **Step 5: Call it at startup**
@@ -524,13 +524,13 @@ and in `get_drug_info`, wrap the `llm.chat` call from Task 2:
 
 - [ ] **Step 8: Run the full suite**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest -v`
+Run: `cd ./backend && python -m pytest -v`
 Expected: 36 passed (34 + 2 observability). The `ai`/`fda` router tests confirm the `using_attributes` wraps changed no behavior.
 
 - [ ] **Step 9: Commit**
 
 ```bash
-cd /Users/flavius/OPIT/git/uep2026 && git add backend/app/observability.py backend/tests/test_observability.py backend/app/main.py backend/app/routers/ai.py backend/app/routers/fda.py && git commit -m "feat: Arize Phoenix LLM tracing, gated on PHOENIX_COLLECTOR_ENDPOINT
+cd . && git add backend/app/observability.py backend/tests/test_observability.py backend/app/main.py backend/app/routers/ai.py backend/app/routers/fda.py && git commit -m "feat: Arize Phoenix LLM tracing, gated on PHOENIX_COLLECTOR_ENDPOINT
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
@@ -596,7 +596,7 @@ volumes:
 
 - [ ] **Step 2: Validate compose syntax**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026 && docker compose config --quiet`
+Run: `cd . && docker compose config --quiet`
 Expected: no output, exit code 0.
 
 - [ ] **Step 3: Update .env.example**
@@ -682,21 +682,21 @@ to
 
 - [ ] **Step 6: Full-suite verification (the "all python tests work" acceptance gate)**
 
-Run: `cd /Users/flavius/OPIT/git/uep2026/backend && python -m pytest -v`
+Run: `cd ./backend && python -m pytest -v`
 Expected: **36 passed, 0 failed** (32 original − 1 bedrock + 2 llm_provider + 1 fda summary + 2 observability). The RLS test needs the compose Postgres on `localhost:5432` — start it with `docker compose up -d db` if it isn't running.
 
 - [ ] **Step 7: Live-stack smoke test (requires Docker)**
 
 Run:
 ```bash
-cd /Users/flavius/OPIT/git/uep2026 && docker compose up -d --build && sleep 10 && curl -s http://localhost:8000/health/db && curl -s -o /dev/null -w "%{http_code}" http://localhost:6006
+cd . && docker compose up -d --build && sleep 10 && curl -s http://localhost:8000/health/db && curl -s -o /dev/null -w "%{http_code}" http://localhost:6006
 ```
 Expected: `{"database":"connected"}` followed by `200` (Phoenix UI answering). Then confirm the backend booted tracing without errors: `docker compose logs backend | tail -20` shows uvicorn running, no Python tracebacks mentioning `phoenix` or `openinference`.
 
 - [ ] **Step 8: Commit**
 
 ```bash
-cd /Users/flavius/OPIT/git/uep2026 && git add docker-compose.yml .env.example README.md docs/superpowers/specs/2026-07-15-llm-provider-and-observability-design.md && git commit -m "feat: Phoenix service in compose stack; docs for LLM observability
+cd . && git add docker-compose.yml .env.example README.md docs/superpowers/specs/2026-07-15-llm-provider-and-observability-design.md && git commit -m "feat: Phoenix service in compose stack; docs for LLM observability
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```

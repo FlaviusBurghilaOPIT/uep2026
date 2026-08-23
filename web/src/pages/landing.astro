@@ -1,0 +1,849 @@
+---
+import Layout from '../layouts/Layout.astro'
+import LanguageSwitcher from '../components/LanguageSwitcher.astro'
+import {
+  ShieldCheck,
+  TriangleAlert,
+  CheckCircle2,
+  ArrowRight,
+  Check,
+  X,
+  Activity,
+  Pill,
+  Phone,
+  Lock,
+  Clock
+} from 'lucide-astro'
+import { createTranslator, isLanguage } from '../i18n'
+import '../index.css'
+
+const cookieLang = Astro.cookies.get('carepro_language')?.value
+const lang = isLanguage(cookieLang) ? cookieLang : 'en'
+const t = createTranslator(lang)
+---
+
+<Layout title={`${t('landing.brandName', 'RemoteCare Pro')} — ${t('landing.headline', 'Post-Op Recovery & Clinical Triage Platform')}`}>
+  <div class="landing-page">
+    <!-- Sticky Header -->
+    <header class="header">
+      <div class="header-inner">
+        <div class="brand-group">
+          <span class="brand-plus" aria-hidden="true">+</span>
+          <span class="brand-name">{t('landing.brandName', 'RemoteCare Pro')}</span>
+        </div>
+
+        <div class="header-right">
+          <LanguageSwitcher variant="light" />
+          <a href="/login" class="header-login-btn">
+            <Lock size={15} aria-hidden="true" />
+            <span>{t('landing.loginButton', 'Clinician Sign In')}</span>
+          </a>
+          <button class="header-cta-btn launch-demo-btn">
+            {t('landing.launchDemo', 'Launch Live Demo')}
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section" aria-labelledby="hero-title">
+      <div class="hero-inner">
+        <div class="badge-pill">
+          <ShieldCheck size={16} aria-hidden="true" />
+          <span>{t('landing.awsTrack', 'AWS Healthcare Track • Amazon Bedrock Guardrails')}</span>
+        </div>
+
+        <h1 id="hero-title" class="hero-title">
+          {t('landing.headline', 'Close the Post-Op Recovery Gap with')} <span class="hero-highlight">{t('landing.headlineHighlight', 'Intelligent Clinical Triage')}</span>
+        </h1>
+
+        <p class="hero-subtitle">
+          {t('landing.subtitle', 'Real-time patient adherence monitoring, automated 1-click clinical exception escalation, and Amazon Bedrock safety intelligence protecting surgical patients 24/7.')}
+        </p>
+
+        <div class="hero-cta-group">
+          <button class="primary-cta launch-demo-btn">
+            {t('landing.launchClinicianDemo', 'Launch Live Clinician Demo')}
+          </button>
+          <a href="#features" class="secondary-cta">
+            {t('landing.exploreFeatures', 'Explore Features')}
+          </a>
+        </div>
+
+        <!-- Trust Badges Bar -->
+        <div class="trust-bar">
+          <div class="trust-item">
+            <ShieldCheck size={16} aria-hidden="true" />
+            <span>{t('landing.awsTrack', 'AWS Healthcare Track')}</span>
+          </div>
+          <div class="trust-divider"></div>
+          <div class="trust-item">
+            <Lock size={16} aria-hidden="true" />
+            <span>{t('landing.bedrockGuardrails', 'Bedrock Safety Guardrails')}</span>
+          </div>
+          <div class="trust-divider"></div>
+          <div class="trust-item">
+            <Pill size={16} aria-hidden="true" />
+            <span>{t('landing.openFdaIntelligence', 'openFDA Drug Intelligence')}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Live Triage Preview -->
+    <section class="preview-section" aria-labelledby="preview-title">
+      <div class="section-header">
+        <div class="section-badge">
+          <Activity size={16} aria-hidden="true" />
+          <span>{t('landing.interactivePreview', 'Interactive Preview')}</span>
+        </div>
+        <h2 id="preview-title" class="section-title">{t('landing.liveTelemetryTitle', 'Real-Time Clinical Telemetry at a Glance')}</h2>
+        <p class="section-subtitle">{t('landing.liveTelemetrySubtitle', 'Clinicians triage missed doses and symptoms in under 60 seconds with 1-click outreach.')}</p>
+      </div>
+
+      <div class="preview-card" id="demo-card">
+        <div class="preview-card-header">
+          <div class="patient-meta">
+            <span class="patient-avatar">MR</span>
+            <div>
+              <h3 class="patient-name">Maria Rossi, 62yo</h3>
+              <span class="patient-sub">Total Knee Arthroplasty • Post-Op Day 3</span>
+            </div>
+          </div>
+          <div class="status-badge" id="demo-badge">
+            <TriangleAlert size={14} id="badge-icon-alert" aria-hidden="true" />
+            <CheckCircle2 size={14} id="badge-icon-resolved" class="hidden" aria-hidden="true" />
+            <span id="badge-text">HIGH PRIORITY • Missed Morning Dose</span>
+          </div>
+        </div>
+
+        <div class="preview-details">
+          <div class="telemetry-box">
+            <div class="telemetry-label">
+              <Pill size={14} aria-hidden="true" />
+              <span>Prescribed Regimen</span>
+            </div>
+            <div class="telemetry-value">Oxycodone 5mg (Every 6h PRN)</div>
+          </div>
+          <div class="telemetry-box">
+            <div class="telemetry-label">
+              <Clock size={14} aria-hidden="true" />
+              <span>Dose Adherence Status</span>
+            </div>
+            <div class="telemetry-status" id="telemetry-status">
+              Overdue by 4.5 hours (0 / 2 doses logged today)
+            </div>
+          </div>
+        </div>
+
+        <div class="preview-action-row">
+          <button class="preview-action-btn" id="simulate-outreach-btn">
+            <Phone size={16} aria-hidden="true" />
+            <span id="simulate-btn-text">Simulate 1-Click Clinical Outreach</span>
+          </button>
+          <div class="resolved-banner hidden" id="resolved-banner">
+            <CheckCircle2 size={16} aria-hidden="true" />
+            <span>Clinical Outreach Logged • Patient Status Resolved</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Problem vs Solution (StoryBrand SB7) -->
+    <section class="problem-section" aria-labelledby="problem-title">
+      <div class="section-header">
+        <h2 id="problem-title" class="section-title">{t('landing.comparisonTitle', 'Why Traditional Post-Op Care Fails')}</h2>
+        <p class="section-subtitle">{t('landing.comparisonSubtitle', 'Comparing passive paper discharge with active intelligent remote monitoring.')}</p>
+      </div>
+
+      <div class="comparison-grid">
+        <!-- Traditional Card -->
+        <div class="comparison-card-dark">
+          <div class="card-badge-red">
+            <X size={14} aria-hidden="true" />
+            <span>{t('landing.traditionalTitle', 'Traditional Discharge')}</span>
+          </div>
+          <h3 class="comp-heading">Static Paper Instructions & Blind Spots</h3>
+          <ul class="comp-list">
+            <li class="comp-item">
+              <span class="bullet-x" aria-hidden="true">✕</span>
+              <span>Patients forget complex medication tapers and dosing schedules.</span>
+            </li>
+            <li class="comp-item">
+              <span class="bullet-x" aria-hidden="true">✕</span>
+              <span>Severe side effects escalate to ER readmissions before clinicians are alerted.</span>
+            </li>
+            <li class="comp-item">
+              <span class="bullet-x" aria-hidden="true">✕</span>
+              <span>No continuous adherence telemetry or automated exception queues.</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- RemoteCare Pro Card -->
+        <div class="comparison-card-light">
+          <div class="card-badge-green">
+            <Check size={14} aria-hidden="true" />
+            <span>{t('landing.remoteCareTitle', 'RemoteCare Pro Platform')}</span>
+          </div>
+          <h3 class="comp-heading-blue">Proactive Guarded Care & Instant Escalation</h3>
+          <ul class="comp-list">
+            <li class="comp-item">
+              <span class="bullet-check" aria-hidden="true">✓</span>
+              <span>1-tap mobile dose logging with offline-first state and haptic feedback.</span>
+            </li>
+            <li class="comp-item">
+              <span class="bullet-check" aria-hidden="true">✓</span>
+              <span>Dynamically prioritized triage dashboard with sub-60s resolution targets.</span>
+            </li>
+            <li class="comp-item">
+              <span class="bullet-check" aria-hidden="true">✓</span>
+              <span>Amazon Bedrock safety intelligence and openFDA adverse event intelligence.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 Core Differentiators Grid -->
+    <section id="features" class="features-section" aria-labelledby="features-title">
+      <div class="section-header">
+        <h2 id="features-title" class="section-title">{t('landing.pillarsTitle', 'Architected for Clinical Rigor and Patient Clarity')}</h2>
+        <p class="section-subtitle">{t('landing.pillarsSubtitle', 'Three pillars that set RemoteCare Pro apart in surgical recovery care.')}</p>
+      </div>
+
+      <div class="features-grid">
+        <!-- Feature 1 -->
+        <div class="feature-card">
+          <div class="feature-badge">ADHERENCE</div>
+          <div class="feature-icon">
+            <Pill size={24} aria-hidden="true" />
+          </div>
+          <h3 class="feature-title">{t('landing.pillar1Title', 'Frictionless Patient Dose Logging')}</h3>
+          <p class="feature-desc">{t('landing.pillar1Text', 'Offline-capable Flutter app with visual pill-form cues, 5-second undo windows, and engaging completion celebrations.')}</p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="feature-card">
+          <div class="feature-badge">AI SAFETY</div>
+          <div class="feature-icon">
+            <ShieldCheck size={24} aria-hidden="true" />
+          </div>
+          <h3 class="feature-title">{t('landing.pillar2Title', 'Amazon Bedrock Guardrails')}</h3>
+          <p class="feature-desc">{t('landing.pillar2Text', 'RAG-grounded recovery chat with strict medical boundary enforcement, refusal telemetry, and instant red-flag triage triggers.')}</p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="feature-card">
+          <div class="feature-badge">CLINICAL TRIAGE</div>
+          <div class="feature-icon">
+            <Activity size={24} aria-hidden="true" />
+          </div>
+          <h3 class="feature-title">{t('landing.pillar3Title', 'Dynamic Triage Queues')}</h3>
+          <p class="feature-desc">{t('landing.pillar3Text', 'Clinician dashboard prioritizing patients by critical risk metrics, median resolution gauges, and automated 1-click resolution modals.')}</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Conversion Banner -->
+    <section class="cta-banner" aria-labelledby="cta-banner-title">
+      <div class="cta-banner-inner">
+        <h2 id="cta-banner-title" class="cta-banner-title">{t('landing.ctaBannerTitle', 'Experience the Complete Golden Loop')}</h2>
+        <p class="cta-banner-desc">{t('landing.ctaBannerSubtitle', 'Explore the live clinician dashboard and experience how RemoteCare Pro transforms surgical recovery.')}</p>
+        <button class="cta-banner-btn launch-demo-btn">
+          <span>{t('landing.ctaBannerButton', 'Launch Live Clinician Demo')}</span>
+          <ArrowRight size={18} aria-hidden="true" />
+        </button>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p class="footer-text">RemoteCare Pro • Surgical Recovery & Telemetry Platform • {new Date().getFullYear()}</p>
+    </footer>
+  </div>
+</Layout>
+
+<style>
+  .landing-page {
+    background-color: #f8fafc;
+    min-height: 100vh;
+    color: #0f172a;
+    display: flex;
+    flex-direction: column;
+  }
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 12px 24px;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.05);
+  }
+  .header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .brand-plus {
+    color: #0284c7;
+    font-size: 24px;
+    font-weight: 800;
+  }
+  .brand-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .header-login-btn {
+    background-color: transparent;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+  }
+  .header-cta-btn {
+    background-color: #0284c7;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(2,132,199,0.2);
+  }
+  .hero-section {
+    padding: 64px 24px 48px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: center;
+  }
+  .hero-inner {
+    max-width: 860px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #e0f2fe;
+    color: #0369a1;
+    padding: 6px 14px;
+    border-radius: 9999px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+  .hero-title {
+    font-size: clamp(2rem, 3.5vw + 1rem, 3.25rem);
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+    margin-bottom: 20px;
+  }
+  .hero-highlight {
+    color: #0284c7;
+  }
+  .hero-subtitle {
+    font-size: 17px;
+    color: #475569;
+    line-height: 1.6;
+    max-width: 66ch;
+    margin-bottom: 32px;
+  }
+  .hero-cta-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 48px;
+  }
+  .primary-cta {
+    background-color: #0284c7;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 14px 28px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(2,132,199,0.3);
+    transition: background-color 0.15s ease;
+  }
+  .primary-cta:hover {
+    background-color: #0369a1;
+  }
+  .secondary-cta {
+    background-color: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 14px 28px;
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+  .secondary-cta:hover {
+    background-color: #e2e8f0;
+  }
+  .trust-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background-color: #f8fafc;
+    padding: 10px 20px;
+    border-radius: 9999px;
+    border: 1px solid #e2e8f0;
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+  }
+  .trust-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .trust-divider {
+    width: 1px;
+    height: 16px;
+    background-color: #cbd5e1;
+  }
+  .preview-section {
+    padding: 64px 24px;
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .section-header {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+  .section-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #0284c7;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+  }
+  .section-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 12px;
+  }
+  .section-subtitle {
+    font-size: 16px;
+    color: #64748b;
+    max-width: 60ch;
+    margin: 0 auto;
+  }
+  .preview-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(15,23,42,0.08);
+    padding: 24px;
+    transition: all 0.3s ease;
+  }
+  .preview-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 18px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .patient-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .patient-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: #0284c7;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+  }
+  .patient-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+  .patient-sub {
+    font-size: 13px;
+    color: #64748b;
+  }
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+    padding: 6px 12px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .status-badge.resolved {
+    background-color: #f0fdf4;
+    color: #15803d;
+    border-color: #86efac;
+  }
+  .preview-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    padding: 20px 0;
+  }
+  .telemetry-box {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .telemetry-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .telemetry-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+  }
+  .telemetry-status {
+    font-size: 14px;
+    font-weight: 600;
+    color: #b91c1c;
+  }
+  .telemetry-status.good {
+    color: #15803d;
+  }
+  .preview-action-row {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 12px;
+  }
+  .preview-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #b91c1c;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+  .preview-action-btn:hover {
+    background-color: #991b1b;
+  }
+  .resolved-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #86efac;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .problem-section {
+    padding: 64px 24px;
+    background-color: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .comparison-grid {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .comparison-card-dark {
+    background-color: #0f172a;
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 32px;
+  }
+  .comparison-card-light {
+    background-color: #f0f9ff;
+    border: 2px solid #0284c7;
+    border-radius: 12px;
+    padding: 32px;
+  }
+  .card-badge-red {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+  .card-badge-green {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: #dcfce7;
+    color: #15803d;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+  .comp-heading {
+    font-size: 20px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 16px;
+  }
+  .comp-heading-blue {
+    font-size: 20px;
+    font-weight: 700;
+    color: #0284c7;
+    margin-bottom: 16px;
+  }
+  .comp-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .comp-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .bullet-x {
+    color: #ef4444;
+    font-weight: 800;
+  }
+  .bullet-check {
+    color: #16a34a;
+    font-weight: 800;
+  }
+  .features-section {
+    padding: 64px 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .feature-card {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .feature-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(15,23,42,0.08);
+  }
+  .feature-badge {
+    font-size: 11px;
+    font-weight: 700;
+    color: #0284c7;
+    letter-spacing: 0.05em;
+    margin-bottom: 14px;
+  }
+  .feature-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    background-color: #e0f2fe;
+    color: #0284c7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 18px;
+  }
+  .feature-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 10px;
+  }
+  .feature-desc {
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.6;
+  }
+  .cta-banner {
+    padding: 64px 24px;
+    background-color: #0f172a;
+    color: #ffffff;
+    text-align: center;
+  }
+  .cta-banner-inner {
+    max-width: 700px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .cta-banner-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 16px;
+  }
+  .cta-banner-desc {
+    font-size: 16px;
+    color: #94a3b8;
+    margin-bottom: 32px;
+  }
+  .cta-banner-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #0284c7;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 14px 28px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(2,132,199,0.3);
+  }
+  .hidden {
+    display: none !important;
+  }
+  .footer {
+    padding: 24px;
+    background-color: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    text-align: center;
+  }
+  .footer-text {
+    font-size: 13px;
+    color: #94a3b8;
+  }
+  @media (max-width: 768px) {
+    .header-inner {
+      flex-direction: column;
+      gap: 12px;
+    }
+    .comparison-grid {
+      grid-template-columns: 1fr;
+    }
+    .features-grid {
+      grid-template-columns: 1fr;
+    }
+    .trust-bar {
+      flex-direction: column;
+      gap: 8px;
+    }
+    .trust-divider {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  function initLandingPage() {
+    // Launch Demo Buttons
+    const demoBtns = document.querySelectorAll('.launch-demo-btn')
+    demoBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        window.location.href = '/login?demo=true'
+      })
+    })
+
+    // Simulate Outreach Interaction
+    const simulateBtn = document.getElementById('simulate-outreach-btn')
+    const simulateBtnText = document.getElementById('simulate-btn-text')
+    const demoBadge = document.getElementById('demo-badge')
+    const badgeText = document.getElementById('badge-text')
+    const badgeIconAlert = document.getElementById('badge-icon-alert')
+    const badgeIconResolved = document.getElementById('badge-icon-resolved')
+    const telemetryStatus = document.getElementById('telemetry-status')
+    const resolvedBanner = document.getElementById('resolved-banner')
+
+    if (simulateBtn) {
+      simulateBtn.addEventListener('click', () => {
+        if (simulateBtnText) simulateBtnText.textContent = 'Initiating Clinical Outreach...'
+        setTimeout(() => {
+          if (simulateBtn) simulateBtn.style.display = 'none'
+          if (resolvedBanner) resolvedBanner.style.display = 'flex'
+          if (demoBadge) {
+            demoBadge.classList.add('resolved')
+          }
+          if (badgeIconAlert) badgeIconAlert.style.display = 'none'
+          if (badgeIconResolved) badgeIconResolved.style.display = 'inline-block'
+          if (badgeText) badgeText.textContent = 'RESOLVED • Outreach Logged'
+          if (telemetryStatus) {
+            telemetryStatus.classList.add('good')
+            telemetryStatus.textContent = 'Patient Contacted • Regimen Adjusted'
+          }
+        }, 500)
+      })
+    }
+  }
+
+  initLandingPage()
+  document.addEventListener('astro:page-load', initLandingPage)
+</script>

@@ -417,10 +417,3 @@ export interface Translations {
   common: CommonTranslations
   medication: MedicationTranslations
 }
-
-export interface LanguageContextType {
-  language: Language
-  setLanguage: (lang: Language) => void
-  t: (path: string, fallbackOrParams?: string | Record<string, string | number>, fallback?: string) => string
-  translations: Translations
-}

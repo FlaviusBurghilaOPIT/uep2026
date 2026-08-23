@@ -57,7 +57,7 @@ Our team followed an agile, contract-first **Simple, Lovable, Complete (SLC)** e
 | Category | Technology / Tool | Rationale & Use in Project |
 |---|---|---|
 | **Frontend (Mobile)** | **Flutter 3.27 / Dart / Riverpod** | Cross-platform (iOS/Android), offline-first state management, 60fps animations, WCAG high-contrast compliance. |
-| **Frontend (Web)** | **React 18 / TypeScript / Vite / Tailwind CSS / Lucide** | Clinician dashboard, sub-second load times, Refactoring UI design tokens, responsive triage cards. |
+| **Frontend (Web)** | **Astro 7.2 / React / TypeScript / Lucide Icons** | Clinician dashboard, sub-second load times, Refactoring UI design tokens, responsive triage cards. |
 | **Backend API** | **FastAPI / Python 3.11 / Pydantic v2 / Uvicorn** | Asynchronous execution, auto-generated OpenAPI documentation, sub-millisecond serialization. |
 | **Database & ORM** | **PostgreSQL 16 / SQLAlchemy 2.0 / Alembic** | Relational integrity, ACID compliance, Row-Level Security (RLS) policies, schema migrations. |
 | **AI & LLM Services** | **AWS Bedrock / OpenRouter (Llama 3, Claude 3.5 Sonnet) / RAG** | Retrieval-Augmented Generation over clinical case guidelines, structured JSON outputs, guardrail refusal detection. |
@@ -75,7 +75,7 @@ Our team followed an agile, contract-first **Simple, Lovable, Complete (SLC)** e
 |                                CLIENT SURFACES                                    |
 |                                                                                   |
 |   +------------------------------------+   +----------------------------------+   |
-|   |    Clinician Web Portal (React)    |   |  Patient Mobile Companion (App)  |   |
+|   |    Clinician Web Portal (Astro 7.2)|   |  Patient Mobile Companion (App)  |   |
 |   |  - Triage Dashboard & Priority List|   |  - 1-Tap Dose Logging & Reminders|   |
 |   |  - Patient & Case Authoring        |   |  - Daily Check-In & Red-Flag Bar |   |
 |   |  - openFDA Safety Analysis Review  |   |  - Guardrailed AI Assistant      |   |
@@ -106,7 +106,7 @@ Our team followed an agile, contract-first **Simple, Lovable, Complete (SLC)** e
 ```
 
 **Data Flow Architecture:**
-1. **Prescription & Protocol Ingestion:** Clinician inputs surgical discharge regimen on React Web → Persisted in PostgreSQL with encrypted patient references → Push notification anchor scheduled via AWS SNS.
+1. **Prescription & Protocol Ingestion:** Clinician inputs surgical discharge regimen on Astro 7.2 Web Portal → Persisted in PostgreSQL with encrypted patient references → Push notification anchor scheduled via AWS SNS.
 2. **Patient Interaction & Dose Logging:** Mobile app receives regimen via API → User logs dose offline or online → Optimistic local UI updates instantly with 5-second undo toast → Synchronized to Backend `/adherence/log` with idempotency tokens.
 3. **Closed-Loop Exception Triage:** Missed doses or "bad" symptom check-ins trigger Backend Triage Engine → Evaluates risk score (`CRITICAL`, `WARNING`, `STABLE`) → Real-time Triage Dashboard updates clinician view.
 4. **Safety-Guarded AI Inquiries:** Patient asks question on Mobile → Streamed to Backend `/ai/chat/stream` → Case documents + FDA labels retrieved into RAG context → LLM evaluates response under strict medical guardrails → Streamed back in chunks; out-of-scope diagnosis triggers standardized clinical refusal.

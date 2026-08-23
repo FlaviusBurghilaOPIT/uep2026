@@ -1,0 +1,82 @@
+---
+import { Globe } from 'lucide-astro'
+
+interface Props {
+  variant?: 'dark' | 'light'
+  showGlobe?: boolean
+}
+
+const { variant = 'light', showGlobe = true } = Astro.props
+const isDark = variant === 'dark'
+---
+
+<div class={`language-switcher ${isDark ? 'dark' : 'light'}`}>
+  {showGlobe && <Globe size={14} class={isDark ? 'globe-dark' : 'globe-light'} aria-hidden="true" />}
+  <select class={`lang-select ${isDark ? 'select-dark' : 'select-light'}`} aria-label="Select Language">
+    <option value="en">🇬🇧 English</option>
+    <option value="es">🇪🇸 Español</option>
+    <option value="it">🇮🇹 Italiano</option>
+  </select>
+</div>
+
+<style>
+  .language-switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 6px;
+    padding: 4px 8px;
+    transition: background-color 0.2s ease;
+  }
+  .language-switcher.dark {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+  }
+  .language-switcher.light {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+  }
+  :global(.globe-dark) {
+    color: #38bdf8;
+  }
+  :global(.globe-light) {
+    color: #64748b;
+  }
+  .lang-select {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    outline: none;
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .select-dark {
+    color: #38bdf8;
+  }
+  .select-light {
+    color: #334155;
+  }
+</style>
+
+<script>
+  function initLanguageSwitcher() {
+    const selects = document.querySelectorAll<HTMLSelectElement>('.lang-select')
+    const match = document.cookie.match(/(?:^|; )carepro_language=([^;]*)/)
+    const cookieLang = match ? match[1] : null
+    const currentLang = localStorage.getItem('carepro_language') || cookieLang || 'en'
+
+    selects.forEach(select => {
+      select.value = currentLang
+      select.addEventListener('change', (e) => {
+        const target = e.target as HTMLSelectElement
+        const lang = target.value
+        localStorage.setItem('carepro_language', lang)
+        document.cookie = `carepro_language=${lang};path=/;max-age=31536000;SameSite=Lax`
+        window.location.reload()
+      })
+    })
+  }
+
+  initLanguageSwitcher()
+  document.addEventListener('astro:page-load', initLanguageSwitcher)
+</script>

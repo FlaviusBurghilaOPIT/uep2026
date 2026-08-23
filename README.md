@@ -1,13 +1,13 @@
 # Remote CarePro
 
-A post-surgery care platform for clinicians and patients: a React clinician web dashboard, a Flutter patient mobile app, and a FastAPI + Postgres backend they share.
+A post-surgery care platform for clinicians and patients: a Pure Astro SSR clinician web dashboard (with Lucide icons and tri-lingual i18n), a Flutter patient mobile app, and a FastAPI + Postgres backend they share.
 
 ## Prerequisites
 
 - [Git](https://git-scm.com)
 - [Docker](https://www.docker.com/products/docker-desktop) — runs Postgres + the backend
-- [Node.js](https://nodejs.org) v18+ — for the web app
-- [Flutter SDK](https://docs.flutter.dev/get-started/install) 3.27+ — for the mobile app (only needed if you're running the mobile side of the demo; see [mobile/README.md](mobile/README.md) for full setup including Android/iOS simulator requirements)
+- [Node.js](https://nodejs.org) v18+ — for the web app (Astro SSR)
+- [Flutter SDK](https://docs.flutter.dev/get-started/install) 3.27+ (Dart 3.12+) — for the mobile app (only needed if you're running the mobile side of the demo; see [mobile/README.md](mobile/README.md) for full setup including Android/iOS simulator requirements)
 
 ---
 
@@ -55,7 +55,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173`. The web app talks to the real backend at `http://localhost:8000` by default — no extra config needed.
+Open `http://localhost:3000` (or `http://localhost:5173`). The web app talks to the real backend at `http://localhost:8000` by default — no extra config needed.
 
 ### 5. Start the mobile app (only if you're working on the patient app)
 
@@ -78,7 +78,7 @@ Patients don't have passwords — sign-in is always an emailed one-time code. In
 
 ### Demo walkthrough (the golden loop)
 
-1. **Web (Clinician)** — Log in at `http://localhost:5173/login` (or 1-click Demo Clinician).
+1. **Web (Clinician)** — Log in at `http://localhost:3000/login` (or 1-click Demo Clinician).
 2. **Web (Authoring)** — `Patients` → `+ New Patient`, invite a new patient. `+ New Case` (e.g. Total Knee Replacement), prescribe medication regimen, and check openFDA drug safety warnings.
 3. **Web (Triage)** — `Triage Dashboard` displays patients dynamically prioritized by urgency (`CRITICAL`, `WARNING`, `STABLE`) with 1-click alert resolution.
 4. **Mobile (Patient)** — Onboarding with passwordless 6-digit OTP (clipboard auto-paste and auto-submit).
@@ -94,19 +94,19 @@ Patients don't have passwords — sign-in is always an emailed one-time code. In
 | Service | URL | Description |
 |---|---|---|
 | Backend API (FastAPI) | `http://localhost:8000` | OpenAPI docs at `/docs` |
-| Web Portal (Vite/React) | `http://localhost:5173` | Clinician portal and landing page |
+| Web Portal (Pure Astro SSR) | `http://localhost:3000` | Clinician portal and landing page |
 | PostgreSQL Database | `localhost:5432` | `caredev` / `caredev`, db `remotecare` |
 
 ---
 
 ## Testing & Quality Verification
 
-Full test automation across all three platform components (376 total passing tests):
+Full test automation across all three platform components:
 
 | Platform | Test Command | Scope & Coverage | Status |
 |---|---|---|---|
 | **Backend** | `cd backend && pytest` | 164 unit, RLS authorization, and integration tests | **164 Passing** |
-| **Web Portal** | `cd web && npm test` | Vitest component, landing page, and i18n tests | **5 Passing** |
+| **Web Portal** | `cd web && npm test` | Vitest Astro page, template DOM, and i18n tests | **10 Passing** |
 | **Mobile App** | `cd mobile && flutter test` | 207 unit, widget, and accessibility (WCAG) tests | **207 Passing** |
 | **Mobile Linter** | `cd mobile && flutter analyze` | Dart/Flutter static analyzer | **0 Issues** |
 

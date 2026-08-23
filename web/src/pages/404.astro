@@ -1,0 +1,70 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { ArrowLeft } from 'lucide-astro'
+import { createTranslator, isLanguage } from '../i18n'
+import '../index.css'
+
+const cookieLang = Astro.cookies.get('carepro_language')?.value
+const lang = isLanguage(cookieLang) ? cookieLang : 'en'
+const t = createTranslator(lang)
+---
+
+<Layout title={`${t('common.error', 'Page Not Found')} — RemoteCare Pro`}>
+  <div class="not-found-container">
+    <h1 class="error-code">404</h1>
+    <h2 class="error-title">{t('common.error', 'Page Not Found')}</h2>
+    <p class="error-desc">
+      The requested page or surgical recovery resource could not be located.
+    </p>
+    <a href="/dashboard" class="dashboard-link">
+      <ArrowLeft size={16} aria-hidden="true" />
+      <span>{t('caseDetail.backToPatients', 'Return to Clinician Dashboard')}</span>
+    </a>
+  </div>
+</Layout>
+
+<style>
+  .not-found-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 80vh;
+    padding: 24px;
+    text-align: center;
+  }
+  .error-code {
+    font-size: 72px;
+    font-weight: 800;
+    color: #0284c7;
+    margin: 0;
+  }
+  .error-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 12px 0 8px 0;
+  }
+  .error-desc {
+    color: #64748b;
+    font-size: 15px;
+    max-width: 450px;
+    margin-bottom: 24px;
+  }
+  .dashboard-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #0284c7;
+    color: #ffffff;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 2px 4px rgba(2,132,199,0.2);
+    transition: background-color 0.15s ease;
+  }
+  .dashboard-link:hover {
+    background-color: #0369a1;
+  }
+</style>

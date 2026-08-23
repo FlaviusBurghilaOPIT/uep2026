@@ -211,7 +211,7 @@ flutter analyze
 - **State Management**: Riverpod (`flutter_riverpod`, `freezed`, `AsyncNotifier`, `Notifier`).
 - **Local Storage**: `SharedPreferences` for auth JWT token persistence.
 - **Network Layer**: `ApiService` abstract class with `HttpApiService` (production) and `FakeApiService` (unit & widget tests).
-- **Environment Resolution**: [AppConfig](file:///Users/flavius/OPIT/uep2026/mobile/lib/core/config/app_config.dart) resolves `API_BASE_URL` dynamically.
+- **Environment Resolution**: [AppConfig](file://./mobile/lib/core/config/app_config.dart) resolves `API_BASE_URL` dynamically.
 
 ### Why `10.0.2.2` on Android vs `localhost` on iOS
 

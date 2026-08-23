@@ -1,35 +1,20 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
-import { BrowserRouter } from 'react-router-dom'
-import { LanguageProvider } from '../i18n'
-import LoginPage from '../pages/LoginPage'
+import fs from 'fs'
+import path from 'path'
 
-describe('LoginPage', () => {
-  it('renders login form and 1-click demo button', () => {
-    render(
-      <LanguageProvider>
-        <BrowserRouter>
-          <LoginPage />
-        </BrowserRouter>
-      </LanguageProvider>
-    )
+describe('LoginPage Astro', () => {
+  const loginSource = fs.readFileSync(path.resolve(__dirname, '../pages/login.astro'), 'utf-8')
 
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/Remote CarePro/i)
-    expect(screen.getByRole('button', { name: /1-Click Demo Clinician Login/i })).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('clinician@example.com')).toBeInTheDocument()
+  it('contains login form and 1-click demo button', () => {
+    expect(loginSource).toContain('Remote CarePro')
+    expect(loginSource).toContain('1-Click Demo Clinician Login')
+    expect(loginSource).toContain('clinician@example.com')
   })
 
-  it('allows clicking demo login button', () => {
-    render(
-      <LanguageProvider>
-        <BrowserRouter>
-          <LoginPage />
-        </BrowserRouter>
-      </LanguageProvider>
-    )
-
-    const demoBtn = screen.getByRole('button', { name: /1-Click Demo Clinician Login/i })
-    fireEvent.click(demoBtn)
-    expect(demoBtn).toBeInTheDocument()
+  it('contains Lucide icons and auth submission script', () => {
+    expect(loginSource).toContain('Lock')
+    expect(loginSource).toContain('Zap')
+    expect(loginSource).toContain('ArrowLeft')
+    expect(loginSource).toContain('/api/auth/login')
   })
 })
