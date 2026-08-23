@@ -309,5 +309,19 @@
         "type": "int"
       }
     }
-  }
+  },
+  "emergencyBannerTitle": "Emergency Red Flag Warning",
+  "emergencyCall911": "Call Emergency (911)",
+  "emergencyCallClinic": "Call Care Team ({phone})",
+  "@emergencyCallClinic": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "emergencyCallClinicFallback": "Call Care Team",
+  "pillFormCapsule": "Capsule",
+  "pillFormTablet": "Tablet",
+  "pillFormLiquid": "Liquid"
 }

@@ -52,6 +52,7 @@ def seed_database():
                 status="active",
                 phone="+1 555-0199",
                 date_of_birth="1988-04-12",
+                password_hash=hash_password("password123"),
                 invite_code=DEMO_PATIENT_CODE,
                 invite_code_expires_at=datetime.utcnow() + timedelta(days=365),
             )

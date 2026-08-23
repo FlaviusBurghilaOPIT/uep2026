@@ -19,7 +19,10 @@ def get_db():
         db.close()
 
 def init_db():
-    """Enable pgvector extension on startup"""
-    with engine.connect() as conn:
-        conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
-        conn.commit()
+    """Enable pgvector extension on startup if available"""
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+            conn.commit()
+    except Exception:
+        pass

@@ -15,6 +15,7 @@ node_modules/
 dist/
 .next/
 .cache/
+external_docs/
 
 # Flutter
 .dart_tool/
@@ -50,3 +51,5 @@ skills-lock.json
 .superpowers/
 token
 .token
+.playwright-mcp/
+

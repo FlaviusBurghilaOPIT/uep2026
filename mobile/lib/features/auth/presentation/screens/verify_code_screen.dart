@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
@@ -96,7 +97,7 @@ class _VerifyCodeScreenState extends ConsumerState<VerifyCodeScreen> {
                 AppTextField(
                   label: AuthStrings.codeLabel,
                   hintText: AuthStrings.codeHint,
-                  prefixIcon: Icons.vpn_key_outlined,
+                  prefixIcon: LucideIcons.keyRound,
                   keyboardType: TextInputType.number,
                   controller: _codeController,
                   validator: (value) {

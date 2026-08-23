@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../constants/app_colors.dart';
 import '../l10n/app_localizations.dart';
 import '../providers/app_providers.dart';
@@ -31,32 +32,32 @@ class MainBottomNav extends ConsumerWidget {
       _NavItem(
         key: 'today',
         label: l10n.navTabToday,
-        icon: Icons.home_outlined,
-        activeIcon: Icons.home_rounded,
+        icon: LucideIcons.calendarDays,
+        activeIcon: LucideIcons.calendarCheck,
       ),
       _NavItem(
         key: 'medications',
         label: l10n.navTabMedications,
-        icon: Icons.medication_outlined,
-        activeIcon: Icons.medication_rounded,
+        icon: LucideIcons.pill,
+        activeIcon: LucideIcons.pill,
       ),
       _NavItem(
         key: 'recovery',
         label: l10n.navTabRecovery,
-        icon: Icons.favorite_outline,
-        activeIcon: Icons.favorite_rounded,
+        icon: LucideIcons.heartPulse,
+        activeIcon: LucideIcons.heartPulse,
       ),
       _NavItem(
         key: 'assistant',
         label: l10n.navTabAssistant,
-        icon: Icons.chat_bubble_outline_rounded,
-        activeIcon: Icons.chat_bubble_rounded,
+        icon: LucideIcons.botMessageSquare,
+        activeIcon: LucideIcons.botMessageSquare,
       ),
       _NavItem(
         key: 'profile',
         label: l10n.navTabProfile,
-        icon: Icons.person_outline,
-        activeIcon: Icons.person_rounded,
+        icon: LucideIcons.user,
+        activeIcon: LucideIcons.userCheck,
       ),
     ];
 

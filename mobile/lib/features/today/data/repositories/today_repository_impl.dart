@@ -7,24 +7,23 @@ import '../datasources/today_remote_datasource.dart';
 
 /// Concrete [TodayRepository] over remote and local datasources.
 class TodayRepositoryImpl implements TodayRepository {
-  final TodayRemoteDatasource _remote;
-  final TodayLocalDatasource _local;
+  final TodayRemoteDatasource remote;
+  final TodayLocalDatasource local;
 
   TodayRepositoryImpl({
-    required TodayRemoteDatasource remote,
-    required TodayLocalDatasource local,
-  })  : _remote = remote,
-        _local = local;
+    required this.remote,
+    required this.local,
+  });
 
   @override
   Future<http.Response> fetchAgenda({required String date}) =>
-      _remote.fetchAgenda(date: date);
+      remote.fetchAgenda(date: date);
 
   @override
   Future<http.Response> logDose({
     required String scheduledReminderId,
     required String status,
-  }) => _remote.logDose(
+  }) => remote.logDose(
     scheduledReminderId: scheduledReminderId,
     status: status,
   );
@@ -35,7 +34,7 @@ class TodayRepositoryImpl implements TodayRepository {
     required String status,
     String? takenAt,
     required String idempotencyKey,
-  }) => _remote.logAdhocDose(
+  }) => remote.logAdhocDose(
     medicationId: medicationId,
     status: status,
     takenAt: takenAt,
@@ -46,29 +45,29 @@ class TodayRepositoryImpl implements TodayRepository {
   Future<http.Response> correctDoseLog({
     required String logId,
     required String status,
-  }) => _remote.correctDoseLog(logId: logId, status: status);
+  }) => remote.correctDoseLog(logId: logId, status: status);
 
   @override
   Future<http.Response> fetchCase(String patientId) =>
-      _remote.fetchCase(patientId);
+      remote.fetchCase(patientId);
 
   @override
   Future<http.Response> fetchEmergencyContact(String caseId) =>
-      _remote.fetchEmergencyContact(caseId);
+      remote.fetchEmergencyContact(caseId);
 
   @override
   Future<({String? body, DateTime? time})> readCache() async =>
-      _local.readCache();
+      local.readCache();
 
   @override
   Future<void> writeCache(String body, DateTime time) =>
-      _local.writeCache(body, time);
+      local.writeCache(body, time);
 
   @override
   Future<List<OfflineQueueEntry>> readOfflineQueue() async =>
-      _local.readOfflineQueue();
+      local.readOfflineQueue();
 
   @override
   Future<void> writeOfflineQueue(List<OfflineQueueEntry> queue) =>
-      _local.writeOfflineQueue(queue);
+      local.writeOfflineQueue(queue);
 }

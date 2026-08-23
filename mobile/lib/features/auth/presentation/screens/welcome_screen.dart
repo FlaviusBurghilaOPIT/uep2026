@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
@@ -83,7 +84,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 AppTextField(
                   label: AuthStrings.emailLabel,
                   hintText: AuthStrings.emailHint,
-                  prefixIcon: Icons.email_outlined,
+                  prefixIcon: LucideIcons.mail,
                   keyboardType: TextInputType.emailAddress,
                   controller: _emailController,
                   validator: (value) {
@@ -99,7 +100,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 AppTextField(
                   label: AuthStrings.passwordLabel,
                   hintText: AuthStrings.passwordHint,
-                  prefixIcon: Icons.lock_outline,
+                  prefixIcon: LucideIcons.lock,
                   isPassword: true,
                   controller: _passwordController,
                   validator: (value) {

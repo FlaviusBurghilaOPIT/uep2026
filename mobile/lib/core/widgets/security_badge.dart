@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 import '../constants/app_spacing.dart';
@@ -15,7 +16,7 @@ class SecurityBadge extends StatelessWidget {
     required this.text,
     this.boldText,
     this.suffixText,
-    this.icon = Icons.verified_user_outlined,
+    this.icon = LucideIcons.shieldCheck,
   });
 
   @override

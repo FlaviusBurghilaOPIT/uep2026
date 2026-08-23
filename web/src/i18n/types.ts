@@ -158,6 +158,69 @@ export interface MedicationTranslations {
 }
 
 
+export interface LandingTranslations {
+  badge: string
+  headline: string
+  headlineHighlight: string
+  subheadline: string
+  launchDemo: string
+  exploreFeatures: string
+  loginLink: string
+  trustTrack: string
+  trustBedrock: string
+  trustFda: string
+  problemTitle: string
+  problemSubtitle: string
+  traditionalTitle: string
+  traditionalDesc: string
+  traditional1: string
+  traditional2: string
+  traditional3: string
+  platformTitle: string
+  platformDesc: string
+  platform1: string
+  platform2: string
+  platform3: string
+  feature1Title: string
+  feature1Desc: string
+  feature1Badge: string
+  feature2Title: string
+  feature2Desc: string
+  feature2Badge: string
+  feature3Title: string
+  feature3Desc: string
+  feature3Badge: string
+  featuresSectionHeading: string
+  featuresSectionSubheading: string
+  previewTitle: string
+  previewSubtitle: string
+  previewSimulateAlert: string
+  previewResolvedAlert: string
+  previewLiveBadge: string
+  telemetryPrescribedLabel: string
+  telemetryAdherenceLabel: string
+  telemetryOxycodone: string
+  telemetryMissedMorning: string
+  telemetryGoodStatus: string
+  telemetryInitiatingOutreach: string
+  telemetrySimulateOutreach: string
+  telemetryOutreachLogged: string
+  timelineTitle: string
+  step1Num: string
+  step1Title: string
+  step1Desc: string
+  step2Num: string
+  step2Title: string
+  step2Desc: string
+  step3Num: string
+  step3Title: string
+  step3Desc: string
+  ctaBannerTitle: string
+  ctaBannerDesc: string
+  ctaBannerButton: string
+  footerText: string
+}
+
 export interface LoginTranslations {
   title: string
   subtitle: string
@@ -166,6 +229,10 @@ export interface LoginTranslations {
   errorInvalid: string
   button: string
   loggingIn: string
+  quickDemoButton: string
+  demoHelper: string
+  backToHome: string
+  orSignInWithPassword: string
 }
 
 export interface AuthTranslations {
@@ -332,7 +399,7 @@ export interface CaseDetailTranslations {
 }
 
 export interface Translations {
-
+  landing: LandingTranslations
   login: LoginTranslations
   auth: AuthTranslations
   createCase: CreateCaseTranslations
@@ -342,7 +409,6 @@ export interface Translations {
   medicationsList: MedicationsListTranslations
   recommendationsList: RecommendationsListTranslations
   recommendations: RecommendationsTranslations
-
   caseDetail: CaseDetailTranslations
   nav: NavTranslations
   triage: TriageTranslations
@@ -355,6 +421,6 @@ export interface Translations {
 export interface LanguageContextType {
   language: Language
   setLanguage: (lang: Language) => void
-  t: (path: string, fallback?: string) => string
+  t: (path: string, fallbackOrParams?: string | Record<string, string | number>, fallback?: string) => string
   translations: Translations
 }

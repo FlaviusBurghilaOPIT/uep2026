@@ -16,7 +16,7 @@ Widget buildTestApp(SharedPreferences prefs) {
     child: ScreenUtilInit(
       designSize: const Size(375, 812),
       minTextAdapt: true,
-      builder: (_, __) => const MaterialApp(
+      builder: (context, child) => const MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         onGenerateRoute: AppRoutes.onGenerateRoute,

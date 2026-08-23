@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/navigation/app_routes.dart';
@@ -17,13 +18,30 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   final _otpController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkClipboard());
+  }
+
+  Future<void> _checkClipboard() async {
+    try {
+      final data = await Clipboard.getData(Clipboard.kTextPlain);
+      final text = data?.text?.trim() ?? '';
+      if (RegExp(r'^\d{6}$').hasMatch(text) && mounted) {
+        _otpController.text = text;
+        _submit();
+      }
+    } catch (_) {}
+  }
+
+  @override
   void dispose() {
     _otpController.dispose();
     super.dispose();
   }
 
   void _submit() async {
-    if (_formKey.currentState!.validate()) {
+    if (_formKey.currentState?.validate() ?? false) {
       await ref.read(demoAuthProvider.notifier).completeOtpLogin();
       if (mounted) {
         AppRoutes.navigateAndClearStack(context, AppRoutes.main);
@@ -33,7 +51,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final authState = ref.watch(demoAuthProvider).value;
     final email = authState?.email ?? '';
     final emailText = email.isNotEmpty
@@ -68,6 +86,12 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                   labelText: l10n.authOtpCodeLabel,
                   border: const OutlineInputBorder(),
                 ),
+                onChanged: (val) {
+                  final trimmed = val.trim();
+                  if (trimmed.length == 6 && RegExp(r'^\d{6}$').hasMatch(trimmed)) {
+                    _submit();
+                  }
+                },
                 validator: (val) {
                   final trimmed = val?.trim() ?? '';
                   if (trimmed.length != 6) {
@@ -94,3 +118,4 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     );
   }
 }
+

@@ -5,7 +5,7 @@ import '../providers/demo_auth_provider.dart';
 import '../../../../core/l10n/app_localizations.dart';
 
 class EmailLoginScreen extends ConsumerStatefulWidget {
-  const EmailLoginScreen({Key? key}) : super(key: key);
+  const EmailLoginScreen({super.key});
 
   @override
   ConsumerState<EmailLoginScreen> createState() => _EmailLoginScreenState();
@@ -29,7 +29,7 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
   }
 
   void _submit() async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     if (_formKey.currentState!.validate()) {
       try {
         await ref
@@ -50,7 +50,7 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.authEmailLoginTitle)),
       body: Padding(
@@ -65,11 +65,13 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
                 decoration: InputDecoration(labelText: l10n.authEmailLabel),
                 keyboardType: TextInputType.emailAddress,
                 validator: (val) {
-                  if (val == null || val.trim().isEmpty)
+                  if (val == null || val.trim().isEmpty) {
                     return l10n.authRequiredError;
+                  }
                   final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
-                  if (!emailRegex.hasMatch(val))
+                  if (!emailRegex.hasMatch(val)) {
                     return l10n.authInvalidEmailError;
+                  }
                   return null;
                 },
               ),

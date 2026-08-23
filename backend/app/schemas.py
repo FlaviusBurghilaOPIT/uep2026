@@ -1,7 +1,7 @@
 import enum
 from datetime import date, datetime, timezone
 
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 from app.models import DoseStatus
 
@@ -29,6 +29,8 @@ class UserCreate(BaseModel):
 
 
 class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     email: str
     full_name: str
@@ -41,9 +43,6 @@ class UserResponse(BaseModel):
     # Derived from password_hash (User.has_password property) so clients know
     # whether change-password must supply the current password.
     has_password: bool = False
-
-    class Config:
-        from_attributes = True
 
 
 class UserUpdateRequest(BaseModel):
@@ -152,6 +151,8 @@ class CaseCreate(BaseModel):
 
 
 class CaseResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     clinician_id: str
     patient_id: str
@@ -164,9 +165,6 @@ class CaseResponse(BaseModel):
     emergency_contact_phone: str | None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
-
 
 class ReminderCreate(BaseModel):
     medication_id: str
@@ -174,14 +172,13 @@ class ReminderCreate(BaseModel):
 
 
 class ReminderResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     medication_id: str
     scheduled_time: datetime
     status: str
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class MedicationCreate(BaseModel):
@@ -193,6 +190,8 @@ class MedicationCreate(BaseModel):
 
 
 class MedicationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id:             str
     case_id:        str
     name:           str
@@ -203,9 +202,6 @@ class MedicationResponse(BaseModel):
     notes:          str | None
     created_at:     datetime
     scheduled_reminders: list[ReminderResponse] = []
-
-    class Config:
-        from_attributes = True
 
 
 class ChatRequest(BaseModel):
@@ -227,6 +223,8 @@ class FDADrugInfoResponse(BaseModel):
 
 
 class FDAWarningResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     drug_name: str
     summary: str
@@ -236,11 +234,10 @@ class FDAWarningResponse(BaseModel):
     reviewed_by: str | None
     reviewed_at: datetime | None
 
-    class Config:
-        from_attributes = True
-
 
 class WikiArticleResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     surgery_type: str
     content_md: str
@@ -248,9 +245,6 @@ class WikiArticleResponse(BaseModel):
     source_case_ids: str
     created_at: datetime
     approved_by: str | None
-
-    class Config:
-        from_attributes = True
 
 
 class WikiArticleUpdate(BaseModel):
@@ -264,14 +258,13 @@ class RecommendationCreate(BaseModel):
 
 
 class RecommendationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     case_id: str
     text: str
     content: str | None = None
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class DeviceTokenRegisterRequest(BaseModel):
@@ -280,15 +273,14 @@ class DeviceTokenRegisterRequest(BaseModel):
 
 
 class DeviceTokenResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     user_id: str
     token: str
     platform: str
     is_active: bool
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class SendTestPushRequest(BaseModel):
@@ -306,15 +298,14 @@ class TriageResolveRequest(BaseModel):
 
 
 class TriageResolutionResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     patient_id: str
     clinician_id: str
     outreach_method: str
     clinical_note: str
     resolved_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class TriageResolutionLatest(BaseModel):

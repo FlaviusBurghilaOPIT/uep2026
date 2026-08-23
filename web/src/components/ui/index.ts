@@ -1,5 +1,6 @@
 export { Icon } from './Icon'
-export { ToastProvider, useToast } from './Toast'
+export { ToastProvider } from './Toast'
+export { useToast } from './useToast'
 export { FormField } from './FormField'
 export { Select } from './Select'
 export { NumberField } from './NumberField'

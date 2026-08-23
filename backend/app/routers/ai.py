@@ -1,7 +1,7 @@
 import anyio
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.core.database import SessionLocal
 from app import models, schemas
@@ -31,20 +31,57 @@ def _check_guardrail(request: schemas.ChatRequest) -> tuple[bool, bool]:
     return True, False
 
 
-def _get_case_sync(case_id: int) -> models.Case | None:
+def _build_patient_context(case: models.Case) -> dict:
+    active_meds = [
+        f"{m.name} ({m.dose}, {getattr(m, 'schedule_text', '')})"
+        for m in (getattr(case, "medications", None) or [])
+        if getattr(m, "discontinued_at", None) is None
+    ]
+    recs = [r.text for r in (getattr(case, "recommendations", None) or [])]
+    checkins = getattr(case, "checkins", None) or []
+    sorted_checkins = sorted(checkins, key=lambda c: c.created_at, reverse=True) if checkins else []
+    recent_feeling = (
+        sorted_checkins[0].feeling.value if sorted_checkins and hasattr(sorted_checkins[0], "feeling") else "N/A"
+    )
+    emergency_contact = (
+        f"{getattr(case, 'emergency_contact_name', None) or 'N/A'} ({getattr(case, 'emergency_contact_phone', None) or 'N/A'})"
+    )
+    return {
+        "surgery_type": getattr(case, "surgery_type", None) or "Post-Surgery",
+        "case_status": getattr(case, "status", None) or "Active",
+        "medications": ", ".join(active_meds) if active_meds else "None",
+        "recommendations": "; ".join(recs) if recs else "None",
+        "recent_feeling": recent_feeling,
+        "emergency_contact": emergency_contact,
+    }
+
+
+def _get_case_and_context_sync(case_id: int) -> tuple[models.Case, dict] | None:
     with SessionLocal() as db:
-        case = db.query(models.Case).filter(models.Case.id == case_id).first()
-        if case:
-            db.expunge(case)
-        return case
+        case = (
+            db.query(models.Case)
+            .options(
+                selectinload(models.Case.medications),
+                selectinload(models.Case.recommendations),
+                selectinload(models.Case.checkins),
+            )
+            .filter(models.Case.id == case_id)
+            .first()
+        )
+        if not case:
+            return None
+        ctx = _build_patient_context(case)
+        db.expunge(case)
+        return case, ctx
 
 
-async def _process_chat_request(request: schemas.ChatRequest) -> tuple[models.Case, bool, bool]:
-    case = await anyio.to_thread.run_sync(_get_case_sync, request.case_id)
-    if not case:
+async def _process_chat_request(request: schemas.ChatRequest) -> tuple[models.Case, dict, bool, bool]:
+    res = await anyio.to_thread.run_sync(_get_case_and_context_sync, request.case_id)
+    if not res:
         raise HTTPException(status_code=404, detail="Case not found")
+    case, patient_ctx = res
     in_scope, escalate = _check_guardrail(request)
-    return case, in_scope, escalate
+    return case, patient_ctx, in_scope, escalate
 
 
 def _save_message_sync(message: models.ChatMessage):
@@ -85,7 +122,7 @@ async def chat(
     db: Session = Depends(get_db_for_user),
     _ = Depends(get_current_user),
 ):
-    case, in_scope, escalate = await _process_chat_request(request)
+    case, patient_ctx, in_scope, escalate = await _process_chat_request(request)
 
     await _save_user_message(case.id, request.message, in_scope, escalate)
 
@@ -97,7 +134,7 @@ async def chat(
         )
     else:
         chunks = []
-        async for chunk in generate_recommendation_stream(request.message, case.surgery_type):
+        async for chunk in generate_recommendation_stream(request.message, case.surgery_type, patient_context=patient_ctx):
             chunks.append(chunk)
         reply = "".join(chunks)
 
@@ -118,7 +155,7 @@ async def chat_stream(
     db: Session = Depends(get_db_for_user),
     _ = Depends(get_current_user),
 ):
-    case, in_scope, escalate = await _process_chat_request(request)
+    case, patient_ctx, in_scope, escalate = await _process_chat_request(request)
 
     await _save_user_message(case.id, request.message, in_scope, escalate)
     
@@ -133,10 +170,11 @@ async def chat_stream(
                 yield reply
             finally:
                 await _save_assistant_message_shielded(case.id, reply)
+            return
         return StreamingResponse(mock_stream(), media_type="text/plain")
 
     async def stream_and_save():
-        generator = generate_recommendation_stream(request.message, case.surgery_type)
+        generator = generate_recommendation_stream(request.message, case.surgery_type, patient_context=patient_ctx)
         chunks = []
         try:
             async for chunk in generator:

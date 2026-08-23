@@ -1,8 +1,9 @@
-import 'package:remotecare/core/providers/shared_preferences_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:remotecare/core/providers/shared_preferences_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:remotecare/core/l10n/app_localizations.dart';
 import 'package:remotecare/core/navigation/app_routes.dart';
@@ -14,7 +15,7 @@ Widget buildTestApp(SharedPreferences prefs) {
     child: ScreenUtilInit(
       designSize: const Size(375, 812),
       minTextAdapt: true,
-      builder: (_, __) => const MaterialApp(
+      builder: (context, child) => const MaterialApp(
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         onGenerateRoute: AppRoutes.onGenerateRoute,
@@ -124,4 +125,44 @@ void main() {
     expect(find.text('Code must be numeric'), findsNothing);
     expect(find.text('Verify Identity'), findsNothing);
   });
+
+  testWidgets('OtpScreen auto-submits on 6th digit entry without tapping button', (
+    WidgetTester tester,
+  ) async {
+    setupScreenSize(tester);
+    SharedPreferences.setMockInitialValues({'email': 'user@example.com'});
+    final prefs = await SharedPreferences.getInstance();
+
+    await tester.pumpWidget(buildTestApp(prefs));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextFormField), '654321');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Verify Identity'), findsNothing);
+  });
+
+  testWidgets('OtpScreen auto-pastes and auto-submits 6-digit code from clipboard', (
+    WidgetTester tester,
+  ) async {
+    setupScreenSize(tester);
+    SharedPreferences.setMockInitialValues({'email': 'user@example.com'});
+    final prefs = await SharedPreferences.getInstance();
+
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (MethodCall methodCall) async {
+        if (methodCall.method == 'Clipboard.getData') {
+          return {'text': '987654'};
+        }
+        return null;
+      },
+    );
+
+    await tester.pumpWidget(buildTestApp(prefs));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Verify Identity'), findsNothing);
+  });
 }
+

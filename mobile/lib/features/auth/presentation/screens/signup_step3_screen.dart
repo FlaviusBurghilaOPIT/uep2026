@@ -62,7 +62,7 @@ class _SignupStep3ScreenState extends ConsumerState<SignupStep3Screen> {
     if (_selectedDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.authSelectDobError),
+          content: Text(AppLocalizations.of(context).authSelectDobError),
         ),
       );
       return;
@@ -88,7 +88,7 @@ class _SignupStep3ScreenState extends ConsumerState<SignupStep3Screen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(AppLocalizations.of(context)!.okButton),
+              child: Text(AppLocalizations.of(context).okButton),
             ),
           ],
         ),
@@ -125,7 +125,7 @@ class _SignupStep3ScreenState extends ConsumerState<SignupStep3Screen> {
               Text(AppStrings.yourHealthProfile, style: AppTextStyles.heading1),
               SizedBox(height: AppSpacing.sm),
               Text(
-                AppLocalizations.of(context)!.authCompleteProfileSetupSubtitle,
+                AppLocalizations.of(context).authCompleteProfileSetupSubtitle,
                 style: AppTextStyles.subtitle,
               ),
               SizedBox(height: AppSpacing.xxl),

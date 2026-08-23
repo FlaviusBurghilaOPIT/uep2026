@@ -1,10 +1,18 @@
 import json
 import logging
 import os
+from contextlib import contextmanager
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
-from openinference.instrumentation import using_attributes
+
+try:
+    from openinference.instrumentation import using_attributes
+except ImportError:
+    @contextmanager
+    def using_attributes(**kwargs):
+        yield
+
 from sqlalchemy.orm import Session
 
 from app import models, schemas

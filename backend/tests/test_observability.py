@@ -1,4 +1,8 @@
 from unittest.mock import MagicMock
+import pytest
+
+pytest.importorskip("openinference.instrumentation.openai")
+pytest.importorskip("phoenix.otel")
 
 import openinference.instrumentation.openai
 import phoenix.otel

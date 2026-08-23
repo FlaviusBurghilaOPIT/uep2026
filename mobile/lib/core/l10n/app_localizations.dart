@@ -991,6 +991,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} h ago'**
   String todayTimeHoursAgo(int count);
+
+  /// No description provided for @emergencyBannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency Red Flag Warning'**
+  String get emergencyBannerTitle;
+
+  /// No description provided for @emergencyCall911.
+  ///
+  /// In en, this message translates to:
+  /// **'Call Emergency (911)'**
+  String get emergencyCall911;
+
+  /// No description provided for @emergencyCallClinic.
+  ///
+  /// In en, this message translates to:
+  /// **'Call Care Team ({phone})'**
+  String emergencyCallClinic(String phone);
+
+  /// No description provided for @emergencyCallClinicFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Call Care Team'**
+  String get emergencyCallClinicFallback;
+
+  /// No description provided for @pillFormCapsule.
+  ///
+  /// In en, this message translates to:
+  /// **'Capsule'**
+  String get pillFormCapsule;
+
+  /// No description provided for @pillFormTablet.
+  ///
+  /// In en, this message translates to:
+  /// **'Tablet'**
+  String get pillFormTablet;
+
+  /// No description provided for @pillFormLiquid.
+  ///
+  /// In en, this message translates to:
+  /// **'Liquid'**
+  String get pillFormLiquid;
 }
 
 class _AppLocalizationsDelegate

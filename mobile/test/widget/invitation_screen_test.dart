@@ -13,7 +13,7 @@ Widget buildTestApp(Widget child) {
     home: ScreenUtilInit(
       designSize: const Size(375, 812),
       minTextAdapt: true,
-      builder: (_, __) => child,
+      builder: (context, _) => child,
     ),
   );
 }

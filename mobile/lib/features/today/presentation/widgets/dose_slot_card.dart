@@ -109,7 +109,7 @@ class DoseSlotCard extends StatelessWidget {
                                   // not overflow horizontally.
                                   Flexible(
                                     child: Text(
-                                      timeText,
+                                      '$timeText · ${_pillForm(l10n)}',
                                       style: AppTextStyles.bodySmall,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -202,6 +202,20 @@ class DoseSlotCard extends StatelessWidget {
       l10n.doseStatusMissed,
     ].map((s) => s.toLowerCase()).join(', ');
     return '$base Actions: $actions.';
+  }
+
+  String _pillForm(AppLocalizations l10n) {
+    final medLower = '${slot.medicationName} ${slot.dose}'.toLowerCase();
+    if (medLower.contains('liquid') ||
+        medLower.contains('drops') ||
+        medLower.contains('syrup') ||
+        medLower.contains('ml')) {
+      return l10n.pillFormLiquid;
+    }
+    if (medLower.contains('capsule') || medLower.contains('cap')) {
+      return l10n.pillFormCapsule;
+    }
+    return l10n.pillFormTablet;
   }
 
   List<_ActionSpec> _actions(AppLocalizations l10n) => [
@@ -409,3 +423,4 @@ class _SlotActionRow extends StatelessWidget {
     );
   }
 }
+

@@ -1,15 +1,10 @@
-import 'package:remotecare/features/today/domain/entities/agenda_entities.dart';
 import 'package:flutter/material.dart';
-import 'package:remotecare/features/today/domain/entities/agenda_entities.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:remotecare/features/today/domain/entities/agenda_entities.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:remotecare/features/today/domain/entities/agenda_entities.dart';
+
 import 'package:remotecare/core/l10n/app_localizations.dart';
 import 'package:remotecare/features/today/domain/entities/agenda_entities.dart';
 import 'package:remotecare/features/today/presentation/widgets/correction_sheet.dart';
-import 'package:remotecare/features/today/domain/entities/agenda_entities.dart';
-import 'package:remotecare/features/today/presentation/providers/today_agenda_notifier.dart';
 
 AgendaSlot loggedSlot({SlotState state = SlotState.taken, DateTime? loggedAt}) {
   return AgendaSlot(

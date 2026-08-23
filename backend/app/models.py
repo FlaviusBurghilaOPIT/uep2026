@@ -6,7 +6,7 @@ ScheduledReminder, DoseLog, Recommendation, CheckIn, ChatMessage.
 
 import enum
 import uuid
-from datetime import datetime
+from datetime import date, datetime, timezone
 from sqlalchemy.dialects.postgresql import UUID
 from pgvector.sqlalchemy import Vector
 
@@ -30,6 +30,14 @@ from sqlalchemy.orm import (
 
 class Base(DeclarativeBase):
     pass
+
+
+def utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def utc_today() -> date:
+    return datetime.now(timezone.utc).date()
 
 
 def gen_uuid() -> str:
@@ -78,7 +86,7 @@ class User(Base):
     phone: Mapped[str | None] = mapped_column(String, nullable=True)
     date_of_birth: Mapped[str | None] = mapped_column(String, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
     @property
     def has_password(self) -> bool:
@@ -111,7 +119,7 @@ class Case(Base):
     emergency_contact_name: Mapped[str | None] = mapped_column(String, nullable=True)
     emergency_contact_phone: Mapped[str | None] = mapped_column(String, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
     clinician: Mapped["User"] = relationship(
         back_populates="cases_as_clinician", foreign_keys=[clinician_id]
@@ -152,7 +160,7 @@ class Medication(Base):
     duration: Mapped[str] = mapped_column(String, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     # Soft-delete marker (spec E4): set instead of deleting so adherence
     # history is preserved; read paths filter `discontinued_at IS NULL`.
     discontinued_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -180,7 +188,7 @@ class ScheduledReminder(Base):
         String, unique=True, index=True, nullable=True
     )
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
     medication: Mapped["Medication"] = relationship(back_populates="scheduled_reminders")
     dose_log: Mapped["DoseLog"] = relationship(back_populates="scheduled_reminder")
@@ -216,7 +224,7 @@ class DoseLogEvent(Base):
     )
     old_status: Mapped[DoseStatus] = mapped_column(Enum(DoseStatus), nullable=False)
     new_status: Mapped[DoseStatus] = mapped_column(Enum(DoseStatus), nullable=False)
-    changed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    changed_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
     dose_log: Mapped["DoseLog"] = relationship(back_populates="events")
 
@@ -228,7 +236,7 @@ class Recommendation(Base):
     case_id: Mapped[str] = mapped_column(ForeignKey("cases.id"), nullable=False)
 
     text: Mapped[str] = mapped_column(Text, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
     case: Mapped["Case"] = relationship(back_populates="recommendations")
 
@@ -240,8 +248,8 @@ class CheckIn(Base):
     case_id: Mapped[str] = mapped_column(ForeignKey("cases.id"), nullable=False)
 
     feeling: Mapped[CheckInFeeling] = mapped_column(Enum(CheckInFeeling), nullable=False)
-    checkin_date: Mapped[Date] = mapped_column(Date, default=datetime.utcnow().date)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    checkin_date: Mapped[Date] = mapped_column(Date, default=utc_today)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
     case: Mapped["Case"] = relationship(back_populates="checkins")
 
@@ -256,7 +264,7 @@ class ChatMessage(Base):
     content: Mapped[str] = mapped_column(Text, nullable=False)
     in_scope: Mapped[bool] = mapped_column(Boolean, default=True)
     escalate: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
     case: Mapped["Case"] = relationship(back_populates="chat_messages")
 
@@ -278,7 +286,7 @@ class FDAWarning(Base):
         Enum(FDAWarningStatus), default=FDAWarningStatus.pending
     )
     source_payload: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     reviewed_by: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
@@ -293,7 +301,7 @@ class CaseFDAWarning(Base):
     id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
     case_id: Mapped[str] = mapped_column(ForeignKey("cases.id"), nullable=False)
     fda_warning_id: Mapped[str] = mapped_column(ForeignKey("fda_warnings.id"), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
     fda_warning: Mapped["FDAWarning"] = relationship(back_populates="cases")
 
@@ -313,7 +321,7 @@ class WikiArticle(Base):
         Enum(WikiArticleStatus), default=WikiArticleStatus.draft
     )
     source_case_ids: Mapped[str] = mapped_column(Text, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     approved_by: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True)
 
 
@@ -326,7 +334,7 @@ class DeviceToken(Base):
     platform: Mapped[str] = mapped_column(String(32), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+        DateTime, default=utcnow, onupdate=utcnow, nullable=False
     )
 
     user: Mapped["User"] = relationship(back_populates="device_tokens")
@@ -344,8 +352,8 @@ class TriageResolution(Base):
 
     outreach_method: Mapped[str] = mapped_column(String, nullable=False)
     clinical_note: Mapped[str] = mapped_column(Text, nullable=False)
-    resolved_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    resolved_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
 
 class AnalyticsEvent(Base):
@@ -361,7 +369,7 @@ class AnalyticsEvent(Base):
     )
     properties: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, index=True
+        DateTime, default=utcnow, index=True
     )
 from pgvector.sqlalchemy import Vector
 from sqlalchemy.dialects.postgresql import UUID
@@ -376,4 +384,4 @@ class Embedding(Base):
     source_type = mapped_column(String, nullable=False)
     surgery_type = mapped_column(String, nullable=True)
     embedding = mapped_column(Vector(1536), nullable=False)
-    created_at = mapped_column(DateTime, default=datetime.utcnow)
+    created_at = mapped_column(DateTime, default=utcnow)

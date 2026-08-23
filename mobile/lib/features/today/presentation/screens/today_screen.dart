@@ -20,6 +20,7 @@ import '../../../auth/domain/entities/auth_state.dart';
 import '../../../../core/settings/settings_opener.dart';
 import '../../../../core/widgets/app_skeleton_loader.dart';
 import '../../../checkin/presentation/widgets/checkin_card.dart';
+import '../widgets/celebration_ring_card.dart';
 import '../widgets/correction_sheet.dart';
 import '../widgets/dose_format.dart';
 import '../widgets/dose_group.dart';
@@ -854,48 +855,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
   // -- Celebration (spec §7/§9: ARB-localized, dismissible, no streaks) ------
 
   Widget _buildCelebrationCard(AppLocalizations l10n) {
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: AppSpacing.screenPaddingH,
-        vertical: AppSpacing.sm,
-      ),
-      child: Container(
-        key: const Key('today_celebration'),
-        padding: EdgeInsets.all(14.w),
-        decoration: BoxDecoration(
-          color: AppColors.lightGreen.withValues(alpha: 0.8),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          border: Border.all(color: AppColors.primaryGreen, width: 1),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.stars_rounded,
-              color: AppColors.primaryGreen,
-              size: 24.sp,
-            ),
-            SizedBox(width: 10.w),
-            Expanded(
-              child: Text(
-                l10n.todayCelebration,
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.primaryGreen,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            IconButton(
-              icon: Icon(
-                Icons.close,
-                size: 18.sp,
-                color: AppColors.primaryGreen,
-              ),
-              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-              onPressed: () => setState(() => _dismissedCelebration = true),
-            ),
-          ],
-        ),
-      ),
+    return CelebrationRingCard(
+      onDismiss: () => setState(() => _dismissedCelebration = true),
     );
   }
 }

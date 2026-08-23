@@ -1,16 +1,9 @@
 import * as RadixToast from '@radix-ui/react-toast'
-import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
+import { useCallback, useState, type ReactNode } from 'react'
 import { faCircleCheck, faCircleExclamation, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { Icon } from './Icon'
 import { useTranslation } from '../../i18n'
-
-type ToastVariant = 'success' | 'error'
-
-type ToastContextValue = { show: (message: string, variant?: ToastVariant) => void }
-
-const ToastContext = createContext<ToastContextValue>({ show: () => {} })
-
-export const useToast = () => useContext(ToastContext)
+import { ToastContext, type ToastVariant } from './useToast'
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const { t } = useTranslation()

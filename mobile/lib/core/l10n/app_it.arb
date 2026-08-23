@@ -309,5 +309,19 @@
         "type": "int"
       }
     }
-  }
+  },
+  "emergencyBannerTitle": "Avviso di Emergenza Rosso",
+  "emergencyCall911": "Chiama Emergenza (112)",
+  "emergencyCallClinic": "Chiama Reparto ({phone})",
+  "@emergencyCallClinic": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "emergencyCallClinicFallback": "Chiama Reparto",
+  "pillFormCapsule": "Capsula",
+  "pillFormTablet": "Compressa",
+  "pillFormLiquid": "Liquido"
 }

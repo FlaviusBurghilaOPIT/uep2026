@@ -15,8 +15,12 @@ class SNSPushService:
         self.db = db
         self.aws_region = os.getenv("AWS_REGION")
         self.sns_platform_arn = os.getenv("SNS_PLATFORM_APPLICATION_ARN")
+        sns_dry_run_env = os.getenv("SNS_DRY_RUN", "").lower()
 
-        if self.aws_region:
+        if sns_dry_run_env in ("true", "1", "yes") or not self.sns_platform_arn or not self.aws_region:
+            self.sns_client = None
+            self.dry_run = True
+        else:
             try:
                 import boto3
 
@@ -26,9 +30,6 @@ class SNSPushService:
                 logger.warning(f"Failed to initialize boto3 SNS client: {e}. Falling back to dry-run.")
                 self.sns_client = None
                 self.dry_run = True
-        else:
-            self.sns_client = None
-            self.dry_run = True
 
     def register_endpoint(self, user_id: str, token: str, platform: str) -> models.DeviceToken:
         """

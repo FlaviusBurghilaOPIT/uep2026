@@ -309,5 +309,19 @@
         "type": "int"
       }
     }
-  }
+  },
+  "emergencyBannerTitle": "Rote Notfallwarnung",
+  "emergencyCall911": "Notruf wählen (112)",
+  "emergencyCallClinic": "Pflegeteam anrufen ({phone})",
+  "@emergencyCallClinic": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "emergencyCallClinicFallback": "Pflegeteam anrufen",
+  "pillFormCapsule": "Kapsel",
+  "pillFormTablet": "Tablette",
+  "pillFormLiquid": "Flüssig"
 }

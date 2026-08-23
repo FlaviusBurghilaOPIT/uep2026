@@ -519,4 +519,27 @@ class AppLocalizationsDe extends AppLocalizations {
   String todayTimeHoursAgo(int count) {
     return 'vor $count Std.';
   }
+
+  @override
+  String get emergencyBannerTitle => 'Rote Notfallwarnung';
+
+  @override
+  String get emergencyCall911 => 'Notruf wählen (112)';
+
+  @override
+  String emergencyCallClinic(String phone) {
+    return 'Pflegeteam anrufen ($phone)';
+  }
+
+  @override
+  String get emergencyCallClinicFallback => 'Pflegeteam anrufen';
+
+  @override
+  String get pillFormCapsule => 'Kapsel';
+
+  @override
+  String get pillFormTablet => 'Tablette';
+
+  @override
+  String get pillFormLiquid => 'Flüssig';
 }

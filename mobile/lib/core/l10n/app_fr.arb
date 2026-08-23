@@ -309,5 +309,19 @@
         "type": "int"
       }
     }
-  }
+  },
+  "emergencyBannerTitle": "Alerte d'Urgence Rouge",
+  "emergencyCall911": "Appeler les Urgences (15)",
+  "emergencyCallClinic": "Appeler l'Équipe ({phone})",
+  "@emergencyCallClinic": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "emergencyCallClinicFallback": "Appeler l'Équipe",
+  "pillFormCapsule": "Gélule",
+  "pillFormTablet": "Comprimé",
+  "pillFormLiquid": "Liquide"
 }

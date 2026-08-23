@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 import '../constants/app_spacing.dart';
@@ -28,7 +29,7 @@ class StepProgressBar extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: Icon(
-              Icons.arrow_back,
+              LucideIcons.arrowLeft,
               color: AppColors.black,
               size: AppSpacing.iconMd,
             ),

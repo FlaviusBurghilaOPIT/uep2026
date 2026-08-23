@@ -56,7 +56,6 @@ function FDAPage() {
 
   useEffect(() => {
     if (initialDrug) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       void handleSearch(initialDrug)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

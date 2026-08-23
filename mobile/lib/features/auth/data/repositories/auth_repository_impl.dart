@@ -6,36 +6,35 @@ import '../datasources/auth_remote_datasource.dart';
 /// Concrete [AuthRepository] over [AuthRemoteDatasource] and
 /// [AuthLocalDatasource].
 class AuthRepositoryImpl implements AuthRepository {
-  final AuthRemoteDatasource _remote;
-  final AuthLocalDatasource _local;
+  final AuthRemoteDatasource remote;
+  final AuthLocalDatasource local;
 
   AuthRepositoryImpl({
-    required AuthRemoteDatasource remote,
-    required AuthLocalDatasource local,
-  }) : _remote = remote,
-       _local = local;
+    required this.remote,
+    required this.local,
+  });
 
   @override
-  Future<AuthState?> fetchProfile() => _remote.fetchProfile();
+  Future<AuthState?> fetchProfile() => remote.fetchProfile();
 
   @override
   Future<({String? caseId, String? primaryCondition})> fetchCase(
     String patientId,
-  ) => _remote.fetchCase(patientId);
+  ) => remote.fetchCase(patientId);
 
   @override
   Future<String?> login({required String email, required String password}) =>
-      _remote.login(email: email, password: password);
+      remote.login(email: email, password: password);
 
   @override
   Future<bool> requestCode({required String email}) =>
-      _remote.requestCode(email: email);
+      remote.requestCode(email: email);
 
   @override
   Future<VerifyCodeResult?> verifyCode({
     required String email,
     required String code,
-  }) => _remote.verifyCode(email: email, code: code);
+  }) => remote.verifyCode(email: email, code: code);
 
   @override
   Future<String?> completeOnboarding({
@@ -45,7 +44,7 @@ class AuthRepositoryImpl implements AuthRepository {
     String? fullName,
     required String phone,
     String? password,
-  }) => _remote.completeOnboarding(
+  }) => remote.completeOnboarding(
     email: email,
     inviteCode: inviteCode,
     dateOfBirth: dateOfBirth,
@@ -55,14 +54,14 @@ class AuthRepositoryImpl implements AuthRepository {
   );
 
   @override
-  Future<String?> getToken() => _remote.getToken();
+  Future<String?> getToken() => remote.getToken();
 
   @override
   Future<bool> updateProfile({
     String? fullName,
     String? phone,
     String? dateOfBirth,
-  }) => _remote.updateProfile(
+  }) => remote.updateProfile(
     fullName: fullName,
     phone: phone,
     dateOfBirth: dateOfBirth,
@@ -72,31 +71,31 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<String?> changePassword({
     required String newPassword,
     String? currentPassword,
-  }) => _remote.changePassword(
+  }) => remote.changePassword(
     newPassword: newPassword,
     currentPassword: currentPassword,
   );
 
   @override
-  Future<void> setToken(String token) => _remote.setToken(token);
+  Future<void> setToken(String token) => remote.setToken(token);
 
   @override
-  Future<void> clearToken() => _remote.clearToken();
+  Future<void> clearToken() => remote.clearToken();
 
   @override
-  Future<DemoAuthState> loadDemoAuth() async => _local.load();
+  Future<DemoAuthState> loadDemoAuth() async => local.load();
 
   @override
   Future<void> saveDemoAuth({
     required bool isFirstTime,
     required bool hasActiveSession,
     String? email,
-  }) => _local.save(
+  }) => local.save(
     isFirstTime: isFirstTime,
     hasActiveSession: hasActiveSession,
     email: email,
   );
 
   @override
-  Future<void> clearDemoAuth() => _local.clear();
+  Future<void> clearDemoAuth() => local.clear();
 }

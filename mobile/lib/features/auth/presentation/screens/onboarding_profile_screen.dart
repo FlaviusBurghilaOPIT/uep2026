@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
@@ -117,7 +118,7 @@ class _OnboardingProfileScreenState
                 AppTextField(
                   label: AuthStrings.fullNameLabel,
                   hintText: AuthStrings.fullNameHint,
-                  prefixIcon: Icons.person_outline,
+                  prefixIcon: LucideIcons.user,
                   controller: _nameController,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
@@ -130,7 +131,7 @@ class _OnboardingProfileScreenState
                 AppTextField(
                   label: AuthStrings.dateOfBirthLabel,
                   hintText: AuthStrings.dateOfBirthHint,
-                  prefixIcon: Icons.cake_outlined,
+                  prefixIcon: LucideIcons.calendar,
                   keyboardType: TextInputType.datetime,
                   controller: _dobController,
                 ),
@@ -138,7 +139,7 @@ class _OnboardingProfileScreenState
                 AppTextField(
                   label: AuthStrings.phoneLabel,
                   hintText: AuthStrings.phoneHint,
-                  prefixIcon: Icons.phone_outlined,
+                  prefixIcon: LucideIcons.phone,
                   keyboardType: TextInputType.phone,
                   controller: _phoneController,
                   validator: (value) {

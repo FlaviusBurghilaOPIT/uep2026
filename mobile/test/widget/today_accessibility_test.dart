@@ -1,30 +1,19 @@
 import 'dart:convert';
 import 'dart:ui';
 
-import 'package:remotecare/features/today/domain/entities/agenda_entities.dart';
-import 'package:remotecare/core/providers/shared_preferences_provider.dart';
-import 'package:remotecare/features/today/domain/entities/agenda_entities.dart';
 import 'package:flutter/material.dart';
-import 'package:remotecare/features/today/domain/entities/agenda_entities.dart';
 import 'package:flutter/services.dart';
-import 'package:remotecare/features/today/domain/entities/agenda_entities.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:remotecare/features/today/domain/entities/agenda_entities.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:remotecare/features/today/domain/entities/agenda_entities.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:remotecare/features/today/domain/entities/agenda_entities.dart';
 import 'package:http/http.dart' as http;
-import 'package:remotecare/features/today/domain/entities/agenda_entities.dart';
-import 'package:remotecare/core/l10n/app_localizations.dart';
-import 'package:remotecare/features/today/domain/entities/agenda_entities.dart';
-import 'package:remotecare/core/network/api_service.dart';
-import 'package:remotecare/features/today/domain/entities/agenda_entities.dart';
-import 'package:remotecare/features/auth/presentation/providers/auth_provider.dart';
-import 'package:remotecare/features/today/domain/entities/agenda_entities.dart';
-import 'package:remotecare/features/today/presentation/screens/today_screen.dart';
-import 'package:remotecare/features/today/domain/entities/agenda_entities.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:remotecare/core/l10n/app_localizations.dart';
+import 'package:remotecare/core/network/api_service.dart';
+import 'package:remotecare/core/providers/shared_preferences_provider.dart';
+import 'package:remotecare/features/auth/presentation/providers/auth_provider.dart';
+import 'package:remotecare/features/today/presentation/screens/today_screen.dart';
 
 import '../unit/fake_api_service.dart';
 

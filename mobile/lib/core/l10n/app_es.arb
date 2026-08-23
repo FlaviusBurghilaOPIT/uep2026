@@ -309,5 +309,19 @@
         "type": "int"
       }
     }
-  }
+  },
+  "emergencyBannerTitle": "Aviso de Emergencia Rojo",
+  "emergencyCall911": "Llamar a Emergencias (911)",
+  "emergencyCallClinic": "Llamar al Equipo ({phone})",
+  "@emergencyCallClinic": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "emergencyCallClinicFallback": "Llamar al Equipo",
+  "pillFormCapsule": "Cápsula",
+  "pillFormTablet": "Comprimido",
+  "pillFormLiquid": "Líquido"
 }

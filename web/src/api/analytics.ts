@@ -15,6 +15,9 @@ import { apiFetch } from './client'
 
 export type AnalyticsEventName =
   | 'web.auth.login_succeeded'
+  | 'web.auth.demo_login_fallback'
+  | 'web.landing.launch_demo_clicked'
+  | 'web.landing.simulate_resolve_clicked'
   | 'web.patient.invited'
   | 'web.case.created'
   | 'web.medication.prescribed'

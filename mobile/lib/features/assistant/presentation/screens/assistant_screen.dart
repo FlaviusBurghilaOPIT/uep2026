@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -222,7 +223,7 @@ class GuardrailBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.shield_outlined, color: AppColors.deepTeal, size: 18.sp),
+          Icon(LucideIcons.shieldCheck, color: AppColors.deepTeal, size: 18.sp),
           SizedBox(width: 8.w),
           Expanded(
             child: Text(
@@ -367,7 +368,7 @@ class RefusalBox extends ConsumerWidget {
           Row(
             children: [
               Icon(
-                Icons.warning_amber_rounded,
+                LucideIcons.triangleAlert,
                 color: AppColors.errorRed,
                 size: 20.sp,
               ),
@@ -403,7 +404,7 @@ class RefusalBox extends ConsumerWidget {
                     .read(chatAssistantNotifierProvider.notifier)
                     .onEmergencyCtaTapped(caseId, phone);
               },
-              icon: Icon(Icons.phone, color: AppColors.white, size: 18.sp),
+              icon: Icon(LucideIcons.phone, color: AppColors.white, size: 18.sp),
               label: Text(
                 buttonText,
                 style: TextStyle(

@@ -31,7 +31,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.authProfileSetupTitle)),
       body: Padding(
@@ -59,11 +59,13 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                 decoration: InputDecoration(labelText: l10n.authEmailLabel),
                 keyboardType: TextInputType.emailAddress,
                 validator: (val) {
-                  if (val == null || val.trim().isEmpty)
+                  if (val == null || val.trim().isEmpty) {
                     return l10n.authRequiredError;
+                  }
                   final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-                  if (!emailRegex.hasMatch(val))
+                  if (!emailRegex.hasMatch(val)) {
                     return l10n.authInvalidEmailError;
+                  }
                   return null;
                 },
               ),
@@ -72,10 +74,13 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                 decoration: InputDecoration(labelText: l10n.authAgeLabel),
                 keyboardType: TextInputType.number,
                 validator: (val) {
-                  if (val == null || val.trim().isEmpty)
+                  if (val == null || val.trim().isEmpty) {
                     return l10n.authRequiredError;
+                  }
                   final age = int.tryParse(val);
-                  if (age == null || age <= 0) return l10n.authInvalidAgeError;
+                  if (age == null || age <= 0) {
+                    return l10n.authInvalidAgeError;
+                  }
                   return null;
                 },
               ),

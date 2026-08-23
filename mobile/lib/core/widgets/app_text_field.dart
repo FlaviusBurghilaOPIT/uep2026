@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 import '../constants/app_spacing.dart';
@@ -68,8 +69,8 @@ class _AppTextFieldState extends State<AppTextField> {
                     onTap: () => setState(() => _obscureText = !_obscureText),
                     child: Icon(
                       _obscureText
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
+                          ? LucideIcons.eyeOff
+                          : LucideIcons.eye,
                       color: AppColors.greyLight,
                       size: AppSpacing.iconMd,
                     ),

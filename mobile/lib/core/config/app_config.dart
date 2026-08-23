@@ -19,6 +19,9 @@ class AppConfig {
     if (!kIsWeb && Platform.isAndroid) {
       return 'http://10.0.2.2:8000';
     }
-    return 'http://localhost:8000';
+    if (kIsWeb || (!kIsWeb && Platform.isMacOS)) {
+      return 'http://localhost:8000';
+    }
+    return 'http://192.168.86.227:8000';
   }
 }
