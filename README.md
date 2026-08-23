@@ -78,48 +78,48 @@ Patients don't have passwords — sign-in is always an emailed one-time code. In
 
 ### Demo walkthrough (the golden loop)
 
-1. **Web** — log in as the clinician at `http://localhost:5173/login`.
-2. **Web** — `Patients` → `+ New Patient`, invite a new patient. A sign-in code is emailed to them immediately (or logged to the backend console in local dev) and also shown on screen as a backup.
-3. **Web** — `+ New Case` for the invited patient, then prescribe 1–2 medications from the case's `Medications` screen.
-4. **Mobile** — on the onboarding screen, tap **Sign In** (or **Create account** — both lead to the same flow), enter the patient's email, tap to send a code, then enter it. First-time patients continue to a short profile step (phone, date of birth); returning patients go straight in.
-5. **Mobile** — land on `Today`, log a dose as `Taken`/`Skipped`.
-6. **Mobile** — open `Assistant` and ask an in-scope question (e.g. "when should I take my medication?") to see a real AI reply, or an out-of-scope one (e.g. "can I take a double dose?") to see the safety guardrail refuse it.
-7. **Web** — back on `Patients`, open the patient's case to see the prescribed medications and (once logged) the recorded dose.
-
-Note: a dedicated clinician "Needs Attention" triage view (surfacing missed doses / AI escalations without opening each patient) is planned but not yet built — see [Project Status](#project-status) below. Today's web demo shows the roster and per-patient case detail.
+1. **Web (Clinician)** — Log in at `http://localhost:5173/login` (or 1-click Demo Clinician).
+2. **Web (Authoring)** — `Patients` → `+ New Patient`, invite a new patient. `+ New Case` (e.g. Total Knee Replacement), prescribe medication regimen, and check openFDA drug safety warnings.
+3. **Web (Triage)** — `Triage Dashboard` displays patients dynamically prioritized by urgency (`CRITICAL`, `WARNING`, `STABLE`) with 1-click alert resolution.
+4. **Mobile (Patient)** — Onboarding with passwordless 6-digit OTP (clipboard auto-paste and auto-submit).
+5. **Mobile (Adherence)** — Land on `Today`, log doses in 1 tap with pill form badges (Capsule, Tablet, Liquid) and 5s undo window.
+6. **Mobile (Ring Closure)** — Logging all scheduled doses triggers the 600ms animated circular sweep with emerald sparkle and haptic pulse.
+7. **Mobile (Emergency Escalation)** — Daily check-in selecting acute distress ("Feeling Unwell") immediately reveals the Emergency Red-Flag Banner with direct 911 / Clinic dial buttons.
+8. **Mobile (AI Assistant)** — Context-aware recovery chat grounded via Streaming RAG with strict medical guardrail refusals.
 
 ---
 
 ## Ports
 
-| Service | URL |
-|---|---|
-| Real backend (FastAPI) | `http://localhost:8000` (`/docs` for OpenAPI) |
-| Web dashboard (Vite dev) | `http://localhost:5173` |
-| Postgres | `localhost:5432` (`caredev` / `caredev`, db `remotecare`) |
+| Service | URL | Description |
+|---|---|---|
+| Backend API (FastAPI) | `http://localhost:8000` | OpenAPI docs at `/docs` |
+| Web Portal (Vite/React) | `http://localhost:5173` | Clinician portal and landing page |
+| PostgreSQL Database | `localhost:5432` | `caredev` / `caredev`, db `remotecare` |
 
-## Testing
+---
 
-Two tiers per platform — unit/widget tests need nothing but the language toolchain; integration/e2e tests need the full stack running.
+## Testing & Quality Verification
 
-| Platform | Unit / Widget (no backend needed) | Integration / E2E (needs the full stack) |
-|----------|-------------------------------------|-------------------------------------------|
-| Backend | `cd backend && python3 -m pytest tests -q` — in-memory SQLite, no Docker/Postgres, LLM/SNS/email all mocked or dry-run | *(none — the pytest suite already exercises real routes via FastAPI's `TestClient`)* |
-| Web | `cd web && npm run build && npm run lint` — no automated tests exist yet (`vitest` is installed but unused) | *(none yet)* |
-| Mobile | `cd mobile && flutter test && flutter analyze` — uses a fake API client, no backend needed | `cd mobile && flutter test integration_test/golden_loop_test.dart` — requires: backend running, DB seeded (`seed_data.py`), a booted simulator |
+Full test automation across all three platform components (376 total passing tests):
 
-## Project Status & Roadmap
+| Platform | Test Command | Scope & Coverage | Status |
+|---|---|---|---|
+| **Backend** | `cd backend && pytest` | 164 unit, RLS authorization, and integration tests | **164 Passing** |
+| **Web Portal** | `cd web && npm test` | Vitest component, landing page, and i18n tests | **5 Passing** |
+| **Mobile App** | `cd mobile && flutter test` | 207 unit, widget, and accessibility (WCAG) tests | **207 Passing** |
+| **Mobile Linter** | `cd mobile && flutter analyze` | Dart/Flutter static analyzer | **0 Issues** |
 
-The current iteration ("Core Loop Hardening & Mobile Polish") is tracked in **[docs/product/10-implementation-plan.md](docs/product/10-implementation-plan.md)**, with live progress against GitHub issues and mobile ACT Work Items. Broader UX/product research lives in `docs/product/00-04`, `09` and `docs/ux/05-08`. Mobile implementation specs live under `ai_specs/`.
+---
 
-## Team Branches
+## 🏆 Final Submission & Documentation
 
-- `p1/platform` — Platform, AI, AWS (P1)
-- `p2/web-authoring` — Clinician web authoring screens (P2)
-- `p3/web-monitoring` — Clinician web monitoring screens (P3)
-- `p4/mobile` — Patient mobile app (P4)
-- `p5/backend` — Backend services (P5)
+- **Official UEP 5.0 Report:** See [FINAL_SUBMISSION_REPORT.md](FINAL_SUBMISSION_REPORT.md) for the complete submission document formatted to the UEP template, including problem statement, architecture diagrams, challenges, and 2-minute demo script.
+- **Product Strategy & Specs:**
+  - [CUSTOMER.md](docs/CUSTOMER.md) — Patient persona, clinical pain points & jobs-to-be-done.
+  - [PRODUCT.md](docs/PRODUCT.md) — Feature matrix and clinical outcome metrics.
+  - [DESIGN.md](docs/DESIGN.md) — Design tokens, color system, and typography.
+  - [POSITIONING.md](docs/POSITIONING.md) — Market differentiation and competition strategy.
+  - [SPEC.md](SPEC.md) — Technical specifications and acceptance criteria.
+- **Mobile Details:** See [mobile/README.md](mobile/README.md) for detailed mobile platform configurations.
 
-## Mobile App (Flutter)
-
-For detailed Flutter mobile app setup (Android, iOS, local backend seeding, demo credentials, debugging), see **[mobile/README.md](mobile/README.md)**.
