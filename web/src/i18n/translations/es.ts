@@ -169,7 +169,7 @@ export const es: Translations = {
     duration: 'Duración',
     days: 'días',
     viewFdaSafety: 'Ver Advertencias de Seguridad FDA',
-    backToPatients: 'Volver a Pacientes',
+    backToPatients: 'Volver al Detalle del Caso',
   },
   recommendationsList: {
     title: 'Recomendaciones de Recuperación',
@@ -178,7 +178,7 @@ export const es: Translations = {
     loading: 'Cargando...',
     empty: 'Aún no hay recomendaciones guardadas.',
     added: 'Agregada',
-    backToPatients: 'Volver a Pacientes',
+    backToPatients: 'Volver al Detalle del Caso',
   },
   recommendations: {
     aiGreeting: '¡Hola! Describa la cirugía y los detalles del paciente y redactaré sugerencias de recuperación para su revisión.',
@@ -188,9 +188,9 @@ export const es: Translations = {
     successTitle: 'Recomendaciones Guardadas',
     successSubtitle: 'Las instrucciones de recuperación se guardaron correctamente.',
     viewAll: 'Ver Todas las Recomendaciones',
-    backToPatients: 'Volver a Pacientes',
+    backToPatients: 'Volver al Detalle del Caso',
     title: 'Recomendaciones de Recuperación',
-    caseSubtitle: 'Caso: {surgery} — {patient}',
+    caseSubtitle: 'Instrucciones clínicas de recuperación y asistencia con IA de Amazon Bedrock.',
     instructionsLabel: 'Instrucciones de Recuperación',
     instructionsPlaceholder: 'p. ej., Evite cargar peso durante 2 semanas. Aplique hielo en la rodilla 3 veces al día.',
     askAiTitle: 'Pedir sugerencias a la IA',
@@ -208,6 +208,7 @@ export const es: Translations = {
   caseDetail: {
     title: 'Detalle del Caso',
     backToPatients: 'Volver a Pacientes',
+    backToCaseDetail: 'Volver al Detalle del Caso',
     emergencyContact: 'Contacto de Emergencia',
     adherenceTimeline: 'Cronología de Adherencia',
     colMedication: 'Medicamento',

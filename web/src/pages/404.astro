@@ -9,16 +9,16 @@ const lang = isLanguage(cookieLang) ? cookieLang : 'en'
 const t = createTranslator(lang)
 ---
 
-<Layout title={`${t('common.error', 'Page Not Found')} — RemoteCare Pro`}>
+<Layout title="404 — Page Not Found | RemoteCare Pro">
   <div class="not-found-container">
     <h1 class="error-code">404</h1>
-    <h2 class="error-title">{t('common.error', 'Page Not Found')}</h2>
+    <h2 class="error-title">Page Not Found</h2>
     <p class="error-desc">
-      The requested page or surgical recovery resource could not be located.
+      The requested page or clinical recovery resource could not be located.
     </p>
     <a href="/dashboard" class="dashboard-link">
       <ArrowLeft size={16} aria-hidden="true" />
-      <span>{t('caseDetail.backToPatients', 'Return to Clinician Dashboard')}</span>
+      <span>Return to Clinician Dashboard</span>
     </a>
   </div>
 </Layout>

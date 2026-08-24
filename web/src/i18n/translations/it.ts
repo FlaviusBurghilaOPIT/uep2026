@@ -169,7 +169,7 @@ export const it: Translations = {
     duration: 'Durata',
     days: 'giorni',
     viewFdaSafety: 'Vedi Avvertenze di Sicurezza FDA',
-    backToPatients: 'Torna ai Pazienti',
+    backToPatients: 'Torna al Dettaglio del Caso',
   },
   recommendationsList: {
     title: 'Raccomandazioni di Recupero',
@@ -178,7 +178,7 @@ export const it: Translations = {
     loading: 'Caricamento...',
     empty: 'Nessuna raccomandazione salvata ancora.',
     added: 'Aggiunta',
-    backToPatients: 'Torna ai Pazienti',
+    backToPatients: 'Torna al Dettaglio del Caso',
   },
   recommendations: {
     aiGreeting: 'Ciao! Descrivi l\'intervento e i dettagli del paziente e preparerò suggerimenti di recupero da revisionare.',
@@ -188,9 +188,9 @@ export const it: Translations = {
     successTitle: 'Raccomandazioni Salvate',
     successSubtitle: 'Istruzioni di recupero salvate con successo.',
     viewAll: 'Vedi Tutte le Raccomandazioni',
-    backToPatients: 'Torna ai Pazienti',
+    backToPatients: 'Torna al Dettaglio del Caso',
     title: 'Raccomandazioni di Recupero',
-    caseSubtitle: 'Caso: {surgery} — {patient}',
+    caseSubtitle: 'Istruzioni cliniche di recupero e assistenza con IA di Amazon Bedrock.',
     instructionsLabel: 'Istruzioni di Recupero',
     instructionsPlaceholder: 'es. Evitare il carico per 2 settimane. Ghiaccio sul ginocchio 3 volte al giorno.',
     askAiTitle: 'Chiedi suggerimenti all\'IA',
@@ -208,6 +208,7 @@ export const it: Translations = {
   caseDetail: {
     title: 'Dettaglio del Caso',
     backToPatients: 'Torna ai Pazienti',
+    backToCaseDetail: 'Torna al Dettaglio del Caso',
     emergencyContact: 'Contatto di Emergenza',
     adherenceTimeline: 'Cronologia dell\'Aderenza',
     colMedication: 'Farmaco',

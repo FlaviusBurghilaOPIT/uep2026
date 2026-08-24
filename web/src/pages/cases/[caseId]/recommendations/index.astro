@@ -17,7 +17,7 @@ const t = createTranslator(lang)
       <div class="top-row">
         <a href={`/cases/${caseId}`} class="back-link">
           <ArrowLeft size={16} aria-hidden="true" />
-          <span>{t('caseDetail.backToPatients', 'Back to Case Detail')}</span>
+          <span>{t('caseDetail.backToCaseDetail', 'Back to Case Detail')}</span>
         </a>
       </div>
 
@@ -334,7 +334,14 @@ const t = createTranslator(lang)
 
     if (aiToggleBtn && aiChatPanel) {
       aiToggleBtn.addEventListener('click', () => {
-        aiChatPanel.classList.toggle('hidden')
+        const isHidden = aiChatPanel.classList.contains('hidden')
+        if (isHidden) {
+          aiChatPanel.classList.remove('hidden')
+          aiChatPanel.style.display = 'flex'
+        } else {
+          aiChatPanel.classList.add('hidden')
+          aiChatPanel.style.display = 'none'
+        }
       })
     }
 
@@ -349,7 +356,7 @@ const t = createTranslator(lang)
         aiMessages!.scrollTop = aiMessages!.scrollHeight
       }
 
-      aiSendBtn.addEventListener('click', async () => {
+      async function sendAiQuery() {
         const text = aiInput.value.trim()
         if (!text) return
 
@@ -381,6 +388,11 @@ const t = createTranslator(lang)
             recContent.value = fallback
           }
         }
+      }
+
+      aiSendBtn.addEventListener('click', sendAiQuery)
+      aiInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') sendAiQuery()
       })
     }
 
@@ -438,6 +450,10 @@ const t = createTranslator(lang)
     }
   }
 
-  initRecommendations()
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initRecommendations)
+  } else {
+    initRecommendations()
+  }
   document.addEventListener('astro:page-load', initRecommendations)
 </script>

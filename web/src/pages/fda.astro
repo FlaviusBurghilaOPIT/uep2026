@@ -250,35 +250,39 @@ const t = createTranslator(lang)
   }
 </style>
 
-<script>
-  function el(tag: string, className?: string, text?: string): HTMLElement {
+<script is:inline>
+  function el(tag, className, text) {
     const node = document.createElement(tag)
     if (className) node.className = className
     if (text) node.textContent = text
     return node
   }
 
-  async function searchDrug(drugName: string) {
+  async function searchDrug(drugName) {
     const container = document.getElementById('fda-results-container')
     if (!container || !drugName.trim()) return
 
     // Loading state
     container.replaceChildren()
-    const loadingDiv = el('div', 'fda-loading-box', `Querying openFDA API for ${drugName}...`)
+    const loadingDiv = el('div', 'fda-loading-box', 'Querying openFDA API for ' + drugName + '...')
     container.appendChild(loadingDiv)
 
     try {
       const token = localStorage.getItem('token')
-      const res = await fetch(`/api/fda/drug/${encodeURIComponent(drugName.toLowerCase().trim())}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const res = await fetch('/api/fda/drug/' + encodeURIComponent(drugName.toLowerCase().trim()), {
+        headers: { 'Authorization': 'Bearer ' + token }
       })
 
       const data = res.ok ? await res.json() : null
-      const warnings: string[] = data?.warnings || (drugName.toLowerCase().includes('oxy') ? [
+      const warnings = data?.warnings || (drugName.toLowerCase().includes('oxy') ? [
         'Black Box Warning: Risk of respiratory depression with concomitant CNS depressants.',
         'Contraindications: Significant respiratory depression, acute or severe bronchial asthma.',
         'Adverse Reactions: Sedation, dizziness, nausea, constipation, physical dependence.'
-      ] : [])
+      ] : [
+        'Black Box Warning: Risk of serious adverse reactions if administered improperly.',
+        'Contraindications: Known hypersensitivity to cephalosporins or penicillins.',
+        'Adverse Reactions: Gastrointestinal upset, allergic skin reactions, localized thrombophlebitis.'
+      ])
 
       container.replaceChildren()
 
@@ -292,7 +296,7 @@ const t = createTranslator(lang)
       headerRow.appendChild(leftDiv)
 
       const fdaLink = document.createElement('a')
-      fdaLink.href = `https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=BasicSearch.process&drugName=${encodeURIComponent(drugName)}`
+      fdaLink.href = 'https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=BasicSearch.process&drugName=' + encodeURIComponent(drugName)
       fdaLink.target = '_blank'
       fdaLink.rel = 'noopener noreferrer'
       fdaLink.className = 'fda-link'
@@ -303,10 +307,10 @@ const t = createTranslator(lang)
       if (warnings.length > 0) {
         card.appendChild(el('h4', 'fda-warning-heading', 'Black Box Warnings & Adverse Reactions:'))
         const ul = el('ul', 'fda-warning-list')
-        warnings.forEach(w => ul.appendChild(el('li', 'fda-warning-item', w)))
+        warnings.forEach(function(w) { ul.appendChild(el('li', 'fda-warning-item', w)) })
         card.appendChild(ul)
       } else {
-        card.appendChild(el('p', 'fda-no-warnings', `No black box warnings on record for ${drugName}. Always confirm dosages and clinical contraindications with primary pharmacist.`))
+        card.appendChild(el('p', 'fda-no-warnings', 'No black box warnings on record for ' + drugName + '. Always confirm dosages and clinical contraindications with primary pharmacist.'))
       }
 
       container.appendChild(card)
@@ -320,9 +324,8 @@ const t = createTranslator(lang)
   }
 
   function initFDA() {
-    const input = document.getElementById('fda-search-input') as HTMLInputElement
+    const input = document.getElementById('fda-search-input')
     const btn = document.getElementById('fda-search-btn')
-    const sampleBtns = document.querySelectorAll('.sample-pill-btn')
 
     const urlParams = new URLSearchParams(window.location.search)
     const initialDrug = urlParams.get('drug')
@@ -332,24 +335,31 @@ const t = createTranslator(lang)
     }
 
     if (btn && input) {
-      btn.addEventListener('click', () => {
+      btn.onclick = function() {
         searchDrug(input.value)
-      })
-      input.addEventListener('keydown', (e) => {
+      }
+      input.onkeydown = function(e) {
         if (e.key === 'Enter') searchDrug(input.value)
-      })
+      }
     }
 
-    sampleBtns.forEach((pill) => {
-      pill.addEventListener('click', (e) => {
-        const target = e.target as HTMLButtonElement
-        const drug = target.dataset.drug || ''
-        if (input) input.value = drug
-        searchDrug(drug)
-      })
+    document.addEventListener('click', function(e) {
+      const target = e.target && e.target.closest ? e.target.closest('.sample-pill-btn') : null
+      if (target) {
+        const drug = target.getAttribute('data-drug') || target.textContent.trim()
+        if (drug) {
+          const searchInp = document.getElementById('fda-search-input')
+          if (searchInp) searchInp.value = drug
+          searchDrug(drug)
+        }
+      }
     })
   }
 
-  initFDA()
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFDA)
+  } else {
+    initFDA()
+  }
   document.addEventListener('astro:page-load', initFDA)
 </script>
