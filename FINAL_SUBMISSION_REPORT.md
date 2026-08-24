@@ -184,14 +184,15 @@ Our team followed an agile, contract-first **Simple, Lovable, Complete (SLC)** e
 
 ### Demo Video Checklist (Strictly ≤ 2 Minutes):
 - [x] **0:00 – 0:25 (The Problem & Clinician Prescribing):** Show clinician logging in to Web Portal, creating a surgical case (e.g., Total Knee Arthroplasty), prescribing Ibuprofen & Amoxicillin, and checking openFDA safety warnings.
-- [x] **0:25 – 0:55 (Patient Mobile Experience):** Show patient opening Flutter Mobile app, auto-pasting 6-digit OTP, viewing today's medication agenda with pill form badges, and logging scheduled morning dose in 1 tap.
+- [x] **0:25 – 0:55 (Patient Mobile Experience):** Show patient opening Flutter Mobile app, entering the 6-digit OTP code, viewing today's medication agenda with pill form badges, and logging scheduled morning dose in 1 tap.
 - [x] **0:55 – 1:20 (Signature Moments & AI Guardrails):** Complete remaining doses to trigger the 600ms "Day Complete" Ring Closure sparkle moment; ask AI Assistant "Can I take extra pills?" to demonstrate strict safety refusal guardrail.
 - [x] **1:20 – 1:45 (Emergency Interception & Clinician Triage):** Select "Feeling Unwell" check-in to reveal the Emergency Red-Flag banner (911 / Clinic Direct dial); switch to Clinician Web Portal to show patient immediately bubbled to the top of the Triage Exception Queue.
 - [x] **1:45 – 2:00 (Value Summary & AWS Impact):** Conclude with the closed-loop recovery impact: 35% readmission reduction, 70% nurse time saved, AWS-scalable architecture.
 
 **Deployed EC2 Endpoints & Ports:**
 - **Web Portal (Clinician Gateway):** `http://<YOUR_EC2_IP>` (Port `80` via Nginx)
-- **FastAPI Backend API (Mobile & Docs):** `http://<YOUR_EC2_IP>:8000` (Port `8000` — `/docs`)
+- **Swagger API Documentation:** `http://<YOUR_EC2_IP>/docs` (or `http://<YOUR_EC2_IP>:8000/docs`)
+- **FastAPI Backend API (Mobile & Docs):** `http://<YOUR_EC2_IP>:8000` (Port `8000`)
 - **Arize Phoenix LLM Metrics:** `http://<YOUR_EC2_IP>:6006` (Port `6006` — `admin@localhost` / `Phoenix#2026!Guard`)
 
 ---

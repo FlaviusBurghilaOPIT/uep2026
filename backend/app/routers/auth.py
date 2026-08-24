@@ -1,7 +1,9 @@
+import os
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app import models, schemas
@@ -16,10 +18,19 @@ router = APIRouter(
 )
 
 
+def _is_expired(expires_at: datetime | None) -> bool:
+    if not expires_at:
+        return True
+    now = datetime.now(timezone.utc)
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    return expires_at < now
+
+
 @router.post("/login", response_model=schemas.TokenResponse)
-@router.post("/dev-login", response_model=schemas.TokenResponse)
 def login(login: schemas.LoginRequest, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.email == login.email).first()
+    clean_email = login.email.strip().lower()
+    user = db.query(models.User).filter(func.lower(models.User.email) == clean_email).first()
 
     if not user or not user.password_hash:
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -34,11 +45,14 @@ def login(login: schemas.LoginRequest, db: Session = Depends(get_db)):
 
 @router.post("/verify-invite", response_model=schemas.VerifyInviteResponse)
 def verify_invite(req: schemas.VerifyInviteRequest, db: Session = Depends(get_db)):
+    clean_email = req.email.strip().lower()
+    clean_code = str(req.invite_code).strip()
+
     user = (
         db.query(models.User)
         .filter(
-            models.User.email == req.email,
-            models.User.invite_code == req.invite_code,
+            func.lower(models.User.email) == clean_email,
+            models.User.invite_code == clean_code,
             models.User.status == "pending_onboarding",
         )
         .first()
@@ -57,33 +71,27 @@ def verify_invite(req: schemas.VerifyInviteRequest, db: Session = Depends(get_db
 
 @router.post("/complete-onboarding", response_model=schemas.TokenResponse)
 def complete_onboarding(req: schemas.CompleteOnboardingRequest, db: Session = Depends(get_db)):
+    clean_email = req.email.strip().lower()
+    clean_code = str(req.invite_code).strip()
+
     user = (
         db.query(models.User)
         .filter(
-            models.User.email == req.email,
-            models.User.invite_code == req.invite_code,
+            func.lower(models.User.email) == clean_email,
+            models.User.invite_code == clean_code,
             models.User.status == "pending_onboarding",
         )
         .first()
     )
 
-    if (
-        not user
-        or not user.invite_code_expires_at
-        or user.invite_code_expires_at < datetime.utcnow()
-    ):
+    if not user or _is_expired(user.invite_code_expires_at):
         raise HTTPException(status_code=400, detail="Invalid email or invite code")
 
-    # date_of_birth is optional (pre-set at intake): update only when supplied,
-    # otherwise preserve the existing value.
     if req.date_of_birth is not None:
         user.date_of_birth = req.date_of_birth
-    # full_name is optional (pre-filled from intake, editable at onboarding):
-    # update only when supplied, otherwise preserve the existing value.
     if req.full_name is not None:
         user.full_name = req.full_name
     user.phone = req.phone
-    # Hybrid auth: hash the password when one is provided at onboarding.
     if req.password is not None:
         user.password_hash = hash_password(req.password)
     user.status = "active"
@@ -103,8 +111,6 @@ def change_password(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    # The current password is required only when the user already has one; a
-    # code-authenticated user (no password_hash) may set a password without it.
     if current_user.password_hash:
         if not req.current_password or not verify_password(
             req.current_password, current_user.password_hash
@@ -128,8 +134,6 @@ def update_me(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    # Partial profile update (WI 06): only supplied fields change; omitted
-    # fields keep their stored values (same convention as complete-onboarding).
     if req.full_name is not None:
         current_user.full_name = req.full_name
     if req.phone is not None:
@@ -144,16 +148,17 @@ def update_me(
 
 @router.post("/patient/request-code", response_model=schemas.PatientRequestCodeResponse)
 def request_patient_code(req: schemas.PatientRequestCodeRequest, db: Session = Depends(get_db)):
+    clean_email = req.email.strip().lower()
     user = (
         db.query(models.User)
-        .filter(models.User.email == req.email, models.User.role == models.UserRole.patient)
+        .filter(func.lower(models.User.email) == clean_email, models.User.role == models.UserRole.patient)
         .first()
     )
 
     if user:
         code = f"{secrets.randbelow(900000) + 100000}"
         user.invite_code = code
-        user.invite_code_expires_at = datetime.utcnow() + timedelta(minutes=15)
+        user.invite_code_expires_at = datetime.now(timezone.utc) + timedelta(minutes=15)
         db.commit()
 
         email_service = EmailService()
@@ -164,24 +169,26 @@ def request_patient_code(req: schemas.PatientRequestCodeRequest, db: Session = D
 
 @router.post("/patient/verify-code")
 def verify_patient_code(req: schemas.PatientVerifyCodeRequest, db: Session = Depends(get_db)):
+    clean_email = req.email.strip().lower()
+    clean_code = str(req.code).strip()
+
     user = (
         db.query(models.User)
-        .filter(models.User.email == req.email, models.User.role == models.UserRole.patient)
+        .filter(func.lower(models.User.email) == clean_email, models.User.role == models.UserRole.patient)
         .first()
     )
 
-    if (
-        not user
-        or not user.invite_code
-        or not secrets.compare_digest(str(user.invite_code), str(req.code))
-        or not user.invite_code_expires_at
-        or user.invite_code_expires_at < datetime.utcnow()
-    ):
+    valid_stored_code = False
+    if user and user.invite_code:
+        valid_stored_code = (
+            secrets.compare_digest(str(user.invite_code).strip(), clean_code)
+            and not _is_expired(user.invite_code_expires_at)
+        )
+
+    if not user or not valid_stored_code:
         raise HTTPException(status_code=400, detail="Invalid or expired code")
 
     if user.status == "pending_onboarding":
-        # Surface the intake DOB so the patient app can pre-fill it (editable)
-        # at onboarding (Req 9) rather than re-typing clinic-held data.
         return {
             "result": "onboarding",
             "email": user.email,

@@ -142,7 +142,7 @@ Patients don't have passwords — sign-in is always an emailed one-time code, en
 
 ### Patient Account (Existing User)
 - **Email**: `patient@example.com`
-- **Sign-in code**: `424242` (fixed, long-lived, seeded by `seed_data.py` — no password field exists for patients)
+- **Sign-in code**: 6-digit OTP (printed to console by `seed_data.py` upon initialization)
 - **Surgery**: Total Knee Arthroplasty (TKA)
 - **Included Data**: 3 active medications (Oxycodone, Amoxicillin, Ibuprofen), check-ins, recommendations.
 
@@ -156,14 +156,14 @@ The old invite-code-on-login-screen + password-during-onboarding flow is gone. P
 
 1. **Invite the patient (web dashboard)**:
    - Log in as the clinician and go to `Patients` → `+ New Patient`.
-   - This creates the patient record and sends them a one-time sign-in code by email (via SES in real deployments; logged to the backend console in local dev when `AWS_REGION` isn't set — the code is also shown on screen as a backup).
+   - This creates the patient record and displays their 6-digit onboarding code directly on the screen (and logs it to the backend console / sends via email).
 2. **On the mobile app**:
    - From the onboarding screen, tap either **"Sign in to your account"** (`AppStrings.signInToAccount`) or **"Create account"** — both routes lead to the same `LoginScreen`.
    - Enter the patient's email and tap **Sign In** (`AppStrings.signIn`). This calls `POST /auth/patient/request-code` with `{"email"}`.
    - The screen switches to the code-entry stage ("Verify your email" / `AppStrings.verifyEmail`). Enter the 6-digit code and tap **Verify & Continue** (`AppStrings.verifyAndContinue`). This calls `POST /auth/patient/verify-code` with `{"email", "code"}`.
    - **New patient**: the response comes back as onboarding data (email, full name) and the app continues to the phone/date-of-birth profile step — no password is ever collected.
    - **Returning patient**: the response comes back with an access token, which the app stores, navigating straight into the Today Agenda.
-   - For the seeded demo patient above, you can skip step 1 and go straight to step 2 using the fixed code `424242` — it's pre-seeded with a long expiry.
+   - For the seeded demo patient above, enter the 6-digit OTP printed by `seed_data.py`.
 
 ---
 
@@ -192,7 +192,7 @@ Then run:
 flutter test integration_test/golden_loop_test.dart
 ```
 
-It signs in as the seeded demo patient (`patient@example.com`, code `424242`), asks the AI assistant an in-scope and an out-of-scope question, and logs a dose — verifying the real network path end to end. This is not a substitute for the unit/widget suite (`flutter test`), which runs against a fake API client and needs none of the above.
+It signs in as the seeded demo patient (`patient@example.com` with its generated OTP), asks the AI assistant an in-scope and an out-of-scope question, and logs a dose — verifying the real network path end to end. This is not a substitute for the unit/widget suite (`flutter test`), which runs against a fake API client and needs none of the above.
 
 ### Static Analysis
 ```bash

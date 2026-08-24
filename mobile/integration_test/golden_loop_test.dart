@@ -269,9 +269,9 @@ Future<({String inviteCode, String patientId})> _createInvitedPatient({
 }) async {
   final base = AppConfig.baseUrl;
 
-  // Clinician sign-in (seeded clinician; /auth/dev-login returns a token).
+  // Clinician sign-in (seeded clinician; /auth/login returns a token).
   final loginRes = await http.post(
-    Uri.parse('$base/auth/dev-login'),
+    Uri.parse('$base/auth/login'),
     headers: const {'Content-Type': 'application/json'},
     body: jsonEncode({
       'email': 'clinician@example.com',

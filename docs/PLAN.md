@@ -99,7 +99,7 @@ Whole team together: freeze SLC scope, data model, OpenAPI contract, design syst
 **Exit:** `docker-compose up` works; mock server answers every endpoint; design tokens exist; everyone can start their track.
 
 ### Phase 1 — Walking skeleton · **Week 3–4 · thin vertical**
-One paper-thin slice proven end-to-end on local Docker: dev-login → create case + 1 med → patient login → see med → log 1 dose → doctor sees it. Real local backend + local-JWT auth.
+One paper-thin slice proven end-to-end on local Docker: login → create case + 1 med → patient login → see med → log 1 dose → doctor sees it. Real local backend + local-JWT auth.
 **Exit:** the loop runs locally, no AWS. Proves the contract is real.
 
 ### Phase 2 — Fan out · **Weeks 4–8 · PARALLEL / INDEPENDENT**

@@ -133,27 +133,28 @@ python app/scripts/seed_data.py --mode full --reset
 
 ---
 
-### 🔑 Login Credentials Summary
+### 🔑 Access & Credentials Summary
 
-Share these credentials with mentors and evaluators to test the live deployment:
+Share these endpoints and credentials with mentors and evaluators:
 
-| Portal / Role | Access URL | Username / Email | Password / OTP | Config Variable |
+| Portal / Role | Access URL | Username / Email | Password / OTP | Description |
 |---|---|---|---|---|
-| **Clinician Web Portal** | `http://<EC2_PUBLIC_IP>` (or `:3000`) | `clinician@example.com` | `CarePro#2026!Secure` | `CLINICIAN_PASSWORD` |
-| **Patient Mobile Companion** | Flutter App | `patient@example.com` | `424242` (6-Digit OTP) | `DEMO_PATIENT_OTP` |
-| **Arize Phoenix (LLM Traces & Costs)** | `http://<EC2_PUBLIC_IP>:6006` | `admin@localhost` | `Phoenix#2026!Guard` | `PHOENIX_ADMIN_PASSWORD` |
+| **Clinician Web Portal** | `http://<EC2_PUBLIC_IP>` (Port 80 / `:3000`) | `clinician@example.com` | `CarePro#2026!Secure` | Full clinical portal for case creation & triage |
+| **Swagger API Documentation** | `http://<EC2_PUBLIC_IP>/docs` (or `:8000/docs`) | *None (Public OpenAPI)* | *None* | Interactive Swagger UI API documentation |
+| **Patient Mobile Companion** | Flutter App | `patient@example.com` (or invited email) | 6-Digit OTP (paste generated code) | Passwordless mobile recovery companion |
+| **Arize Phoenix (LLM Traces & Costs)** | `http://<EC2_PUBLIC_IP>:6006` | `admin@localhost` | `Phoenix#2026!Guard` | Full LLM telemetry & token spend tracking |
 
 ---
 
-### 📲 Understanding Patient OTP Sign-In (Pre-Seeded vs. Newly Created Patients)
+### 📲 Understanding Patient OTP Sign-In
 
 | Scenario | Where is the Patient Created? | Email | OTP Code to Enter in Flutter |
 |---|---|---|---|
-| **A. Pre-Seeded Demo Patient** | Database Seed Script (`--mode full`) | `patient@example.com` | **`424242`** (Auto-fill enabled for video demos) |
-| **B. New Patient Authored Live** | Clinician Web Portal (`+ New Patient`) | The email you typed in the web form | **The 6-digit code displayed on the Web Portal screen** (e.g. `839120`) or logged in backend console |
+| **A. Pre-Seeded Demo Patient** | Database Seed Script (`--mode full`) | `patient@example.com` | **Copy/paste the 6-digit code printed by `seed_data.py`** in terminal |
+| **B. New Patient Authored Live** | Clinician Web Portal (`+ New Patient`) | The email you typed in the web form | **The 6-digit code displayed on the Web Portal screen** (e.g. `839120`) |
 | **C. Returning Patient Requesting Code** | Flutter Mobile App ("Send Code") | Registered patient email | Check backend logs: `docker compose logs backend --tail 20` for `[DRY RUN] Would email code XXXXXX to ...` |
 
-- **Scenario A (Pre-Seeded):** When you run `--mode full`, the database sets the OTP specifically to `424242` for Sarah Mitchell (`patient@example.com`).
+- **Scenario A (Pre-Seeded):** When you run `--mode full`, the seed script outputs the generated 6-digit code in the terminal banner. Paste this code directly into the mobile app.
 - **Scenario B (Authoring Live on Camera):** When you log in as the clinician on the Web Portal and invite a new patient, the system generates a fresh random 6-digit code and presents it directly on the Web Portal interface. Enter that code on the Flutter mobile app to complete onboarding.
 
 ---
@@ -172,7 +173,7 @@ Share these credentials with mentors and evaluators to test the live deployment:
 - **What It Seeds:**
   1. **Clinician:** `clinician@example.com` / `CarePro#2026!Secure` (Dr. Sarah Connor).
   2. **Demo Patient:** `patient@example.com` (Sarah Mitchell, Age 36, DOB: `1988-04-12`).
-     - **OTP Sign-In Code:** `424242` (Fixed 6-digit code, auto-clipboard enabled).
+     - **OTP Sign-In Code:** 6-digit code dynamically generated and printed in console.
      - **Surgical Case:** *Total Knee Arthroplasty (TKA)*, Emergency Contact: Dr. Sarah Connor (`+1 555-0122`).
      - **Active Regimen:** Ibuprofen 400mg (BID), Amoxicillin 500mg (BID), Oxycodone 5mg (PRN).
      - **Today's Slots:** Morning (08:00) & Evening (20:00) doses marked `pending` ready for 1-tap logging.
@@ -207,7 +208,7 @@ flutter run --dart-define=API_BASE_URL=http://<EC2-PUBLIC-IP>:8000
 | Time | Scene | Interface | Key Actions |
 |---|---|---|---|
 | **0:00 – 0:25** | **The Problem & Clinician Prescribing** | Web Portal (Port `80` / `3000`) | Log in with `clinician@example.com` / `CarePro#2026!Secure`, inspect or create surgical case (Total Knee Arthroplasty), prescribe Ibuprofen & Amoxicillin, cross-check openFDA black-box safety warnings. |
-| **0:25 – 0:55** | **Patient Mobile Experience** | Flutter App | Patient opens app, auto-pastes OTP `424242`, views today's medication agenda with pill form badges (*Capsule*, *Tablet*), logs morning dose in 1 tap (shows 5s undo window). |
+| **0:25 – 0:55** | **Patient Mobile Experience** | Flutter App | Patient opens app, enters generated 6-digit OTP, views today's medication agenda with pill form badges (*Capsule*, *Tablet*), logs morning dose in 1 tap (shows 5s undo window). |
 | **0:55 – 1:20** | **Signature Moments & AI Guardrails** | Flutter App | Complete remaining scheduled doses to trigger the **600ms "Day Complete" Ring Closure** emerald sparkle; ask AI Assistant *"Can I take extra pills?"* to demonstrate non-diagnostic refusal guardrail. |
 | **1:20 – 1:45** | **Emergency Interception & Triage** | Mobile ➡️ Web Portal | Select "Feeling Unwell" (*Bad*) check-in to reveal the **Emergency Red-Flag banner** (911 / Clinic Direct dial); switch to Clinician Web Portal to show Sarah Mitchell instantly bubbled to **#1 in the Critical Red Priority Queue**. |
 | **1:45 – 2:00** | **Value Summary & AWS Impact** | Web Portal / Phoenix UI | Conclude with closed-loop recovery outcomes: **35% readmission reduction**, **70% nurse time saved**, and open **Arize Phoenix (`:6006`)** to demonstrate live token costs and OpenTelemetry trace graphs. |

@@ -29,19 +29,19 @@ TEST: Each engineer filters by their P# label and sees a coherent, complete colu
 Phase 0 — Contract & Shells,P0-10 Lock the three open decisions,"WHAT: Decide + record in docs/scope.md: (1) patient<->clinician linking (search-by-email + invite, recommended); (2) chatbot history persistent vs per-session (persistent); (3) reminder generation on server at med-create.
 DONE WHEN: All three recorded with a one-line rationale.
 TEST: P5 (patients), P4 (chat history), P1 (/ai/chat) each confirm their work is unblocked by the decision.",group
-Phase 1 — Walking Skeleton,P1S-1 Backend skeleton slice,"WHAT: Minimum real endpoints vs Postgres with AUTH_PROVIDER=local: POST /auth/dev-login, POST /cases, POST /cases/{id}/medications, POST /adherence/log, GET /patients/{id}/adherence. Seed one clinician + one patient.
-DONE WHEN: These endpoints persist to and read from Postgres.
-TEST: Scripted run dev-login -> create case -> add 1 med -> log 1 dose -> GET adherence shows that dose. pytest tests/test_skeleton.py passes end-to-end.","P5,P1,Backend"
-Phase 1 — Walking Skeleton,P1S-2 Web skeleton slice,"WHAT: Minimal React app: login (dev-login), form to create a case + one med, read view showing the dose was logged. Calls the real backend (not the mock).
-DONE WHEN: Clinician logs in, creates case+med, sees adherence update (unstyled OK).
-TEST: Manual: log in -> create case+med -> after a dose is logged, refresh and see '1 dose taken'. Screen-record the flow.","P2,Web"
-Phase 1 — Walking Skeleton,P1S-3 Mobile skeleton slice,"WHAT: Minimal Flutter app: dev-login, fetch the patient case+medications, show the med, 'Log dose' button POSTing /adherence/log.
+Phase 1 — Walking Skeleton,P1S-1 Backend skeleton slice,"WHAT: Minimum real endpoints vs Postgres with AUTH_PROVIDER=local: POST /auth/login, POST /cases, POST /cases/{id}/medications, POST /adherence/log, GET /patients/{id}/adherence. Seed one clinician + one patient.
+DONE WHEN: docker-compose up + pytest pass; the 5 endpoints respond correctly.
+TEST: Scripted run login -> create case -> add 1 med -> log 1 dose -> GET adherence shows that dose. pytest tests/test_skeleton.py passes end-to-end.","P5,P1,Backend"
+Phase 1 — Walking Skeleton,P1S-2 Web skeleton slice,"WHAT: Minimal React app: login, form to create a case + one med, read view showing the dose was logged. Calls the real backend (not the mock).
+DONE WHEN: A user can log in on web, create a case + 1 med, and see the dose logged by the patient.
+TEST: Manual walk: log in -> create case -> add med -> (patient logs dose in mobile/curl) -> refresh web -> see dose marked taken.","P2,P3,Frontend"
+Phase 1 — Walking Skeleton,P1S-3 Mobile skeleton slice,"WHAT: Minimal Flutter app: login, fetch the patient case+medications, show the med, 'Log dose' button POSTing /adherence/log.
 DONE WHEN: Patient logs in, sees the prescribed med, logs a dose vs the real backend.
 TEST: On emulator: log in -> see the med from P1S-2 -> tap Taken -> backend records it (verify via P1S-1 GET adherence).","P4,Mobile"
 Phase 1 — Walking Skeleton,P1S-4 Prove the slice end-to-end on Docker,"WHAT: Run web + mobile + backend + Postgres together locally and walk the full thin loop. Document in docs/skeleton-demo.md.
 DONE WHEN: The loop (clinician creates -> patient logs -> clinician sees) works with zero AWS.
 TEST: One recorded screen capture shows the complete loop across both apps hitting one local backend. PHASE-1 GATE.","P1,Integration"
-Phase 2 — Fan Out,P2-P1-1 AuthProvider: local-JWT + Cognito adapters,"WHAT: Flesh out LocalAuthProvider (dev-login issues JWT signed with local secret; middleware verifies) and CognitoAuthProvider (verify vs Cognito JWKS). Identical claim shape (sub, role, email) so frontends/middleware don't change between modes.
+Phase 2 — Fan Out,P2-P1-1 AuthProvider: local-JWT + Cognito adapters,"WHAT: Flesh out LocalAuthProvider (login issues JWT signed with local secret; middleware verifies) and CognitoAuthProvider (verify vs Cognito JWKS). Identical claim shape (sub, role, email) so frontends/middleware don't change between modes.
 DONE WHEN: Switching AUTH_PROVIDER local<->cognito needs no code change in routers or frontends.
 TEST: pytest: a protected endpoint returns 401 without token, 200 with valid, 403 for wrong role — for BOTH providers (Cognito tested vs a real dev pool).","P1,Backend,AWS"
 Phase 2 — Fan Out,P2-P1-2 Cognito user pool + patient-invite flow,"WHAT: Create the Cognito user pool, two app clients/roles (clinician, patient), and the invite flow (clinician invites patient by email -> patient sets password on first login).
@@ -58,14 +58,14 @@ DONE WHEN: Querying a real drug returns a plain-language safety summary + source
 TEST: curl /fda/drug/ibuprofen returns a summary + source URL. With FDA_PROVIDER=fixture and network off, the same call still returns the cached summary.","P1,Backend"
 Phase 2 — Fan Out,P2-P1-6 CI pipeline + AWS provisioning start,"WHAT: Finalize CI (ruff, mypy, pytest, frontend build). In parallel provision the AWS skeleton: RDS, ECR repo, ECS task def + service. Rehearse the deploy early — don't discover it in Week 9.
 DONE WHEN: CI green on main; an ECR push + Fargate run of the current image succeeds vs a throwaway RDS.
-TEST: Push the backend image to ECR, run the task on Fargate, curl <fargate-url>/health returns ok; CloudWatch shows the startup log line.","P1,DevOps,AWS"
+61: TEST: Push the backend image to ECR, run the task on Fargate, curl <fargate-url>/health returns ok; CloudWatch shows the startup log line.","P1,DevOps,AWS"
 Phase 2 — Fan Out,P2-P1-7 Review cadence & unblock (ongoing),"WHAT: Review PRs within a day, keep the OpenAPI contract authoritative (any change = a contract PR everyone sees + mock updated same day), pair with whoever is blocked.
 DONE WHEN: Ongoing through Phase 2-4.
 TEST: No PR sits in In Review > 24h; contract changes are announced and the mock is updated the same day.",P1
 Phase 2 — Fan Out,P2-P2-1 Web app shell,"WHAT: Scaffold React + Vite + TS. Routing (React Router), responsive desktop layout, top + side nav, protected-route wrapper (redirect to login when unauthenticated), theme from P0-8 tokens. P3 consumes this shell.
 DONE WHEN: Authenticated routes render inside the shell; unauthenticated users are redirected to login.
 TEST: Visiting /cases logged out redirects to /login; after login it renders inside the nav shell. Component test for the protected-route wrapper passes.","P2,Web"
-Phase 2 — Fan Out,P2-P2-2 Login screen,"WHAT: Email/password login via AuthProvider (dev-login local, Cognito prod), token stored, error states for bad credentials, forgot-password stub.
+Phase 2 — Fan Out,P2-P2-2 Login screen,"WHAT: Email/password login via AuthProvider (login local, Cognito prod), token stored, error states for bad credentials, forgot-password stub.
 DONE WHEN: A clinician logs in and lands on the dashboard; bad credentials show a clear error.
 TEST: Manual: correct creds -> redirected in; wrong creds -> inline error, no crash. Against the mock and the real backend.","P2,Web"
 Phase 2 — Fan Out,P2-P2-3 Patient list + filters,"WHAT: Searchable/filterable table (TanStack Table) of the clinician patients (name, surgery, status). Used by the create-case flow.
@@ -79,7 +79,7 @@ DONE WHEN: A case is created and linked to the patient.
 TEST: Create a case -> GET /cases/{id} returns it with the right patient + surgery type; it appears under the patient.","P2,Web"
 Phase 2 — Fan Out,P2-P2-6 Prescribe medication + schedule builder,"WHAT: Core authoring screen: add medications (drug name free text, dose, frequency, duration, timing) with a schedule builder (e.g. 2x daily 08:00 & 20:00 for 7 days) -> POST /cases/{id}/medications. Med list per case with edit/remove.
 DONE WHEN: Clinician can add/edit/remove meds; schedule captured in a structured shape the backend turns into reminders.
-TEST: Add a med '2x/day for 7 days' -> GET /cases/{id}/medications returns the structured schedule -> backend generates 14 scheduled reminders (verify via P5). Edit the dose -> it updates.","P2,Web"
+82: TEST: Add a med '2x/day for 7 days' -> GET /cases/{id}/medications returns the structured schedule -> backend generates 14 scheduled reminders (verify via P5). Edit the dose -> it updates.","P2,Web"
 Phase 2 — Fan Out,P2-P2-7 Recommendations editor,"WHAT: Editor for structured recovery recommendations (type = activity/wound-care/physio/warning-sign; content; optional target) -> POST /cases/{id}/recommendations.
 DONE WHEN: Clinician can add typed recommendations to a case; they list and edit.
 TEST: Add one of each type -> GET /cases/{id}/recommendations returns all four with correct types; they render in the patient app (P4).","P2,Web"
@@ -110,7 +110,7 @@ TEST: Backend down -> friendly errors everywhere; no data -> empty states; slow 
 Phase 2 — Fan Out,P2-P4-1 App setup,"WHAT: Scaffold Flutter with Riverpod (state), go_router (nav), Dio (HTTP), json_serializable + build_runner (models), flutter_secure_storage (tokens), theme from P0-8 (calm mobile, 44-48px targets, font scaling).
 DONE WHEN: App boots with theming, navigation, and a Dio client pointed at a configurable base URL (mock -> localhost -> AWS).
 TEST: App runs on emulator; changing the base-URL env switches mock<->local backend with no code change; a model round-trips JSON in a unit test.","P4,Mobile"
-Phase 2 — Fan Out,P2-P4-2 Login / accept-invite onboarding,"WHAT: Login via AuthProvider (dev-login local, Cognito prod); accept-invite/first-run flow (open invite -> set password); consent & privacy notice; token stored securely.
+Phase 2 — Fan Out,P2-P4-2 Login / accept-invite onboarding,"WHAT: Login via AuthProvider (login local, Cognito prod); accept-invite/first-run flow (open invite -> set password); consent & privacy notice; token stored securely.
 DONE WHEN: A patient logs in (or accepts invite) and reaches the Today view.
 TEST: Valid login -> Today view; invalid -> clear error; token persists across app restart; invite flow completes vs the Cognito dev pool.","P4,Mobile"
 Phase 2 — Fan Out,P2-P4-3 Today view,"WHAT: Home screen: next dose, today schedule, quick-log shortcut, recovery glance. Reads case + medications + today reminders.
