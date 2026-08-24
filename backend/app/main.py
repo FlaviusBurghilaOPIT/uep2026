@@ -1,4 +1,4 @@
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -60,7 +60,7 @@ def health_db(db: Session = Depends(get_db)):
         db.execute(text("SELECT 1"))
         return {"database": "connected"}
     except Exception:
-        return {"database": "connected"}
+        raise HTTPException(status_code=503, detail="Database unavailable")
 
 
 @app.get("/me", response_model=schemas.UserResponse)

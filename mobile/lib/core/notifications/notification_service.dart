@@ -14,9 +14,11 @@ void notificationTapBackground(NotificationResponse details) async {
       details.payload ?? '',
     );
     if (reminderId != null && reminderId.isNotEmpty) {
-      final api = HttpApiService();
-      await api.logAdherence(scheduledReminderId: reminderId, status: 'taken');
-      await HapticFeedback.mediumImpact();
+      try {
+        final api = HttpApiService();
+        await api.logAdherence(scheduledReminderId: reminderId, status: 'taken');
+        await HapticFeedback.mediumImpact();
+      } catch (_) {}
     }
   }
   if (details.actionId == 'snooze') {
@@ -24,7 +26,9 @@ void notificationTapBackground(NotificationResponse details) async {
       details.payload ?? '',
     );
     if (reminderId != null && reminderId.isNotEmpty) {
-      await NotificationService.instance.snoozeReminder(reminderId, 15);
+      try {
+        await NotificationService.instance.snoozeReminder(reminderId, 15);
+      } catch (_) {}
     }
   }
 }

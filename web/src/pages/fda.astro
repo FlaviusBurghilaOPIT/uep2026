@@ -268,21 +268,13 @@ const t = createTranslator(lang)
     container.appendChild(loadingDiv)
 
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('token') || (document.cookie.match(/(^| )carepro_token=([^;]+)/)?.[2])
       const res = await fetch('/api/fda/drug/' + encodeURIComponent(drugName.toLowerCase().trim()), {
         headers: { 'Authorization': 'Bearer ' + token }
       })
 
       const data = res.ok ? await res.json() : null
-      const warnings = data?.warnings || (drugName.toLowerCase().includes('oxy') ? [
-        'Black Box Warning: Risk of respiratory depression with concomitant CNS depressants.',
-        'Contraindications: Significant respiratory depression, acute or severe bronchial asthma.',
-        'Adverse Reactions: Sedation, dizziness, nausea, constipation, physical dependence.'
-      ] : [
-        'Black Box Warning: Risk of serious adverse reactions if administered improperly.',
-        'Contraindications: Known hypersensitivity to cephalosporins or penicillins.',
-        'Adverse Reactions: Gastrointestinal upset, allergic skin reactions, localized thrombophlebitis.'
-      ])
+      const warnings = data?.warnings || []
 
       container.replaceChildren()
 
@@ -310,7 +302,7 @@ const t = createTranslator(lang)
         warnings.forEach(function(w) { ul.appendChild(el('li', 'fda-warning-item', w)) })
         card.appendChild(ul)
       } else {
-        card.appendChild(el('p', 'fda-no-warnings', 'No black box warnings on record for ' + drugName + '. Always confirm dosages and clinical contraindications with primary pharmacist.'))
+        card.appendChild(el('p', 'fda-no-warnings', 'No black box warnings on official record for ' + drugName + '. Always confirm dosages and clinical contraindications with primary pharmacist.'))
       }
 
       container.appendChild(card)
@@ -318,7 +310,7 @@ const t = createTranslator(lang)
       container.replaceChildren()
       const fallback = el('div', 'fda-result-card')
       fallback.appendChild(el('h2', 'fda-drug-title', drugName.toUpperCase()))
-      fallback.appendChild(el('p', 'fda-no-warnings', 'FDA safety intelligence retrieved from local index cache.'))
+      fallback.appendChild(el('p', 'fda-no-warnings', 'Unable to retrieve openFDA label data for this medication. Please check connection or search directly on FDA.gov.'))
       container.appendChild(fallback)
     }
   }

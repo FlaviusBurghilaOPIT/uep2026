@@ -11,14 +11,16 @@ const cookieLang = Astro.cookies.get('carepro_language')?.value
 const lang = isLanguage(cookieLang) ? cookieLang : 'en'
 const t = createTranslator(lang)
 
+const cookieToken = Astro.cookies.get('carepro_token')?.value
+if (!cookieToken) {
+  return Astro.redirect('/login')
+}
+
 let recommendations: any[] = []
 try {
-  recommendations = await apiFetch<any[]>(`/cases/${caseId}/recommendations`)
+  recommendations = await apiFetch<any[]>(`/cases/${caseId}/recommendations`, { token: cookieToken })
 } catch {
-  recommendations = [
-    { title: 'Bedrock Clinical Protocol', date: 'Today, 09:30 AM', content: 'Initiate continuous passive motion (CPM) 2 hours twice daily. Apply cold compression pack for 20 minutes post-exercise. Do not pivot or bear unassisted weight until post-op week 2 evaluation.' },
-    { title: 'Surgical Wound Care', date: 'Yesterday, 04:15 PM', content: 'Keep surgical dressing clean and dry. Do not immerse operative leg in water or tub bath. Inspect daily for erythema or unexpected drainage.' }
-  ]
+  recommendations = []
 }
 ---
 

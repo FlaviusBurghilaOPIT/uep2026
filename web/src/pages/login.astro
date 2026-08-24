@@ -287,17 +287,12 @@ const t = createTranslator(lang)
         localStorage.setItem('token', data.access_token)
         localStorage.setItem('role', 'clinician')
         localStorage.setItem('email', loginEmail)
+        document.cookie = `carepro_token=${data.access_token}; path=/; max-age=86400; SameSite=Lax`
         window.location.href = '/dashboard'
       } catch (err: any) {
-        if (isDemoTrigger || urlParams.get('demo') === 'true') {
-          localStorage.setItem('token', 'demo-clinician-jwt-token')
-          localStorage.setItem('role', 'clinician')
-          localStorage.setItem('email', loginEmail)
-          window.location.href = '/dashboard'
-          return
-        }
         if (errorBanner) {
           errorBanner.textContent = err.message || 'Invalid email or password'
+          errorBanner.classList.remove('hidden')
           errorBanner.style.display = 'block'
         }
       } finally {

@@ -11,14 +11,16 @@ const cookieLang = Astro.cookies.get('carepro_language')?.value
 const lang = isLanguage(cookieLang) ? cookieLang : 'en'
 const t = createTranslator(lang)
 
+const cookieToken = Astro.cookies.get('carepro_token')?.value
+if (!cookieToken) {
+  return Astro.redirect('/login')
+}
+
 let medications: any[] = []
 try {
-  medications = await apiFetch<any[]>(`/cases/${caseId}/medications`)
+  medications = await apiFetch<any[]>(`/cases/${caseId}/medications`, { token: cookieToken })
 } catch {
-  medications = [
-    { name: 'Oxycodone', frequency: 'Every 6 Hours PRN', dose: '5mg oral tablet', duration: '5 days', notes: 'Take with meals. Taper dose as surgical knee pain subsides.' },
-    { name: 'Cefazolin', frequency: 'BID (08:00, 20:00)', dose: '500mg oral capsule', duration: '7 days', notes: 'Post-surgical prophylactic antibiotic. Complete full course.' }
-  ]
+  medications = []
 }
 ---
 

@@ -173,7 +173,7 @@ def verify_patient_code(req: schemas.PatientVerifyCodeRequest, db: Session = Dep
     if (
         not user
         or not user.invite_code
-        or user.invite_code != req.code
+        or not secrets.compare_digest(str(user.invite_code), str(req.code))
         or not user.invite_code_expires_at
         or user.invite_code_expires_at < datetime.utcnow()
     ):

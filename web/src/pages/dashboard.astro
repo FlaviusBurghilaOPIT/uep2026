@@ -21,24 +21,24 @@ const cookieLang = Astro.cookies.get('carepro_language')?.value
 const lang = isLanguage(cookieLang) ? cookieLang : 'en'
 const t = createTranslator(lang)
 
+const cookieToken = Astro.cookies.get('carepro_token')?.value
+if (!cookieToken) {
+  return Astro.redirect('/login')
+}
+
 let patients: any[] = []
 let cases: any[] = []
 
 try {
   const [pRes, cRes] = await Promise.all([
-    apiFetch<any[]>('/patients').catch(() => []),
-    apiFetch<any[]>('/cases').catch(() => [])
+    apiFetch<any[]>('/patients', { token: cookieToken }).catch(() => []),
+    apiFetch<any[]>('/cases', { token: cookieToken }).catch(() => [])
   ])
   patients = pRes || []
   cases = cRes || []
 } catch {
-  patients = [
-    { id: 'demo-p1', full_name: 'Maria Rossi', date_of_birth: '1964-05-12' },
-    { id: 'demo-p2', full_name: 'John Doe', date_of_birth: '1978-11-23' }
-  ]
-  cases = [
-    { id: 'demo-case-1', patient_id: 'demo-p1', surgery_type: 'Total Knee Arthroplasty' }
-  ]
+  patients = []
+  cases = []
 }
 
 const totalPatients = patients.length
@@ -161,8 +161,8 @@ const totalPatients = patients.length
                   {t('patientCard.surgeryType', 'Surgery')}: {pCase?.surgery_type || t('triage.surgery', 'Post-Op')} • {t('patients.dob', 'DOB')}: {p.date_of_birth || 'N/A'}
                 </p>
                 <div class="roster-footer">
-                  <span class="roster-adherence">{t('triage.adherenceLabel', 'Adherence')}: <strong>95%</strong></span>
-                  <a href={`/cases/${pCase?.id || 'demo-case-1'}`} class="view-case-link">{t('patientCard.viewCase', 'View Case')} &rarr;</a>
+                  <span class="roster-adherence">{t('triage.statusStable', 'STABLE')}</span>
+                  <a href={pCase ? `/cases/${pCase.id}` : `/patients`} class="view-case-link">{t('patientCard.viewCase', 'View Case')} &rarr;</a>
                 </div>
               </div>
             )

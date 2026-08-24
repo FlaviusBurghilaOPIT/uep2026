@@ -16,12 +16,17 @@ class AppConfig {
     if (_envApiBaseUrl.isNotEmpty) {
       return _envApiBaseUrl;
     }
+    if (kReleaseMode) {
+      throw StateError(
+        'CRITICAL: API_BASE_URL must be provided via --dart-define=API_BASE_URL=https://... in release builds.',
+      );
+    }
     if (!kIsWeb && Platform.isAndroid) {
       return 'http://10.0.2.2:8000';
     }
-    if (kIsWeb || (!kIsWeb && Platform.isMacOS)) {
+    if (kIsWeb || (!kIsWeb && (Platform.isMacOS || Platform.isIOS))) {
       return 'http://localhost:8000';
     }
-    return 'http://192.168.86.227:8000';
+    return 'http://localhost:8000';
   }
 }

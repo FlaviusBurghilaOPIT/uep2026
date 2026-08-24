@@ -45,10 +45,37 @@ class AuthNotifier extends Notifier<AuthState> {
     try {
       final token = await _repo.getToken();
       if (token != null && token.isNotEmpty) {
-        final success = await fetchProfile();
-        if (!success) {
-          await _repo.clearToken();
-          state = state.copyWith(isSignedIn: false);
+        try {
+          final profile = await _repo.fetchProfile();
+          if (profile != null) {
+            var next = state.copyWith(
+              patientId: profile.patientId,
+              email: profile.email,
+              fullName: profile.fullName,
+              phone: profile.phone,
+              dateOfBirth: profile.dateOfBirth,
+              hasPassword: profile.hasPassword,
+              isSignedIn: true,
+            );
+
+            if (profile.patientId != null) {
+              try {
+                final caseInfo = await _repo.fetchCase(profile.patientId!);
+                next = next.copyWith(
+                  caseId: caseInfo.caseId,
+                  primaryCondition: caseInfo.primaryCondition,
+                );
+              } catch (_) {}
+            }
+            state = next;
+          } else {
+            // Explicit 401 or invalid token
+            await _repo.clearToken();
+            state = state.copyWith(isSignedIn: false);
+          }
+        } catch (_) {
+          // Network / offline error on boot: keep session signed in
+          state = state.copyWith(isSignedIn: true);
         }
       }
     } finally {

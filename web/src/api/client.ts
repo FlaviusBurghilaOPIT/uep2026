@@ -29,10 +29,16 @@ export interface ApiFetchOptions extends RequestInit {
   token?: string;
 }
 
+function getCookie(name: string): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? decodeURIComponent(match[2]) : undefined;
+}
+
 export async function apiFetch<T>(endpoint: string, options: ApiFetchOptions = {}): Promise<T> {
   let token = options.token;
   if (!token && typeof window !== 'undefined') {
-    token = localStorage.getItem('token') || undefined;
+    token = getCookie('carepro_token') || localStorage.getItem('token') || undefined;
   }
 
   const headers: Record<string, string> = {
@@ -57,6 +63,7 @@ export async function apiFetch<T>(endpoint: string, options: ApiFetchOptions = {
       localStorage.removeItem('token');
       localStorage.removeItem('role');
       localStorage.removeItem('email');
+      document.cookie = 'carepro_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }

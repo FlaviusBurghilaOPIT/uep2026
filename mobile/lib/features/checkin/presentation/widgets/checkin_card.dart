@@ -216,7 +216,11 @@ class _CheckInCardState extends ConsumerState<CheckInCard> {
           if (isBadMood)
             _EmergencyRedFlagBanner(
               emergencyPhone: _emergencyPhone,
-              onCall911: () => _launchTel('911'),
+              onCall911: () {
+                final locale = Localizations.localeOf(context).languageCode.toLowerCase();
+                final emergencyNumber = (locale == 'it' || locale == 'es' || locale == 'fr' || locale == 'de') ? '112' : '911';
+                _launchTel(emergencyNumber);
+              },
               onCallClinic: () {
                 final phone = _emergencyPhone?.trim() ?? '';
                 if (phone.isNotEmpty) {

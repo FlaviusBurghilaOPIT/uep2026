@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app import models, schemas
-from app.dependencies import get_current_user, get_db_for_user
+from app.dependencies import get_current_user, get_db_for_user, require_clinician
 from app.services.schedule_parser import (
     create_scheduled_reminders_for_medication,
     times_for_frequency,
@@ -18,7 +18,7 @@ router = APIRouter(
 def create_case(
     case: schemas.CaseCreate,
     db: Session = Depends(get_db_for_user),
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(require_clinician),
 ):
 
     new_case = models.Case(
@@ -39,7 +39,8 @@ def create_case(
 
 @router.get("/", response_model=list[schemas.CaseResponse])
 def list_cases(
-    db: Session = Depends(get_db_for_user), current_user: models.User = Depends(get_current_user)
+    db: Session = Depends(get_db_for_user),
+    current_user: models.User = Depends(require_clinician),
 ):
 
     cases = db.query(models.Case).filter(models.Case.clinician_id == current_user.id).all()
@@ -201,7 +202,13 @@ def get_emergency_contact(
     db: Session = Depends(get_db_for_user),
     current_user: models.User = Depends(get_current_user),
 ):
-    case = db.query(models.Case).filter(models.Case.id == case_id).first()
+    query = db.query(models.Case).filter(models.Case.id == case_id)
+    if current_user.role == models.UserRole.patient:
+        query = query.filter(models.Case.patient_id == current_user.id)
+    elif current_user.role == models.UserRole.clinician:
+        query = query.filter(models.Case.clinician_id == current_user.id)
+
+    case = query.first()
 
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")

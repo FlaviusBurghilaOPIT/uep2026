@@ -757,7 +757,11 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
     }
 
     final latest = state.value ?? const AgendaState();
-    state = AsyncValue.data(latest.copyWith(offlineQueue: remaining));
+    final processedKeys = [...creates, ...corrections].map((e) => e.idempotencyKey).toSet();
+    final newEntriesDuringFlush = latest.offlineQueue.where((e) => !processedKeys.contains(e.idempotencyKey));
+    final mergedRemaining = [...remaining, ...newEntriesDuringFlush];
+
+    state = AsyncValue.data(latest.copyWith(offlineQueue: mergedRemaining));
     await _persistQueue();
     _syncQueueRetry();
 

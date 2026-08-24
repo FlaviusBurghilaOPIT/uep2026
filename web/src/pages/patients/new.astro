@@ -64,7 +64,7 @@ const t = createTranslator(lang)
 
       <div class="invite-box">
         <p class="invite-label">{t('createPatient.inviteLabel', '6-Digit Mobile Onboarding Code')}</p>
-        <p class="invite-code" id="generated-invite-code">424242</p>
+        <p class="invite-code" id="generated-invite-code">------</p>
         <p class="invite-subtext">{t('createPatient.inviteSubtext', 'The patient enters this code in the RemoteCare mobile app.')}</p>
         <button class="copy-btn" id="copy-code-btn" type="button">{t('patients.copyCode', 'Copy Onboarding Code')}</button>
       </div>
@@ -288,7 +288,7 @@ const t = createTranslator(lang)
             successCard.classList.remove('hidden')
             successCard.style.display = 'flex'
           }
-          if (codeEl) codeEl.textContent = data.invite_code || '424242'
+          if (codeEl) codeEl.textContent = data.invite_code || '—'
         } catch (err: any) {
           if (errorBox) {
             errorBox.textContent = err?.message || 'Network error occurred while enrolling patient.'

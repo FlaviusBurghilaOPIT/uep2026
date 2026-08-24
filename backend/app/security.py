@@ -7,7 +7,11 @@ from passlib.context import CryptContext
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
+ENV = os.getenv("ENV", os.getenv("ENVIRONMENT", "development")).lower()
 SECRET_KEY = os.getenv("JWT_SECRET", "dev-secret-change-in-prod")
+
+if ENV in ("production", "prod") and (not os.getenv("JWT_SECRET") or SECRET_KEY == "dev-secret-change-in-prod"):
+    raise RuntimeError("CRITICAL: JWT_SECRET must be set to a secure, non-default value in production!")
 
 ALGORITHM = "HS256"
 

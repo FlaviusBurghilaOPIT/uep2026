@@ -13,21 +13,22 @@ class AuthRemoteDatasource {
 
   /// `GET /auth/me`
   Future<AuthState?> fetchProfile() async {
-    try {
-      final res = await _api.get('/auth/me');
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        return AuthState(
-          patientId: data['id'] as String?,
-          email: data['email'] as String?,
-          fullName: data['full_name'] as String?,
-          phone: data['phone'] as String?,
-          dateOfBirth: data['date_of_birth'] as String?,
-          hasPassword: data['has_password'] as bool? ?? false,
-          isSignedIn: true,
-        );
-      }
-    } catch (_) {}
+    final res = await _api.get('/auth/me');
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      return AuthState(
+        patientId: data['id'] as String?,
+        email: data['email'] as String?,
+        fullName: data['full_name'] as String?,
+        phone: data['phone'] as String?,
+        dateOfBirth: data['date_of_birth'] as String?,
+        hasPassword: data['has_password'] as bool? ?? false,
+        isSignedIn: true,
+      );
+    }
+    if (res.statusCode == 401) {
+      return null;
+    }
     return null;
   }
 

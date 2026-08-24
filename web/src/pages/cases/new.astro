@@ -224,16 +224,10 @@ const t = createTranslator(lang)
     } catch {
       if (patientSelect) {
         patientSelect.replaceChildren()
-        const demos = [
-          { id: 'demo-p1', name: 'Maria Rossi (Demo)' },
-          { id: 'demo-p2', name: 'John Doe (Demo)' }
-        ]
-        demos.forEach(d => {
-          const opt = document.createElement('option')
-          opt.value = d.id
-          opt.textContent = d.name
-          patientSelect.appendChild(opt)
-        })
+        const opt = document.createElement('option')
+        opt.value = ''
+        opt.textContent = 'Unable to load patients'
+        patientSelect.appendChild(opt)
       }
     }
 

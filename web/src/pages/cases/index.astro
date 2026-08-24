@@ -9,23 +9,24 @@ const cookieLang = Astro.cookies.get('carepro_language')?.value
 const lang = isLanguage(cookieLang) ? cookieLang : 'en'
 const t = createTranslator(lang)
 
+const cookieToken = Astro.cookies.get('carepro_token')?.value
+if (!cookieToken) {
+  return Astro.redirect('/login')
+}
+
 let cases: any[] = []
 let patients: any[] = []
 
 try {
   const [cRes, pRes] = await Promise.all([
-    apiFetch<any[]>('/cases').catch(() => []),
-    apiFetch<any[]>('/patients').catch(() => []),
+    apiFetch<any[]>('/cases', { token: cookieToken }).catch(() => []),
+    apiFetch<any[]>('/patients', { token: cookieToken }).catch(() => []),
   ])
   cases = cRes || []
   patients = pRes || []
 } catch {
-  cases = [
-    { id: 'demo-case-1', patient_id: 'demo-p1', surgery_type: 'Total Knee Arthroplasty (TKR)', status: 'active' }
-  ]
-  patients = [
-    { id: 'demo-p1', full_name: 'Maria Rossi' }
-  ]
+  cases = []
+  patients = []
 }
 ---
 

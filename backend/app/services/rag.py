@@ -8,7 +8,7 @@ from openai import OpenAI, AsyncOpenAI
 from app.core.database import SessionLocal
 
 client_async = AsyncOpenAI(
-    api_key=os.getenv("OPENROUTER_API_KEY"),
+    api_key=os.getenv("OPENROUTER_API_KEY") or "dummy-openrouter-key",
     base_url="https://openrouter.ai/api/v1"
 )
 
@@ -22,13 +22,14 @@ def get_embedding(text_input: str) -> list[float]:
     Convert text into a vector using OpenAI embeddings.
     In production swap for Bedrock Titan embeddings.
     """
+    api_key = os.getenv("OPENROUTER_API_KEY") or "dummy-openrouter-key"
     client = OpenAI(
-        api_key=os.getenv("OPENROUTER_API_KEY"),
-        base_url="https://openrouter.ai/api/v1"
+        api_key=api_key,
+        base_url="https://openrouter.ai/api/v1",
     )
     response = client.embeddings.create(
         model="openai/text-embedding-ada-002",
-        input=text_input
+        input=text_input,
     )
     return response.data[0].embedding
 

@@ -11,42 +11,37 @@ const cookieLang = Astro.cookies.get('carepro_language')?.value
 const lang = isLanguage(cookieLang) ? cookieLang : 'en'
 const t = createTranslator(lang)
 
+const cookieToken = Astro.cookies.get('carepro_token')?.value
+if (!cookieToken) {
+  return Astro.redirect('/login')
+}
+
 let caseData: any = null
 let patientData: any = null
 let doseLogs: any[] = []
 
 try {
-  caseData = await apiFetch<any>(`/cases/${caseId}`)
+  caseData = await apiFetch<any>(`/cases/${caseId}`, { token: cookieToken })
   if (caseData?.patient_id) {
-    patientData = await apiFetch<any>(`/patients/${caseData.patient_id}`).catch(() => null)
-    doseLogs = await apiFetch<any[]>(`/adherence/patients/${caseData.patient_id}`).catch(() => [])
+    patientData = await apiFetch<any>(`/patients/${caseData.patient_id}`, { token: cookieToken }).catch(() => null)
+    doseLogs = await apiFetch<any[]>(`/adherence/patients/${caseData.patient_id}`, { token: cookieToken }).catch(() => [])
   }
 } catch {
-  // Graceful fallback for demo/offline cases
-  caseData = {
-    id: caseId,
-    surgery_type: 'Total Knee Arthroplasty (TKR)',
-    status: 'ACTIVE CASE',
-  }
-  patientData = {
-    full_name: 'Maria Rossi',
-    date_of_birth: '1964-05-12',
-  }
-  doseLogs = [
-    { medication_name: 'Oxycodone 5mg', scheduled_time: '08:00 AM', status: 'taken', logged_at: '08:04 AM' },
-    { medication_name: 'Cefazolin 500mg', scheduled_time: '12:00 PM', status: 'taken', logged_at: '12:01 PM' },
-    { medication_name: 'Oxycodone 5mg', scheduled_time: '02:00 PM', status: 'pending', logged_at: '—' },
-  ]
+  caseData = null
+  patientData = null
+  doseLogs = []
 }
 
-const patientName = patientData?.full_name || t('common.loading', 'Assigned Patient')
-const surgeryType = caseData?.surgery_type || t('triage.surgery', 'Post-Operative Recovery')
+const patientName = patientData?.full_name || (caseData ? t('common.loading', 'Assigned Patient') : t('caseDetail.notFound', 'Case Not Found'))
+const surgeryType = caseData?.surgery_type || 'N/A'
 const dob = patientData?.date_of_birth || 'N/A'
-const status = (caseData?.status || 'ACTIVE').toUpperCase()
+const status = caseData ? (caseData.status || 'ACTIVE').toUpperCase() : 'NOT FOUND'
+const emergencyName = caseData?.emergency_contact_name || 'Care Team'
+const emergencyPhone = caseData?.emergency_contact_phone || 'N/A'
 
 const completedLogs = doseLogs.filter(l => ['taken', 'missed', 'skipped'].includes(l.status?.toLowerCase()))
 const takenCount = doseLogs.filter(l => l.status?.toLowerCase() === 'taken').length
-const adherenceRate = completedLogs.length > 0 ? Math.round((takenCount / completedLogs.length) * 100) : 94
+const adherenceRate = completedLogs.length > 0 ? Math.round((takenCount / completedLogs.length) * 100) : 0
 ---
 
 <AppLayout title={`${t('caseDetail.title', 'Case Details')} — RemoteCare Pro`}>
@@ -65,11 +60,15 @@ const adherenceRate = completedLogs.length > 0 ? Math.round((takenCount / comple
       </div>
       <div class="emergency-box">
         <p class="emergency-label">{t('caseDetail.emergencyContact', 'Emergency Clinical Contact')}</p>
-        <p class="emergency-name" id="emergency-name">Dr. Sarah Jenkins</p>
-        <a href="tel:+15550192834" class="tel-link" id="emergency-tel" aria-label="Call emergency contact at +1 (555) 019-2834">
-          <Phone size={14} aria-hidden="true" />
-          <span>+1 (555) 019-2834</span>
-        </a>
+        <p class="emergency-name" id="emergency-name">{emergencyName}</p>
+        {emergencyPhone !== 'N/A' ? (
+          <a href={`tel:${emergencyPhone}`} class="tel-link" id="emergency-tel" aria-label={`Call emergency contact at ${emergencyPhone}`}>
+            <Phone size={14} aria-hidden="true" />
+            <span>{emergencyPhone}</span>
+          </a>
+        ) : (
+          <span class="tel-link">{emergencyPhone}</span>
+        )}
       </div>
     </div>
 

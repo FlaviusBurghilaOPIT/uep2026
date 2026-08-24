@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.core.database import SessionLocal
 from app import models, schemas
-from app.dependencies import get_current_user, get_db_for_user
+from app.dependencies import get_current_user, get_db_for_user, require_clinician
 from app.services.rag import generate_recommendation_stream, generate_patients_summary
 
 router = APIRouter(prefix="/ai", tags=["ai"])
@@ -56,9 +56,9 @@ def _build_patient_context(case: models.Case) -> dict:
     }
 
 
-def _get_case_and_context_sync(case_id: int) -> tuple[models.Case, dict] | None:
+def _get_case_and_context_sync(case_id: int, user_id: str, user_role: models.UserRole) -> tuple[models.Case, dict] | None:
     with SessionLocal() as db:
-        case = (
+        query = (
             db.query(models.Case)
             .options(
                 selectinload(models.Case.medications),
@@ -66,8 +66,13 @@ def _get_case_and_context_sync(case_id: int) -> tuple[models.Case, dict] | None:
                 selectinload(models.Case.checkins),
             )
             .filter(models.Case.id == case_id)
-            .first()
         )
+        if user_role == models.UserRole.patient:
+            query = query.filter(models.Case.patient_id == user_id)
+        elif user_role == models.UserRole.clinician:
+            query = query.filter(models.Case.clinician_id == user_id)
+
+        case = query.first()
         if not case:
             return None
         ctx = _build_patient_context(case)
@@ -75,8 +80,8 @@ def _get_case_and_context_sync(case_id: int) -> tuple[models.Case, dict] | None:
         return case, ctx
 
 
-async def _process_chat_request(request: schemas.ChatRequest) -> tuple[models.Case, dict, bool, bool]:
-    res = await anyio.to_thread.run_sync(_get_case_and_context_sync, request.case_id)
+async def _process_chat_request(request: schemas.ChatRequest, current_user: models.User) -> tuple[models.Case, dict, bool, bool]:
+    res = await anyio.to_thread.run_sync(_get_case_and_context_sync, request.case_id, current_user.id, current_user.role)
     if not res:
         raise HTTPException(status_code=404, detail="Case not found")
     case, patient_ctx = res
@@ -120,9 +125,9 @@ async def _save_assistant_message_shielded(case_id: int, content: str):
 async def chat(
     request: schemas.ChatRequest,
     db: Session = Depends(get_db_for_user),
-    _ = Depends(get_current_user),
+    current_user: models.User = Depends(get_current_user),
 ):
-    case, patient_ctx, in_scope, escalate = await _process_chat_request(request)
+    case, patient_ctx, in_scope, escalate = await _process_chat_request(request, current_user)
 
     await _save_user_message(case.id, request.message, in_scope, escalate)
 
@@ -153,9 +158,9 @@ async def chat(
 async def chat_stream(
     request: schemas.ChatRequest,
     db: Session = Depends(get_db_for_user),
-    _ = Depends(get_current_user),
+    current_user: models.User = Depends(get_current_user),
 ):
-    case, patient_ctx, in_scope, escalate = await _process_chat_request(request)
+    case, patient_ctx, in_scope, escalate = await _process_chat_request(request, current_user)
 
     await _save_user_message(case.id, request.message, in_scope, escalate)
     
@@ -190,7 +195,7 @@ async def chat_stream(
 @router.get("/patients-summary")
 async def patients_summary(
     db: Session = Depends(get_db_for_user),
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(require_clinician),
 ):
     """Summarize the clinician's full patient roster using the LLM, with a
     'things to consider' section. Bypasses the RAG/embeddings pipeline

@@ -98,7 +98,9 @@ class HttpApiService implements ApiService {
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
     };
-    return http.get(Uri.parse('$_baseUrl$path'), headers: headers);
+    return http
+        .get(Uri.parse('$_baseUrl$path'), headers: headers)
+        .timeout(const Duration(seconds: 15));
   }
 
   @override
@@ -108,11 +110,13 @@ class HttpApiService implements ApiService {
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
     };
-    return http.post(
-      Uri.parse('$_baseUrl$path'),
-      headers: headers,
-      body: jsonEncode(body),
-    );
+    return http
+        .post(
+          Uri.parse('$_baseUrl$path'),
+          headers: headers,
+          body: jsonEncode(body),
+        )
+        .timeout(const Duration(seconds: 15));
   }
 
   Future<http.Response> _patch(String path, Map<String, dynamic> body) async {
@@ -121,11 +125,13 @@ class HttpApiService implements ApiService {
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
     };
-    return http.patch(
-      Uri.parse('$_baseUrl$path'),
-      headers: headers,
-      body: jsonEncode(body),
-    );
+    return http
+        .patch(
+          Uri.parse('$_baseUrl$path'),
+          headers: headers,
+          body: jsonEncode(body),
+        )
+        .timeout(const Duration(seconds: 15));
   }
 
   @override

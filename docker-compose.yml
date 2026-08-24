@@ -20,7 +20,9 @@ services:
     build: ./backend
     ports:
       - "8000:8000"
-    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://remotecare_app:dev-only-change-in-prod@db:5432/remotecare
+      POSTGRES_APP_PASSWORD: dev-only-change-in-prod
     depends_on:
       db:
         condition: service_healthy
@@ -32,10 +34,10 @@ services:
     build: ./web
     ports:
       - "3000:3000"
-    volumes:
-      - ./web:/app
     environment:
       VITE_API_URL: http://localhost:8000
+      PORT: 3000
+      HOST: 0.0.0.0
 
 volumes:
   pgdata:

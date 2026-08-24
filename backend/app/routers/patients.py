@@ -37,7 +37,7 @@ def invite_patient(
         role=models.UserRole.patient,
         status="pending_onboarding",
         invite_code=invite_code,
-        invite_code_expires_at=datetime.utcnow() + timedelta(minutes=15),
+        invite_code_expires_at=datetime.utcnow() + timedelta(days=7),
         date_of_birth=req.date_of_birth,
     )
     db.add(patient)
@@ -69,14 +69,21 @@ def invite_patient(
 @router.get("/", response_model=list[schemas.UserResponse])
 def list_patients(
     db: Session = Depends(get_db_for_user),
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(require_clinician),
 ):
     patients = db.query(models.User).filter(models.User.role == models.UserRole.patient).all()
     return patients
 
 
 @router.post("/", response_model=schemas.UserResponse)
-def create_patient(user: schemas.UserCreate, db: Session = Depends(get_db_for_user)):
+def create_patient(
+    user: schemas.UserCreate,
+    db: Session = Depends(get_db_for_user),
+    current_user: models.User = Depends(require_clinician),
+):
+    existing = db.query(models.User).filter(models.User.email == user.email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="User with this email already exists")
 
     db_user = models.User(
         email=user.email,
@@ -156,7 +163,13 @@ def triage_roster(
 
 
 @router.get("/{patient_id}", response_model=schemas.UserResponse)
-def get_patient(patient_id: str, db: Session = Depends(get_db_for_user)):
+def get_patient(
+    patient_id: str,
+    db: Session = Depends(get_db_for_user),
+    current_user: models.User = Depends(get_current_user),
+):
+    if current_user.role == models.UserRole.patient and current_user.id != patient_id:
+        raise HTTPException(status_code=404, detail="Patient not found")
 
     patient = (
         db.query(models.User)
