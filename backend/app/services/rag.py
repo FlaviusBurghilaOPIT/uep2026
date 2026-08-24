@@ -6,6 +6,7 @@ from sqlalchemy import text
 from openai import OpenAI, AsyncOpenAI
 
 from app.core.database import SessionLocal
+from app.observability import track_llm_ops
 
 client_async = AsyncOpenAI(
     api_key=os.getenv("OPENROUTER_API_KEY") or "dummy-openrouter-key",
@@ -97,6 +98,7 @@ def retrieve_relevant_chunks(
 # Generation
 # ─────────────────────────────────────────
 
+@track_llm_ops(name="rag.generate_recommendation_stream")
 async def generate_recommendation_stream(
     doctor_message: str,
     surgery_type: str | None = None,
@@ -163,6 +165,7 @@ Always end with: "Please review and adjust based on your clinical judgment."
         yield fallback_reply
 
 
+@track_llm_ops(name="rag.generate_patients_summary", model=os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini"))
 async def generate_patients_summary(patients_context: str) -> str:
     """Summarize a clinician's full patient roster (plain chat completion,
     no retrieval/embeddings involved)."""

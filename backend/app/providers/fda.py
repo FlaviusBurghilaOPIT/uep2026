@@ -23,9 +23,6 @@ class LiveFDAProvider(FDAProvider):
             "search": f'openfda.brand_name:"{clean_name}"+openfda.generic_name:"{clean_name}"+openfda.substance_name:"{clean_name}"',
             "limit": "1",
         }
-        api_key = os.getenv("FDA_API_KEY")
-        if api_key:
-            params["api_key"] = api_key
 
         timeout = httpx.Timeout(float(os.getenv("FDA_TIMEOUT", "8")))
         async with httpx.AsyncClient(timeout=timeout) as client:

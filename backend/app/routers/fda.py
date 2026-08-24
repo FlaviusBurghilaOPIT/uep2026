@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 from app import models, schemas
 from app.database import get_db
 from app.dependencies import get_current_user, require_clinician
+from app.observability import track_llm_ops
 from app.providers.fda import get_fda_provider
 from openai import AsyncOpenAI
 
@@ -52,6 +53,20 @@ client_async = AsyncOpenAI(
     base_url="https://openrouter.ai/api/v1"
 )
 
+
+@track_llm_ops(name="fda.summarize")
+async def _summarize_drug_label(raw: dict) -> str:
+    response = await client_async.chat.completions.create(
+        model=os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3-8b-instruct"),
+        messages=[
+            {"role": "system", "content": FDA_SUMMARY_SYSTEM_PROMPT},
+            {"role": "user", "content": json.dumps(raw)[:4000]}
+        ],
+        timeout=float(os.getenv("OPENROUTER_TIMEOUT", "20")),
+    )
+    return response.choices[0].message.content
+
+
 @router.get("/drug/{name}", response_model=schemas.FDADrugInfoResponse)
 async def get_drug_info(name: str, current_user: models.User = Depends(get_current_user)):
     provider = get_fda_provider()
@@ -76,15 +91,7 @@ async def get_drug_info(name: str, current_user: models.User = Depends(get_curre
 
     try:
         with using_attributes(metadata={"endpoint": "fda.summarize", "drug_name": name}):
-            response = await client_async.chat.completions.create(
-                model=os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3-8b-instruct"),
-                messages=[
-                    {"role": "system", "content": FDA_SUMMARY_SYSTEM_PROMPT},
-                    {"role": "user", "content": json.dumps(raw)[:4000]}
-                ],
-                timeout=float(os.getenv("OPENROUTER_TIMEOUT", "20")),
-            )
-        summary = response.choices[0].message.content
+            summary = await _summarize_drug_label(raw)
         return schemas.FDADrugInfoResponse(drug_name=name, summary=summary, source=provider.source)
     except Exception:
         # Missing/invalid LLM key or a provider error — return the raw warnings

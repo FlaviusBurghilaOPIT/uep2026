@@ -7,6 +7,7 @@ from app import models, schemas
 from app.core.database import init_db
 from app.database import get_db
 from app.dependencies import get_current_user
+from app.observability import setup_tracing
 from app.routers import (
     adherence,
     agenda,
@@ -38,6 +39,10 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup():
+    try:
+        setup_tracing()
+    except Exception as e:
+        print(f"Warning: setup_tracing failed: {e}")
     try:
         init_db()
     except Exception as e:
