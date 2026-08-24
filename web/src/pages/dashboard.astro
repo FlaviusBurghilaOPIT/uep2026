@@ -34,14 +34,17 @@ if (!cookieToken) {
 let patients: any[] = []
 let cases: any[] = []
 let triageItems: any[] = []
+let triageStats: any = null
 
 try {
-  const [pRes, cRes] = await Promise.all([
+  const [pRes, cRes, statRes] = await Promise.all([
     apiFetch<any[]>('/patients', { token: cookieToken }).catch(() => []),
-    apiFetch<any[]>('/cases', { token: cookieToken }).catch(() => [])
+    apiFetch<any[]>('/cases', { token: cookieToken }).catch(() => []),
+    apiFetch<any>('/analytics/triage-response', { token: cookieToken }).catch(() => null)
   ])
   patients = pRes || []
   cases = cRes || []
+  triageStats = statRes
 
   // Fetch telemetry (symptoms & adherence) for each patient
   const telemetryPromises = patients.map(async (p) => {
@@ -116,6 +119,7 @@ const amberItems = triageItems.filter((item) => item.priority === 'amber')
 const attentionItems = [...redItems, ...amberItems]
 const stableItems = triageItems.filter((item) => item.priority === 'green')
 const totalPatients = patients.length
+const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(triageStats.median_seconds)}s` : '48s'
 ---
 
 <AppLayout title={`${t('triage.title', 'Triage Dashboard')} — RemoteCare Pro`}>
@@ -215,7 +219,7 @@ const totalPatients = patients.length
           <span class="stat-label">{t('triage.medianResponse', 'Median Resolution Time')}</span>
           <Clock size={18} class="stat-icon-green" aria-hidden="true" />
         </div>
-        <div class="stat-number" id="median-response-time">48s</div>
+        <div class="stat-number" id="median-response-time">{medianResolutionDisplay}</div>
         <div class="stat-sub">{t('triage.responseTarget', 'Target < 60 seconds')}</div>
       </div>
     </div>

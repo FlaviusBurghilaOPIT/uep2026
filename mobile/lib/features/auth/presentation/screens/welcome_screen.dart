@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/navigation/app_routes.dart';
@@ -10,12 +11,14 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../auth_strings.dart';
 import '../providers/auth_provider.dart';
+import 'invitation_code_screen.dart';
 import 'request_code_screen.dart';
 
 /// Hybrid-auth Welcome screen (WI 04, spec Req 2).
 ///
-/// Offers TWO sign-in methods: email + password (PRIMARY) and an
-/// "email me a one-time code" fallback. Both land on Today on success.
+/// Offers sign-in methods: email + password (PRIMARY),
+/// "I got an invitation code" (for newly enrolled patients),
+/// and an "email me a one-time code" fallback. Both land on Today on success.
 class WelcomeScreen extends ConsumerStatefulWidget {
   const WelcomeScreen({super.key});
 
@@ -54,6 +57,16 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text(message)));
     }
+  }
+
+  void _openInviteCodeSignIn() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => InvitationCodeScreen(
+          initialEmail: _emailController.text.trim(),
+        ),
+      ),
+    );
   }
 
   void _openCodeSignIn() {
@@ -117,9 +130,18 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                   isLoading: auth.isLoading,
                   onPressed: _signInWithPassword,
                 ),
+                SizedBox(height: AppSpacing.md),
+
+                // Primary patient onboarding action: Invitation Code
+                AppButton(
+                  text: 'I got an invitation code',
+                  isOutlined: true,
+                  icon: LucideIcons.keyRound,
+                  onPressed: _openInviteCodeSignIn,
+                ),
                 SizedBox(height: AppSpacing.lg),
 
-                // Fallback sign-in method (spec Req 2 / Open Questions).
+                // Fallback sign-in method: email OTP
                 Center(
                   child: TextButton(
                     onPressed: _openCodeSignIn,

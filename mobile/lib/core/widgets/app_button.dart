@@ -76,14 +76,18 @@ class AppButton extends StatelessWidget {
     if (icon != null) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: AppSpacing.iconMd),
           SizedBox(width: AppSpacing.hSm),
-          Text(
-            text,
-            style: isOutlined
-                ? AppTextStyles.buttonTextOutlined
-                : AppTextStyles.buttonText,
+          Flexible(
+            child: Text(
+              text,
+              style: isOutlined
+                  ? AppTextStyles.buttonTextOutlined
+                  : AppTextStyles.buttonText,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       );

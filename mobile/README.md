@@ -83,7 +83,7 @@ uvicorn app.main:app --reload --port 8000
 ### Option B: Running with Docker Compose
 ```bash
 # From the repository root directory
-docker-compose up backend
+docker compose up -d backend
 ```
 
 > **Note**: Verify backend is running by opening `http://localhost:8000/docs` in your browser.
@@ -183,8 +183,8 @@ flutter test test/widget/assistant_screen_test.dart
 
 `integration_test/golden_loop_test.dart` drives the app against a **real, running backend** — unlike unit/widget tests, it needs:
 
-1. The backend running: `docker-compose up backend` (from the repo root).
-2. The database seeded: `docker-compose exec backend python app/scripts/seed_data.py`.
+1. The backend running: `docker compose up -d backend` (from the repo root).
+2. The database seeded: `docker compose exec backend python app/scripts/seed_data.py`.
 3. A booted simulator (see device setup above).
 
 Then run:

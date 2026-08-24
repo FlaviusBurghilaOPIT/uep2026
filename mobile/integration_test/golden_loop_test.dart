@@ -2,7 +2,7 @@
 //
 // Requires the real FastAPI backend running at http://localhost:8000 (or
 // 10.0.2.2:8000 on Android), seeded via
-// `docker-compose exec backend python app/scripts/seed_data.py` per the
+// `docker compose exec backend python app/scripts/seed_data.py` per the
 // project README. This exercises the real network stack end to end — it is
 // not a substitute for the mocked unit/widget suite in test/.
 //
