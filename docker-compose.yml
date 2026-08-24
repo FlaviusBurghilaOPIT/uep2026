@@ -1,7 +1,6 @@
 services:
   db:
     image: pgvector/pgvector:pg16
-    container_name: remotecare-db
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-caredev}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-caredev}
@@ -20,7 +19,6 @@ services:
 
   phoenix:
     image: arizephoenix/phoenix:latest
-    container_name: remotecare-phoenix
     ports:
       - "6006:6006"
       - "4317:4317"
@@ -29,8 +27,9 @@ services:
       PHOENIX_GRPC_PORT: 4317
       PHOENIX_HOST: 0.0.0.0
       PHOENIX_ENABLE_AUTH: ${PHOENIX_ENABLE_AUTH:-true}
+      PHOENIX_SECRET: ${PHOENIX_SECRET:-dev-phoenix-secret-key-32chars-min}
+      PHOENIX_SECRET_KEY: ${PHOENIX_SECRET:-dev-phoenix-secret-key-32chars-min}
       PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD: ${PHOENIX_ADMIN_PASSWORD:-Phoenix#2026!Guard}
-      PHOENIX_SECRET_KEY: ${PHOENIX_SECRET_KEY:-dev-phoenix-secret-key-32chars-min}
       PHOENIX_ENABLE_STRONG_PASSWORD_POLICY: "false"
       PHOENIX_POSTGRES_HOST: db
       PHOENIX_POSTGRES_PORT: 5432
@@ -50,7 +49,6 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: remotecare-backend
     ports:
       - "8000:8000"
     environment:
@@ -87,7 +85,6 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
-    container_name: remotecare-web
     ports:
       - "3000:3000"
     environment:
@@ -105,7 +102,6 @@ services:
     build:
       context: ./nginx
       dockerfile: Dockerfile
-    container_name: remotecare-nginx
     ports:
       - "80:80"
     depends_on:

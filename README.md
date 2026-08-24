@@ -65,6 +65,19 @@ Configuration is managed via `.env`. A pre-configured template is provided in `.
 
 ---
 
+## 🛡️ AWS EC2 Security Group Inbound Port Configuration
+
+To ensure all platform components operate smoothly on AWS EC2, make sure the following inbound ports are exposed in your **AWS EC2 Security Group**:
+
+| Port | Protocol | Source | Service & Purpose |
+|---|---|---|---|
+| **`80`** | TCP / HTTP | `0.0.0.0/0` | **Clinician Web Portal** (Nginx Gateway entrypoint for web users & clinicians) |
+| **`8000`** | TCP / HTTP | `0.0.0.0/0` | **FastAPI Backend API** (Required for Flutter Mobile App communication & `/docs`) |
+| **`6006`** | TCP / HTTP | `0.0.0.0/0` | **Arize Phoenix Dashboard** (Live LLM Observability, Trace Graphs & Cost Metrics) |
+| **`22`** | TCP / SSH | Your IP | **SSH Instance Administration** |
+
+---
+
 ## 🚀 One-Command Docker Setup (Local & AWS EC2)
 
 The entire stack (Nginx, Arize Phoenix, PostgreSQL + pgvector, FastAPI Backend, and Pure Astro SSR Web Portal) starts in a single command.
@@ -76,11 +89,10 @@ docker-compose up -d --build
 ```
 
 Verify services are healthy:
-- **Web Portal (Nginx Gateway):** `http://localhost` (or `http://<EC2-PUBLIC-IP>`)
-- **Web Portal (Direct Node):** `http://localhost:3000` (or `http://<EC2-PUBLIC-IP>:3000`)
-- **FastAPI Swagger Docs:** `http://localhost/docs` (or `http://<EC2-PUBLIC-IP>/docs` / `:8000/docs`)
-- **Arize Phoenix LLM Dashboard:** `http://localhost:6006` (or `http://<EC2-PUBLIC-IP>:6006`)
-- **PostgreSQL Database:** Port `5432`
+- **Web Portal (Nginx Gateway):** `http://<EC2-PUBLIC-IP>` (Port `80`)
+- **FastAPI Backend & Swagger:** `http://<EC2-PUBLIC-IP>:8000/docs` (Port `8000` — used by Flutter)
+- **Arize Phoenix LLM Metrics:** `http://<EC2-PUBLIC-IP>:6006` (Port `6006` — traces & token costs)
+- **PostgreSQL Database:** Port `5432` (Internal Docker network)
 
 ---
 

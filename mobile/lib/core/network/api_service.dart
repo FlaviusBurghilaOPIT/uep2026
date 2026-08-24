@@ -91,6 +91,12 @@ class HttpApiService implements ApiService {
     await prefs.remove('auth_token');
   }
 
+  Uri _buildUri(String path) {
+    final base = _baseUrl.endsWith('/') ? _baseUrl.substring(0, _baseUrl.length - 1) : _baseUrl;
+    final normalizedPath = path.startsWith('/') ? path : '/$path';
+    return Uri.parse('$base$normalizedPath');
+  }
+
   @override
   Future<http.Response> get(String path) async {
     final token = await getToken();
@@ -99,7 +105,7 @@ class HttpApiService implements ApiService {
       if (token != null) 'Authorization': 'Bearer $token',
     };
     return http
-        .get(Uri.parse('$_baseUrl$path'), headers: headers)
+        .get(_buildUri(path), headers: headers)
         .timeout(const Duration(seconds: 15));
   }
 
@@ -112,7 +118,7 @@ class HttpApiService implements ApiService {
     };
     return http
         .post(
-          Uri.parse('$_baseUrl$path'),
+          _buildUri(path),
           headers: headers,
           body: jsonEncode(body),
         )
@@ -127,7 +133,7 @@ class HttpApiService implements ApiService {
     };
     return http
         .patch(
-          Uri.parse('$_baseUrl$path'),
+          _buildUri(path),
           headers: headers,
           body: jsonEncode(body),
         )

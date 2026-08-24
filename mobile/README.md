@@ -148,7 +148,7 @@ Patients don't have passwords — sign-in is always an emailed one-time code, en
 
 ### Clinician Account
 - **Email**: `clinician@example.com`
-- **Password**: `password123`
+- **Password**: `CarePro#2026!Secure` (configured via `CLINICIAN_PASSWORD` in `.env`)
 - **Name**: Dr. Sarah Connor
 
 ### Patient Invitation / Sign-In Flow

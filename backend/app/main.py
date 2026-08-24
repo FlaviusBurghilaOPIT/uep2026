@@ -26,8 +26,21 @@ from app.routers import (
     wiki,
 )
 
+import re
+from starlette.types import ASGIApp, Receive, Scope, Send
+
 app = FastAPI(title="Remote CarePro API", version="1.0.0")
 
+class NormalizePathMiddleware:
+    def __init__(self, app: ASGIApp):
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send):
+        if scope["type"] in ("http", "websocket") and "path" in scope:
+            scope["path"] = re.sub(r"/+", "/", scope["path"])
+        await self.app(scope, receive, send)
+
+app.add_middleware(NormalizePathMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

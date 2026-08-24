@@ -189,7 +189,10 @@ Our team followed an agile, contract-first **Simple, Lovable, Complete (SLC)** e
 - [x] **1:20 – 1:45 (Emergency Interception & Clinician Triage):** Select "Feeling Unwell" check-in to reveal the Emergency Red-Flag banner (911 / Clinic Direct dial); switch to Clinician Web Portal to show patient immediately bubbled to the top of the Triage Exception Queue.
 - [x] **1:45 – 2:00 (Value Summary & AWS Impact):** Conclude with the closed-loop recovery impact: 35% readmission reduction, 70% nurse time saved, AWS-scalable architecture.
 
-**Optional Deployed Website Link:** `http://localhost:5173` (or `[Insert Live AWS Deployed URL if hosted]`)
+**Deployed EC2 Endpoints & Ports:**
+- **Web Portal (Clinician Gateway):** `http://<YOUR_EC2_IP>` (Port `80` via Nginx)
+- **FastAPI Backend API (Mobile & Docs):** `http://<YOUR_EC2_IP>:8000` (Port `8000` — `/docs`)
+- **Arize Phoenix LLM Metrics:** `http://<YOUR_EC2_IP>:6006` (Port `6006` — `admin@localhost` / `Phoenix#2026!Guard`)
 
 ---
 
@@ -201,7 +204,7 @@ Our team followed an agile, contract-first **Simple, Lovable, Complete (SLC)** e
    - **Architectural Flow:** Seamless bidirectional data flow between React Web, Flutter Mobile, and FastAPI with clean domain-driven separation.
    - **Appropriateness of Technologies:** Industry-standard pairing of Flutter + FastAPI + Postgres + OpenRouter AI RAG.
 2. **Technical Execution & Code Quality (20% Pre-Pitch):**
-   - **376 Automated Tests:** Unmatched test coverage across unit, widget, accessibility, RLS security, and RAG streaming.
+   - **402 Automated Tests:** Unmatched test coverage across unit, widget, accessibility, RLS security, and RAG streaming (100% passing).
    - **Enterprise Hardening:** Row-Level Security, multi-language localization (5 languages), WCAG 2.1 AA accessibility.
 3. **Innovation & Impact (35% Pitching Ceremony):**
    - **Novel Closed-Loop Paradigm:** Unlike passive medication reminder apps, RemoteCare Pro connects patient adherence directly to a clinician triage exception engine.

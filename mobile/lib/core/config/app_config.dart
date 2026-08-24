@@ -13,20 +13,21 @@ class AppConfig {
   /// 2. Use `10.0.2.2:8000` on Android emulator (host loopback alias).
   /// 3. Use `localhost:8000` on iOS simulator / Web.
   static String get baseUrl {
+    String url;
     if (_envApiBaseUrl.isNotEmpty) {
-      return _envApiBaseUrl;
-    }
-    if (kReleaseMode) {
+      url = _envApiBaseUrl.trim();
+    } else if (kReleaseMode) {
       throw StateError(
         'CRITICAL: API_BASE_URL must be provided via --dart-define=API_BASE_URL=https://... in release builds.',
       );
+    } else if (!kIsWeb && Platform.isAndroid) {
+      url = 'http://10.0.2.2:8000';
+    } else {
+      url = 'http://localhost:8000';
     }
-    if (!kIsWeb && Platform.isAndroid) {
-      return 'http://10.0.2.2:8000';
+    while (url.endsWith('/')) {
+      url = url.substring(0, url.length - 1);
     }
-    if (kIsWeb || (!kIsWeb && (Platform.isMacOS || Platform.isIOS))) {
-      return 'http://localhost:8000';
-    }
-    return 'http://localhost:8000';
+    return url;
   }
 }
