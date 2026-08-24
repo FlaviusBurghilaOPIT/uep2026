@@ -22,7 +22,7 @@ const t = createTranslator(lang)
       </div>
 
       <h1 class="title">{t('recommendations.title', 'Clinical Recovery Instructions')}</h1>
-      <p class="subtitle">{t('recommendations.caseSubtitle', 'Author wound care, physical therapy guidelines, and leverage Amazon Bedrock clinical assistant.')}</p>
+      <p class="subtitle">{t('recommendations.caseSubtitle', 'Author wound care, physical therapy guidelines, and consult clinical protocol assistant.')}</p>
 
       <div class="error-box hidden" id="error-box" role="alert" aria-live="assertive"></div>
 
@@ -37,9 +37,9 @@ const t = createTranslator(lang)
               required
               aria-required="true"
             ></textarea>
-            <button type="button" class="ai-toggle-btn" id="ai-toggle-btn" title={t('recommendations.askAiTitle', 'Ask Bedrock AI')}>
+            <button type="button" class="ai-toggle-btn" id="ai-toggle-btn" title={t('recommendations.askAiTitle', 'Consult Protocol AI')}>
               <Bot size={18} aria-hidden="true" />
-              <span>{t('recommendations.askAiTitle', 'Ask Bedrock AI')}</span>
+              <span>{t('recommendations.askAiTitle', 'Consult Protocol AI')}</span>
             </button>
           </div>
         </div>
@@ -48,7 +48,7 @@ const t = createTranslator(lang)
         <div class="ai-chat-panel hidden" id="ai-chat-panel">
           <div class="ai-chat-header">
             <Bot size={16} aria-hidden="true" />
-            <span>{t('recommendations.aiTitle', 'Amazon Bedrock Post-Op Surgical Assistant')}</span>
+            <span>{t('recommendations.aiTitle', 'Clinical Protocol & Recovery Assistant')}</span>
           </div>
           <div class="ai-messages" id="ai-messages" role="log" aria-live="polite">
             <div class="ai-msg assistant">
@@ -61,7 +61,7 @@ const t = createTranslator(lang)
               id="ai-input"
               class="ai-input"
               placeholder={t('recommendations.chatPlaceholder', 'e.g. Draft 1st-week knee flexion protocol...')}
-              aria-label="Ask Bedrock AI for recommendations"
+              aria-label="Ask Clinical Protocol Assistant for suggestions"
             />
             <button type="button" id="ai-send-btn" class="ai-send-btn" aria-label={t('recommendations.send', 'Send')}>
               <Send size={14} aria-hidden="true" />
@@ -367,7 +367,7 @@ const t = createTranslator(lang)
         // Append loading skeleton message
         const loadingMsg = document.createElement('div')
         loadingMsg.className = 'ai-msg assistant skeleton-msg'
-        loadingMsg.innerHTML = '<span class="inline-spinner dark"></span> <span style="font-size: 13px; color: #64748b;">Consulting Bedrock protocol library...</span>'
+        loadingMsg.innerHTML = '<span class="inline-spinner dark"></span> <span style="font-size: 13px; color: #64748b;">Consulting Clinical Protocol Library...</span>'
         aiMessages!.appendChild(loadingMsg)
         aiMessages!.scrollTop = aiMessages!.scrollHeight
 

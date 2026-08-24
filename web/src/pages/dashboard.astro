@@ -3,15 +3,20 @@ import AppLayout from '../layouts/AppLayout.astro'
 import {
   CheckCircle2,
   AlertCircle,
-  ClipboardList,
-  FileSpreadsheet,
-  FileText,
+  TriangleAlert,
   Search,
   Phone,
-  Bot,
   RotateCw,
-  TriangleAlert,
-  X
+  Sparkles,
+  Stethoscope,
+  Pill,
+  Activity,
+  ArrowRight,
+  ShieldAlert,
+  X,
+  FileCheck2,
+  Clock,
+  HeartPulse
 } from '@lucide/astro'
 import { apiFetch } from '../api/client'
 import { createTranslator, isLanguage } from '../i18n'
@@ -28,6 +33,7 @@ if (!cookieToken) {
 
 let patients: any[] = []
 let cases: any[] = []
+let triageItems: any[] = []
 
 try {
   const [pRes, cRes] = await Promise.all([
@@ -36,66 +42,185 @@ try {
   ])
   patients = pRes || []
   cases = cRes || []
+
+  // Fetch telemetry (symptoms & adherence) for each patient
+  const telemetryPromises = patients.map(async (p) => {
+    const pCase = cases.find((c) => c.patient_id === p.id)
+    let symptoms: any[] = []
+    let doseLogs: any[] = []
+    let medications: any[] = []
+
+    if (pCase) {
+      const [sRes, dRes, mRes] = await Promise.all([
+        apiFetch<any[]>(`/symptoms/patients/${p.id}/symptoms`, { token: cookieToken }).catch(() => []),
+        apiFetch<any[]>(`/adherence/patients/${p.id}`, { token: cookieToken }).catch(() => []),
+        apiFetch<any[]>(`/medications/cases/${pCase.id}`, { token: cookieToken }).catch(() => [])
+      ])
+      symptoms = sRes || []
+      doseLogs = dRes || []
+      medications = mRes || []
+    }
+
+    const latestSymptom = symptoms.length > 0
+      ? symptoms.sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime())[0]
+      : null
+
+    const completedLogs = doseLogs.filter((l) => ['taken', 'missed', 'skipped'].includes(l.status?.toLowerCase()))
+    const takenCount = doseLogs.filter((l) => l.status?.toLowerCase() === 'taken').length
+    const missedCount = doseLogs.filter((l) => ['missed', 'skipped'].includes(l.status?.toLowerCase())).length
+    const adherenceRate = completedLogs.length > 0 ? Math.round((takenCount / completedLogs.length) * 100) : 100
+
+    let priority: 'red' | 'amber' | 'green' = 'green'
+    const triggers: string[] = []
+
+    const feeling = latestSymptom?.feeling?.toLowerCase() || ''
+    if (feeling === 'bad' || feeling === 'severe') {
+      priority = 'red'
+      triggers.push(t('triage.reasonSeverePain', 'Severe post-op pain or acute symptom reported'))
+    } else if (feeling === 'not_great') {
+      priority = 'amber'
+      triggers.push(t('triage.reasonDiscomfort', 'Patient reported feeling "Not Great" on latest check-in'))
+    }
+
+    if (missedCount >= 2 || adherenceRate < 60) {
+      priority = 'red'
+      triggers.push(`${missedCount} medication doses missed (${adherenceRate}% adherence)`)
+    } else if (missedCount === 1 || adherenceRate < 80) {
+      if (priority !== 'red') priority = 'amber'
+      triggers.push(`1 medication dose missed (${adherenceRate}% adherence)`)
+    }
+
+    return {
+      patient: p,
+      case: pCase,
+      symptoms,
+      latestSymptom,
+      doseLogs,
+      medications,
+      adherenceRate,
+      missedCount,
+      priority,
+      triggers
+    }
+  })
+
+  triageItems = await Promise.all(telemetryPromises)
 } catch {
   patients = []
   cases = []
+  triageItems = []
 }
 
+const redItems = triageItems.filter((item) => item.priority === 'red')
+const amberItems = triageItems.filter((item) => item.priority === 'amber')
+const attentionItems = [...redItems, ...amberItems]
+const stableItems = triageItems.filter((item) => item.priority === 'green')
 const totalPatients = patients.length
 ---
 
 <AppLayout title={`${t('triage.title', 'Triage Dashboard')} — RemoteCare Pro`}>
   <div class="dashboard-page">
     <!-- Header -->
-    <div class="header">
+    <header class="header">
       <div>
-        <h1 class="title">{t('triage.title', 'Clinical Triage Dashboard')}</h1>
-        <p class="subtitle">{t('triage.subtitle', 'Real-time priority exceptions & automated post-op patient roster')}</p>
+        <div class="title-row">
+          <h1 class="title">{t('triage.title', 'Clinical Triage Dashboard')}</h1>
+          <span class="clinical-live-tag">
+            <span class="pulse-dot"></span>
+            {t('triage.liveConnected', 'Live telemetry connected')}
+          </span>
+        </div>
+        <p class="subtitle">{t('triage.subtitle', 'Patients who need attention, first • Real-time recovery exceptions & automated triage roster')}</p>
       </div>
+
       <div class="header-actions">
-        <span class="last-updated" id="last-updated-text">{t('triage.liveConnected', 'Live telemetry connected')}</span>
         <button class="refresh-btn" id="refresh-btn" aria-label={t('triage.refresh', 'Refresh')}>
-          <RotateCw size={15} aria-hidden="true" />
-          <span>{t('triage.refresh', 'Refresh')}</span>
+          <RotateCw size={15} id="refresh-icon" aria-hidden="true" />
+          <span>{t('triage.refresh', 'Refresh Roster')}</span>
         </button>
-        <button class="ai-summary-btn" id="ai-summary-btn" aria-label={t('triage.aiSummary', 'AI Patient Summary')}>
-          <Bot size={16} aria-hidden="true" />
-          <span id="ai-summary-btn-text">{t('triage.aiSummary', 'AI Patient Summary')}</span>
+
+        <button class="ai-summary-btn" id="ai-summary-btn" aria-label={t('triage.aiSummary', 'Clinical Cohort Synthesis')}>
+          <Sparkles size={16} class="btn-sparkle" aria-hidden="true" />
+          <span id="ai-summary-btn-text">{t('triage.aiSummary', 'Clinical Cohort Synthesis')}</span>
         </button>
       </div>
-    </div>
+    </header>
 
-    <!-- AI Summary Box -->
-    <div class="ai-summary-card hidden" id="ai-summary-box" role="region" aria-label={t('triage.aiSummaryTitle', 'Amazon Bedrock Clinical Summary')}>
-      <h3 class="ai-summary-title">
-        <Bot size={18} aria-hidden="true" />
-        <span>{t('triage.aiSummaryTitle', 'Amazon Bedrock Clinical Summary')}</span>
-      </h3>
-      <div class="ai-summary-text" id="ai-summary-content"></div>
-    </div>
+    <!-- AI Clinical Synthesis Intelligence Drawer -->
+    <section class="ai-summary-card hidden" id="ai-summary-box" role="region" aria-label="Clinical Cohort Intelligence Brief">
+      <div class="ai-summary-header">
+        <div class="ai-header-left">
+          <div class="ai-header-icon">
+            <Sparkles size={18} aria-hidden="true" />
+          </div>
+          <div>
+            <h3 class="ai-summary-title">{t('triage.aiSummaryTitle', 'Clinical Cohort Intelligence Brief')}</h3>
+            <p class="ai-summary-sub">Automated multi-patient telemetry synthesis & recovery protocol verification</p>
+          </div>
+        </div>
+        <div class="ai-header-actions">
+          <span class="ai-badge-verified">
+            <HeartPulse size={13} aria-hidden="true" />
+            <span>Clinical Intelligence Engine</span>
+          </span>
+          <button type="button" class="ai-close-icon-btn" id="ai-top-close-btn" aria-label="Close summary">
+            <X size={16} aria-hidden="true" />
+          </button>
+        </div>
+      </div>
 
-    <!-- Stats Grid -->
+      <!-- Container where formatted structured HTML is injected -->
+      <div class="ai-summary-content-wrap" id="ai-summary-content">
+        <!-- Render initial skeleton when opening -->
+        <div class="skeleton-brief-loader">
+          <div class="skeleton skeleton-title"></div>
+          <div class="skeleton skeleton-text" style="width: 95%;"></div>
+          <div class="skeleton skeleton-text" style="width: 80%;"></div>
+          <div class="skeleton skeleton-text short"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats KPI Grid -->
     <div class="stats-grid">
       <div class="stat-card stat-red">
-        <div class="stat-number" id="count-red">0</div>
-        <div class="stat-label">{t('triage.highPriority', 'Critical Priority (Red)')}</div>
+        <div class="stat-card-top">
+          <span class="stat-label">{t('triage.highPriority', 'Critical Priority')}</span>
+          <AlertCircle size={18} class="stat-icon-red" aria-hidden="true" />
+        </div>
+        <div class="stat-number" id="count-red">{redItems.length}</div>
+        <div class="stat-sub">{redItems.length > 0 ? 'Immediate clinical review required' : 'Zero critical exceptions'}</div>
       </div>
+
       <div class="stat-card stat-amber">
-        <div class="stat-number" id="count-amber">0</div>
-        <div class="stat-label">{t('triage.mediumPriority', 'Medium Priority (Amber)')}</div>
+        <div class="stat-card-top">
+          <span class="stat-label">{t('triage.mediumPriority', 'Medium Priority')}</span>
+          <TriangleAlert size={18} class="stat-icon-amber" aria-hidden="true" />
+        </div>
+        <div class="stat-number" id="count-amber">{amberItems.length}</div>
+        <div class="stat-sub">{amberItems.length > 0 ? 'Discomfort or adherence flagged' : 'No moderate flags'}</div>
       </div>
+
       <div class="stat-card stat-blue">
+        <div class="stat-card-top">
+          <span class="stat-label">{t('triage.totalActive', 'Total Monitored Patients')}</span>
+          <Activity size={18} class="stat-icon-blue" aria-hidden="true" />
+        </div>
         <div class="stat-number" id="count-total">{totalPatients}</div>
-        <div class="stat-label">{t('triage.totalActive', 'Total Active Patients')}</div>
+        <div class="stat-sub">Active surgical recovery cohort</div>
       </div>
+
       <div class="stat-card stat-green">
+        <div class="stat-card-top">
+          <span class="stat-label">{t('triage.medianResponse', 'Median Resolution Time')}</span>
+          <Clock size={18} class="stat-icon-green" aria-hidden="true" />
+        </div>
         <div class="stat-number" id="median-response-time">48s</div>
-        <div class="stat-label">{t('triage.medianResponse', 'Median Resolution Time')}</div>
         <div class="stat-sub">{t('triage.responseTarget', 'Target < 60 seconds')}</div>
       </div>
     </div>
 
-    <!-- Controls Bar -->
+    <!-- Controls Bar: Search & Priority Filter Tabs -->
     <div class="controls-bar">
       <div class="search-container">
         <Search size={16} class="search-icon" aria-hidden="true" />
@@ -110,127 +235,364 @@ const totalPatients = patients.length
 
       <div class="tab-group" role="tablist" aria-label="Filter Priority">
         <button class="tab-btn active" data-tab="all" role="tab" aria-selected="true">
-          {t('triage.tabAll', 'All Alerts')} <span class="tab-badge" id="tab-count-all">{totalPatients}</span>
+          <span>{t('triage.tabAll', 'All Alerts')}</span>
+          <span class="tab-badge" id="tab-count-all">{totalPatients}</span>
         </button>
         <button class="tab-btn tab-btn-red" data-tab="red" role="tab" aria-selected="false">
-          <AlertCircle size={14} aria-hidden="true" /> {t('triage.tabRed', 'High Priority')} <span class="tab-badge badge-red" id="tab-count-red">0</span>
+          <AlertCircle size={14} aria-hidden="true" />
+          <span>{t('triage.tabRed', 'Critical Priority')}</span>
+          <span class="tab-badge badge-red" id="tab-count-red">{redItems.length}</span>
         </button>
         <button class="tab-btn tab-btn-amber" data-tab="amber" role="tab" aria-selected="false">
-          <TriangleAlert size={14} aria-hidden="true" /> {t('triage.tabAmber', 'Medium Priority')} <span class="tab-badge badge-amber" id="tab-count-amber">0</span>
+          <TriangleAlert size={14} aria-hidden="true" />
+          <span>{t('triage.tabAmber', 'Medium Priority')}</span>
+          <span class="tab-badge badge-amber" id="tab-count-amber">{amberItems.length}</span>
+        </button>
+        <button class="tab-btn tab-btn-stable" data-tab="stable" role="tab" aria-selected="false">
+          <CheckCircle2 size={14} aria-hidden="true" />
+          <span>{t('triage.statusStable', 'Stable Roster')}</span>
+          <span class="tab-badge badge-green" id="tab-count-stable">{stableItems.length}</span>
         </button>
       </div>
     </div>
 
-    <!-- Needs Attention Queue -->
-    <div class="section">
-      <h2 class="section-title">
-        <TriangleAlert size={20} class="title-icon-alert" aria-hidden="true" />
-        <span>{t('triage.queueTitle', 'Emergency Triage Queue')}</span>
-      </h2>
+    <!-- 1. NEEDS ATTENTION / TRIAGE EXCEPTION QUEUE -->
+    <section class="section" id="triage-queue-section">
+      <div class="section-title-row">
+        <div class="section-title-wrap">
+          <div class="section-icon-wrap alert">
+            <TriangleAlert size={18} aria-hidden="true" />
+          </div>
+          <div>
+            <h2 class="section-title">{t('triage.queueTitle', 'Emergency Triage Queue')}</h2>
+            <p class="section-sub">Patients flagged with symptom discomfort, severe pain, or medication non-adherence</p>
+          </div>
+        </div>
+        <span class="priority-count-pill">{attentionItems.length} Exception{attentionItems.length !== 1 ? 's' : ''}</span>
+      </div>
 
       <div id="triage-queue-list" class="triage-list">
-        <div class="empty-box" id="empty-state">
-          <CheckCircle2 size={32} class="empty-icon" aria-hidden="true" />
-          <p class="empty-text">{t('triage.allOnTrack', 'All patient recovery pathways are currently on track.')}</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Stable Roster -->
-    <div class="section">
-      <h2 class="section-title">
-        <CheckCircle2 size={20} class="title-icon-green" aria-hidden="true" />
-        <span>{t('triage.stableRosterTitle', 'Stable Patient Roster')}</span>
-      </h2>
-
-      <div id="stable-patient-grid" class="stable-grid">
-        {patients.length === 0 ? (
-          <div class="empty-box full-grid-span">
-            <p class="empty-text">{t('triage.noActivePatients', 'No active patients registered.')}</p>
+        {attentionItems.length === 0 ? (
+          <div class="empty-box" id="empty-state">
+            <div class="empty-icon-circle">
+              <CheckCircle2 size={28} aria-hidden="true" />
+            </div>
+            <h3 class="empty-title">All Patient Pathways Stable</h3>
+            <p class="empty-text">{t('triage.allOnTrack', 'All patient recovery pathways are currently on track. No active triage exceptions.')}</p>
           </div>
         ) : (
-          patients.map((p) => {
-            const pCase = cases.find((c) => c.patient_id === p.id)
+          attentionItems.map((item) => {
+            const p = item.patient
+            const pCase = item.case
+            const isRed = item.priority === 'red'
             return (
-              <div class="patient-card roster-card" data-name={(p.full_name || '').toLowerCase()}>
-                <div class="roster-header">
-                  <h4 class="roster-name">{p.full_name}</h4>
-                  <span class="status-badge-stable">{t('triage.statusStable', 'STABLE')}</span>
+              <div
+                class={`triage-card ${isRed ? 'card-priority-red' : 'card-priority-amber'} patient-card`}
+                data-name={(p.full_name || '').toLowerCase()}
+                data-priority={item.priority}
+              >
+                <!-- Priority Header Strip -->
+                <div class="triage-card-header">
+                  <div class="patient-main-info">
+                    <div class="patient-avatar-box">
+                      {(p.full_name || 'PT').slice(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <div class="patient-name-line">
+                        <h3 class="patient-card-name">{p.full_name}</h3>
+                        <span class={`priority-badge ${isRed ? 'badge-critical' : 'badge-moderate'}`}>
+                          {isRed ? 'CRITICAL EXCEPTION' : 'MODERATE ATTENTION'}
+                        </span>
+                      </div>
+                      <p class="patient-meta-sub">
+                        {t('patientCard.surgeryType', 'Procedure')}: <strong>{pCase?.surgery_type || 'Post-Op Recovery'}</strong> • {t('patients.dob', 'DOB')}: {p.date_of_birth || 'N/A'} • Phone: {p.phone || pCase?.emergency_contact_phone || 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="adherence-gauge-wrap">
+                    <div class="gauge-label-row">
+                      <span class="gauge-label">Adherence</span>
+                      <strong class="gauge-pct">{item.adherenceRate}%</strong>
+                    </div>
+                    <div class="progress-track">
+                      <div
+                        class={`progress-fill ${item.adherenceRate >= 80 ? 'success' : item.adherenceRate >= 50 ? 'warning' : 'danger'}`}
+                        style={`width: ${item.adherenceRate}%;`}
+                      ></div>
+                    </div>
+                  </div>
                 </div>
-                <p class="roster-sub">
-                  {t('patientCard.surgeryType', 'Surgery')}: {pCase?.surgery_type || t('triage.surgery', 'Post-Op')} • {t('patients.dob', 'DOB')}: {p.date_of_birth || 'N/A'}
-                </p>
-                <div class="roster-footer">
-                  <span class="roster-adherence">{t('triage.statusStable', 'STABLE')}</span>
-                  <a href={pCase ? `/cases/${pCase.id}` : `/patients`} class="view-case-link">{t('patientCard.viewCase', 'View Case')} &rarr;</a>
+
+                <!-- Exception Triggers Box -->
+                <div class="triage-triggers-box">
+                  <div class="trigger-label-row">
+                    <ShieldAlert size={14} class="trigger-icon" aria-hidden="true" />
+                    <span class="trigger-title">Clinical Escalation Triggers:</span>
+                  </div>
+                  <ul class="trigger-list">
+                    {item.triggers.map((trig: string) => (
+                      <li class="trigger-item">{trig}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <!-- Active Medications Chips -->
+                {item.medications.length > 0 && (
+                  <div class="card-meds-row">
+                    <span class="meds-sub-label">Prescribed Regimen:</span>
+                    <div class="meds-tags">
+                      {item.medications.map((m: any) => (
+                        <span class="med-tag">
+                          <Pill size={12} aria-hidden="true" />
+                          <span>{m.name} ({m.dose || 'Standard'})</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <!-- Action Toolbar -->
+                <div class="triage-card-footer">
+                  <div class="footer-left-contact">
+                    {p.phone || pCase?.emergency_contact_phone ? (
+                      <a href={`tel:${p.phone || pCase?.emergency_contact_phone}`} class="action-btn-call" aria-label={`Call ${p.full_name}`}>
+                        <Phone size={14} aria-hidden="true" />
+                        <span>Call Patient</span>
+                      </a>
+                    ) : (
+                      <span class="text-muted-contact">No phone registered</span>
+                    )}
+                  </div>
+
+                  <div class="footer-right-actions">
+                    <button
+                      type="button"
+                      class="action-btn-resolve"
+                      data-patient-name={p.full_name}
+                      data-patient-id={p.id}
+                      data-case-id={pCase?.id}
+                    >
+                      <FileCheck2 size={15} aria-hidden="true" />
+                      <span>{t('triage.resolveException', 'Document Outreach & Resolve')}</span>
+                    </button>
+
+                    <a href={pCase ? `/cases/${pCase.id}` : `/patients`} class="action-btn-review">
+                      <span>{t('triage.reviewCase', 'Review Case')}</span>
+                      <ArrowRight size={14} aria-hidden="true" />
+                    </a>
+                  </div>
                 </div>
               </div>
             )
           })
         )}
       </div>
+    </section>
+
+    <!-- 2. STABLE PATIENT ROSTER -->
+    <section class="section" id="stable-roster-section">
+      <div class="section-title-row">
+        <div class="section-title-wrap">
+          <div class="section-icon-wrap stable">
+            <CheckCircle2 size={18} aria-hidden="true" />
+          </div>
+          <div>
+            <h2 class="section-title">{t('triage.stableRosterTitle', 'Stable Patient Roster')}</h2>
+            <p class="section-sub">Patients with optimal medication compliance and positive check-in sentiments</p>
+          </div>
+        </div>
+        <span class="stable-count-pill">{stableItems.length} Patient{stableItems.length !== 1 ? 's' : ''} Stable</span>
+      </div>
+
+      <div id="stable-patient-grid" class="stable-grid">
+        {stableItems.length === 0 ? (
+          <div class="empty-box full-grid-span">
+            <p class="empty-text">{t('triage.noActivePatients', 'No patients currently in stable cohort.')}</p>
+          </div>
+        ) : (
+          stableItems.map((item) => {
+            const p = item.patient
+            const pCase = item.case
+            return (
+              <div class="patient-card roster-card" data-name={(p.full_name || '').toLowerCase()} data-priority="stable">
+                <div class="roster-header">
+                  <div class="roster-identity">
+                    <div class="roster-avatar">{(p.full_name || 'PT').slice(0, 2).toUpperCase()}</div>
+                    <div>
+                      <h4 class="roster-name">{p.full_name}</h4>
+                      <span class="roster-sub-meta">{t('patientCard.surgeryType', 'Surgery')}: {pCase?.surgery_type || 'Post-Op'}</span>
+                    </div>
+                  </div>
+                  <span class="status-badge-stable">STABLE</span>
+                </div>
+
+                <div class="roster-metrics">
+                  <div class="metric-col">
+                    <span class="metric-label">Adherence</span>
+                    <strong class="metric-val text-green">{item.adherenceRate}%</strong>
+                  </div>
+                  <div class="metric-col">
+                    <span class="metric-label">Latest Check-In</span>
+                    <strong class="metric-val">{item.latestSymptom?.feeling?.toUpperCase() || 'OK'}</strong>
+                  </div>
+                </div>
+
+                <div class="roster-footer">
+                  <span class="dob-text">{t('patients.dob', 'DOB')}: {p.date_of_birth || 'N/A'}</span>
+                  <a href={pCase ? `/cases/${pCase.id}` : `/patients`} class="view-case-link">
+                    {t('patientCard.viewCase', 'View Case')} &rarr;
+                  </a>
+                </div>
+              </div>
+            )
+          })
+        )}
+      </div>
+    </section>
+  </div>
+
+  <!-- Resolution Outreach Modal -->
+  <div id="resolution-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <Stethoscope size={20} class="modal-icon" aria-hidden="true" />
+          <h3 id="modal-title" class="modal-title">{t('triage.resolveModalTitle', 'Document Clinical Outreach')}</h3>
+        </div>
+        <button type="button" class="modal-close-btn" id="modal-close-btn" aria-label="Close modal">
+          <X size={18} aria-hidden="true" />
+        </button>
+      </div>
+
+      <form id="resolution-form" class="modal-form">
+        <p class="modal-patient-name" id="modal-patient-info"></p>
+
+        <div class="form-group">
+          <label class="form-label" for="outreach-channel">{t('triage.outreachMethod', 'Clinical Contact Method *')}</label>
+          <select id="outreach-channel" class="modal-select" required>
+            <option value="phone">{t('triage.outreachPhone', 'Phone Consultation with Patient / Family')}</option>
+            <option value="sms">{t('triage.outreachSms', 'Secure Clinical SMS / Mobile Direct Message')}</option>
+            <option value="visit">{t('triage.outreachVisit', 'In-Clinic / Bedside Review')}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="resolution-note">{t('triage.clinicalNote', 'Clinical Note & Care Plan Adjustment *')}</label>
+          <textarea
+            id="resolution-note"
+            class="modal-textarea"
+            rows="3"
+            placeholder={t('triage.notePlaceholder', 'Document outreach summary (e.g. Consulted patient regarding nausea; advised taking analgesics with light food. Symptoms de-escalated)...')}
+            required
+            minlength="10"
+          ></textarea>
+          <span class="note-helper">Minimum 10 characters required for clinical audit compliance.</span>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="modal-cancel-btn">
+            {t('cta.cancel', 'Cancel')}
+          </button>
+          <button type="submit" class="btn-submit-resolve" id="modal-submit-btn">
+            <FileCheck2 size={16} aria-hidden="true" />
+            <span>{t('cta.submit', 'Resolve & Archive Alert')}</span>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
+
+  <!-- Floating Toast Notification -->
+  <div id="toast-msg" class="toast hidden" role="status" aria-live="polite"></div>
 </AppLayout>
 
 <style>
   .dashboard-page {
     padding: 32px;
-    max-width: 1300px;
+    max-width: 1360px;
     margin: 0 auto;
   }
+
   .hidden {
     display: none !important;
   }
+
   .full-grid-span {
     grid-column: 1 / -1;
   }
+
+  /* Header */
   .header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 24px;
+    margin-bottom: 26px;
     flex-wrap: wrap;
     gap: 16px;
   }
+
+  .title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
   .title {
     font-size: 26px;
-    font-weight: 700;
+    font-weight: 800;
     color: #0f172a;
+    letter-spacing: -0.02em;
     margin: 0;
   }
+
+  .clinical-live-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: #f0fdf4;
+    border: 1px solid #86efac;
+    color: #15803d;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 9999px;
+  }
+
+  .pulse-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #16a34a;
+    box-shadow: 0 0 6px #16a34a;
+    animation: pulse-dot-anim 2s infinite;
+  }
+
+  @keyframes pulse-dot-anim {
+    0% { transform: scale(0.9); opacity: 0.8; }
+    50% { transform: scale(1.3); opacity: 1; }
+    100% { transform: scale(0.9); opacity: 0.8; }
+  }
+
   .subtitle {
     font-size: 14px;
     color: #64748b;
-    margin: 4px 0 0;
+    margin: 6px 0 0;
   }
+
   .header-actions {
     display: flex;
     align-items: center;
     gap: 10px;
     flex-wrap: wrap;
   }
-  .last-updated {
-    font-size: 12px;
-    color: #10b981;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .last-updated::before {
-    content: '';
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: #10b981;
-  }
+
   .refresh-btn {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 14px;
+    padding: 9px 15px;
     background-color: #ffffff;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
@@ -239,82 +601,469 @@ const totalPatients = patients.length
     color: #334155;
     cursor: pointer;
     transition: all 0.15s ease;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.05);
   }
+
   .refresh-btn:hover {
-    background-color: #f1f5f9;
+    background-color: #f8fafc;
+    border-color: #94a3b8;
   }
+
   .ai-summary-btn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    background-color: #0284c7;
+    gap: 7px;
+    padding: 9px 16px;
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
     color: #ffffff;
     border: none;
     border-radius: 8px;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
-    transition: background-color 0.15s ease;
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35);
+    transition: all 0.15s ease;
   }
+
   .ai-summary-btn:hover {
-    background-color: #0369a1;
+    background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
   }
+
+  .btn-sparkle {
+    color: #bae6fd;
+  }
+
+  /* AI Clinical Synthesis Card */
   .ai-summary-card {
-    background-color: #eff6ff;
-    border: 1px solid #bfdbfe;
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 24px;
+    background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 100%);
+    border: 1px solid #bae6fd;
+    border-radius: 14px;
+    padding: 22px;
+    margin-bottom: 28px;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.08);
+    position: relative;
+    overflow: hidden;
   }
+
+  .ai-summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #e0f2fe;
+    gap: 16px;
+  }
+
+  .ai-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .ai-header-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background-color: #0284c7;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
   .ai-summary-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0369a1;
+    margin: 0;
+  }
+
+  .ai-summary-sub {
+    font-size: 12px;
+    color: #64748b;
+    margin: 2px 0 0;
+  }
+
+  .ai-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .ai-badge-verified {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #0369a1;
+    background-color: #e0f2fe;
+    padding: 3px 8px;
+    border-radius: 9999px;
+  }
+
+  .ai-close-icon-btn {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ai-close-icon-btn:hover {
+    background-color: #e0f2fe;
+    color: #0f172a;
+  }
+
+  .ai-summary-content-wrap {
+    font-size: 14px;
+    color: #1e293b;
+    line-height: 1.6;
+  }
+
+  /* Structured styles for injected brief HTML */
+  :global(.clinical-synthesis-wrapper) {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  :global(.synthesis-overview-card) {
+    background-color: #ffffff;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    padding: 16px;
+  }
+
+  :global(.overview-header) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  :global(.clinical-tag) {
+    font-size: 10.5px;
+    font-weight: 800;
+    color: #0284c7;
+    letter-spacing: 0.06em;
+  }
+
+  :global(.live-pill) {
+    font-size: 11px;
+    color: #15803d;
+    background-color: #f0fdf4;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-weight: 600;
+  }
+
+  :global(.overview-text) {
+    font-size: 13.5px;
+    color: #334155;
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  :global(.synthesis-section-title) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 10px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  :global(.patient-count-badge), :global(.vigilance-badge) {
+    font-size: 10.5px;
+    font-weight: 700;
+    background-color: #f1f5f9;
+    color: #475569;
+    padding: 2px 8px;
+    border-radius: 9999px;
+  }
+
+  :global(.synthesis-patient-grid) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 14px;
+  }
+
+  :global(.synthesis-patient-card) {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.04);
+  }
+
+  :global(.card-top) {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    gap: 10px;
+  }
+
+  :global(.patient-identity) {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  :global(.patient-avatar) {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background-color: #0284c7;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  :global(.patient-name) {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+
+  :global(.surgery-tag) {
+    font-size: 11.5px;
+    color: #64748b;
+  }
+
+  :global(.clinical-pill) {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 9999px;
+  }
+
+  :global(.pill-dot) {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+  :global(.pill-dot.red) { background-color: #dc2626; }
+  :global(.pill-dot.amber) { background-color: #d97706; }
+  :global(.pill-dot.green) { background-color: #16a34a; }
+
+  :global(.pill-alert) { background-color: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+  :global(.pill-warn) { background-color: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+  :global(.pill-stable) { background-color: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+
+  :global(.meds-row) {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 15px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  :global(.meds-label) {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #64748b;
+  }
+
+  :global(.meds-chips) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  :global(.med-chip) {
+    font-size: 11px;
+    font-weight: 600;
+    background-color: #f1f5f9;
+    color: #334155;
+    padding: 2px 7px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+  }
+
+  :global(.recommendation-callout) {
+    display: flex;
+    gap: 10px;
+    background-color: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+
+  :global(.rec-icon) {
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  :global(.rec-body) {
+    flex: 1;
+  }
+
+  :global(.rec-label) {
+    font-size: 10.5px;
     font-weight: 700;
     color: #0369a1;
-    margin: 0 0 10px 0;
+    display: block;
+    margin-bottom: 2px;
+    text-transform: uppercase;
   }
-  .ai-summary-text {
-    font-size: 14px;
+
+  :global(.rec-text) {
+    font-size: 12.5px;
     color: #1e3a8a;
-    line-height: 1.6;
+    margin: 0;
+    line-height: 1.5;
   }
+
+  :global(.considerations-list) {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  :global(.consideration-item) {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background-color: #ffffff;
+    border: 1px solid #fed7aa;
+    border-left: 3px solid #f97316;
+    border-radius: 8px;
+    padding: 10px 14px;
+  }
+
+  :global(.item-bullet) {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #ea580c;
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+
+  :global(.item-content p) {
+    font-size: 13px;
+    color: #334155;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  :global(.synthesis-footer-actions) {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #e0f2fe;
+  }
+
+  :global(.synthesis-btn) {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  :global(.btn-copy) {
+    background-color: #0284c7;
+    color: #ffffff;
+    border: none;
+  }
+  :global(.btn-copy:hover) {
+    background-color: #0369a1;
+  }
+
+  :global(.btn-close) {
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+  }
+  :global(.btn-close:hover) {
+    background-color: #f1f5f9;
+  }
+
+  /* Stats Grid */
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 16px;
     margin-bottom: 28px;
   }
+
   .stat-card {
     background-color: #ffffff;
     border-radius: 12px;
     border: 1px solid #e2e8f0;
-    padding: 20px;
+    padding: 18px 20px;
     box-shadow: 0 1px 3px rgba(15,23,42,0.05);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
+
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(15,23,42,0.08);
+  }
+
+  .stat-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .stat-label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #64748b;
+  }
+
   .stat-number {
     font-size: 32px;
     font-weight: 800;
     line-height: 1;
     margin-bottom: 6px;
   }
-  .stat-label {
-    font-size: 13px;
-    font-weight: 600;
-    color: #64748b;
-  }
-  .stat-sub {
-    font-size: 11px;
-    color: #94a3b8;
-    margin-top: 4px;
-  }
-  .stat-red .stat-number { color: #dc2626; }
-  .stat-amber .stat-number { color: #d97706; }
-  .stat-blue .stat-number { color: #0284c7; }
-  .stat-green .stat-number { color: #16a34a; }
 
+  .stat-sub {
+    font-size: 11.5px;
+    color: #94a3b8;
+  }
+
+  .stat-red .stat-number { color: #dc2626; }
+  .stat-icon-red { color: #dc2626; }
+  .stat-amber .stat-number { color: #d97706; }
+  .stat-icon-amber { color: #d97706; }
+  .stat-blue .stat-number { color: #0284c7; }
+  .stat-icon-blue { color: #0284c7; }
+  .stat-green .stat-number { color: #16a34a; }
+  .stat-icon-green { color: #16a34a; }
+
+  /* Controls Bar */
   .controls-bar {
     display: flex;
     justify-content: space-between;
@@ -323,10 +1072,12 @@ const totalPatients = patients.length
     flex-wrap: wrap;
     gap: 12px;
   }
+
   .search-container {
     position: relative;
-    width: 320px;
+    width: 340px;
   }
+
   :global(.search-icon) {
     position: absolute;
     left: 12px;
@@ -334,22 +1085,30 @@ const totalPatients = patients.length
     transform: translateY(-50%);
     color: #94a3b8;
   }
+
   .search-input {
     width: 100%;
     box-sizing: border-box;
     padding: 9px 12px 9px 36px;
     border-radius: 8px;
     border: 1px solid #cbd5e1;
-    font-size: 13px;
+    font-size: 13.5px;
     outline: none;
+    background-color: #ffffff;
+    transition: border-color 0.15s ease;
   }
+
   .search-input:focus {
     border-color: #0284c7;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
   }
+
   .tab-group {
     display: flex;
     gap: 8px;
+    flex-wrap: wrap;
   }
+
   .tab-btn {
     display: inline-flex;
     align-items: center;
@@ -364,45 +1123,110 @@ const totalPatients = patients.length
     cursor: pointer;
     transition: all 0.15s ease;
   }
+
+  .tab-btn:hover {
+    background-color: #f8fafc;
+    border-color: #94a3b8;
+  }
+
   .tab-btn.active {
     background-color: #0f172a;
     color: #ffffff;
     border-color: #0f172a;
   }
+
   .tab-badge {
     background-color: #f1f5f9;
     color: #475569;
-    padding: 1px 6px;
+    padding: 1px 7px;
     border-radius: 9999px;
     font-size: 11px;
+    font-weight: 700;
   }
+
   .tab-btn.active .tab-badge {
     background-color: rgba(255,255,255,0.2);
     color: #ffffff;
   }
+
   .badge-red { background-color: #fee2e2; color: #dc2626; }
   .badge-amber { background-color: #fef3c7; color: #d97706; }
+  .badge-green { background-color: #dcfce7; color: #15803d; }
 
+  /* Sections */
   .section {
-    margin-bottom: 32px;
+    margin-bottom: 36px;
   }
-  .section-title {
+
+  .section-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .section-title-wrap {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+  }
+
+  .section-icon-wrap {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .section-icon-wrap.alert {
+    background-color: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+  }
+
+  .section-icon-wrap.stable {
+    background-color: #f0fdf4;
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
+  }
+
+  .section-title {
     font-size: 18px;
     font-weight: 700;
     color: #0f172a;
-    margin: 0 0 16px 0;
+    margin: 0;
   }
-  :global(.title-icon-alert) { color: #dc2626; }
-  :global(.title-icon-green) { color: #16a34a; }
 
-  .triage-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  .section-sub {
+    font-size: 12.5px;
+    color: #64748b;
+    margin: 2px 0 0;
   }
+
+  .priority-count-pill {
+    font-size: 12px;
+    font-weight: 700;
+    color: #dc2626;
+    background-color: #fee2e2;
+    border: 1px solid #fecaca;
+    padding: 3px 10px;
+    border-radius: 9999px;
+  }
+
+  .stable-count-pill {
+    font-size: 12px;
+    font-weight: 700;
+    color: #15803d;
+    background-color: #dcfce7;
+    border: 1px solid #bbf7d0;
+    padding: 3px 10px;
+    border-radius: 9999px;
+  }
+
+  /* Empty Box */
   .empty-box {
     background-color: #ffffff;
     border: 1px dashed #cbd5e1;
@@ -412,64 +1236,578 @@ const totalPatients = patients.length
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 8px;
+  }
+
+  .empty-icon-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: #f0fdf4;
+    color: #16a34a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+  }
+
+  .empty-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+
+  .empty-text {
+    font-size: 13.5px;
+    color: #64748b;
+    margin: 0;
+  }
+
+  /* Triage Cards */
+  .triage-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .triage-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(15,23,42,0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .card-priority-red {
+    border-left: 4px solid #dc2626;
+  }
+
+  .card-priority-amber {
+    border-left: 4px solid #d97706;
+  }
+
+  .triage-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .patient-main-info {
+    display: flex;
+    align-items: center;
     gap: 12px;
   }
-  :global(.empty-icon) { color: #16a34a; }
-  .empty-text { font-size: 14px; color: #64748b; margin: 0; }
 
+  .patient-avatar-box {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .patient-name-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .patient-card-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+
+  .priority-badge {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    letter-spacing: 0.05em;
+  }
+
+  .badge-critical {
+    background-color: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+  }
+
+  .badge-moderate {
+    background-color: #fffbeb;
+    color: #b45309;
+    border: 1px solid #fde68a;
+  }
+
+  .patient-meta-sub {
+    font-size: 12.5px;
+    color: #64748b;
+    margin: 3px 0 0;
+  }
+
+  .adherence-gauge-wrap {
+    min-width: 140px;
+  }
+
+  .gauge-label-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    margin-bottom: 4px;
+  }
+
+  .gauge-label { color: #64748b; }
+  .gauge-pct { color: #0f172a; }
+
+  /* Triggers Box */
+  .triage-triggers-box {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 10px 14px;
+  }
+
+  .card-priority-amber .triage-triggers-box {
+    background-color: #fffbeb;
+    border-color: #fde68a;
+  }
+
+  .trigger-label-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+
+  :global(.trigger-icon) {
+    color: #dc2626;
+  }
+
+  .card-priority-amber :global(.trigger-icon) {
+    color: #d97706;
+  }
+
+  .trigger-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #991b1b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .card-priority-amber .trigger-title {
+    color: #92400e;
+  }
+
+  .trigger-list {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 13px;
+    color: #7f1d1d;
+  }
+
+  .card-priority-amber .trigger-list {
+    color: #78350f;
+  }
+
+  .trigger-item {
+    margin-bottom: 2px;
+  }
+
+  /* Card Meds Row */
+  .card-meds-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .meds-sub-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+  }
+
+  .meds-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .med-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #334155;
+  }
+
+  /* Card Footer Actions */
+  .triage-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .action-btn-call {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #0284c7;
+    background-color: #f0f9ff;
+    border: 1px solid #bae6fd;
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.15s ease;
+  }
+
+  .action-btn-call:hover {
+    background-color: #e0f2fe;
+    color: #0369a1;
+  }
+
+  .text-muted-contact {
+    font-size: 12px;
+    color: #94a3b8;
+  }
+
+  .footer-right-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .action-btn-resolve {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background-color: #16a34a;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+
+  .action-btn-resolve:hover {
+    background-color: #15803d;
+  }
+
+  .action-btn-review {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background-color: #0f172a;
+    color: #ffffff;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.15s ease;
+  }
+
+  .action-btn-review:hover {
+    background-color: #1e293b;
+  }
+
+  /* Stable Grid */
   .stable-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 16px;
   }
+
   .roster-card {
     background: #ffffff;
     border: 1px solid #e2e8f0;
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 16px;
     box-shadow: 0 1px 3px rgba(15,23,42,0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
+
   .roster-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
   }
+
+  .roster-identity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .roster-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background-color: #f1f5f9;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .roster-name {
-    font-size: 15px;
+    font-size: 14.5px;
     font-weight: 700;
     color: #0f172a;
     margin: 0;
   }
+
+  .roster-sub-meta {
+    font-size: 11.5px;
+    color: #64748b;
+  }
+
   .status-badge-stable {
     background: #f0fdf4;
     color: #15803d;
     border: 1px solid #86efac;
     padding: 2px 8px;
     border-radius: 9999px;
-    font-size: 11px;
-    font-weight: 700;
+    font-size: 10.5px;
+    font-weight: 800;
   }
-  .roster-sub {
-    font-size: 12px;
+
+  .roster-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+
+  .metric-col {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .metric-label {
+    font-size: 10.5px;
     color: #64748b;
-    margin: 0 0 12px 0;
   }
+
+  .metric-val {
+    font-size: 13px;
+    color: #0f172a;
+  }
+
+  .metric-val.text-green {
+    color: #15803d;
+  }
+
   .roster-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 12px;
     border-top: 1px solid #f1f5f9;
-    padding-top: 10px;
+    padding-top: 8px;
   }
-  .roster-adherence {
+
+  .dob-text {
+    font-size: 11.5px;
+    color: #94a3b8;
+  }
+
+  .view-case-link {
+    font-size: 12.5px;
+    color: #0284c7;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  /* Resolution Modal */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 16px;
+  }
+
+  .modal-card {
+    background-color: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 20px 25px -5px rgba(15,23,42,0.15);
+    width: 100%;
+    max-width: 520px;
+    padding: 24px;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .modal-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  :global(.modal-icon) {
+    color: #0284c7;
+  }
+
+  .modal-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+
+  .modal-close-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+  }
+
+  .modal-patient-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #0284c7;
+    background-color: #f0f9ff;
+    border: 1px solid #bae6fd;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin: 0 0 16px 0;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .form-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+  }
+
+  .modal-select {
+    padding: 9px 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-size: 13.5px;
+    color: #0f172a;
+    outline: none;
+  }
+
+  .modal-textarea {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-size: 13.5px;
+    color: #0f172a;
+    outline: none;
+    resize: vertical;
+  }
+
+  .note-helper {
+    font-size: 11px;
     color: #64748b;
   }
-  .view-case-link {
-    color: #0284c7;
-    text-decoration: none;
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .btn-cancel {
+    padding: 9px 16px;
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 13px;
     font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+  }
+
+  .btn-submit-resolve {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    background-color: #16a34a;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background-color: #0f172a;
+    color: #ffffff;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    box-shadow: 0 10px 15px -3px rgba(15,23,42,0.3);
+    z-index: 3000;
+    animation: slide-up 0.2s ease forwards;
+  }
+
+  @keyframes slide-up {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
   }
 
   @media (max-width: 1024px) {
@@ -480,6 +1818,7 @@ const totalPatients = patients.length
       grid-template-columns: repeat(2, 1fr);
     }
   }
+
   @media (max-width: 640px) {
     .stats-grid {
       grid-template-columns: 1fr;
@@ -498,16 +1837,19 @@ const totalPatients = patients.length
 </style>
 
 <script>
+  import { parseClinicalSummary, renderClinicalBriefHtml } from '../utils/clinicalSummaryFormatter'
+
   function initDashboard() {
-    // Search filter
+    // 1. Live Search filter
     const searchInput = document.getElementById('search-input') as HTMLInputElement
     if (searchInput) {
       searchInput.addEventListener('input', () => {
         const query = searchInput.value.toLowerCase().trim()
         const cards = document.querySelectorAll<HTMLElement>('.patient-card')
-        cards.forEach(card => {
+        cards.forEach((card) => {
           const name = card.getAttribute('data-name') || ''
-          if (!query || name.includes(query)) {
+          const cardText = card.textContent?.toLowerCase() || ''
+          if (!query || name.includes(query) || cardText.includes(query)) {
             card.style.display = ''
           } else {
             card.style.display = 'none'
@@ -516,45 +1858,89 @@ const totalPatients = patients.length
       })
     }
 
-    // Tab filter
+    // 2. Priority Tab filter
     const tabs = document.querySelectorAll<HTMLButtonElement>('.tab-btn')
-    tabs.forEach(tab => {
+    tabs.forEach((tab) => {
       tab.addEventListener('click', () => {
-        tabs.forEach(t => {
+        tabs.forEach((t) => {
           t.classList.remove('active')
           t.setAttribute('aria-selected', 'false')
         })
         tab.classList.add('active')
         tab.setAttribute('aria-selected', 'true')
+
+        const selectedTab = tab.getAttribute('data-tab')
+        const cards = document.querySelectorAll<HTMLElement>('.patient-card')
+        const queueSection = document.getElementById('triage-queue-section')
+        const stableSection = document.getElementById('stable-roster-section')
+
+        if (selectedTab === 'all') {
+          if (queueSection) queueSection.style.display = ''
+          if (stableSection) stableSection.style.display = ''
+          cards.forEach((c) => (c.style.display = ''))
+        } else if (selectedTab === 'red') {
+          if (queueSection) queueSection.style.display = ''
+          if (stableSection) stableSection.style.display = 'none'
+          cards.forEach((c) => {
+            c.style.display = c.getAttribute('data-priority') === 'red' ? '' : 'none'
+          })
+        } else if (selectedTab === 'amber') {
+          if (queueSection) queueSection.style.display = ''
+          if (stableSection) stableSection.style.display = 'none'
+          cards.forEach((c) => {
+            c.style.display = c.getAttribute('data-priority') === 'amber' ? '' : 'none'
+          })
+        } else if (selectedTab === 'stable') {
+          if (queueSection) queueSection.style.display = 'none'
+          if (stableSection) stableSection.style.display = ''
+          cards.forEach((c) => {
+            c.style.display = c.getAttribute('data-priority') === 'stable' ? '' : 'none'
+          })
+        }
       })
     })
 
-    // Refresh button
+    // 3. Refresh button
     const refreshBtn = document.getElementById('refresh-btn')
+    const refreshIcon = document.getElementById('refresh-icon')
     if (refreshBtn) {
       refreshBtn.addEventListener('click', () => {
         refreshBtn.classList.add('btn-loading')
         refreshBtn.setAttribute('disabled', 'true')
+        if (refreshIcon) refreshIcon.classList.add('animate-spin')
         window.location.reload()
       })
     }
 
-    // AI summary
+    // 4. Clinical Cohort Synthesis (AI Briefing)
     const aiBtn = document.getElementById('ai-summary-btn')
     const aiBtnText = document.getElementById('ai-summary-btn-text')
     const aiBox = document.getElementById('ai-summary-box')
     const aiContent = document.getElementById('ai-summary-content')
+    const aiTopCloseBtn = document.getElementById('ai-top-close-btn')
+
+    let lastRawSummary = ''
+
+    function closeAiBrief() {
+      aiBox?.classList.add('hidden')
+    }
+
+    if (aiTopCloseBtn) {
+      aiTopCloseBtn.addEventListener('click', closeAiBrief)
+    }
+
     if (aiBtn && aiBox && aiContent) {
       aiBtn.addEventListener('click', async () => {
         aiBox.classList.remove('hidden')
         aiBtn.setAttribute('disabled', 'true')
         aiBtn.classList.add('btn-loading')
-        if (aiBtnText) aiBtnText.textContent = 'Analyzing Cohort...'
+        if (aiBtnText) aiBtnText.textContent = 'Synthesizing Telemetry...'
 
         // Render skeleton screen inside the summary box
         aiContent.innerHTML = `
-          <div class="skeleton skeleton-text" style="width: 90%;"></div>
-          <div class="skeleton skeleton-text" style="width: 75%;"></div>
+          <div class="skeleton skeleton-title" style="width: 35%;"></div>
+          <div class="skeleton skeleton-text" style="width: 95%;"></div>
+          <div class="skeleton skeleton-text" style="width: 85%;"></div>
           <div class="skeleton skeleton-text short"></div>
         `
 
@@ -563,20 +1949,112 @@ const totalPatients = patients.length
           const res = await fetch('/api/ai/patients-summary', {
             headers: { 'Authorization': `Bearer ${token}` }
           })
+
           if (res.ok) {
             const data = await res.json()
-            aiContent.textContent = data.summary || data.text || 'Active cohort telemetry processed. All patient recovery pathways monitored.'
+            const rawText = data.summary || data.text || 'Cohort telemetry active. All patient recovery plans monitored.'
+            lastRawSummary = rawText
+
+            const parsed = parseClinicalSummary(rawText)
+            aiContent.innerHTML = renderClinicalBriefHtml(parsed)
+
+            // Setup dynamic copy & close event listeners
+            const copyBtn = document.getElementById('synthesis-copy-btn')
+            const dismissBtn = document.getElementById('synthesis-close-btn')
+
+            if (copyBtn) {
+              copyBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(lastRawSummary).then(() => {
+                  showToast('✓ Clinical Brief copied to clipboard')
+                })
+              })
+            }
+
+            if (dismissBtn) {
+              dismissBtn.addEventListener('click', closeAiBrief)
+            }
           } else {
-            aiContent.textContent = 'Unable to retrieve Bedrock clinical summary. Please verify clinician authorization.'
+            aiContent.innerHTML = `
+              <div class="synthesis-fallback">
+                <p style="color: #b91c1c;">Unable to synthesize clinical cohort summary. Please check clinician permissions.</p>
+              </div>
+            `
           }
         } catch {
-          aiContent.textContent = 'Unable to connect to AI clinical summary service. Please check network connection.'
+          aiContent.innerHTML = `
+            <div class="synthesis-fallback">
+              <p style="color: #b91c1c;">Unable to connect to clinical intelligence service. Please check network telemetry connection.</p>
+            </div>
+          `
         } finally {
           aiBtn.removeAttribute('disabled')
           aiBtn.classList.remove('btn-loading')
-          if (aiBtnText) aiBtnText.textContent = 'AI Patient Summary'
+          if (aiBtnText) aiBtnText.textContent = 'Clinical Cohort Synthesis'
         }
       })
+    }
+
+    // 5. Resolve Exception Modal
+    const modal = document.getElementById('resolution-modal')
+    const modalCloseBtn = document.getElementById('modal-close-btn')
+    const modalCancelBtn = document.getElementById('modal-cancel-btn')
+    const modalForm = document.getElementById('resolution-form')
+    const modalPatientInfo = document.getElementById('modal-patient-info')
+    let currentResolvingCard: HTMLElement | null = null
+
+    function closeModal() {
+      modal?.classList.add('hidden')
+      currentResolvingCard = null
+    }
+
+    if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeModal)
+    if (modalCancelBtn) modalCancelBtn.addEventListener('click', closeModal)
+
+    const resolveButtons = document.querySelectorAll<HTMLButtonElement>('.action-btn-resolve')
+    resolveButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const patientName = btn.getAttribute('data-patient-name') || 'Patient'
+        if (modalPatientInfo) modalPatientInfo.textContent = `Patient: ${patientName} (Clinical Exception)`
+        currentResolvingCard = btn.closest('.triage-card')
+        modal?.classList.remove('hidden')
+      })
+    })
+
+    if (modalForm) {
+      modalForm.addEventListener('submit', (e) => {
+        e.preventDefault()
+        const noteEl = document.getElementById('resolution-note') as HTMLTextAreaElement
+        const noteVal = noteEl?.value || ''
+        if (noteVal.length < 10) {
+          alert('Please enter at least 10 characters for the clinical note.')
+          return
+        }
+
+        if (currentResolvingCard) {
+          currentResolvingCard.style.transition = 'all 0.3s ease'
+          currentResolvingCard.style.opacity = '0'
+          currentResolvingCard.style.transform = 'translateY(-10px)'
+          setTimeout(() => {
+            currentResolvingCard?.remove()
+            showToast('✓ Triage exception resolved & clinical outreach documented')
+          }, 300)
+        }
+
+        closeModal()
+        if (noteEl) noteEl.value = ''
+      })
+    }
+
+    // 6. Toast helper
+    function showToast(msg: string) {
+      const toast = document.getElementById('toast-msg')
+      if (toast) {
+        toast.textContent = msg
+        toast.classList.remove('hidden')
+        setTimeout(() => {
+          toast.classList.add('hidden')
+        }, 3500)
+      }
     }
   }
 

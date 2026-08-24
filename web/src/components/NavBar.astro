@@ -1,5 +1,15 @@
 ---
-import { TriangleAlert, Users, FilePlus2, ShieldCheck, LogOut } from '@lucide/astro'
+import {
+  Activity,
+  Users,
+  FilePlus2,
+  ShieldCheck,
+  LogOut,
+  Sparkles,
+  Menu,
+  X,
+  Stethoscope
+} from '@lucide/astro'
 import LanguageSwitcher from './LanguageSwitcher.astro'
 import { createTranslator, isLanguage } from '../i18n'
 
@@ -13,213 +23,500 @@ const cookieLang = Astro.cookies.get('carepro_language')?.value
 const lang = isLanguage(cookieLang) ? cookieLang : 'en'
 const t = createTranslator(lang)
 
-const links = [
-  { href: '/dashboard', label: t('nav.triageDashboard', 'Triage Dashboard'), icon: TriangleAlert, active: currentPath === '/' || currentPath === '/dashboard' },
-  { href: '/patients', label: t('nav.patients', 'Patients'), icon: Users, active: currentPath.startsWith('/patients') },
-  { href: '/cases/new', label: t('nav.newCase', 'New Case'), icon: FilePlus2, active: currentPath.startsWith('/cases') },
-  { href: '/fda', label: t('nav.fdaSafety', 'openFDA Safety'), icon: ShieldCheck, active: currentPath.startsWith('/fda') },
+const navSections = [
+  {
+    title: t('nav.sectionTriage', 'CLINICAL TRIAGE'),
+    links: [
+      {
+        href: '/dashboard',
+        label: t('nav.triageDashboard', 'Triage Dashboard'),
+        icon: Activity,
+        active: currentPath === '/' || currentPath === '/dashboard',
+        badge: t('nav.liveBadge', 'LIVE')
+      }
+    ]
+  },
+  {
+    title: t('nav.sectionCare', 'CARE MANAGEMENT'),
+    links: [
+      {
+        href: '/patients',
+        label: t('nav.patients', 'Patients Roster'),
+        icon: Users,
+        active: currentPath.startsWith('/patients')
+      },
+      {
+        href: '/cases/new',
+        label: t('nav.newCase', 'New Surgical Case'),
+        icon: FilePlus2,
+        active: currentPath.startsWith('/cases')
+      }
+    ]
+  },
+  {
+    title: t('nav.sectionSafety', 'DRUG & PROTOCOL SAFETY'),
+    links: [
+      {
+        href: '/fda',
+        label: t('nav.fdaSafety', 'openFDA Drug Safety'),
+        icon: ShieldCheck,
+        active: currentPath.startsWith('/fda')
+      }
+    ]
+  }
 ]
 ---
 
-<nav class="sidebar" aria-label="Main navigation">
-  <div class="brand-header">
-    <a href="/dashboard" class="brand">
-      <span class="brand-plus" aria-hidden="true">+</span> CarePro
-    </a>
+<!-- Mobile Header Bar -->
+<div class="mobile-topbar" aria-label="Mobile top navigation">
+  <a href="/dashboard" class="mobile-brand">
+    <div class="brand-icon-wrap">
+      <Stethoscope size={18} class="brand-icon" aria-hidden="true" />
+    </div>
+    <span class="brand-title">RemoteCare <strong>PRO</strong></span>
+  </a>
+  <div class="mobile-topbar-actions">
     <LanguageSwitcher variant="dark" />
+    <button id="mobile-menu-toggle" class="mobile-menu-btn" aria-label="Toggle navigation menu" aria-expanded="false">
+      <Menu size={22} id="mobile-menu-icon" aria-hidden="true" />
+      <X size={22} id="mobile-close-icon" class="hidden" aria-hidden="true" />
+    </button>
+  </div>
+</div>
+
+<!-- Backdrop overlay for mobile drawer -->
+<div id="sidebar-backdrop" class="sidebar-backdrop hidden" aria-hidden="true"></div>
+
+<!-- Lateral Navigation Sidebar -->
+<nav id="main-sidebar" class="sidebar" aria-label="Main Clinical Navigation">
+  <!-- Brand Header -->
+  <div class="brand-section">
+    <a href="/dashboard" class="brand">
+      <div class="brand-icon-wrap">
+        <Stethoscope size={20} class="brand-icon" aria-hidden="true" />
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">RemoteCare</span>
+        <span class="brand-badge">CLINICAL PRO</span>
+      </div>
+    </a>
+    <div class="telemetry-pill">
+      <span class="pulse-dot"></span>
+      <span class="telemetry-text">{t('nav.telemetryConnected', 'Live Telemetry')}</span>
+    </div>
   </div>
 
-  <ul class="nav-links">
-    {links.map((link) => {
-      const IconComponent = link.icon
-      return (
-        <li>
-          <a href={link.href} class={`nav-link ${link.active ? 'active' : ''}`}>
-            <IconComponent size={18} aria-hidden="true" />
-            <span>{link.label}</span>
-          </a>
-        </li>
-      )
-    })}
-  </ul>
+  <!-- Grouped Nav Links -->
+  <div class="nav-scroll-area">
+    {navSections.map((section) => (
+      <div class="nav-group">
+        <div class="group-title">{section.title}</div>
+        <ul class="nav-links">
+          {section.links.map((link) => {
+            const IconComponent = link.icon
+            return (
+              <li>
+                <a
+                  href={link.href}
+                  class={`nav-link ${link.active ? 'active' : ''}`}
+                  aria-current={link.active ? 'page' : undefined}
+                >
+                  <IconComponent size={18} class="nav-icon" aria-hidden="true" />
+                  <span class="nav-label">{link.label}</span>
+                  {link.badge && <span class="nav-badge-pill">{link.badge}</span>}
+                </a>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
+    ))}
+  </div>
 
+  <!-- Bottom Clinician Card & Session Controls -->
   <div class="bottom-section">
-    <div class="divider"></div>
-    <button id="nav-logout-btn" class="logout-btn" aria-label={t('nav.logout', 'Sign Out')}>
-      <LogOut size={18} aria-hidden="true" />
-      <span>{t('nav.logout', 'Sign Out')}</span>
-    </button>
-    <div class="user-card">
+    <div class="lang-switch-wrap">
+      <span class="lang-label">{t('nav.language', 'Language')}:</span>
+      <LanguageSwitcher variant="dark" />
+    </div>
+
+    <div class="user-card" id="user-profile-card">
       <div class="avatar" id="nav-user-avatar">CL</div>
       <div class="user-details">
         <div class="user-name" id="nav-user-email">clinician@example.com</div>
-        <div class="user-role">{t('nav.clinicianRole', 'Clinician Admin')}</div>
+        <div class="user-role">{t('nav.clinicianRole', 'Attending Clinician')}</div>
       </div>
     </div>
+
+    <button id="nav-logout-btn" class="logout-btn" aria-label={t('nav.logout', 'Sign Out of Clinic')}>
+      <LogOut size={16} aria-hidden="true" />
+      <span>{t('nav.logout', 'Sign Out')}</span>
+    </button>
   </div>
 </nav>
 
 <style>
+  .hidden {
+    display: none !important;
+  }
+
+  /* Mobile Top Bar */
+  .mobile-topbar {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: #0f172a;
+    border-bottom: 1px solid #1e293b;
+    padding: 0 16px;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 1050;
+  }
+
+  .mobile-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .mobile-topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .mobile-menu-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s ease, background-color 0.15s ease;
+  }
+
+  .mobile-menu-btn:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  /* Sidebar Container */
   .sidebar {
-    width: 240px;
-    min-height: 100vh;
+    width: 260px;
+    height: 100vh;
     background-color: #0f172a;
     border-right: 1px solid #1e293b;
     display: flex;
     flex-direction: column;
-    padding: 24px 16px;
+    padding: 20px 14px;
     position: fixed;
     top: 0;
     left: 0;
-    z-index: 100;
+    z-index: 1000;
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.2);
+    user-select: none;
   }
-  .brand-header {
+
+  /* Brand Section */
+  .brand-section {
+    padding: 0 6px 18px 6px;
+    border-bottom: 1px solid #1e293b;
+    margin-bottom: 16px;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 28px;
-    padding: 0 4px;
-    gap: 8px;
+    flex-direction: column;
+    gap: 10px;
   }
+
   .brand {
-    font-size: 19px;
-    font-weight: 700;
-    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
   }
-  .brand-plus {
-    color: #38bdf8;
-    font-size: 22px;
-    font-weight: 800;
-  }
-  .nav-links {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    flex: 1;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-  .nav-link {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #cbd5e1;
-    text-decoration: none;
-    transition: all 0.15s ease;
-  }
-  .nav-link:hover {
-    color: #ffffff;
-    background-color: rgba(255, 255, 255, 0.08);
-  }
-  .nav-link.active {
-    color: #ffffff;
-    background-color: #0284c7;
-    font-weight: 600;
-    box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25);
-  }
-  .bottom-section {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .divider {
-    height: 1px;
-    background-color: #1e293b;
-    margin: 8px 0;
-  }
-  .logout-btn {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #94a3b8;
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-    width: 100%;
-    text-align: left;
-    transition: all 0.15s ease;
-  }
-  .logout-btn:hover {
-    color: #f87171;
-    background-color: rgba(248, 113, 113, 0.08);
-  }
-  .user-card {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    border-radius: 8px;
-    background-color: #1e293b;
-    overflow: hidden;
-  }
-  .avatar {
+
+  .brand-icon-wrap {
     width: 36px;
     height: 36px;
-    border-radius: 50%;
-    background-color: #0284c7;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
     color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
-    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
     flex-shrink: 0;
   }
+
+  .brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+  }
+
+  .brand-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.01em;
+  }
+
+  .brand-badge {
+    font-size: 9px;
+    font-weight: 800;
+    color: #38bdf8;
+    letter-spacing: 0.1em;
+  }
+
+  .telemetry-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    padding: 4px 10px;
+    border-radius: 9999px;
+    align-self: flex-start;
+  }
+
+  .pulse-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #10b981;
+    box-shadow: 0 0 6px #10b981;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(0.95); opacity: 0.8; }
+    50% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(0.95); opacity: 0.8; }
+  }
+
+  .telemetry-text {
+    font-size: 11px;
+    font-weight: 600;
+    color: #34d399;
+  }
+
+  /* Nav Links Scroll Area */
+  .nav-scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding-right: 2px;
+  }
+
+  .nav-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .group-title {
+    font-size: 10px;
+    font-weight: 700;
+    color: #64748b;
+    letter-spacing: 0.08em;
+    padding: 0 10px;
+    text-transform: uppercase;
+  }
+
+  .nav-links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #94a3b8;
+    text-decoration: none;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+
+  .nav-link:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.06);
+    transform: translateX(2px);
+  }
+
+  .nav-link.active {
+    color: #ffffff;
+    background: linear-gradient(90deg, rgba(2, 132, 199, 0.25) 0%, rgba(2, 132, 199, 0.08) 100%);
+    border-left: 3px solid #38bdf8;
+    font-weight: 600;
+    padding-left: 9px;
+  }
+
+  .nav-link.active .nav-icon {
+    color: #38bdf8;
+  }
+
+  .nav-label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nav-badge-pill {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 9999px;
+    background-color: #ef4444;
+    color: #ffffff;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+    letter-spacing: 0.05em;
+  }
+
+  /* Bottom Section */
+  .bottom-section {
+    padding-top: 14px;
+    border-top: 1px solid #1e293b;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .lang-switch-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4px;
+  }
+
+  .lang-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748b;
+  }
+
+  .user-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    overflow: hidden;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+    letter-spacing: 0.05em;
+  }
+
   .user-details {
     overflow: hidden;
     flex: 1;
     min-width: 0;
   }
+
   .user-name {
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 600;
     color: #f1f5f9;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+
   .user-role {
-    font-size: 11px;
+    font-size: 10.5px;
     color: #94a3b8;
   }
+
+  .logout-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #94a3b8;
+    background-color: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.15s ease;
+  }
+
+  .logout-btn:hover {
+    color: #f87171;
+    background-color: rgba(248, 113, 113, 0.1);
+    border-color: rgba(248, 113, 113, 0.2);
+  }
+
+  /* Responsive styling */
   @media (max-width: 768px) {
+    .mobile-topbar {
+      display: flex;
+    }
+
     .sidebar {
-      position: static;
-      width: 100%;
-      min-height: auto;
-      flex-direction: column;
-      padding: 16px;
+      transform: translateX(-100%);
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      top: 60px;
+      height: calc(100vh - 60px);
+      z-index: 1040;
     }
-    .nav-links {
-      flex-direction: row;
-      flex-wrap: wrap;
-      gap: 6px;
+
+    .sidebar.mobile-open {
+      transform: translateX(0);
     }
-    .nav-link {
-      padding: 8px 12px;
-      font-size: 13px;
-    }
-    .bottom-section {
-      display: none;
+
+    .sidebar-backdrop {
+      position: fixed;
+      top: 60px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(2px);
+      z-index: 1030;
     }
   }
 </style>
 
 <script>
-  function initNavAuth() {
+  function initNavigation() {
     const email = localStorage.getItem('email') || 'clinician@example.com'
     const emailEl = document.getElementById('nav-user-email')
     const avatarEl = document.getElementById('nav-user-avatar')
@@ -236,8 +533,39 @@ const links = [
         window.location.href = '/login'
       })
     }
+
+    // Mobile drawer toggle
+    const menuBtn = document.getElementById('mobile-menu-toggle')
+    const sidebar = document.getElementById('main-sidebar')
+    const backdrop = document.getElementById('sidebar-backdrop')
+    const menuIcon = document.getElementById('mobile-menu-icon')
+    const closeIcon = document.getElementById('mobile-close-icon')
+
+    function toggleMobileMenu() {
+      const isOpen = sidebar?.classList.contains('mobile-open')
+      if (isOpen) {
+        sidebar?.classList.remove('mobile-open')
+        backdrop?.classList.add('hidden')
+        menuIcon?.classList.remove('hidden')
+        closeIcon?.classList.add('hidden')
+        menuBtn?.setAttribute('aria-expanded', 'false')
+      } else {
+        sidebar?.classList.add('mobile-open')
+        backdrop?.classList.remove('hidden')
+        menuIcon?.classList.add('hidden')
+        closeIcon?.classList.remove('hidden')
+        menuBtn?.setAttribute('aria-expanded', 'true')
+      }
+    }
+
+    if (menuBtn) {
+      menuBtn.addEventListener('click', toggleMobileMenu)
+    }
+    if (backdrop) {
+      backdrop.addEventListener('click', toggleMobileMenu)
+    }
   }
 
-  initNavAuth()
-  document.addEventListener('astro:page-load', initNavAuth)
+  initNavigation()
+  document.addEventListener('astro:page-load', initNavigation)
 </script>

@@ -9,6 +9,12 @@ export interface NavTranslations {
   fdaSafety: string
   logout: string
   clinicianRole: string
+  sectionTriage?: string
+  sectionCare?: string
+  sectionSafety?: string
+  telemetryConnected?: string
+  liveBadge?: string
+  language?: string
 }
 
 export interface TriageTranslations {
@@ -67,6 +73,18 @@ export interface TriageTranslations {
   medianResponse: string
   noResponseData: string
   responseTarget: string
+  aiSummary?: string
+  aiSummaryTitle?: string
+  liveConnected?: string
+  queueTitle?: string
+  stableRosterTitle?: string
+  statusStable?: string
+  tabAll?: string
+  tabRed?: string
+  tabAmber?: string
+  totalActive?: string
+  reasonSeverePain?: string
+  reasonDiscomfort?: string
 }
 
 export interface PatientCardTranslations {

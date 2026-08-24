@@ -33,7 +33,7 @@ try {
           <span>{t('caseDetail.backToCaseDetail', 'Back to Case Detail')}</span>
         </a>
         <h1 class="title">{t('recommendationsList.title', 'Clinical Recovery Instructions')}</h1>
-        <p class="subtitle">{t('recommendations.caseSubtitle', 'Published physical therapy milestones and Amazon Bedrock clinical advice')}</p>
+        <p class="subtitle">{t('recommendations.caseSubtitle', 'Published physical therapy milestones and evidence-based clinical protocols')}</p>
       </div>
 
       <a href={`/cases/${caseId}/recommendations`} class="add-rec-btn">
@@ -54,7 +54,7 @@ try {
             <div class="rec-card-header">
               <span class="rec-badge">
                 <Bot size={14} aria-hidden="true" />
-                <span>{rec.title || 'Bedrock Clinical Protocol'}</span>
+                <span>{rec.title || 'Clinical Recovery Protocol'}</span>
               </span>
               <span class="rec-date">{rec.date || rec.created_at || 'Recent'}</span>
             </div>
