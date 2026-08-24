@@ -23,7 +23,7 @@ router = APIRouter(
 
 def _is_expired(expires_at: datetime | None) -> bool:
     if not expires_at:
-        return True
+        return False
     now = datetime.now(timezone.utc)
     if expires_at.tzinfo is None:
         expires_at = expires_at.replace(tzinfo=timezone.utc)
@@ -180,7 +180,7 @@ def request_patient_code(req: schemas.PatientRequestCodeRequest, db: Session = D
         else:
             code = f"{secrets.randbelow(900000) + 100000}"
             user.invite_code = code
-            user.invite_code_expires_at = datetime.now(timezone.utc) + timedelta(minutes=15)
+            user.invite_code_expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
             db.commit()
             logger.info(f"[/auth/patient/request-code] Generated fresh code '{code}' for '{user.email}'")
 

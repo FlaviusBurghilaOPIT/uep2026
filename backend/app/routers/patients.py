@@ -42,7 +42,7 @@ def invite_patient(
         role=models.UserRole.patient,
         status="pending_onboarding",
         invite_code=invite_code,
-        invite_code_expires_at=datetime.now(timezone.utc) + timedelta(days=7),
+        invite_code_expires_at=datetime.now(timezone.utc) + timedelta(days=30),
         date_of_birth=req.date_of_birth,
     )
     db.add(patient)

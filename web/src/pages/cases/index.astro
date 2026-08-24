@@ -1,6 +1,6 @@
 ---
 import AppLayout from '../../layouts/AppLayout.astro'
-import { Plus, ArrowRight } from '@lucide/astro'
+import { Plus, ArrowRight, Pill, Activity, Phone, Calendar, Stethoscope, User, HeartPulse } from '@lucide/astro'
 import { apiFetch } from '../../api/client'
 import { createTranslator, isLanguage } from '../../i18n'
 import '../../index.css'
@@ -28,14 +28,31 @@ try {
   cases = []
   patients = []
 }
+
+function calculatePostOpDay(surgeryDateStr?: string | null): string {
+  if (!surgeryDateStr) return 'Day 1 Post-Op'
+  try {
+    const surgeryDate = new Date(surgeryDateStr)
+    if (isNaN(surgeryDate.getTime())) return 'Day 1 Post-Op'
+    const now = new Date()
+    const diffTime = Math.abs(now.getTime() - surgeryDate.getTime())
+    const diffDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)))
+    return `Day ${diffDays} Post-Op`
+  } catch {
+    return 'Day 1 Post-Op'
+  }
+}
 ---
 
 <AppLayout title={`${t('patients.cases', 'Surgical Cases')} — RemoteCare Pro`}>
   <div class="cases-page">
     <div class="header">
       <div>
-        <h1 class="title">{t('patients.cases', 'Surgical Cases')}</h1>
-        <p class="subtitle">{t('triage.subtitle', 'Active post-operative patient recovery cases')}</p>
+        <div class="title-row">
+          <h1 class="title">{t('patients.cases', 'Surgical Cases')}</h1>
+          <span class="cohort-badge">{cases.length} {cases.length === 1 ? 'Active Case' : 'Active Cases'}</span>
+        </div>
+        <p class="subtitle">{t('triage.subtitle', 'Active post-operative patient recovery cases • Medication regimens & clinical protocols')}</p>
       </div>
       <a href="/cases/new" class="new-case-btn">
         <Plus size={16} aria-hidden="true" />
@@ -43,24 +60,98 @@ try {
       </a>
     </div>
 
+    <!-- Quick Stats Bar -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon-box bg-blue">
+          <Stethoscope size={20} class="text-blue" />
+        </div>
+        <div>
+          <p class="stat-label">Total Surgical Cases</p>
+          <p class="stat-value">{cases.length}</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-box bg-emerald">
+          <HeartPulse size={20} class="text-emerald" />
+        </div>
+        <div>
+          <p class="stat-label">Enrolled Patients</p>
+          <p class="stat-value">{patients.length}</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-box bg-purple">
+          <Activity size={20} class="text-purple" />
+        </div>
+        <div>
+          <p class="stat-label">Clinical Care Pathways</p>
+          <p class="stat-value">TKA • THA • Spine • ACL</p>
+        </div>
+      </div>
+    </div>
+
     <div class="cases-grid">
       {cases.length === 0 ? (
         <div class="empty-card">
+          <Stethoscope size={40} class="empty-icon" />
           <p class="empty-text">{t('patients.noCases', 'No active surgical cases found.')}</p>
-          <a href="/patients" class="primary-link">{t('patients.title', 'View Patients Roster')} &rarr;</a>
+          <p class="empty-sub">Enroll a patient or create a surgical case to initiate remote recovery monitoring.</p>
+          <a href="/patients/new" class="primary-link">+ Enroll New Patient &rarr;</a>
         </div>
       ) : (
         cases.map((c) => {
           const patient = patients.find((p) => p.id === c.patient_id)
+          const postOpDay = calculatePostOpDay(c.surgery_date)
           return (
             <div class="case-card">
               <div class="case-card-header">
-                <h3 class="case-patient">{patient?.full_name || t('common.loading', 'Assigned Patient')}</h3>
+                <div class="patient-title-group">
+                  <div class="patient-avatar">
+                    <User size={16} />
+                  </div>
+                  <div>
+                    <h3 class="case-patient">{patient?.full_name || t('common.loading', 'Assigned Patient')}</h3>
+                    <p class="patient-email">{patient?.email || '—'}</p>
+                  </div>
+                </div>
                 <span class="status-badge">{(c.status || 'ACTIVE').toUpperCase()}</span>
               </div>
-              <p class="case-procedure">{c.surgery_type}</p>
-              <div class="case-actions">
-                <a href={`/cases/${c.id}`} class="view-case-link">
+
+              <div class="procedure-box">
+                <div class="procedure-name">
+                  <Stethoscope size={15} class="proc-icon" />
+                  <span>{c.surgery_type}</span>
+                </div>
+                <span class="postop-pill">{postOpDay}</span>
+              </div>
+
+              {c.surgery_date && (
+                <div class="meta-row">
+                  <Calendar size={14} class="meta-icon" />
+                  <span>Surgery Date: <strong>{c.surgery_date}</strong></span>
+                </div>
+              )}
+
+              {c.emergency_contact_phone && (
+                <div class="meta-row">
+                  <Phone size={14} class="meta-icon" />
+                  <span>Emergency: <strong>{c.emergency_contact_phone}</strong> {c.emergency_contact_name ? `(${c.emergency_contact_name})` : ''}</span>
+                </div>
+              )}
+
+              <div class="card-divider"></div>
+
+              <div class="quick-links-row">
+                <a href={`/cases/${c.id}/medications`} class="sub-link" title="Prescribe and view medications">
+                  <Pill size={14} />
+                  <span>Meds</span>
+                </a>
+                <a href={`/cases/${c.id}/recommendations`} class="sub-link" title="Recovery instructions and guidelines">
+                  <Activity size={14} />
+                  <span>Protocols</span>
+                </a>
+                <a href={`/cases/${c.id}`} class="view-case-btn">
                   <span>{t('patientCard.viewCase', 'View Case')}</span>
                   <ArrowRight size={14} aria-hidden="true" />
                 </a>
@@ -76,7 +167,7 @@ try {
 <style>
   .cases-page {
     padding: 32px;
-    max-width: 1100px;
+    max-width: 1200px;
     margin: 0 auto;
   }
   .header {
@@ -85,11 +176,25 @@ try {
     align-items: flex-start;
     margin-bottom: 24px;
   }
+  .title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
   .title {
     font-size: 24px;
     font-weight: 700;
     color: #0f172a;
-    margin: 0 0 6px 0;
+    margin: 0;
+  }
+  .cohort-badge {
+    background: #e0f2fe;
+    color: #0369a1;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 9999px;
   }
   .subtitle {
     font-size: 14px;
@@ -107,30 +212,99 @@ try {
     font-size: 14px;
     font-weight: 600;
     text-decoration: none;
-    transition: background-color 0.15s ease;
+    transition: background-color 0.15s ease, transform 0.1s ease;
+    box-shadow: 0 1px 2px rgba(2, 132, 199, 0.2);
   }
   .new-case-btn:hover {
     background-color: #0369a1;
+    transform: translateY(-1px);
   }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  }
+  .stat-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .bg-blue { background: #e0f2fe; }
+  .text-blue { color: #0284c7; }
+  .bg-emerald { background: #dcfce7; }
+  .text-emerald { color: #059669; }
+  .bg-purple { background: #f3e8ff; }
+  .text-purple { color: #7c3aed; }
+  .stat-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    margin: 0 0 2px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+
   .cases-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 20px;
   }
   .case-card {
     background-color: #ffffff;
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border-radius: 14px;
     padding: 20px;
-    box-shadow: 0 1px 3px rgba(15,23,42,0.05);
+    box-shadow: 0 1px 3px rgba(15,23,42,0.04);
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  }
+  .case-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+    border-color: #cbd5e1;
   }
   .case-card-header {
     display: flex;
     justify-content: space-between;
+    align-items: flex-start;
+  }
+  .patient-title-group {
+    display: flex;
     align-items: center;
+    gap: 10px;
+  }
+  .patient-avatar {
+    width: 34px;
+    height: 34px;
+    background: #f1f5f9;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #475569;
   }
   .case-patient {
     font-size: 16px;
@@ -138,49 +312,146 @@ try {
     color: #0f172a;
     margin: 0;
   }
+  .patient-email {
+    font-size: 12px;
+    color: #64748b;
+    margin: 2px 0 0 0;
+  }
   .status-badge {
     background-color: #f0fdf4;
     color: #15803d;
     border: 1px solid #86efac;
-    padding: 2px 8px;
+    padding: 3px 9px;
     border-radius: 9999px;
     font-size: 11px;
     font-weight: 700;
+    letter-spacing: 0.04em;
   }
-  .case-procedure {
+
+  .procedure-box {
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    padding: 10px 14px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .procedure-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+  }
+  .proc-icon {
+    color: #0284c7;
+  }
+  .postop-pill {
+    font-size: 11px;
+    font-weight: 700;
+    color: #0369a1;
+    background: #e0f2fe;
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+
+  .meta-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 13px;
-    color: #64748b;
-    margin: 0;
+    color: #475569;
   }
-  .case-actions {
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid #f1f5f9;
+  .meta-icon {
+    color: #94a3b8;
+    flex-shrink: 0;
   }
-  .view-case-link {
+
+  .card-divider {
+    height: 1px;
+    background: #f1f5f9;
+    margin: 4px 0;
+  }
+
+  .quick-links-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .sub-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 6px 10px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.15s ease;
+  }
+  .sub-link:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    border-color: #cbd5e1;
+  }
+  .view-case-btn {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    color: #0284c7;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
+    color: #0284c7;
     text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+    margin-left: auto;
   }
+  .view-case-btn:hover {
+    background: #f0f9ff;
+    color: #0369a1;
+  }
+
   .empty-card {
     grid-column: 1 / -1;
-    background-color: #ffffff;
-    border: 1px dashed #cbd5e1;
-    border-radius: 12px;
-    padding: 36px;
+    background: #ffffff;
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 16px;
+    padding: 48px 24px;
     text-align: center;
   }
+  .empty-icon {
+    color: #94a3b8;
+    margin-bottom: 12px;
+  }
   .empty-text {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 6px 0;
+  }
+  .empty-sub {
+    font-size: 14px;
     color: #64748b;
-    margin-bottom: 16px;
+    margin: 0 0 20px 0;
   }
   .primary-link {
-    color: #0284c7;
+    display: inline-block;
+    background: #0284c7;
+    color: #ffffff;
+    font-size: 14px;
     font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 8px;
     text-decoration: none;
+  }
+  .primary-link:hover {
+    background: #0369a1;
   }
 </style>

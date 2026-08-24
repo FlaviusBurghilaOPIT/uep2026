@@ -54,7 +54,7 @@ try {
       const [sRes, dRes, mRes] = await Promise.all([
         apiFetch<any[]>(`/symptoms/patients/${p.id}/symptoms`, { token: cookieToken }).catch(() => []),
         apiFetch<any[]>(`/adherence/patients/${p.id}`, { token: cookieToken }).catch(() => []),
-        apiFetch<any[]>(`/medications/cases/${pCase.id}`, { token: cookieToken }).catch(() => [])
+        apiFetch<any[]>(`/cases/${pCase.id}/medications`, { token: cookieToken }).catch(() => [])
       ])
       symptoms = sRes || []
       doseLogs = dRes || []
