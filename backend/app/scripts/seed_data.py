@@ -20,9 +20,10 @@ Usage:
     python app/scripts/seed_data.py --mode full --reset
 """
 
-import sys
-import os
 import argparse
+import os
+import secrets
+import sys
 from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 
@@ -200,10 +201,10 @@ def seed_database(
             return
 
         # =========================================================================
-        # MODE 2: Full Simulation Mode (Patient + Case + Roster)
+        # MODE 2: Full Simulation Mode (Patient + Case + Meds + Roster)
         # =========================================================================
 
-        # Main Demo Patient: Sarah Mitchell
+        # 2. Main Demo Patient: Sarah Mitchell
         patient = db.query(models.User).filter(models.User.email == p_email).first()
         if not patient:
             patient = models.User(
@@ -211,24 +212,23 @@ def seed_database(
                 full_name="Sarah Mitchell",
                 role=models.UserRole.patient,
                 status="active",
+                date_of_birth="1988-04-12",
+                phone="+1 555-0199",
                 invite_code=p_otp,
                 invite_code_expires_at=datetime.now(timezone.utc) + timedelta(days=365),
-                password_hash=hash_password(c_password),
-                date_of_birth=date(1988, 4, 12),
-                phone="+1 555-0199",
             )
             db.add(patient)
             db.commit()
             db.refresh(patient)
             print(f"Created patient: {p_email}")
         else:
+            patient.status = "active"
             patient.invite_code = p_otp
             patient.invite_code_expires_at = datetime.now(timezone.utc) + timedelta(days=365)
-            patient.status = "active"
             db.commit()
             print(f"Verified patient: {p_email}")
 
-        # Active Surgical Case: Total Knee Arthroplasty (TKA)
+        # Case: Total Knee Arthroplasty (TKA)
         case = (
             db.query(models.Case)
             .filter(
@@ -243,10 +243,8 @@ def seed_database(
                 patient_id=patient.id,
                 clinician_id=clinician.id,
                 surgery_type="Total Knee Arthroplasty",
-                surgery_date=today - timedelta(days=3),
-                status=models.CaseStatus.active,
-                notes="Right knee primary TKA. Patient recovering well, moderate swelling expected. Cryotherapy 3x daily.",
-                discharge_date=today - timedelta(days=2),
+                surgery_date=str(today - timedelta(days=3)),
+                status="active",
                 emergency_contact_name="Dr. Sarah Connor",
                 emergency_contact_phone="+1 555-0122",
             )
@@ -255,7 +253,7 @@ def seed_database(
             db.refresh(case)
             print(f"Created case: {case.surgery_type} for Sarah Mitchell")
         else:
-            case.status = models.CaseStatus.active
+            case.status = "active"
             case.emergency_contact_name = "Dr. Sarah Connor"
             case.emergency_contact_phone = "+1 555-0122"
             db.commit()
@@ -264,42 +262,27 @@ def seed_database(
         meds_data = [
             {
                 "name": "Ibuprofen",
-                "dosage": "400mg",
-                "form": models.MedicationForm.tablet,
-                "frequency": models.FrequencyType.bid,
-                "route": "oral",
-                "schedule_times": ["08:00", "20:00"],
-                "instructions": "Take with meals or milk to reduce stomach upset.",
-                "duration_days": 10,
-                "prescribed_days": 10,
-                "is_prn": False,
-                "is_scheduled": True,
+                "dose": "400mg",
+                "schedule_text": "2x daily (08:00, 20:00)",
+                "duration": "10 days",
+                "notes": "Take with meals or milk to reduce stomach upset.",
+                "times": ["08:00", "20:00"],
             },
             {
                 "name": "Amoxicillin",
-                "dosage": "500mg",
-                "form": models.MedicationForm.capsule,
-                "frequency": models.FrequencyType.bid,
-                "route": "oral",
-                "schedule_times": ["08:00", "20:00"],
-                "instructions": "Complete the entire course as prescribed.",
-                "duration_days": 7,
-                "prescribed_days": 7,
-                "is_prn": False,
-                "is_scheduled": True,
+                "dose": "500mg",
+                "schedule_text": "2x daily (08:00, 20:00)",
+                "duration": "7 days",
+                "notes": "Complete the entire course as prescribed.",
+                "times": ["08:00", "20:00"],
             },
             {
                 "name": "Oxycodone",
-                "dosage": "5mg",
-                "form": models.MedicationForm.tablet,
-                "frequency": models.FrequencyType.prn,
-                "route": "oral",
-                "schedule_times": [],
-                "instructions": "Take as needed for severe breakthrough pain. Maximum 4 per day.",
-                "duration_days": 5,
-                "prescribed_days": 5,
-                "is_prn": True,
-                "is_scheduled": False,
+                "dose": "5mg",
+                "schedule_text": "As needed (PRN)",
+                "duration": "5 days",
+                "notes": "Take as needed for severe breakthrough pain. Maximum 4 per day.",
+                "times": [],
             },
         ]
 
@@ -316,36 +299,28 @@ def seed_database(
                 med = models.Medication(
                     case_id=case.id,
                     name=m_data["name"],
-                    dosage=m_data["dosage"],
-                    form=m_data["form"],
-                    frequency=m_data["frequency"],
-                    route=m_data["route"],
-                    schedule_times=m_data["schedule_times"],
-                    instructions=m_data["instructions"],
-                    duration_days=m_data["duration_days"],
-                    prescribed_days=m_data["prescribed_days"],
-                    is_prn=m_data["is_prn"],
-                    is_scheduled=m_data["is_scheduled"],
-                    start_date=today - timedelta(days=2),
+                    dose=m_data["dose"],
+                    schedule_text=m_data["schedule_text"],
+                    duration=m_data["duration"],
+                    notes=m_data["notes"],
                 )
                 db.add(med)
                 db.commit()
                 db.refresh(med)
 
                 # Generate scheduled reminders for today
-                if med.is_scheduled and med.schedule_times:
-                    for t_str in med.schedule_times:
+                if m_data["times"]:
+                    for t_str in m_data["times"]:
                         hh, mm = map(int, t_str.split(":"))
                         sched_dt = datetime.combine(today, time(hh, mm), tzinfo=timezone.utc)
                         rem = models.ScheduledReminder(
-                            case_id=case.id,
                             medication_id=med.id,
                             scheduled_time=sched_dt,
-                            status=models.ReminderStatus.pending,
+                            status="pending",
                         )
                         db.add(rem)
                     db.commit()
-                print(f"Created prescription: {med.name} {med.dosage} ({med.frequency.value})")
+                print(f"Created prescription: {med.name} {med.dose}")
 
         # Care Instructions / Recommendations
         recs = [
@@ -366,7 +341,6 @@ def seed_database(
                 rec = models.Recommendation(
                     case_id=case.id,
                     text=rec_text,
-                    category="Post-Op Care",
                 )
                 db.add(rec)
         db.commit()
@@ -378,54 +352,54 @@ def seed_database(
             {
                 "email": "john.davies@example.com",
                 "name": "John Davies",
-                "dob": date(1965, 8, 14),
+                "dob": "1965-08-14",
                 "surgery": "Total Hip Arthroplasty",
                 "days_ago": 4,
                 "med_name": "Celecoxib",
-                "dosage": "200mg",
-                "form": models.MedicationForm.capsule,
-                "freq": models.FrequencyType.bid,
+                "dose": "200mg",
+                "schedule_text": "2x daily (08:00, 20:00)",
+                "duration": "10 days",
                 "status": "missed_dose",
-                "checkin": "ok",
+                "checkin": models.CheckInFeeling.ok,
             },
             {
                 "email": "emma.wilson@example.com",
                 "name": "Emma Wilson",
-                "dob": date(1979, 11, 23),
+                "dob": "1979-11-23",
                 "surgery": "Rotator Cuff Repair",
                 "days_ago": 2,
                 "med_name": "Tramadol",
-                "dosage": "50mg",
-                "form": models.MedicationForm.tablet,
-                "freq": models.FrequencyType.bid,
+                "dose": "50mg",
+                "schedule_text": "2x daily (08:00, 20:00)",
+                "duration": "7 days",
                 "status": "active",
-                "checkin": "not_great",
+                "checkin": models.CheckInFeeling.not_great,
             },
             {
                 "email": "maria.garcia@example.com",
                 "name": "Maria Garcia",
-                "dob": date(1992, 3, 5),
+                "dob": "1992-03-05",
                 "surgery": "ACL Reconstruction",
                 "days_ago": 6,
                 "med_name": "Naproxen",
-                "dosage": "500mg",
-                "form": models.MedicationForm.tablet,
-                "freq": models.FrequencyType.bid,
+                "dose": "500mg",
+                "schedule_text": "2x daily (08:00, 20:00)",
+                "duration": "14 days",
                 "status": "active",
-                "checkin": "great",
+                "checkin": models.CheckInFeeling.great,
             },
             {
                 "email": "robert.chen@example.com",
                 "name": "Robert Chen",
-                "dob": date(1971, 7, 30),
+                "dob": "1971-07-30",
                 "surgery": "Spinal Fusion",
                 "days_ago": 5,
                 "med_name": "Gabapentin",
-                "dosage": "300mg",
-                "form": models.MedicationForm.capsule,
-                "freq": models.FrequencyType.tid,
+                "dose": "300mg",
+                "schedule_text": "3x daily (08:00, 14:00, 20:00)",
+                "duration": "14 days",
                 "status": "active",
-                "checkin": "ok",
+                "checkin": models.CheckInFeeling.ok,
             },
         ]
 
@@ -458,10 +432,8 @@ def seed_database(
                     patient_id=p_user.id,
                     clinician_id=clinician.id,
                     surgery_type=p_info["surgery"],
-                    surgery_date=today - timedelta(days=p_info["days_ago"]),
-                    status=models.CaseStatus.active,
-                    notes=f"{p_info['surgery']} routine recovery follow-up.",
-                    discharge_date=today - timedelta(days=p_info["days_ago"] - 1),
+                    surgery_date=str(today - timedelta(days=p_info["days_ago"])),
+                    status="active",
                 )
                 db.add(p_case)
                 db.commit()
@@ -470,14 +442,10 @@ def seed_database(
                 p_med = models.Medication(
                     case_id=p_case.id,
                     name=p_info["med_name"],
-                    dosage=p_info["dosage"],
-                    form=p_info["form"],
-                    frequency=p_info["freq"],
-                    route="oral",
-                    schedule_times=["08:00", "20:00"],
-                    duration_days=10,
-                    prescribed_days=10,
-                    start_date=today - timedelta(days=2),
+                    dose=p_info["dose"],
+                    schedule_text=p_info["schedule_text"],
+                    duration=p_info["duration"],
+                    notes="Standard post-op protocol.",
                 )
                 db.add(p_med)
                 db.commit()
@@ -485,10 +453,9 @@ def seed_database(
 
                 morning_dt = datetime.combine(today, time(8, 0), tzinfo=timezone.utc)
                 r1 = models.ScheduledReminder(
-                    case_id=p_case.id,
                     medication_id=p_med.id,
                     scheduled_time=morning_dt,
-                    status=models.ReminderStatus.taken if p_info["status"] != "missed_dose" else models.ReminderStatus.missed,
+                    status="taken" if p_info["status"] != "missed_dose" else "missed",
                 )
                 db.add(r1)
                 db.commit()
@@ -534,7 +501,7 @@ def seed_database(
         print("  📖 SWAGGER API DOCUMENTATION:")
         print("    • Swagger UI:  http://<YOUR_EC2_IP>/docs (or http://<YOUR_EC2_IP>:8000/docs)\n")
         print("  📊 ARIZE PHOENIX (LLM Observability & Cost Tracking):")
-        print("    • UI URL:      http://<YOUR_EC2_IP>:6006 (or http://localhost:6006)")
+        print(f"    • UI URL:      http://<YOUR_EC2_IP>:6006 (or http://localhost:6006)")
         print(f"    • Admin User:  {ph_admin_email}")
         print(f"    • Password:    {ph_admin_pass}")
         print("=" * 80)
