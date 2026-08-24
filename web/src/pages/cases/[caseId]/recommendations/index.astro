@@ -357,11 +357,19 @@ const t = createTranslator(lang)
       }
 
       async function sendAiQuery() {
-        const text = aiInput.value.trim()
+        const text = (aiInput as HTMLInputElement).value.trim()
         if (!text) return
 
         appendMsg('user', text)
-        aiInput.value = ''
+        ;(aiInput as HTMLInputElement).value = ''
+        if (aiSendBtn) (aiSendBtn as HTMLButtonElement).disabled = true
+
+        // Append loading skeleton message
+        const loadingMsg = document.createElement('div')
+        loadingMsg.className = 'ai-msg assistant skeleton-msg'
+        loadingMsg.innerHTML = '<span class="inline-spinner dark"></span> <span style="font-size: 13px; color: #64748b;">Consulting Bedrock protocol library...</span>'
+        aiMessages!.appendChild(loadingMsg)
+        aiMessages!.scrollTop = aiMessages!.scrollHeight
 
         try {
           const token = localStorage.getItem('token')
@@ -376,17 +384,18 @@ const t = createTranslator(lang)
             body: JSON.stringify({ message: text, case_id: caseId })
           })
           const data = res.ok ? await res.json() : null
-          const reply = data?.reply || data?.response || 'Recommended Protocol: 1. Continuous passive motion 2 hrs BID. 2. Ice pack 20m post-exercise. 3. Avoid weight-bearing pivot until week 2 follow-up.'
+          loadingMsg.remove()
+          const reply = data?.reply || data?.response || 'Clinical advice unavailable at this moment. Please check clinician authorization.'
           appendMsg('assistant', reply)
           if (recContent && !recContent.value.trim()) {
             recContent.value = reply
           }
         } catch {
-          const fallback = 'Recommended Protocol: 1. Continuous passive motion 2 hrs BID. 2. Ice pack 20m post-exercise. 3. Avoid weight-bearing pivot until week 2 follow-up.'
-          appendMsg('assistant', fallback)
-          if (recContent && !recContent.value.trim()) {
-            recContent.value = fallback
-          }
+          loadingMsg.remove()
+          const errReply = 'Unable to connect to AI assistant. Please enter clinical recommendations manually.'
+          appendMsg('assistant', errReply)
+        } finally {
+          if (aiSendBtn) (aiSendBtn as HTMLButtonElement).disabled = false
         }
       }
 
@@ -402,7 +411,8 @@ const t = createTranslator(lang)
         if (errorBox) errorBox.classList.add('hidden')
         if (submitBtn) {
           submitBtn.disabled = true
-          submitBtn.textContent = 'Saving...'
+          submitBtn.classList.add('btn-loading')
+          submitBtn.innerHTML = '<span class="inline-spinner" aria-hidden="true"></span> Saving...'
         }
 
         const pathParts = window.location.pathname.split('/')
@@ -443,6 +453,7 @@ const t = createTranslator(lang)
         } finally {
           if (submitBtn) {
             submitBtn.disabled = false
+            submitBtn.classList.remove('btn-loading')
             submitBtn.textContent = 'Save Clinical Instructions'
           }
         }
