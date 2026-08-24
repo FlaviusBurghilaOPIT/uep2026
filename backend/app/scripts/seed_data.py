@@ -21,6 +21,7 @@ Usage:
 """
 
 import sys
+import os
 import argparse
 from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
@@ -36,25 +37,27 @@ from app.database import SessionLocal, engine
 from app.models import Base
 from app.security import hash_password
 
-DEMO_PATIENT_CODE = "424242"
-DEFAULT_PASSWORD = "password123"
-
 
 def get_utc_today() -> date:
     return datetime.now(timezone.utc).date()
 
 
-def clean_demo_data(db: Session, keep_clinician: bool = False):
+def clean_demo_data(
+    db: Session,
+    keep_clinician: bool = False,
+    clinician_email: str = "clinician@example.com",
+    patient_email: str = "patient@example.com",
+):
     """Wipes all demo records (cases, medications, logs, checkins, chat, patients)."""
     demo_emails = [
-        "patient@example.com",
+        patient_email,
         "john.davies@example.com",
         "emma.wilson@example.com",
         "maria.garcia@example.com",
         "robert.chen@example.com",
     ]
     if not keep_clinician:
-        demo_emails.append("clinician@example.com")
+        demo_emails.append(clinician_email)
 
     users = db.query(models.User).filter(models.User.email.in_(demo_emails)).all()
     for u in users:
@@ -73,7 +76,7 @@ def clean_demo_data(db: Session, keep_clinician: bool = False):
                     db.query(models.ScheduledReminder).filter(models.ScheduledReminder.id == r.id).delete()
                 db.query(models.Medication).filter(models.Medication.id == m.id).delete()
             db.query(models.Case).filter(models.Case.id == c.id).delete()
-        if not (keep_clinician and u.email == "clinician@example.com"):
+        if not (keep_clinician and u.email == clinician_email):
             db.query(models.User).filter(models.User.id == u.id).delete()
     db.commit()
 
@@ -106,7 +109,24 @@ def seed_guidelines_if_empty(db: Session):
         print(f"Note: Vector guidelines initialization note: {emb_err}")
 
 
-def seed_database(mode: str = "full", reset: bool = False):
+def seed_database(
+    mode: str = "full",
+    reset: bool = False,
+    clinician_email: str | None = None,
+    clinician_password: str | None = None,
+    patient_email: str | None = None,
+    patient_otp: str | None = None,
+    phoenix_admin_email: str | None = None,
+    phoenix_admin_password: str | None = None,
+):
+    # Resolve configurable credentials (from args > env vars > secure defaults)
+    c_email = clinician_email or os.getenv("CLINICIAN_EMAIL", "clinician@example.com")
+    c_password = clinician_password or os.getenv("CLINICIAN_PASSWORD", "CarePro#2026!Secure")
+    p_email = patient_email or os.getenv("DEMO_PATIENT_EMAIL", "patient@example.com")
+    p_otp = patient_otp or os.getenv("DEMO_PATIENT_OTP", "424242")
+    ph_admin_email = phoenix_admin_email or os.getenv("PHOENIX_ADMIN_EMAIL", "admin@localhost")
+    ph_admin_pass = phoenix_admin_password or os.getenv("PHOENIX_ADMIN_PASSWORD", "Phoenix#2026!Guard")
+
     # Ensure pgvector extension exists before table creation
     try:
         with engine.connect() as conn:
@@ -123,34 +143,34 @@ def seed_database(mode: str = "full", reset: bool = False):
 
         if reset:
             print(f"--- Resetting existing demo data (Mode: {mode}) ---")
-            clean_demo_data(db, keep_clinician=False)
+            clean_demo_data(db, keep_clinician=False, clinician_email=c_email, patient_email=p_email)
             print("Cleaned existing demo user data.")
         elif mode == "clinician-only":
             # In clinician-only mode without full reset, ensure other demo patients/cases are removed
-            clean_demo_data(db, keep_clinician=True)
+            clean_demo_data(db, keep_clinician=True, clinician_email=c_email, patient_email=p_email)
 
         # =========================================================================
         # 1. Clinician: Dr. Sarah Connor
         # =========================================================================
-        clinician = db.query(models.User).filter(models.User.email == "clinician@example.com").first()
+        clinician = db.query(models.User).filter(models.User.email == c_email).first()
         if not clinician:
             clinician = models.User(
-                email="clinician@example.com",
+                email=c_email,
                 full_name="Dr. Sarah Connor",
                 role=models.UserRole.clinician,
-                password_hash=hash_password(DEFAULT_PASSWORD),
+                password_hash=hash_password(c_password),
                 status="active",
                 phone="+1 555-0100",
             )
             db.add(clinician)
             db.commit()
             db.refresh(clinician)
-            print("Created clinician: clinician@example.com (password: password123)")
+            print(f"Created clinician: {c_email}")
         else:
-            clinician.password_hash = hash_password(DEFAULT_PASSWORD)
+            clinician.password_hash = hash_password(c_password)
             clinician.status = "active"
             db.commit()
-            print("Verified clinician: clinician@example.com")
+            print(f"Verified clinician: {c_email}")
 
         # Load guidelines for AI assistant
         seed_guidelines_if_empty(db)
@@ -159,16 +179,22 @@ def seed_database(mode: str = "full", reset: bool = False):
         # MODE 1: Clinician Only Mode Exit
         # =========================================================================
         if mode == "clinician-only":
-            print("\n" + "=" * 75)
-            print("  RemoteCare Pro — SIMULATION 1: CLINICIAN-ONLY SEED COMPLETE")
-            print("=" * 75)
+            print("\n" + "=" * 80)
+            print("  🎉 RemoteCare Pro — SIMULATION 1: CLINICIAN-ONLY SEED INITIALIZED")
+            print("=" * 80)
             print("  Ready for live authoring demo! No patients or cases currently exist.")
-            print("  Log in to the Clinician Web Portal to create a patient and surgical case live.")
-            print("\n  CLINICIAN CREDENTIALS (Web Portal):")
-            print("    • URL:      http://localhost:3000/login (or http://localhost:5173/login)")
-            print("    • Email:    clinician@example.com")
-            print("    • Password: password123")
-            print("=" * 75 + "\n")
+            print("  Log in to the Clinician Web Portal to create a patient and surgical case live.\n")
+            print("  📋 CLINICIAN LOGIN CREDENTIALS (Web Portal):")
+            print("    • Web Portal: http://<YOUR_EC2_IP> (Port 80) or http://localhost:3000/login")
+            print(f"    • Email:      {c_email}")
+            print(f"    • Password:   {c_password}\n")
+            print("  📊 ARIZE PHOENIX (LLM Observability & Cost Tracking):")
+            print(f"    • UI URL:     http://<YOUR_EC2_IP>:6006 (or http://localhost:6006)")
+            print(f"    • Admin User: {ph_admin_email}")
+            print(f"    • Password:   {ph_admin_pass}")
+            print("=" * 80)
+            print("  Share the Clinician Credentials with your mentor/evaluator to test live!")
+            print("=" * 80 + "\n")
             return
 
         # =========================================================================
@@ -176,196 +202,232 @@ def seed_database(mode: str = "full", reset: bool = False):
         # =========================================================================
 
         # Main Demo Patient: Sarah Mitchell
-        patient = db.query(models.User).filter(models.User.email == "patient@example.com").first()
+        patient = db.query(models.User).filter(models.User.email == p_email).first()
         if not patient:
             patient = models.User(
-                email="patient@example.com",
+                email=p_email,
                 full_name="Sarah Mitchell",
                 role=models.UserRole.patient,
                 status="active",
-                phone="+1 555-0199",
-                date_of_birth="1988-04-12",
-                password_hash=hash_password(DEFAULT_PASSWORD),
-                invite_code=DEMO_PATIENT_CODE,
+                invite_code=p_otp,
                 invite_code_expires_at=datetime.now(timezone.utc) + timedelta(days=365),
+                password_hash=hash_password(c_password),
+                date_of_birth=date(1988, 4, 12),
+                phone="+1 555-0199",
             )
             db.add(patient)
             db.commit()
             db.refresh(patient)
-            print(f"Created demo patient: patient@example.com (OTP: {DEMO_PATIENT_CODE})")
+            print(f"Created patient: {p_email}")
         else:
-            patient.invite_code = DEMO_PATIENT_CODE
+            patient.invite_code = p_otp
             patient.invite_code_expires_at = datetime.now(timezone.utc) + timedelta(days=365)
-            patient.password_hash = hash_password(DEFAULT_PASSWORD)
+            patient.status = "active"
             db.commit()
-            print(f"Refreshed demo patient: patient@example.com (OTP: {DEMO_PATIENT_CODE})")
+            print(f"Verified patient: {p_email}")
 
-        # Case for Sarah Mitchell
-        case = db.query(models.Case).filter(models.Case.patient_id == patient.id).first()
+        # Active Surgical Case: Total Knee Arthroplasty (TKA)
+        case = (
+            db.query(models.Case)
+            .filter(
+                models.Case.patient_id == patient.id,
+                models.Case.clinician_id == clinician.id,
+                models.Case.surgery_type == "Total Knee Arthroplasty",
+            )
+            .first()
+        )
         if not case:
             case = models.Case(
-                clinician_id=clinician.id,
                 patient_id=patient.id,
-                surgery_type="Total Knee Arthroplasty (TKA)",
-                surgery_date=today.isoformat(),
-                status="active",
+                clinician_id=clinician.id,
+                surgery_type="Total Knee Arthroplasty",
+                surgery_date=today - timedelta(days=3),
+                status=models.CaseStatus.active,
+                notes="Right knee primary TKA. Patient recovering well, moderate swelling expected. Cryotherapy 3x daily.",
+                discharge_date=today - timedelta(days=2),
                 emergency_contact_name="Dr. Sarah Connor",
                 emergency_contact_phone="+1 555-0122",
             )
             db.add(case)
             db.commit()
             db.refresh(case)
-            print(f"Created surgical case for Sarah Mitchell: {case.id}")
+            print(f"Created case: {case.surgery_type} for Sarah Mitchell")
         else:
-            case.surgery_type = "Total Knee Arthroplasty (TKA)"
+            case.status = models.CaseStatus.active
             case.emergency_contact_name = "Dr. Sarah Connor"
             case.emergency_contact_phone = "+1 555-0122"
             db.commit()
 
-        # Seed Medications for Sarah Mitchell
-        existing_meds = db.query(models.Medication).filter(models.Medication.case_id == case.id).all()
-        if not existing_meds:
-            med_ibuprofen = models.Medication(
-                case_id=case.id,
-                name="Ibuprofen",
-                dose="400mg",
-                schedule_text="BID",
-                duration="14 days",
-                notes="Take with meals for swelling and pain management",
-            )
-            med_amoxicillin = models.Medication(
-                case_id=case.id,
-                name="Amoxicillin",
-                dose="500mg",
-                schedule_text="BID",
-                duration="10 days",
-                notes="Take with full glass of water every 12 hours. Complete entire course.",
-            )
-            med_oxycodone = models.Medication(
-                case_id=case.id,
-                name="Oxycodone",
-                dose="5mg",
-                schedule_text="PRN",
-                duration="5 days",
-                notes="For severe breakthrough pain only. Do not exceed prescribed frequency.",
-            )
-            db.add_all([med_ibuprofen, med_amoxicillin, med_oxycodone])
-            db.commit()
-            db.refresh(med_ibuprofen)
-            db.refresh(med_amoxicillin)
-            db.refresh(med_oxycodone)
-            print("Seeded medications (Ibuprofen 400mg BID, Amoxicillin 500mg BID, Oxycodone 5mg PRN).")
-        else:
-            med_ibuprofen = next((m for m in existing_meds if "ibuprofen" in m.name.lower()), existing_meds[0])
-            med_amoxicillin = next((m for m in existing_meds if "amoxicillin" in m.name.lower()), existing_meds[1] if len(existing_meds) > 1 else existing_meds[0])
+        # Demo Prescriptions: Ibuprofen, Amoxicillin, Oxycodone
+        meds_data = [
+            {
+                "name": "Ibuprofen",
+                "dosage": "400mg",
+                "form": models.MedicationForm.tablet,
+                "frequency": models.FrequencyType.bid,
+                "route": "oral",
+                "schedule_times": ["08:00", "20:00"],
+                "instructions": "Take with meals or milk to reduce stomach upset.",
+                "duration_days": 10,
+                "prescribed_days": 10,
+                "is_prn": False,
+                "is_scheduled": True,
+            },
+            {
+                "name": "Amoxicillin",
+                "dosage": "500mg",
+                "form": models.MedicationForm.capsule,
+                "frequency": models.FrequencyType.bid,
+                "route": "oral",
+                "schedule_times": ["08:00", "20:00"],
+                "instructions": "Complete the entire course as prescribed.",
+                "duration_days": 7,
+                "prescribed_days": 7,
+                "is_prn": False,
+                "is_scheduled": True,
+            },
+            {
+                "name": "Oxycodone",
+                "dosage": "5mg",
+                "form": models.MedicationForm.tablet,
+                "frequency": models.FrequencyType.prn,
+                "route": "oral",
+                "schedule_times": [],
+                "instructions": "Take as needed for severe breakthrough pain. Maximum 4 per day.",
+                "duration_days": 5,
+                "prescribed_days": 5,
+                "is_prn": True,
+                "is_scheduled": False,
+            },
+        ]
 
-        # Materialize Today's scheduled reminder slots for Sarah Mitchell (08:00 AM & 20:00 PM)
-        for med in [med_ibuprofen, med_amoxicillin]:
-            for reminder_time in [time(8, 0), time(20, 0)]:
-                sched_dt = datetime.combine(today, reminder_time)
-                reminder = db.query(models.ScheduledReminder).filter(
-                    models.ScheduledReminder.medication_id == med.id,
-                    models.ScheduledReminder.scheduled_time == sched_dt,
-                ).first()
-                if not reminder:
-                    reminder = models.ScheduledReminder(
-                        medication_id=med.id,
-                        scheduled_time=sched_dt,
-                        status="pending",
-                    )
-                    db.add(reminder)
+        for m_data in meds_data:
+            existing_med = (
+                db.query(models.Medication)
+                .filter(
+                    models.Medication.case_id == case.id,
+                    models.Medication.name == m_data["name"],
+                )
+                .first()
+            )
+            if not existing_med:
+                med = models.Medication(
+                    case_id=case.id,
+                    name=m_data["name"],
+                    dosage=m_data["dosage"],
+                    form=m_data["form"],
+                    frequency=m_data["frequency"],
+                    route=m_data["route"],
+                    schedule_times=m_data["schedule_times"],
+                    instructions=m_data["instructions"],
+                    duration_days=m_data["duration_days"],
+                    prescribed_days=m_data["prescribed_days"],
+                    is_prn=m_data["is_prn"],
+                    is_scheduled=m_data["is_scheduled"],
+                    start_date=today - timedelta(days=2),
+                )
+                db.add(med)
+                db.commit()
+                db.refresh(med)
+
+                # Generate scheduled reminders for today
+                if med.is_scheduled and med.schedule_times:
+                    for t_str in med.schedule_times:
+                        hh, mm = map(int, t_str.split(":"))
+                        sched_dt = datetime.combine(today, time(hh, mm), tzinfo=timezone.utc)
+                        rem = models.ScheduledReminder(
+                            case_id=case.id,
+                            medication_id=med.id,
+                            scheduled_time=sched_dt,
+                            status=models.ReminderStatus.pending,
+                        )
+                        db.add(rem)
                     db.commit()
-                elif reset:
-                    db.query(models.DoseLog).filter(models.DoseLog.scheduled_reminder_id == reminder.id).delete()
-                    reminder.status = "pending"
-                    db.commit()
+                print(f"Created prescription: {med.name} {med.dosage} ({med.frequency.value})")
 
-        # Seed Clinical Recommendations for Sarah Mitchell
-        existing_recs = db.query(models.Recommendation).filter(models.Recommendation.case_id == case.id).count()
-        if existing_recs == 0:
-            recs = [
-                models.Recommendation(
+        # Care Instructions / Recommendations
+        recs = [
+            "Keep the surgical dressing clean, dry, and intact until follow-up appointment.",
+            "Perform gentle ankle pumps (10 repetitions every hour while awake) to prevent blood clots.",
+            "Apply cryotherapy / ice pack for 20 minutes every 3-4 hours to control local swelling.",
+        ]
+        for rec_text in recs:
+            existing_rec = (
+                db.query(models.Recommendation)
+                .filter(
+                    models.Recommendation.case_id == case.id,
+                    models.Recommendation.text == rec_text,
+                )
+                .first()
+            )
+            if not existing_rec:
+                rec = models.Recommendation(
                     case_id=case.id,
-                    text="Elevate leg above heart level for 30 minutes 3x daily",
-                ),
-                models.Recommendation(
-                    case_id=case.id,
-                    text="Apply ice pack to knee for 20 minutes after physical therapy exercises",
-                ),
-                models.Recommendation(
-                    case_id=case.id,
-                    text="Keep surgical incision clean and dry; do not submerge in water",
-                ),
-            ]
-            db.add_all(recs)
-            db.commit()
-            print("Seeded clinical recommendations for Sarah Mitchell.")
+                    text=rec_text,
+                    category="Post-Op Care",
+                )
+                db.add(rec)
+        db.commit()
 
-        # Clean today's checkin on reset so check-in card is fresh
-        if reset:
-            db.query(models.CheckIn).filter(
-                models.CheckIn.case_id == case.id,
-                models.CheckIn.checkin_date == today,
-            ).delete()
-            db.commit()
-
-        # Background Triage Roster Patients
-        roster_data = [
+        # =========================================================================
+        # 3. Background Triage Roster Patients (Amber & Green)
+        # =========================================================================
+        roster_patients = [
             {
                 "email": "john.davies@example.com",
                 "name": "John Davies",
-                "dob": "1961-09-23",
-                "phone": "+1 555-0144",
-                "surgery": "Total Hip Arthroplasty (THA)",
-                "med_name": "Rivaroxaban",
-                "dose": "10mg",
-                "freq": "QD",
-                "duration": "35 days",
-                "status": "missed_dose", # Amber
-                "checkin": models.CheckInFeeling.ok,
+                "dob": date(1965, 8, 14),
+                "surgery": "Total Hip Arthroplasty",
+                "days_ago": 4,
+                "med_name": "Celecoxib",
+                "dosage": "200mg",
+                "form": models.MedicationForm.capsule,
+                "freq": models.FrequencyType.bid,
+                "status": "missed_dose",
+                "checkin": "ok",
             },
             {
                 "email": "emma.wilson@example.com",
                 "name": "Emma Wilson",
-                "dob": "1995-11-04",
-                "phone": "+1 555-0182",
+                "dob": date(1979, 11, 23),
                 "surgery": "Rotator Cuff Repair",
-                "med_name": "Naproxen",
-                "dose": "500mg",
-                "freq": "BID",
-                "duration": "10 days",
-                "status": "not_great", # Amber
-                "checkin": models.CheckInFeeling.not_great,
+                "days_ago": 2,
+                "med_name": "Tramadol",
+                "dosage": "50mg",
+                "form": models.MedicationForm.tablet,
+                "freq": models.FrequencyType.bid,
+                "status": "active",
+                "checkin": "not_great",
             },
             {
                 "email": "maria.garcia@example.com",
                 "name": "Maria Garcia",
-                "dob": "1982-06-18",
-                "phone": "+1 555-0163",
+                "dob": date(1992, 3, 5),
                 "surgery": "ACL Reconstruction",
-                "med_name": "Ibuprofen",
-                "dose": "400mg",
-                "freq": "BID",
-                "duration": "14 days",
-                "status": "great", # Green
-                "checkin": models.CheckInFeeling.great,
+                "days_ago": 6,
+                "med_name": "Naproxen",
+                "dosage": "500mg",
+                "form": models.MedicationForm.tablet,
+                "freq": models.FrequencyType.bid,
+                "status": "active",
+                "checkin": "great",
             },
             {
                 "email": "robert.chen@example.com",
                 "name": "Robert Chen",
-                "dob": "1966-02-14",
-                "phone": "+1 555-0177",
-                "surgery": "Lumbar Spinal Fusion (L4-L5)",
+                "dob": date(1971, 7, 30),
+                "surgery": "Spinal Fusion",
+                "days_ago": 5,
                 "med_name": "Gabapentin",
-                "dose": "300mg",
-                "freq": "TID",
-                "duration": "21 days",
-                "status": "ok", # Green
-                "checkin": models.CheckInFeeling.ok,
+                "dosage": "300mg",
+                "form": models.MedicationForm.capsule,
+                "freq": models.FrequencyType.tid,
+                "status": "active",
+                "checkin": "ok",
             },
         ]
 
-        for p_info in roster_data:
+        for p_info in roster_patients:
             p_user = db.query(models.User).filter(models.User.email == p_info["email"]).first()
             if not p_user:
                 p_user = models.User(
@@ -373,26 +435,31 @@ def seed_database(mode: str = "full", reset: bool = False):
                     full_name=p_info["name"],
                     role=models.UserRole.patient,
                     status="active",
-                    phone=p_info["phone"],
+                    password_hash=hash_password(c_password),
                     date_of_birth=p_info["dob"],
-                    password_hash=hash_password(DEFAULT_PASSWORD),
-                    invite_code="123456",
-                    invite_code_expires_at=datetime.now(timezone.utc) + timedelta(days=365),
+                    phone="+1 555-0155",
                 )
                 db.add(p_user)
                 db.commit()
                 db.refresh(p_user)
 
-            p_case = db.query(models.Case).filter(models.Case.patient_id == p_user.id).first()
+            p_case = (
+                db.query(models.Case)
+                .filter(
+                    models.Case.patient_id == p_user.id,
+                    models.Case.clinician_id == clinician.id,
+                )
+                .first()
+            )
             if not p_case:
                 p_case = models.Case(
-                    clinician_id=clinician.id,
                     patient_id=p_user.id,
+                    clinician_id=clinician.id,
                     surgery_type=p_info["surgery"],
-                    surgery_date=(today - timedelta(days=3)).isoformat(),
-                    status="active",
-                    emergency_contact_name="Dr. Sarah Connor",
-                    emergency_contact_phone="+1 555-0122",
+                    surgery_date=today - timedelta(days=p_info["days_ago"]),
+                    status=models.CaseStatus.active,
+                    notes=f"{p_info['surgery']} routine recovery follow-up.",
+                    discharge_date=today - timedelta(days=p_info["days_ago"] - 1),
                 )
                 db.add(p_case)
                 db.commit()
@@ -401,21 +468,25 @@ def seed_database(mode: str = "full", reset: bool = False):
                 p_med = models.Medication(
                     case_id=p_case.id,
                     name=p_info["med_name"],
-                    dose=p_info["dose"],
-                    schedule_text=p_info["freq"],
-                    duration=p_info["duration"],
-                    notes="Follow prescribed protocol",
+                    dosage=p_info["dosage"],
+                    form=p_info["form"],
+                    frequency=p_info["freq"],
+                    route="oral",
+                    schedule_times=["08:00", "20:00"],
+                    duration_days=10,
+                    prescribed_days=10,
+                    start_date=today - timedelta(days=2),
                 )
                 db.add(p_med)
                 db.commit()
                 db.refresh(p_med)
 
-                # Morning slot
-                morning_dt = datetime.combine(today, time(8, 0))
+                morning_dt = datetime.combine(today, time(8, 0), tzinfo=timezone.utc)
                 r1 = models.ScheduledReminder(
+                    case_id=p_case.id,
                     medication_id=p_med.id,
                     scheduled_time=morning_dt,
-                    status="pending",
+                    status=models.ReminderStatus.taken if p_info["status"] != "missed_dose" else models.ReminderStatus.missed,
                 )
                 db.add(r1)
                 db.commit()
@@ -447,19 +518,24 @@ def seed_database(mode: str = "full", reset: bool = False):
         print("Seeded realistic roster patients (John Davies [Amber], Emma Wilson [Amber], Maria Garcia [Green], Robert Chen [Green]).")
 
         # Summary output
-        print("\n" + "=" * 75)
-        print("  RemoteCare Pro — SIMULATION 2: FULL DEMO SEED INITIALIZED")
-        print("=" * 75)
-        print("  CLINICIAN CREDENTIALS (Web Portal):")
-        print("    • URL:      http://localhost:3000/login (or http://localhost:5173/login)")
-        print("    • Email:    clinician@example.com")
-        print("    • Password: password123")
-        print("\n  PATIENT CREDENTIALS (Flutter Mobile App):")
-        print("    • Email:    patient@example.com")
-        print("    • 6-digit OTP Code: 424242 (Auto-pasting enabled)")
-        print("    • Password: password123")
-        print("    • Patient:  Sarah Mitchell (Total Knee Arthroplasty)")
-        print("=" * 75 + "\n")
+        print("\n" + "=" * 80)
+        print("  🎉 RemoteCare Pro — SIMULATION 2: FULL DEMO SEED INITIALIZED")
+        print("=" * 80)
+        print("  📋 CLINICIAN LOGIN CREDENTIALS (Web Portal):")
+        print("    • Web Portal: http://<YOUR_EC2_IP> (Port 80) or http://localhost:3000/login")
+        print(f"    • Email:      {c_email}")
+        print(f"    • Password:   {c_password}\n")
+        print("  📱 PATIENT DEMO CREDENTIALS (Flutter Mobile App):")
+        print(f"    • Email:      {p_email}")
+        print(f"    • 6-digit OTP Code: {p_otp} (Auto-pasting enabled)")
+        print("    • Case:       Sarah Mitchell (Total Knee Arthroplasty)\n")
+        print("  📊 ARIZE PHOENIX (LLM Observability & Cost Tracking):")
+        print("    • UI URL:     http://<YOUR_EC2_IP>:6006 (or http://localhost:6006)")
+        print(f"    • Admin User: {ph_admin_email}")
+        print(f"    • Password:   {ph_admin_pass}")
+        print("=" * 80)
+        print("  Share the Clinician Credentials with your mentor/evaluator to test live!")
+        print("=" * 80 + "\n")
 
     finally:
         db.close()
@@ -488,7 +564,34 @@ if __name__ == "__main__":
         action="store_true",
         help="Reset and wipe demo records before seeding",
     )
+    parser.add_argument(
+        "--clinician-email",
+        default=None,
+        help="Custom clinician email (defaults to CLINICIAN_EMAIL env or clinician@example.com)",
+    )
+    parser.add_argument(
+        "--clinician-password",
+        default=None,
+        help="Custom clinician password (defaults to CLINICIAN_PASSWORD env or CarePro#2026!Secure)",
+    )
+    parser.add_argument(
+        "--patient-email",
+        default=None,
+        help="Custom patient email (defaults to DEMO_PATIENT_EMAIL env or patient@example.com)",
+    )
+    parser.add_argument(
+        "--patient-otp",
+        default=None,
+        help="Custom patient OTP code (defaults to DEMO_PATIENT_OTP env or 424242)",
+    )
     args = parser.parse_args()
 
     mode = "clinician-only" if args.clinician_only else ("full" if args.full else args.mode)
-    seed_database(mode=mode, reset=args.reset)
+    seed_database(
+        mode=mode,
+        reset=args.reset,
+        clinician_email=args.clinician_email,
+        clinician_password=args.clinician_password,
+        patient_email=args.patient_email,
+        patient_otp=args.patient_otp,
+    )

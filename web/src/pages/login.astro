@@ -1,7 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro'
 import LanguageSwitcher from '../components/LanguageSwitcher.astro'
-import { Lock, Zap, ArrowLeft } from '@lucide/astro'
+import { Lock, ArrowLeft } from '@lucide/astro'
 import { createTranslator, isLanguage } from '../i18n'
 import '../index.css'
 
@@ -31,21 +31,6 @@ const t = createTranslator(lang)
 
       <!-- Error alert banner -->
       <div class="error-banner hidden" id="login-error-banner" role="alert" aria-live="assertive"></div>
-
-      <!-- Quick 1-Click Demo Login Banner -->
-      <div class="demo-box">
-        <button class="quick-demo-btn" id="quick-demo-login-btn" type="button">
-          <Zap size={16} aria-hidden="true" />
-          <span>{t('login.quickDemoButton', '1-Click Demo Clinician Login')}</span>
-        </button>
-        <span class="demo-note">{t('login.demoHelper', 'Pre-populates clinician@example.com (instant demo access)')}</span>
-      </div>
-
-      <div class="divider-row">
-        <div class="divider-line"></div>
-        <span class="divider-text">{t('login.orSignInWithPassword', 'OR SIGN IN WITH PASSWORD')}</span>
-        <div class="divider-line"></div>
-      </div>
 
       <form id="login-form" class="form">
         <div class="form-group">
@@ -157,56 +142,6 @@ const t = createTranslator(lang)
     font-size: 13px;
     margin-bottom: 20px;
   }
-  .demo-box {
-    background-color: #eff6ff;
-    border: 1px solid #bfdbfe;
-    border-radius: 10px;
-    padding: 14px;
-    text-align: center;
-    margin-bottom: 20px;
-  }
-  .quick-demo-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    background-color: #0284c7;
-    color: #ffffff;
-    border: none;
-    border-radius: 8px;
-    padding: 10px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.15s ease;
-  }
-  .quick-demo-btn:hover {
-    background-color: #0369a1;
-  }
-  .demo-note {
-    display: block;
-    font-size: 11px;
-    color: #0369a1;
-    margin-top: 6px;
-  }
-  .divider-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-  .divider-line {
-    flex: 1;
-    height: 1px;
-    background-color: #e2e8f0;
-  }
-  .divider-text {
-    font-size: 11px;
-    font-weight: 700;
-    color: #94a3b8;
-    letter-spacing: 0.05em;
-  }
   .form {
     display: flex;
     flex-direction: column;
@@ -252,20 +187,13 @@ const t = createTranslator(lang)
 
 <script>
   function initLoginPage() {
-    const urlParams = new URLSearchParams(window.location.search)
     const emailInput = document.getElementById('email-input') as HTMLInputElement
     const passwordInput = document.getElementById('password-input') as HTMLInputElement
     const errorBanner = document.getElementById('login-error-banner')
     const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement
-    const quickDemoBtn = document.getElementById('quick-demo-login-btn')
     const loginForm = document.getElementById('login-form')
 
-    if (urlParams.get('demo') === 'true' && emailInput && passwordInput) {
-      emailInput.value = 'clinician@example.com'
-      passwordInput.value = 'password123'
-    }
-
-    async function performLogin(loginEmail: string, loginPass: string, isDemoTrigger = false) {
+    async function performLogin(loginEmail: string, loginPass: string) {
       if (errorBanner) errorBanner.classList.add('hidden')
       if (submitBtn) {
         submitBtn.disabled = true
@@ -308,15 +236,7 @@ const t = createTranslator(lang)
     if (loginForm) {
       loginForm.addEventListener('submit', (e) => {
         e.preventDefault()
-        performLogin(emailInput?.value || '', passwordInput?.value || '', false)
-      })
-    }
-
-    if (quickDemoBtn) {
-      quickDemoBtn.addEventListener('click', () => {
-        if (emailInput) emailInput.value = 'clinician@example.com'
-        if (passwordInput) passwordInput.value = 'password123'
-        performLogin('clinician@example.com', 'password123', true)
+        performLogin(emailInput?.value || '', passwordInput?.value || '')
       })
     }
   }

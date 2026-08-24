@@ -28,6 +28,10 @@ services:
       PHOENIX_PORT: 6006
       PHOENIX_GRPC_PORT: 4317
       PHOENIX_HOST: 0.0.0.0
+      PHOENIX_ENABLE_AUTH: ${PHOENIX_ENABLE_AUTH:-true}
+      PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD: ${PHOENIX_ADMIN_PASSWORD:-Phoenix#2026!Guard}
+      PHOENIX_SECRET_KEY: ${PHOENIX_SECRET_KEY:-dev-phoenix-secret-key-32chars-min}
+      PHOENIX_ENABLE_STRONG_PASSWORD_POLICY: "false"
       PHOENIX_POSTGRES_HOST: db
       PHOENIX_POSTGRES_PORT: 5432
       PHOENIX_POSTGRES_USER: ${POSTGRES_USER:-caredev}
@@ -54,6 +58,12 @@ services:
       POSTGRES_APP_PASSWORD: ${POSTGRES_APP_PASSWORD:-dev-only-change-in-prod}
       AUTH_PROVIDER: ${AUTH_PROVIDER:-local}
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production-use-strong-secret-key-32chars}
+      CLINICIAN_EMAIL: ${CLINICIAN_EMAIL:-clinician@example.com}
+      CLINICIAN_PASSWORD: ${CLINICIAN_PASSWORD:-CarePro#2026!Secure}
+      DEMO_PATIENT_EMAIL: ${DEMO_PATIENT_EMAIL:-patient@example.com}
+      DEMO_PATIENT_OTP: ${DEMO_PATIENT_OTP:-424242}
+      PHOENIX_ADMIN_EMAIL: ${PHOENIX_ADMIN_EMAIL:-admin@localhost}
+      PHOENIX_ADMIN_PASSWORD: ${PHOENIX_ADMIN_PASSWORD:-Phoenix#2026!Guard}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       OPENROUTER_MODEL: ${OPENROUTER_MODEL:-meta-llama/llama-3-8b-instruct}
       OPENROUTER_TIMEOUT: ${OPENROUTER_TIMEOUT:-20}
@@ -89,6 +99,18 @@ services:
       NODE_ENV: ${NODE_ENV:-production}
     depends_on:
       - backend
+    restart: unless-stopped
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: remotecare-nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - web
     restart: unless-stopped
 
 volumes:
