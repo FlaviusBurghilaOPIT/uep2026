@@ -58,13 +58,20 @@ async def get_drug_info(name: str, current_user: models.User = Depends(get_curre
 
     try:
         raw = await provider.get_drug_info(name)
-    except Exception:
+    except Exception as exc:
         # openFDA unreachable/slow — degrade gracefully rather than returning a 500.
-        logger.warning("openFDA lookup failed for drug=%s", name, exc_info=True)
+        logger.warning("openFDA lookup network error for drug=%s: %s", name, exc)
         return schemas.FDADrugInfoResponse(
             drug_name=name,
             summary="Could not reach openFDA right now. Please try again shortly.",
             source=f"{provider.source} (unavailable)",
+        )
+
+    if raw.get("not_found"):
+        return schemas.FDADrugInfoResponse(
+            drug_name=name,
+            summary=f"No official openFDA drug label found for '{name}'. Please check medication spelling.",
+            source=f"{provider.source} (not found)",
         )
 
     try:

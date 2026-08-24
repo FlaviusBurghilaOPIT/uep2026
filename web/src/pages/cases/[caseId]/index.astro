@@ -1,6 +1,6 @@
 ---
 import AppLayout from '../../../layouts/AppLayout.astro'
-import { ArrowLeft, Phone, Pill, Activity, Clock } from 'lucide-astro'
+import { ArrowLeft, Phone, Pill, Activity, Clock } from '@lucide/astro'
 import { apiFetch } from '../../../api/client'
 import { createTranslator, isLanguage } from '../../../i18n'
 import '../../../index.css'
@@ -99,7 +99,12 @@ const adherenceRate = completedLogs.length > 0 ? Math.round((takenCount / comple
     <section class="section">
       <div class="section-header-row">
         <h2 class="section-title">{t('caseDetail.adherenceTimeline', 'Medication Adherence Timeline')}</h2>
-        <span class="adherence-badge">{t('triage.adherenceLabel', 'Adherence Rate')}: <strong>{adherenceRate}%</strong></span>
+        <div class="adherence-stat-wrap">
+          <span class="adherence-badge">{t('triage.adherenceLabel', 'Adherence Rate')}: <strong>{adherenceRate}%</strong></span>
+          <div class="progress-track" style="width: 140px; margin-top: 6px;">
+            <div class={`progress-fill ${adherenceRate >= 80 ? 'success' : adherenceRate >= 50 ? 'warning' : ''}`} style={`width: ${adherenceRate}%;`}></div>
+          </div>
+        </div>
       </div>
 
       <div class="table-card">

@@ -18,8 +18,9 @@ class LiveFDAProvider(FDAProvider):
         # slow/unreachable upstream degrades gracefully instead of hanging the request.
         import httpx
 
+        clean_name = drug_name.strip().replace('"', '')
         params: dict[str, str] = {
-            "search": f"openfda.brand_name:{drug_name}",
+            "search": f'openfda.brand_name:"{clean_name}"+openfda.generic_name:"{clean_name}"+openfda.substance_name:"{clean_name}"',
             "limit": "1",
         }
         api_key = os.getenv("FDA_API_KEY")
@@ -29,6 +30,8 @@ class LiveFDAProvider(FDAProvider):
         timeout = httpx.Timeout(float(os.getenv("FDA_TIMEOUT", "8")))
         async with httpx.AsyncClient(timeout=timeout) as client:
             response = await client.get("https://api.fda.gov/drug/label.json", params=params)
+            if response.status_code == 404:
+                return {"drug": drug_name, "warnings": [], "not_found": True}
             response.raise_for_status()
             return response.json()
 

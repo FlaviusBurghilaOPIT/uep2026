@@ -14,6 +14,7 @@ router = APIRouter(
 )
 
 
+@router.post("", include_in_schema=False)
 @router.post("/")
 def create_case(
     case: schemas.CaseCreate,
@@ -37,6 +38,7 @@ def create_case(
     return new_case
 
 
+@router.get("", response_model=list[schemas.CaseResponse], include_in_schema=False)
 @router.get("/", response_model=list[schemas.CaseResponse])
 def list_cases(
     db: Session = Depends(get_db_for_user),

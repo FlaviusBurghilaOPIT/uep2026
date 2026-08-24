@@ -247,7 +247,8 @@ const t = createTranslator(lang)
 
         if (submitBtn) {
           submitBtn.disabled = true
-          submitBtn.textContent = 'Creating Case...'
+          submitBtn.classList.add('btn-loading')
+          submitBtn.innerHTML = '<span class="inline-spinner" aria-hidden="true"></span> Creating Case...'
         }
         if (errorBox) errorBox.classList.add('hidden')
 
@@ -288,6 +289,7 @@ const t = createTranslator(lang)
         } finally {
           if (submitBtn) {
             submitBtn.disabled = false
+            submitBtn.classList.remove('btn-loading')
             submitBtn.textContent = 'Create Case & Proceed'
           }
         }

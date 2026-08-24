@@ -14,8 +14,7 @@
   "dependencies": {
     "@astrojs/node": "^11.1.4",
     "@lucide/astro": "^1.33.0",
-    "astro": "^7.2.4",
-    "lucide-astro": "^0.556.0"
+    "astro": "^7.2.4"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

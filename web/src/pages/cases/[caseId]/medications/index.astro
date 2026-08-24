@@ -1,6 +1,6 @@
 ---
 import AppLayout from '../../../../layouts/AppLayout.astro'
-import { Pill, ShieldCheck, ArrowLeft } from 'lucide-astro'
+import { Pill, ShieldCheck, ArrowLeft } from '@lucide/astro'
 import { createTranslator, isLanguage } from '../../../../i18n'
 import '../../../../index.css'
 
@@ -286,7 +286,8 @@ const t = createTranslator(lang)
         if (errorBox) errorBox.classList.add('hidden')
         if (submitBtn) {
           submitBtn.disabled = true
-          submitBtn.textContent = 'Prescribing...'
+          submitBtn.classList.add('btn-loading')
+          submitBtn.innerHTML = '<span class="inline-spinner" aria-hidden="true"></span> Prescribing...'
         }
 
         const pathParts = window.location.pathname.split('/')
@@ -334,6 +335,7 @@ const t = createTranslator(lang)
         } finally {
           if (submitBtn) {
             submitBtn.disabled = false
+            submitBtn.classList.remove('btn-loading')
             submitBtn.textContent = 'Save & Add to Patient Schedule'
           }
         }

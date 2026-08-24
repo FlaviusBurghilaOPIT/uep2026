@@ -12,7 +12,7 @@ import {
   RotateCw,
   TriangleAlert,
   X
-} from 'lucide-astro'
+} from '@lucide/astro'
 import { apiFetch } from '../api/client'
 import { createTranslator, isLanguage } from '../i18n'
 import '../index.css'
@@ -533,31 +533,48 @@ const totalPatients = patients.length
     const refreshBtn = document.getElementById('refresh-btn')
     if (refreshBtn) {
       refreshBtn.addEventListener('click', () => {
+        refreshBtn.classList.add('btn-loading')
+        refreshBtn.setAttribute('disabled', 'true')
         window.location.reload()
       })
     }
 
     // AI summary
     const aiBtn = document.getElementById('ai-summary-btn')
+    const aiBtnText = document.getElementById('ai-summary-btn-text')
     const aiBox = document.getElementById('ai-summary-box')
     const aiContent = document.getElementById('ai-summary-content')
     if (aiBtn && aiBox && aiContent) {
       aiBtn.addEventListener('click', async () => {
         aiBox.classList.remove('hidden')
-        aiContent.textContent = 'Querying Amazon Bedrock clinical telemetry...'
+        aiBtn.setAttribute('disabled', 'true')
+        aiBtn.classList.add('btn-loading')
+        if (aiBtnText) aiBtnText.textContent = 'Analyzing Cohort...'
+
+        // Render skeleton screen inside the summary box
+        aiContent.innerHTML = `
+          <div class="skeleton skeleton-text" style="width: 90%;"></div>
+          <div class="skeleton skeleton-text" style="width: 75%;"></div>
+          <div class="skeleton skeleton-text short"></div>
+        `
+
         try {
-          const token = localStorage.getItem('token')
+          const token = localStorage.getItem('token') || (document.cookie.match(/(^| )carepro_token=([^;]+)/)?.[2])
           const res = await fetch('/api/ai/patients-summary', {
             headers: { 'Authorization': `Bearer ${token}` }
           })
           if (res.ok) {
             const data = await res.json()
-            aiContent.textContent = data.summary || data.text || 'Active cohort demonstrates 94.2% median adherence with 0 critical red flags.'
+            aiContent.textContent = data.summary || data.text || 'Active cohort telemetry processed. All patient recovery pathways monitored.'
           } else {
-            aiContent.textContent = 'Clinical Summary: Active surgical cohort demonstrates 94.2% median adherence. 0 critical red flags requiring emergency intervention.'
+            aiContent.textContent = 'Unable to retrieve Bedrock clinical summary. Please verify clinician authorization.'
           }
         } catch {
-          aiContent.textContent = 'Clinical Summary: Active surgical cohort demonstrates 94.2% median adherence. 0 critical red flags requiring emergency intervention.'
+          aiContent.textContent = 'Unable to connect to AI clinical summary service. Please check network connection.'
+        } finally {
+          aiBtn.removeAttribute('disabled')
+          aiBtn.classList.remove('btn-loading')
+          if (aiBtnText) aiBtnText.textContent = 'AI Patient Summary'
         }
       })
     }

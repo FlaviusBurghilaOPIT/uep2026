@@ -66,6 +66,7 @@ def invite_patient(
     )
 
 
+@router.get("", response_model=list[schemas.UserResponse], include_in_schema=False)
 @router.get("/", response_model=list[schemas.UserResponse])
 def list_patients(
     db: Session = Depends(get_db_for_user),
@@ -75,6 +76,7 @@ def list_patients(
     return patients
 
 
+@router.post("", response_model=schemas.UserResponse, include_in_schema=False)
 @router.post("/", response_model=schemas.UserResponse)
 def create_patient(
     user: schemas.UserCreate,

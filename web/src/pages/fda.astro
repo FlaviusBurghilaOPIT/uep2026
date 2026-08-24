@@ -1,6 +1,6 @@
 ---
 import AppLayout from '../layouts/AppLayout.astro'
-import { ClipboardList, Search, Pill, ShieldCheck, TriangleAlert } from 'lucide-astro'
+import { ClipboardList, Search, Pill, ShieldCheck, TriangleAlert } from '@lucide/astro'
 import { createTranslator, isLanguage } from '../i18n'
 import '../index.css'
 
@@ -260,12 +260,26 @@ const t = createTranslator(lang)
 
   async function searchDrug(drugName) {
     const container = document.getElementById('fda-results-container')
+    const searchBtn = document.getElementById('fda-search-btn')
     if (!container || !drugName.trim()) return
 
-    // Loading state
+    // Loading skeleton state
     container.replaceChildren()
-    const loadingDiv = el('div', 'fda-loading-box', 'Querying openFDA API for ' + drugName + '...')
-    container.appendChild(loadingDiv)
+    const loadingCard = el('div', 'skeleton-card')
+    const skTitle = el('div', 'skeleton skeleton-title')
+    const skLine1 = el('div', 'skeleton skeleton-text')
+    const skLine2 = el('div', 'skeleton skeleton-text')
+    const skLine3 = el('div', 'skeleton skeleton-text short')
+    loadingCard.appendChild(skTitle)
+    loadingCard.appendChild(skLine1)
+    loadingCard.appendChild(skLine2)
+    loadingCard.appendChild(skLine3)
+    container.appendChild(loadingCard)
+
+    if (searchBtn) {
+      searchBtn.setAttribute('disabled', 'true')
+      searchBtn.classList.add('btn-loading')
+    }
 
     try {
       const token = localStorage.getItem('token') || (document.cookie.match(/(^| )carepro_token=([^;]+)/)?.[2])
@@ -312,6 +326,11 @@ const t = createTranslator(lang)
       fallback.appendChild(el('h2', 'fda-drug-title', drugName.toUpperCase()))
       fallback.appendChild(el('p', 'fda-no-warnings', 'Unable to retrieve openFDA label data for this medication. Please check connection or search directly on FDA.gov.'))
       container.appendChild(fallback)
+    } finally {
+      if (searchBtn) {
+        searchBtn.removeAttribute('disabled')
+        searchBtn.classList.remove('btn-loading')
+      }
     }
   }
 

@@ -244,7 +244,8 @@ const t = createTranslator(lang)
         if (errorBox) errorBox.classList.add('hidden')
         if (submitBtn) {
           submitBtn.disabled = true
-          submitBtn.textContent = 'Enrolling...'
+          submitBtn.classList.add('btn-loading')
+          submitBtn.innerHTML = '<span class="inline-spinner" aria-hidden="true"></span> Enrolling...'
         }
 
         const fullName = (document.getElementById('full-name') as HTMLInputElement).value
@@ -297,6 +298,7 @@ const t = createTranslator(lang)
         } finally {
           if (submitBtn) {
             submitBtn.disabled = false
+            submitBtn.classList.remove('btn-loading')
             submitBtn.textContent = 'Enroll Patient & Generate Code'
           }
         }

@@ -1,7 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro'
 import LanguageSwitcher from '../components/LanguageSwitcher.astro'
-import { Lock, Zap, ArrowLeft } from 'lucide-astro'
+import { Lock, Zap, ArrowLeft } from '@lucide/astro'
 import { createTranslator, isLanguage } from '../i18n'
 import '../index.css'
 
@@ -269,7 +269,8 @@ const t = createTranslator(lang)
       if (errorBanner) errorBanner.classList.add('hidden')
       if (submitBtn) {
         submitBtn.disabled = true
-        submitBtn.textContent = 'Signing in...'
+        submitBtn.classList.add('btn-loading')
+        submitBtn.innerHTML = '<span class="inline-spinner" aria-hidden="true"></span> Signing in...'
       }
 
       try {
@@ -298,6 +299,7 @@ const t = createTranslator(lang)
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false
+          submitBtn.classList.remove('btn-loading')
           submitBtn.textContent = 'Sign In to Dashboard'
         }
       }
