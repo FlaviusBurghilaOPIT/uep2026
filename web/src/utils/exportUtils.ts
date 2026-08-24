@@ -1,4 +1,4 @@
-import { apiFetch } from '../api/client'
+import { apiFetch, getBaseUrl } from '../api/client'
 
 type Patient = {
   id: string
@@ -19,24 +19,25 @@ type Case = {
 
 type DoseLog = {
   id: string
-  scheduled_reminder_id: string
-  status: 'pending' | 'taken' | 'missed' | 'skipped'
-  logged_at?: string | null
-  notes?: string | null
-  skipped_reason?: string | null
-  escalate?: boolean
+  case_id: string
+  medication_name: string
+  scheduled_time: string
+  status: 'taken' | 'missed' | 'skipped' | 'pending'
+  taken_at?: string | null
 }
 
 type SymptomCheckIn = {
   id: string
   case_id: string
-  feeling: 'great' | 'ok' | 'not_great' | 'bad'
+  feeling: string
+  pain_level: number
+  symptoms: string[]
   notes?: string
   checkin_date?: string
   escalate?: boolean
 }
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const BASE_URL = getBaseUrl()
 
 function sanitizeCsv(field?: string | number | boolean | null): string {
   if (field == null) return '""'

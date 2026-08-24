@@ -26,7 +26,7 @@ class AppStrings {
       'Track your recovery journey day by day. Your clinician monitors your progress remotely.';
 
   static const String hipaaAware = 'Secure Clinic Account';
-  static const String awsBedrock = 'Care Team Assistant';
+  static const String aiCareAssistant = 'Care Team Assistant';
   static const String cognitoAuth = 'Secure Clinic Account';
 
   static const String welcomeBack = 'Welcome back';

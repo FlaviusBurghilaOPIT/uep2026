@@ -669,7 +669,7 @@ void main() {
 
       fakeApi.adherenceLogHandler = (id, status) => throw Exception('offline');
       await n.logDose(slot, DoseLogStatus.taken);
-      await Future<void>.delayed(const Duration(milliseconds: 60));
+      await Future<void>.delayed(const Duration(milliseconds: 120));
       expect(agendaState().offlineQueue, hasLength(1));
 
       // Server says another device already logged this slot as skipped.

@@ -9,7 +9,7 @@ describe('LandingPage Astro', () => {
     expect(landingSource).toContain('Close the Post-Op Recovery Gap with')
     expect(landingSource).toContain('Launch Live Clinician Demo')
     expect(landingSource).toContain('AWS Healthcare Track')
-    expect(landingSource).toContain('Amazon Bedrock Guardrails')
+    expect(landingSource).toContain('Clinical AI Guardrails')
   })
 
   it('contains interactive triage telemetry simulation and Lucide icons', () => {

@@ -1,6 +1,6 @@
 /**
  * Clinical Summary Formatter
- * Parses raw LLM / Bedrock clinical roster summaries into structured,
+ * Parses raw LLM / RAG clinical roster summaries into structured,
  * clinic-ready HTML elements with status badges, medication pills,
  * and high-priority action items.
  */

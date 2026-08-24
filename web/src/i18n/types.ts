@@ -185,7 +185,7 @@ export interface LandingTranslations {
   exploreFeatures: string
   loginLink: string
   trustTrack: string
-  trustBedrock: string
+  trustGuardrails: string
   trustFda: string
   problemTitle: string
   problemSubtitle: string

@@ -1,6 +1,35 @@
 import { translate } from '../i18n';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+export function getBaseUrl(): string {
+  // 1. SSR / Server-side Node runtime:
+  if (typeof window === 'undefined') {
+    if (typeof process !== 'undefined' && process.env) {
+      if (process.env.INTERNAL_API_URL) return process.env.INTERNAL_API_URL.replace(/\/+$/, '');
+      if (process.env.BACKEND_URL) return process.env.BACKEND_URL.replace(/\/+$/, '');
+    }
+    const metaEnv = import.meta.env;
+    if (metaEnv?.INTERNAL_API_URL) return metaEnv.INTERNAL_API_URL.replace(/\/+$/, '');
+    if (metaEnv?.BACKEND_URL) return metaEnv.BACKEND_URL.replace(/\/+$/, '');
+    if (typeof process !== 'undefined' && process.env?.VITE_API_URL && !process.env.VITE_API_URL.startsWith('/')) {
+      return process.env.VITE_API_URL.replace(/\/+$/, '');
+    }
+    if (metaEnv?.VITE_API_URL && !metaEnv.VITE_API_URL.startsWith('/')) {
+      return metaEnv.VITE_API_URL.replace(/\/+$/, '');
+    }
+    return 'http://backend:8000';
+  }
+
+  // 2. Client-side browser runtime:
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl && !envUrl.includes('localhost:8000') && !envUrl.includes('backend:8000')) {
+    return envUrl.replace(/\/+$/, '');
+  }
+
+  // In browser, route requests through relative /api proxy
+  return '/api';
+}
+
+export const BASE_URL = getBaseUrl();
 
 export class ApiError extends Error {
   status: number;
@@ -50,11 +79,34 @@ export async function apiFetch<T>(endpoint: string, options: ApiFetchOptions = {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  const baseUrl = getBaseUrl();
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  const response = await fetch(`${BASE_URL}${cleanEndpoint}`, {
-    ...options,
-    headers,
-  });
+  const targetUrl = baseUrl.endsWith('/api') && cleanEndpoint.startsWith('/api/')
+    ? `${baseUrl.slice(0, -4)}${cleanEndpoint}`
+    : `${baseUrl}${cleanEndpoint}`;
+
+  let response: Response;
+  try {
+    response = await fetch(targetUrl, {
+      ...options,
+      headers,
+    });
+  } catch (err: any) {
+    // SSR Fallback: If connecting to backend:8000 failed in SSR (e.g. running outside Docker), try localhost:8000
+    if (typeof window === 'undefined' && targetUrl.includes('backend:8000')) {
+      const fallbackUrl = targetUrl.replace('backend:8000', 'localhost:8000');
+      try {
+        response = await fetch(fallbackUrl, {
+          ...options,
+          headers,
+        });
+      } catch {
+        throw new ApiError(`Network request to ${targetUrl} failed: ${err?.message || err}`, 500);
+      }
+    } else {
+      throw new ApiError(`Network request to ${targetUrl} failed: ${err?.message || err}`, 500);
+    }
+  }
 
   const isLoginRequest = endpoint.includes('/auth/login');
 

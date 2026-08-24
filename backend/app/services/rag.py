@@ -20,8 +20,7 @@ client_async = AsyncOpenAI(
 
 def get_embedding(text_input: str) -> list[float]:
     """
-    Convert text into a vector using OpenAI embeddings.
-    In production swap for Bedrock Titan embeddings.
+    Convert text into a vector using OpenAI / OpenRouter text embeddings.
     """
     api_key = os.getenv("OPENROUTER_API_KEY") or "dummy-openrouter-key"
     client = OpenAI(

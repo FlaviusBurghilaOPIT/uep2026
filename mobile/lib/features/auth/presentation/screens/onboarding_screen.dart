@@ -251,7 +251,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _buildTrustBadges() {
     final badges = [
       {'icon': Icons.shield_outlined, 'text': AppStrings.hipaaAware},
-      {'icon': Icons.cloud_outlined, 'text': AppStrings.awsBedrock},
+      {'icon': Icons.cloud_outlined, 'text': AppStrings.aiCareAssistant},
       {'icon': Icons.lock_outline, 'text': AppStrings.cognitoAuth},
     ];
 

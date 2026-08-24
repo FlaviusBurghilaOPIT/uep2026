@@ -56,7 +56,7 @@ def _build_patient_context(case: models.Case) -> dict:
     }
 
 
-def _get_case_and_context_sync(case_id: int, user_id: str, user_role: models.UserRole) -> tuple[models.Case, dict] | None:
+def _get_case_and_context_sync(case_id: str, user_id: str, user_role: models.UserRole) -> tuple[models.Case, dict] | None:
     with SessionLocal() as db:
         query = (
             db.query(models.Case)
@@ -96,7 +96,7 @@ def _save_message_sync(message: models.ChatMessage):
         db_sess.refresh(message)
 
 
-async def _save_user_message(case_id: int, content: str, in_scope: bool, escalate: bool):
+async def _save_user_message(case_id: str, content: str, in_scope: bool, escalate: bool):
     await anyio.to_thread.run_sync(
         _save_message_sync,
         models.ChatMessage(
@@ -109,7 +109,7 @@ async def _save_user_message(case_id: int, content: str, in_scope: bool, escalat
     )
 
 
-async def _save_assistant_message_shielded(case_id: int, content: str):
+async def _save_assistant_message_shielded(case_id: str, content: str):
     with anyio.CancelScope(shield=True):
         await anyio.to_thread.run_sync(
             _save_message_sync,

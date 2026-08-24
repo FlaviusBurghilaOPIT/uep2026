@@ -47,7 +47,7 @@ RemoteCare Pro replaces passive paper discharge instructions with an **active, s
 Our team followed an agile, contract-first **Simple, Lovable, Complete (SLC)** engineering methodology over 10 structured sprint weeks:
 - **Phase 1: API & Data Model Freezing (Weeks 1–2):** Established OpenAPI 3.1 specs, PostgreSQL schema with Row-Level Security, and mock adapters so frontend and backend development proceeded concurrently without blocking.
 - **Phase 2: Core Loop Implementation (Weeks 3–5):** Built the Clinician Prescribing Portal, Patient Mobile Onboarding, and adherence synchronization pipelines.
-- **Phase 3: AI Safety, openFDA & Mobile Polish (Weeks 6–8):** Implemented Streaming RAG with Llama-3/Claude via OpenRouter/AWS Bedrock, automated openFDA safety ingestion, 5-locale internationalization, and WCAG 2.1 AA accessibility compliance.
+- **Phase 3: AI Safety, openFDA & Mobile Polish (Weeks 6–8):** Implemented Streaming RAG with Llama-3/Claude via OpenRouter, automated openFDA safety ingestion, 5-locale internationalization, and WCAG 2.1 AA accessibility compliance.
 - **Phase 4: Testing, Hardening & Verification (Weeks 9–10):** Executed full test automation across all tiers (376 automated tests), latency benchmarking (<200ms API responses), and Dockerized production deployment.
 
 ---
@@ -60,10 +60,11 @@ Our team followed an agile, contract-first **Simple, Lovable, Complete (SLC)** e
 | **Frontend (Web)** | **Astro 7.2 / React / TypeScript / Lucide Icons** | Clinician dashboard, sub-second load times, Refactoring UI design tokens, responsive triage cards. |
 | **Backend API** | **FastAPI / Python 3.11 / Pydantic v2 / Uvicorn** | Asynchronous execution, auto-generated OpenAPI documentation, sub-millisecond serialization. |
 | **Database & ORM** | **PostgreSQL 16 / SQLAlchemy 2.0 / Alembic** | Relational integrity, ACID compliance, Row-Level Security (RLS) policies, schema migrations. |
-| **AI & LLM Services** | **AWS Bedrock / OpenRouter (Llama 3, Claude 3.5 Sonnet) / RAG** | Retrieval-Augmented Generation over clinical case guidelines, structured JSON outputs, guardrail refusal detection. |
+| **AI & LLM Services** | **OpenRouter (Llama 3, Claude 3.5 Sonnet) / Streaming RAG** | Retrieval-Augmented Generation over clinical case guidelines, structured JSON outputs, guardrail refusal detection. |
+| **LLM Observability** | **Arize Phoenix / OpenTelemetry / OpenInference** | Self-hosted LLM tracing UI, real-time token count estimation, USD cost attribution, and guardrail refusal auditing. |
 | **Cloud & Deployment** | **AWS (ECS Fargate, RDS, SNS, SES, Cognito, CloudWatch) / Docker** | Scalable container orchestration, automated mobile push notifications, transactional emails. |
 | **External APIs** | **openFDA Drug Label API** | Real-time pharmaceutical adverse reaction warnings, boxed warning ingestion, and recall monitoring. |
-| **Testing & Quality** | **Pytest (164 tests), Flutter Test (207 tests), Vitest (5 tests)** | 376 total automated tests covering unit, widget, security authorization, and end-to-end integration flows. |
+| **Testing & Quality** | **Pytest (183 tests), Flutter Test (207 tests), Vitest (12 tests)** | 402 total automated tests covering unit, widget, security authorization, and end-to-end integration flows. |
 | **Version Control & CI** | **GitHub / GitHub Actions / Docker Compose** | Branch protection, automated test execution, containerized local development parity. |
 
 ---
@@ -98,18 +99,24 @@ Our team followed an agile, contract-first **Simple, Lovable, Complete (SLC)** e
             |                   |                    |                  |
             v                   v                    v                  v
 +--------------------+ +-----------------+ +-------------------+ +------------------+
-|   PostgreSQL /     | |  AWS Bedrock /  | |   AWS SNS / SES   | |  openFDA Public  |
-|     AWS RDS        | |   OpenRouter    | |  Push & Emailed   | |   Drug Label     |
-| - Cases & Regimens | | - Llama-3 / RAG | |   One-Time-Codes  | |   Intelligence   |
-| - Dose Logs & RLS  | | - Guardrails    | | - Local Dry-Run   | |   API Cache      |
+|   PostgreSQL /     | |   OpenRouter /  | |   AWS SNS / SES   | |  openFDA Public  |
+|     AWS RDS        | | - Llama-3 / RAG | |  Push & Emailed   | |   Drug Label     |
+| - Cases & Regimens | | - Guardrails    | |   One-Time-Codes  | |   Intelligence   |
+| - Dose Logs & RLS  | | - OpenRouter API| | - Local Dry-Run   | |   API Cache      |
 +--------------------+ +-----------------+ +-------------------+ +------------------+
+            |
+            v (OTEL Spans & Token Telemetry)
++-----------------------------------------------------------------------------------+
+|               Arize Phoenix LLM Observability & Cost Tracking (Port 6006)         |
+|   - Real-time Trace Graphs  •  Token Cost Accounting  •  Guardrail Refusal Audit  |
++-----------------------------------------------------------------------------------+
 ```
 
 **Data Flow Architecture:**
 1. **Prescription & Protocol Ingestion:** Clinician inputs surgical discharge regimen on Astro 7.2 Web Portal → Persisted in PostgreSQL with encrypted patient references → Push notification anchor scheduled via AWS SNS.
 2. **Patient Interaction & Dose Logging:** Mobile app receives regimen via API → User logs dose offline or online → Optimistic local UI updates instantly with 5-second undo toast → Synchronized to Backend `/adherence/log` with idempotency tokens.
 3. **Closed-Loop Exception Triage:** Missed doses or "bad" symptom check-ins trigger Backend Triage Engine → Evaluates risk score (`CRITICAL`, `WARNING`, `STABLE`) → Real-time Triage Dashboard updates clinician view.
-4. **Safety-Guarded AI Inquiries:** Patient asks question on Mobile → Streamed to Backend `/ai/chat/stream` → Case documents + FDA labels retrieved into RAG context → LLM evaluates response under strict medical guardrails → Streamed back in chunks; out-of-scope diagnosis triggers standardized clinical refusal.
+4. **Safety-Guarded AI Inquiries & Observability:** Patient asks question on Mobile → Streamed to Backend `/ai/chat/stream` → Case documents + FDA labels retrieved into RAG context → LLM evaluates response under strict medical guardrails → Streamed back in chunks; out-of-scope diagnosis triggers standardized clinical refusal → OpenTelemetry traces and USD token costs exported directly to **Arize Phoenix** dashboard (`:6006`).
 
 ---
 
@@ -122,9 +129,10 @@ Our team followed an agile, contract-first **Simple, Lovable, Complete (SLC)** e
 5. **Deterministic Emergency Red-Flag Escalation:** Selecting acute distress during daily check-in immediately renders an Emergency Red Flag Banner with 1-tap direct dialing (`911` and Surgical Clinic Direct).
 6. **openFDA Real-Time Safety & Drug Interaction Review:** On-demand ingestion of FDA drug safety labels, boxed warnings, and adverse reactions, summarized into plain-English clinician cards.
 7. **Streaming Clinical RAG Assistant:** Low-latency SSE streaming AI chat grounded in surgical discharge notes, medication schedules, and clinic FAQs with non-diagnostic refusal guardrails.
-8. **5-Locale Internationalization:** Full linguistic support across English, Italian, Spanish, French, and German with locale-specific date/time formats and medical terminology.
-9. **Accessibility & Usability Engineering (WCAG 2.1 AA):** Scalable typography up to 200%, ≥48dp touch targets, distinct non-color status icons for colorblind users, and Reduce Motion compliance.
-10. **Enterprise Multi-Tenant Security & RLS:** Postgres Row-Level Security and JWT claim validation preventing unauthorized cross-patient data access.
+8. **Arize Phoenix LLM Observability & Cost Tracking:** Self-hosted observability server (`http://localhost:6006`) providing full-trace visualization, span latency breakdowns, token counts, and real-time USD cost attribution per query.
+9. **5-Locale Internationalization:** Full linguistic support across English, Italian, Spanish, French, and German with locale-specific date/time formats and medical terminology.
+10. **Accessibility & Usability Engineering (WCAG 2.1 AA):** Scalable typography up to 200%, ≥48dp touch targets, distinct non-color status icons for colorblind users, and Reduce Motion compliance.
+11. **Enterprise Multi-Tenant Security & RLS:** Postgres Row-Level Security and JWT claim validation preventing unauthorized cross-patient data access.
 
 ---
 
@@ -191,7 +199,7 @@ Our team followed an agile, contract-first **Simple, Lovable, Complete (SLC)** e
 
 1. **Solutions Design (25% Pre-Pitch):**
    - **Architectural Flow:** Seamless bidirectional data flow between React Web, Flutter Mobile, and FastAPI with clean domain-driven separation.
-   - **Appropriateness of Technologies:** Industry-standard pairing of Flutter + FastAPI + Postgres + AWS Bedrock.
+   - **Appropriateness of Technologies:** Industry-standard pairing of Flutter + FastAPI + Postgres + OpenRouter AI RAG.
 2. **Technical Execution & Code Quality (20% Pre-Pitch):**
    - **376 Automated Tests:** Unmatched test coverage across unit, widget, accessibility, RLS security, and RAG streaming.
    - **Enterprise Hardening:** Row-Level Security, multi-language localization (5 languages), WCAG 2.1 AA accessibility.
