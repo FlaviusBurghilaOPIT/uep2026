@@ -26,6 +26,10 @@ async def get_current_user(
 
     user = db.query(models.User).filter(models.User.id == user_id).first()
 
+    # Fallback to email lookup if user was re-seeded and user_id changed
+    if not user and payload.get("email"):
+        user = db.query(models.User).filter(models.User.email == payload.get("email")).first()
+
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
 

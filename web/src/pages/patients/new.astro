@@ -256,7 +256,12 @@ const t = createTranslator(lang)
         const phone = (document.getElementById('emergency-phone') as HTMLInputElement).value
 
         try {
-          const token = localStorage.getItem('token')
+          const cookieToken = document.cookie
+            .split('; ')
+            .find((row) => row.startsWith('carepro_token='))
+            ?.split('=')[1]
+          const token = localStorage.getItem('token') || cookieToken || ''
+
           const res = await fetch('/api/patients/invite', {
             method: 'POST',
             headers: {
@@ -274,6 +279,13 @@ const t = createTranslator(lang)
           })
 
           if (!res.ok) {
+            if (res.status === 401) {
+              if (errorBox) {
+                errorBox.innerHTML = 'Your session has expired or the database was re-seeded. Please <a href="/login" style="color: #b91c1c; text-decoration: underline; font-weight: 700;">log in again</a>.'
+                errorBox.classList.remove('hidden')
+              }
+              return
+            }
             const errData = await res.json().catch(() => null)
             const msg = errData?.detail || 'Failed to enroll patient. Please check the entered data.'
             if (errorBox) {
