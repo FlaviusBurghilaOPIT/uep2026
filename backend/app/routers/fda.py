@@ -48,7 +48,7 @@ FDA_SUMMARY_SYSTEM_PROMPT = (
 )
 
 client_async = AsyncOpenAI(
-    api_key=os.getenv("OPENROUTER_API_KEY"),
+    api_key=os.getenv("OPENROUTER_API_KEY") or "dummy-openrouter-key",
     base_url="https://openrouter.ai/api/v1"
 )
 

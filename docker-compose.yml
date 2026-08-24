@@ -23,7 +23,6 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql://remotecare_app:dev-only-change-in-prod@db:5432/remotecare
       POSTGRES_APP_PASSWORD: dev-only-change-in-prod
     depends_on:
       db:
