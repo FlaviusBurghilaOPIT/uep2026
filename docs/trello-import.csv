@@ -47,12 +47,12 @@ TEST: pytest: a protected endpoint returns 401 without token, 200 with valid, 40
 Phase 2 — Fan Out,P2-P1-2 Cognito user pool + patient-invite flow,"WHAT: Create the Cognito user pool, two app clients/roles (clinician, patient), and the invite flow (clinician invites patient by email -> patient sets password on first login).
 DONE WHEN: A clinician can invite a patient; the patient receives an invite and logs in via Cognito.
 TEST: End-to-end in a dev pool: invite a test email -> complete sign-up -> token has role=patient -> /patients/{id}/case returns 200 for that patient, 403 for a different patient.","P1,AWS"
-Phase 2 — Fan Out,P2-P1-3 /ai/chat with Mock + OpenRouter + Bedrock adapters,"WHAT: Implement POST /ai/chat. Context-aware prompt grounded in the patient prescriptions + recommendations (from DB), system prompt enforcing 'informational only, never diagnostic, never change a dose'. Three LLMProvider adapters: mock (canned), openrouter (HTTP+API key), bedrock (boto3). Persist conversation + messages.
+Phase 2 — Fan Out,P2-P1-3 /ai/chat with Mock + OpenRouter adapters,"WHAT: Implement POST /ai/chat. Context-aware prompt grounded in the patient prescriptions + recommendations (from DB), system prompt enforcing 'informational only, never diagnostic, never change a dose'. Two LLMProvider adapters: mock (canned), openrouter (HTTP+API key). Persist conversation + messages.
 DONE WHEN: 'what is my medication for?' returns a grounded in-scope answer; 'should I double my dose?' returns a safe refusal; conversation persists.
-TEST: pytest with LLM_PROVIDER=mock asserts the prompt includes the patient's actual meds and the refusal path triggers on a dose-change question. Manual run with openrouter returns a real on-topic answer; history reloads on a second call (same conversation id).","P1,Backend,AWS"
-Phase 2 — Fan Out,P2-P1-4 Bedrock Guardrails,"WHAT: Configure Bedrock Guardrails to block diagnostic/dose-change content and PII leakage; wire the bedrock adapter to use them. AWS-only safety story for the pitch.
-DONE WHEN: With LLM_PROVIDER=bedrock, an out-of-scope prompt is blocked by the guardrail (not just the system prompt).
-TEST: Send 'diagnose my chest pain' -> response is the guardrail safe fallback. Capture the guardrail trace as pitch evidence.","P1,AWS"
+TEST: pytest with LLM_PROVIDER=mock asserts the prompt includes the patient's actual meds and the refusal path triggers on a dose-change question. Manual run with openrouter returns a real on-topic answer; history reloads on a second call (same conversation id).","P1,Backend"
+Phase 2 — Fan Out,P2-P1-4 Clinical AI Guardrails,"WHAT: Configure Clinical AI Guardrails to block diagnostic/dose-change content and PII leakage; wire the RAG streaming adapter to use them.
+DONE WHEN: With LLM_PROVIDER=openrouter, an out-of-scope prompt is blocked by the guardrail (not just the system prompt).
+TEST: Send 'diagnose my chest pain' -> response is the guardrail safe fallback. Capture the guardrail trace in Phoenix as pitch evidence.","P1,AI"
 Phase 2 — Fan Out,P2-P1-5 /fda/drug/{name}: openFDA + LLM summary + fixture mode,"WHAT: Implement GET /fda/drug/{name}: call openFDA (httpx async), extract warnings/recalls, summarize in plain language via LLMProvider, return with a source label. Add FDA_PROVIDER=fixture (cached JSON) for offline/demo.
 DONE WHEN: Querying a real drug returns a plain-language safety summary + source; fixture mode works offline.
 TEST: curl /fda/drug/ibuprofen returns a summary + source URL. With FDA_PROVIDER=fixture and network off, the same call still returns the cached summary.","P1,Backend"
@@ -161,28 +161,28 @@ TEST: pytest is green; responses validate against openapi.yaml (contract test); 
 Phase 3 — AWS Integration,P3-1 Provision RDS + run migrations,"WHAT: Stand up RDS PostgreSQL (prod), point DATABASE_URL at it, run alembic upgrade head, seed a demo clinician.
 DONE WHEN: The prod schema exists on RDS.
 TEST: Connect to RDS, confirm all tables present; the app starts vs RDS and /health is ok.","P1,AWS"
-Phase 3 — AWS Integration,P3-2 Deploy backend to ECS Fargate,"WHAT: Build + push the image to ECR; run the ECS Fargate service behind an HTTPS load balancer; set prod .env (AUTH_PROVIDER=cognito, LLM_PROVIDER=bedrock, FDA_PROVIDER=live).
-DONE WHEN: The API is reachable over HTTPS on a stable URL.
-TEST: curl https://<lb-url>/health -> ok over TLS; CloudWatch shows request logs; a dev-login is rejected (prod uses Cognito) and a Cognito login works.","P1,AWS,DevOps"
-Phase 3 — AWS Integration,P3-3 Flip provider toggles to AWS,"WHAT: Verify the Cognito + Bedrock + Guardrails adapters work in prod with no code change — only .env differs from local.
-DONE WHEN: Auth = Cognito, AI = Bedrock+Guardrails, all live.
-TEST: Log in via Cognito on the deployed app; ask the chatbot an out-of-scope question -> Guardrails block it. No code changed from local — only env.","P1,AWS"
-Phase 3 — AWS Integration,P3-4 Repoint frontends + end-to-end smoke test,"WHAT: Set web + mobile base URL to the AWS API; build the web app (S3+CloudFront or Amplify Hosting) and the patient APK; walk the full golden loop on AWS.
-DONE WHEN: The 7-step loop runs entirely on AWS.
-TEST: Recorded run on the deployed stack: clinician (web on AWS) creates case+meds -> patient (APK) sees regimen, gets a reminder, logs a dose, asks the chatbot -> clinician sees adherence. PHASE-3 GATE.","P2,P3,P4,P1,Integration"
+Phase 3 — AWS Integration,P3-2 Deploy backend container,"WHAT: Build + run the container stack; set prod .env (AUTH_PROVIDER=local, LLM_PROVIDER=openrouter, FDA_PROVIDER=live).
+DONE WHEN: The API is reachable over HTTP on port 8000 / port 80.
+TEST: curl http://<ec2-ip>/health -> ok; Phoenix shows trace logs.","P1,DevOps"
+Phase 3 — AWS Integration,P3-3 Verify AI streaming and Phoenix,"WHAT: Verify OpenRouter + Phoenix traces work in prod with no code change.
+DONE WHEN: Auth = Local, AI = OpenRouter+Guardrails, Observability = Phoenix.
+TEST: Ask the chatbot an out-of-scope question -> Guardrails block it. Traces visible in Phoenix (:6006).","P1,AI"
+Phase 3 — AWS Integration,P3-4 Repoint frontends + end-to-end smoke test,"WHAT: Set web + mobile base URL to the EC2 API; walk the full golden loop.
+DONE WHEN: The 7-step loop runs entirely on EC2.
+TEST: Recorded run on the deployed stack: clinician creates case+meds -> patient sees regimen, gets a reminder, logs a dose, asks the chatbot -> clinician sees adherence. PHASE-3 GATE.","P2,P3,P4,P1,Integration"
 Phase 4 — Polish & Submit,P4-1 Lovable polish pass,"WHAT: Each owner polishes their screens: micro-interactions, copy, empty/error states, consistent spacing, loading skeletons, accessibility. Make it feel like v1.0, not v0.1.
 DONE WHEN: No rough edges in the demo path.
 TEST: A fresh user walks the golden loop without confusion or visible errors; AA contrast passes on demo screens.",all
-Phase 4 — Polish & Submit,P4-2 User testing round 2 + survey,"WHAT: Run the survey + test with >=3 users (AWS Week-4 item, finalized here); record findings and the top 3 fixes; apply them.
+Phase 4 — Polish & Submit,P4-2 User testing round 2 + survey,"WHAT: Run the survey + test with >=3 users; record findings and the top 3 fixes; apply them.
 DONE WHEN: Findings documented; top fixes shipped.
 TEST: docs/user-testing.md has >=3 sessions + outcomes; each must-fix maps to a merged PR.",all
-Phase 4 — Polish & Submit,P4-3 Record the demo video,"WHAT: Screen-record the full golden loop on AWS (clinician web + patient app), narrated, highlighting Bedrock + Guardrails + FDA + the closed adherence loop.
+Phase 4 — Polish & Submit,P4-3 Record the demo video,"WHAT: Screen-record the full golden loop (clinician web + patient app), narrated, highlighting Closed-Loop Triage + Clinical AI Guardrails + FDA + Phoenix Metrics.
 DONE WHEN: A clean demo video exists.
-TEST: The video shows all 7 loop steps + the FDA panel + a Guardrails refusal, end-to-end on AWS, in one take.",all
-Phase 4 — Polish & Submit,P4-4 Final report,"WHAT: Write the report: problem, solution, architecture (with the local-first/provider diagram), AWS services used, challenges, what is parked for v2.
+TEST: The video shows all 7 loop steps + the FDA panel + a Guardrails refusal, in one take.",all
+Phase 4 — Polish & Submit,P4-4 Final report,"WHAT: Write the report: problem, solution, architecture, challenges, what is parked for v2.
 DONE WHEN: Report complete and committed.
-TEST: Report covers every AWS service actually used and matches the demo; a reader who never saw the code understands the architecture.",all
-Phase 4 — Polish & Submit,P4-5 Pitch deck + Q&A prep,"WHAT: 5-minute deck: problem -> SLC solution -> live/loop demo -> AWS architecture -> differentiator (clinician-authored + Guardrails + FDA) -> roadmap (the parked list). Rehearse the 2-min Q&A.
+TEST: Report covers every service actually used and matches the demo.",all
+Phase 4 — Polish & Submit,P4-5 Pitch deck + Q&A prep,"WHAT: 5-minute deck: problem -> SLC solution -> live/loop demo -> architecture -> differentiator (clinician-authored + Guardrails + FDA) -> roadmap. Rehearse the 2-min Q&A.
 DONE WHEN: Deck rehearsed within 5 minutes; Q&A answers prepared.
 TEST: A timed dry-run lands <=5:00; the team has crisp answers to 'why AWS?', 'how is this clinical not consumer?', 'what's next?'.",all
 Phase 4 — Polish & Submit,P4-6 README + docs cleanup,"WHAT: Finalize README.md (run locally in one command, env vars, architecture link), docs/architecture.md, docs/api.md. Ensure a stranger can run it.

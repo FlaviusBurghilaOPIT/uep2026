@@ -145,6 +145,19 @@ Share these credentials with mentors and evaluators to test the live deployment:
 
 ---
 
+### 📲 Understanding Patient OTP Sign-In (Pre-Seeded vs. Newly Created Patients)
+
+| Scenario | Where is the Patient Created? | Email | OTP Code to Enter in Flutter |
+|---|---|---|---|
+| **A. Pre-Seeded Demo Patient** | Database Seed Script (`--mode full`) | `patient@example.com` | **`424242`** (Auto-fill enabled for video demos) |
+| **B. New Patient Authored Live** | Clinician Web Portal (`+ New Patient`) | The email you typed in the web form | **The 6-digit code displayed on the Web Portal screen** (e.g. `839120`) or logged in backend console |
+| **C. Returning Patient Requesting Code** | Flutter Mobile App ("Send Code") | Registered patient email | Check backend logs: `docker compose logs backend --tail 20` for `[DRY RUN] Would email code XXXXXX to ...` |
+
+- **Scenario A (Pre-Seeded):** When you run `--mode full`, the database sets the OTP specifically to `424242` for Sarah Mitchell (`patient@example.com`).
+- **Scenario B (Authoring Live on Camera):** When you log in as the clinician on the Web Portal and invite a new patient, the system generates a fresh random 6-digit code and presents it directly on the Web Portal interface. Enter that code on the Flutter mobile app to complete onboarding.
+
+---
+
 ### Simulation 1: Clinician-Only Mode (`--mode clinician-only`)
 - **Use Case:** Record the live creation of a patient and surgical case from scratch on camera.
 - **What It Seeds:**

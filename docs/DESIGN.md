@@ -57,12 +57,12 @@
 |---|---|---|
 | **Landing Hero** | Two-column responsive hero with high-contrast headline, one-liner, live demo CTA, trust badges, and interactive triage preview card | Built |
 | **Interactive Triage Preview** | Live mock exception cards demonstrating 1-click resolution, simulated adherence telemetries, and instant audio/visual cues | Built |
-| **Feature Grid** | 3-column benefit cards highlighting Bedrock AI guardrails, closed-loop adherence, and live FDA safety integration | Built |
+| **Feature Grid** | 3-column benefit cards highlighting Clinical AI guardrails, closed-loop adherence, and live FDA safety integration | Built |
 | **How It Works Timeline** | 3-step numbered progression (1: Clinician Prescribes, 2: Patient Receives & Logs, 3: Real-Time Triage) | Built |
-| **Quick Demo Login Modal / Card** | 1-click authentication bypass with demo clinician credentials prefilled | Built |
+| **Quick Demo Login Modal / Card** | Direct authentication entry with demo clinician credentials | Built |
 | **Navigation Bar** | Sticky header with brand icon, language switcher, direct demo launch button, and clean portal navigation | Built |
 | **Mobile Dose Slot Card** | Optimistic 1-tap Taken/Skipped actions, time-slot grouping, pill form icons, and 5s undo snackbar | Built |
-| **Mobile AI Safety Pill** | Pinned clinical badge affirming Amazon Bedrock safety guardrails and non-diagnostic boundary | Built |
+| **Mobile AI Safety Pill** | Pinned clinical badge affirming Clinical AI safety guardrails and non-diagnostic boundary | Built |
 | **Mobile Emergency Red Flag Banner** | 1-tap 911 / clinic direct dial banner above symptom intake | Built |
 | **Recovery Progress Ring** | Animated SVG/Canvas circular sweep with daily completion sparkle and haptic feedback | Built |
 

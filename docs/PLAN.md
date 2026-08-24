@@ -32,7 +32,7 @@ We build **one lovable, complete loop** (SLC — Simple, Lovable, Complete), not
 Wiki auto-generation · FDA warnings queue/review/approval/propagation · nightly FDA refresh · audit records · document management (S3 upload / discharge letters) · SNS/Pinpoint push (local notifications only) · Terraform/CDK IaC · RxNorm lookup · PDF/print export · Redis · CPG integration · caregiver access · clinician mobile app · multi-language.
 
 ### AWS services used (all serving the loop)
-**Cognito** (auth + roles) · **RDS PostgreSQL** · **Bedrock** (+ **Guardrails**) for AI · **ECS Fargate + ECR** (compute) · **CloudWatch** (logs). Five to six services that all earn their place — which pitches better than ten half-wired ones.
+**RDS PostgreSQL** · **OpenRouter AI + Clinical RAG Guardrails** · **EC2 / Container Stack** · **CloudWatch / Phoenix** (observability). Five to six services that all earn their place.
 
 ---
 
@@ -47,29 +47,29 @@ The only shared surface is the **API contract**. In Phase 0 the team freezes:
 After that, frontends build against the **mock**, the backend builds the **real** implementation behind the same contract, and they meet in the middle with no surprises. A frontend dev graduates by changing **one base URL**: `mock-server` → `localhost:8000` → `aws-url`.
 
 ### 2.2 Local-first (Docker now, AWS later — by config, not rewrite)
-**The one rule:** application code never calls `boto3` directly. Every external dependency sits behind an interface ("port") with a local adapter and an AWS adapter, chosen by an environment variable.
+Every external dependency sits behind an interface ("port") with a local adapter and a cloud adapter, chosen by an environment variable.
 
-| Dependency | Local (Docker — everyone) | AWS (P1 — Week 9) | Adapter |
+| Dependency | Local (Docker — everyone) | AWS / Production | Adapter |
 |---|---|---|---|
 | **Database** | Postgres in docker-compose | RDS PostgreSQL | None — just change `DATABASE_URL` |
-| **Auth** | Local JWT issuer (`/auth/dev-login`) | Cognito + JWKS verify | `AuthProvider` — same JWT claim shape (`sub`, `role`, `email`) |
-| **AI** | **OpenRouter** (real answers via API key) or **Mock** | Bedrock + Guardrails | `LLMProvider` — `mock \| openrouter \| bedrock` |
-| **openFDA** | Real public API + fixture cache | Same (not AWS) | `FDAProvider` — `live \| fixture` |
-| **Logs** | stdout / `docker logs` | ECS auto-forwards to CloudWatch | None |
-| **Compute** | docker-compose | ECR + ECS Fargate | None — same Dockerfile |
+| **Auth** | Local JWT issuer (`/auth/login`) | Local JWT / Secure OTP | `AuthProvider` — same JWT claim shape (`sub`, `role`, `email`) |
+| **AI** | **OpenRouter** (real answers via API key) or **Mock** | OpenRouter + Clinical Guardrails | `LLMProvider` — `mock \| openrouter` |
+| **openFDA** | Real public API + fixture cache | Same (live openFDA) | `FDAProvider` — `live \| fixture` |
+| **Observability** | Arize Phoenix UI | Phoenix / CloudWatch | OpenTelemetry trace export |
+| **Compute** | docker-compose | EC2 Container Stack | None — same Dockerfile |
 
 **`.env` is the whole switch:**
 ```
 DATABASE_URL=postgresql://...
-AUTH_PROVIDER=local        # local | cognito
-LLM_PROVIDER=openrouter    # mock | openrouter | bedrock
+AUTH_PROVIDER=local        # local
+LLM_PROVIDER=openrouter    # mock | openrouter
 OPENROUTER_API_KEY=sk-...
 OPENROUTER_MODEL=...
 FDA_PROVIDER=live          # live | fixture
 ```
-Local defaults are committed to the repo. AWS/secret values live only with P1. **Four of five engineers never need an AWS account.**
+Local defaults are committed to the repo.
 
-**Why OpenRouter:** the AI chat is fully buildable and testable locally with realistic answers (cents per call, just an API key). **Bedrock** is the production/demo adapter that delivers the "runs on AWS + uses Bedrock + Guardrails" pitch story. Same `/ai/chat` contract for both.
+**Why OpenRouter:** the AI chat is fully buildable and testable locally and on EC2 with realistic answers (cents per call, just an API key) with full Clinical RAG and refusal guardrails. Same `/ai/chat` contract for both.
 
 ---
 
@@ -103,14 +103,14 @@ One paper-thin slice proven end-to-end on local Docker: dev-login → create cas
 **Exit:** the loop runs locally, no AWS. Proves the contract is real.
 
 ### Phase 2 — Fan out · **Weeks 4–8 · PARALLEL / INDEPENDENT**
-P2/P3/P4/P5 each build out their full track against the contract + mock + local backend. P1 builds the AI (OpenRouter→Bedrock) + FDA endpoints, reviews, and starts AWS provisioning. **AWS Week 4** (survey + user testing) runs on the walking skeleton / early screens.
+P2/P3/P4/P5 each build out their full track against the contract + mock + local backend. P1 builds the AI (OpenRouter) + FDA endpoints, reviews, and starts deployment configurations.
 **Exit:** every track feature-complete and demoable on local Docker.
 
-### Phase 3 — Integrate on AWS · **Week 9 · P1-led** (AWS "Integration of Components")
-P1 flips the toggles to AWS: provision RDS, push image to ECR, deploy ECS Fargate, wire Cognito + Bedrock + Guardrails. Frontends repoint base URL → AWS.
-**Exit:** the golden loop runs end-to-end **on AWS**.
+### Phase 3 — Integrate on AWS · **Week 9 · P1-led**
+P1 deploys container stack: provision RDS/EC2, deploy Nginx + Phoenix + FastAPI + Astro SSR containers.
+**Exit:** the golden loop runs end-to-end **on AWS EC2**.
 
-### Phase 4 — Polish, demo, submit · **Weeks 9–10 · ALL** (AWS "Final Submissions")
+### Phase 4 — Polish, demo, submit · **Weeks 9–10 · ALL**
 Lovable polish pass, user-testing round 2, record demo video, final report, pitch deck + Q&A prep.
 **Exit:** submitted.
 
@@ -126,8 +126,8 @@ Lovable polish pass, user-testing round 2, record demo video, final report, pitc
 
 **Risks & mitigations:**
 1. **P5 backend is a single point of load.** Mitigation: the frozen contract + mock means no frontend is ever blocked by backend lag; P1 (and P2, who also knows Python) can absorb a module if P5 falls behind.
-2. **P1 carries architecture + AI + AWS.** Mitigation: Phase 0 front-loads the hard interface design; once stable, P2 can assist with CI/infra.
-3. **AWS-only behavior (Cognito quirks, Bedrock Guardrails) can't be tested locally.** Mitigation: P1 spikes the Cognito + Bedrock adapters early in Phase 2 (not Week 9) so integration is rehearsed, not discovered.
+2. **P1 carries architecture + AI + Cloud.** Mitigation: Phase 0 front-loads the hard interface design; once stable, P2 can assist with CI/infra.
+3. **Multi-tier integration.** Mitigation: P1 tests the container stack early so integration is rehearsed, not discovered.
 4. **Scope creep back toward the parked list.** Mitigation: the golden-loop acceptance criteria are frozen in Phase 0; new ideas go to the "v2 roadmap," which is a *pitch asset*, not a backlog.
 
 ---

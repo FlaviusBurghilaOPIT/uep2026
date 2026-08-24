@@ -19,7 +19,7 @@ graph TD
 | Stage | Description | Observed Friction / Leakage | Fix Strategy |
 |---|---|---|---|
 | 1. Landing / Entry | Visitor arrives at `http://localhost:5173/` or public URL | No landing page existed; immediate redirect to bare login page caused 90%+ bounce rate for unauthenticated visitors. | Implement high-converting Clinician Landing Page with SB7 value prop, interactive demo CTA, and feature highlights. |
-| 2. Comprehension | Visitor evaluates clinical & AI safety proposition | Visitors couldn't tell how RemoteCare Pro differs from generic reminder apps. | Highlight the 3 core pillars: Bedrock AI Guardrails, Real-Time Closed-Loop Triage, and Automated FDA Safety Signals. |
+| 2. Comprehension | Visitor evaluates clinical & AI safety proposition | Visitors couldn't tell how RemoteCare Pro differs from generic reminder apps. | Highlight the 3 core pillars: Clinical AI Guardrails, Real-Time Closed-Loop Triage, and Automated FDA Safety Signals. |
 | 3. Portal Activation | Clinician / Judge enters portal | Friction with credentials and passwords during evaluation. | 1-Click "Demo Sign-in" button with pre-seeded demo clinician credentials (`clinician@example.com`). |
 | 4. Core Workflow | Clinician triages patients and prescribes medications | Cluttered typography, lack of visual hierarchy on forms. | Refactoring UI spacing tokens, clear single-column forms, fluid typography, and clear action signifiers. |
 

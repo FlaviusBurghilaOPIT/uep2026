@@ -48,7 +48,7 @@ dart run build_runner build --delete-conflicting-outputs   # regenerate freezed/
 ## Architecture Notes
 
 ### Backend: two parallel code paths — know which is live
-- `main.py` wires up routers from `app/routers/` only. **`app/api/` (`ai.py`, `fda.py`) and `app/services/rag.py` are dead code** — not imported anywhere, left over from an earlier RAG prototype (mock-only LLM reply, hardcoded OpenRouter client). The live AI chat path is `app/routers/ai.py` → `app/providers/llm.py` (`get_llm_provider()`, switched via `LLM_PROVIDER` env: `mock` / `openrouter` / `bedrock`). Don't extend `app/api/` or `rag.py` by mistake.
+- `main.py` wires up routers from `app/routers/` only. **`app/api/` (`ai.py`, `fda.py`) and `app/services/rag.py` are dead code** — not imported anywhere, left over from an earlier RAG prototype. The live AI chat path is `app/routers/ai.py` → `app/providers/llm.py` (`get_llm_provider()`, switched via `LLM_PROVIDER` env: `mock` / `openrouter`). Don't extend `app/api/` or `rag.py` by mistake.
 - Similarly, `app/database.py` (used by routers/dependencies) and `app/core/database.py` (used only for `init_db()`'s `CREATE EXTENSION vector` on startup) are two separate SQLAlchemy engine/session setups pointing at the same `DATABASE_URL` — not a shared module. `app/models.py` (the real SQLAlchemy models: User, Case, Medication, DoseLog, etc.) and `app/models/` (a small package with just `Base` and the `Embedding` model used by the dead RAG path) also coexist; new models belong in `app/models.py`.
 
 ### Backend: auth

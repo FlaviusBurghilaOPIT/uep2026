@@ -3,7 +3,7 @@
 ## Context
 - **Target Surface**: Clinician Landing & Portal Onboarding (RemoteCare Pro)
 - **Primary Conversion Action**: Convert prospective clinicians / clinics to request a demo and create their first patient case
-- **Problem Statement**: Visitors bounce without grasping the core value proposition (closed-loop post-op adherence, Bedrock AI guardrails, live FDA safety) and interface currently defaulted to raw login without an authoritative value proposition
+- **Problem Statement**: Visitors bounce without grasping the core value proposition (closed-loop post-op adherence, Clinical AI guardrails, live FDA safety) and interface currently defaulted to raw login without an authoritative value proposition
 - **Traffic Profile**: Early-stage / Hackathon / Pitch demo (<500 weekly visits) — qualitative CRO, Nielsen heuristics, StoryBrand messaging, and Refactoring UI visual hierarchy
 - **Top Complaint**: "Nobody understands what we do or why it's different from generic reminder apps"
 - **Date Started**: 2026-08-23

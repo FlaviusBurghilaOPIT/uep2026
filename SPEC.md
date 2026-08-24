@@ -58,7 +58,7 @@ mobile/lib/
     ├── checkin/                    # Daily feeling check-in with emergency red-flag escalation
     ├── medications/                # Full prescription schedule & drug guide
     ├── recovery/                   # Server-truth milestones & 7-day adherence chart
-    ├── assistant/                  # Guardrailed Amazon Bedrock assistant with persistent safety seal
+    ├── assistant/                  # Guardrailed Clinical AI assistant with persistent safety seal
     └── profile/                    # Patient profile, notification toggles & change-password
 ```
 
@@ -102,7 +102,7 @@ mobile/lib/
 - **4.2 Auto-Submit**: Filling the 6th digit automatically triggers verification without requiring an extra tap on "Continue".
 - **4.3 Hybrid Authentication**: Supports 1-click email magic code login or email+password login with seamless password creation during first-run onboarding.
 
-### 5. Amazon Bedrock AI Assistant Guardrails (UX-07, GLOSSARY)
+### 5. Clinical AI Assistant & Streaming RAG Guardrails (UX-07, GLOSSARY)
 - **5.1 Persistent Clinical Safety Seal**: The Assistant screen displays a top pinned guardrail banner (*"Clinical AI Companion: Doctor-vetted guidance, 100% non-diagnostic"*). Individual chat bubbles remain clean without repetitive disclaimer paragraphs.
 - **5.2 Out-of-Scope Red Flag Refusal**: Out-of-scope or emergency prompts render a prominent red-bordered refusal card with a bold **Call Emergency Contact ({phone})** 1-tap `tel:` button.
 - **5.3 Stream Typewriter & Physics**: SSE streaming renders tokens progressively with smooth auto-scroll to the bottom of the list.

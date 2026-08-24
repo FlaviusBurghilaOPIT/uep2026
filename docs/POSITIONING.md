@@ -6,13 +6,13 @@
 ---
 
 ## Product Architecture & Commercial Model
-- **All-Inclusive Clinical License**: When deployed at a clinic, surgical center, or hospital system, **100% of capabilities are fully unlocked** (unlimited patient rosters, real-time closed-loop triage, Amazon Bedrock Guardrailed AI, and live openFDA FAERS adverse drug surveillance).
+- **All-Inclusive Clinical License**: When deployed at a clinic, surgical center, or hospital system, **100% of capabilities are fully unlocked** (unlimited patient rosters, real-time closed-loop triage, Clinical Guardrailed AI, and live openFDA FAERS adverse drug surveillance).
 - **Zero Dark Patterns / Zero Tier Gating**: No artificial feature locks, hidden upcharges, or paywall friction for clinical care teams.
 
 ---
 
 ## One-Liner (StoryBrand)
-**"We help surgeons and clinical care teams who struggle with post-operative patient drop-off and medication non-adherence to monitor recovery in real time with guardrailed Bedrock AI and live FDA safety intelligence."**
+**"We help surgeons and clinical care teams who struggle with post-operative patient drop-off and medication non-adherence to monitor recovery in real time with guardrailed Clinical AI and live FDA safety intelligence."**
 
 ---
 
@@ -39,7 +39,7 @@ graph LR
 
 ### 3. The Guide (RemoteCare Pro)
 - **Empathy**: We understand that clinicians don't have hours for manual paperwork or confusing software.
-- **Authority**: Built on the AWS Healthcare Track architecture with Amazon Bedrock Guardrails, PostgreSQL pgvector RAG, and live openFDA FAERS adverse event telemetry.
+- **Authority**: Built on modern cloud architecture with Clinical RAG Guardrails, PostgreSQL pgvector embeddings, and live openFDA FAERS adverse event telemetry.
 
 ### 4. The 3-Step Plan
 1. **Prescribe in 30 Seconds**: Doctor creates a case and selects prescribed regimen; zero manual setup for the patient.
@@ -47,7 +47,7 @@ graph LR
 3. **Real-Time Triage & Guardrailed AI**: Clinician dashboard immediately flags missed doses or severe symptoms, while patients get 24/7 safe, non-diagnostic answers.
 
 ### 5. Calls to Action (Dual CTAs)
-- **Direct CTA**: `[Launch Live Clinician Demo →]` (Instant 1-click test session with preloaded clinical cohorts).
+- **Direct CTA**: `[Launch Live Clinician Demo →]` (Instant test session with preloaded clinical cohorts).
 - **Transitional CTA**: `[Explore FDA Safety Intelligence]` & `[View 3-Minute Demo Playbook]`.
 
 ### 6. Results in Success
@@ -78,7 +78,7 @@ graph LR
 
 | Message Surface | Lead Principle | SUCCESs Score (1-10) | Concrete High-Stick & Honest Rewrite |
 |---|---|---|---|
-| **Clinician Pilot Onboarding (Web)** | **Authority + Reciprocity** | 9 (High Trust) | **"Deploy all-inclusive closed-loop care across your entire surgical department. Full adherence tracking, Bedrock AI guardrails, and FDA FAERS surveillance included from Day 1."** |
+| **Clinician Pilot Onboarding (Web)** | **Authority + Reciprocity** | 9 (High Trust) | **"Deploy all-inclusive closed-loop care across your entire surgical department. Full adherence tracking, Clinical AI guardrails, and FDA FAERS surveillance included from Day 1."** |
 | **openFDA FAERS Intelligence** | **Authority + Social Proof** | 9 (High Trust) | **"Live openFDA integration indexes 20M+ adverse drug reaction records to surface critical black-box warnings and interaction risks in real time."** |
 | **Patient Daily Habit Prompt** | **Commitment & Consistency** | 9 (Empathetic) | **"You committed to Dr. Miller's 14-day protocol. Over 92% of patients stay on schedule with timely morning logging."** |
 | **Hero Headline (Web)** | **Clarity / Outcome** | 9 (Concrete) | **"Close the Post-Op Recovery Gap with Real-Time Clinical Triage & Guardrailed AI."** |

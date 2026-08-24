@@ -1,14 +1,14 @@
 # Product
 
 ## Vision
-RemoteCare Pro bridges the critical blind post-discharge window by providing surgical patients with a frictionless, 1-tap mobile recovery companion and clinical care teams with automated closed-loop adherence triage, Amazon Bedrock AI guardrails, and real-time openFDA safety surveillance.
+RemoteCare Pro bridges the critical blind post-discharge window by providing surgical patients with a frictionless, 1-tap mobile recovery companion and clinical care teams with automated closed-loop adherence triage, Clinical AI guardrails, and real-time openFDA safety surveillance.
 
 ---
 
 ## MVP Definition
 - **Included Scope**:
-  - Flutter Mobile Patient Companion (Today Agenda, 1-Tap Dose Logging with 5s Undo, AI Assistant with Bedrock Guardrails, Recovery Timeline, and Emergency Red Flag Escalation).
-  - React/Vite Clinician Web Portal (Patient Roster, Case & Medication Authoring, Live Triage Exception Dashboard, openFDA FAERS Adverse Event Surveillance, and 1-Click Demo Sandbox).
+  - Flutter Mobile Patient Companion (Today Agenda, 1-Tap Dose Logging with 5s Undo, AI Assistant with Clinical Guardrails, Recovery Timeline, and Emergency Red Flag Escalation).
+  - React/Vite Clinician Web Portal (Patient Roster, Case & Medication Authoring, Live Triage Exception Dashboard, openFDA FAERS Adverse Event Surveillance, and Sandbox Demo).
   - FastAPI + PostgreSQL backend with pgvector RAG, SSE chat streaming, and adherence write APIs.
 - **Deliberately Excluded (Out of Scope)**:
   - Commercial tier gating / in-app paywalls (100% of capabilities are included for licensed clinics).
@@ -38,7 +38,7 @@ RemoteCare Pro bridges the critical blind post-discharge window by providing sur
   - **Opportunity 1 (Patient Activation)**: Patients forget to log doses when groggy.
     - *Solution*: 1-tap notification response + instant optimistic checkmark pop + SMS magic access code.
   - **Opportunity 2 (Patient Reassurance)**: Patients panic over mild surgical aches or side effects.
-    - *Solution*: 24/7 Bedrock guardrailed assistant with explicit clinical protocol grounding and red-flag 911 escalation.
+    - *Solution*: 24/7 Clinical guardrailed assistant with explicit clinical protocol grounding and red-flag 911 escalation.
   - **Opportunity 3 (Clinician Triage Efficiency)**: Clinicians overwhelmed by checking patient profiles one-by-one.
     - *Solution*: Unified high-density Triage Dashboard matrix with 1-click quick-outreach phone/SMS modal.
 

@@ -13,25 +13,25 @@
 ## Page Briefs
 
 ### / (Clinician Landing Page)
-- **Purpose & Primary Conversion Action**: Convert prospective clinic decision-makers and hackathon evaluators into active users via 1-click "Launch Live Clinician Demo" (Direct CTA) and "Explore Clinical Capabilities" (Transitional CTA).
-- **Message (StoryBrand)**: "Transform Post-Operative Care with Proactive Triage, Bedrock AI Guardrails, and Live FDA Safety Intelligence."
-- **Direct CTA**: `[Launch Live Clinician Demo →]` (prefills demo session and drops user into the triage dashboard).
+- **Purpose & Primary Conversion Action**: Convert prospective clinic decision-makers and evaluators into active users via "Launch Live Clinician Demo" (Direct CTA) and "Explore Clinical Capabilities" (Transitional CTA).
+- **Message (StoryBrand)**: "Transform Post-Operative Care with Proactive Triage, Clinical AI Guardrails, and Live FDA Safety Intelligence."
+- **Direct CTA**: `[Launch Live Clinician Demo →]` (drops user into the clinician portal).
 - **Transitional CTA**: `[View 3-Minute Demo Playbook]` / `[Explore FDA Safety Engine]`.
 - **Copy Blocks**:
-  1. *Hero*: High-contrast headline, one-liner subtext, dual CTAs, verified trust badges (AWS Healthcare Track, openFDA FAERS, Bedrock Guardrails).
+  1. *Hero*: High-contrast headline, one-liner subtext, dual CTAs, verified trust badges (openFDA FAERS, Clinical RAG Guardrails).
   2. *The Closed-Loop Problem vs Solution*: Compare traditional blind recovery (missed doses, late complications) vs RemoteCare Pro closed-loop triage.
   3. *Core Differentiators*: (A) Zero-Effort Mobile Ingestion, (B) Guardrailed Clinical AI Assistant, (C) Live openFDA Drug Safety Signal Detection.
-  4. *Live Interactive Preview*: Embedded triage exception cards showcasing real-time Red/Amber alert triage and instant SMS/Call outreach triggers.
+  4. *Live Interactive Preview*: Embedded triage exception cards showcasing real-time Red/Amber alert triage and instant outreach triggers.
 
 ### /login (Clinician Sign-in Portal)
-- **Purpose & Primary Conversion Action**: Fast, frictionless access for registered clinicians and 1-click test credentials for evaluators.
-- **Direct CTA**: `[Log In]` & `[Quick Demo Clinician Login]` (instant auto-fill & login).
-- **Copy Blocks**: Brand logo, clinical credential inputs, demo credential helper badge.
+- **Purpose & Primary Conversion Action**: Fast, frictionless access for registered clinicians with copy-pasteable seed credentials.
+- **Direct CTA**: `[Log In]`.
+- **Copy Blocks**: Brand logo, clinical credential inputs.
 
 ## Conversion Elements (Big 5 Objections & Counters)
 | Objection (Big 5) | Counter | Placement | Status |
 |---|---|---|---|
-| **Trust**: "Is AI safe for surgical patients?" | Amazon Bedrock Guardrails enforce strict non-diagnostic, informational advice; clinicians remain the sole prescribing authority. | Hero subtitle & Safety Architecture section | Live |
+| **Trust**: "Is AI safe for surgical patients?" | Clinical RAG Guardrails enforce strict non-diagnostic, informational advice; clinicians remain the sole prescribing authority. | Hero subtitle & Safety Architecture section | Live |
 | **Effort**: "Clinicians and patients don't have time for complex data entry." | 30-second clinician prescription builder; patient regimen auto-populates on mobile with zero manual drug typing. | "How it Works" 3-step timeline | Live |
 | **Price / Value**: "Why not use a standard reminder app?" | Generic apps don't close the clinical loop; RemoteCare Pro provides real-time triage dashboards, adherence alerts, and automated FDA safety signal detection. | Comparison Matrix section | Live |
 | **Fit**: "Does this support our surgery types and dose schedules?" | Pre-configured for orthopedics, cardiac, and general surgery with QD, BID, TID, QID, and PRN schedule automation. | Features grid & Case Creation | Live |

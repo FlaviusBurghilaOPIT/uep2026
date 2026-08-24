@@ -49,5 +49,5 @@
 | Add "Quick Demo Login" 1-click button to `/login` for seamless access | 9 | 9 | 9 | **27** | Done |
 | Visual Pill Form Badges & Plain-English Timing Tags on Dose Cards (UX-05) | 8 | 9 | 8 | **25** | In Progress |
 | Human-friendly offline & network recovery copy across mobile toasts (UX-06) | 8 | 9 | 8 | **25** | In Progress |
-| Persistent Amazon Bedrock Clinical AI Guardrail Badge (UX-07) | 8 | 9 | 8 | **25** | In Progress |
+| Persistent Clinical AI Guardrail Badge (UX-07) | 8 | 9 | 8 | **25** | In Progress |
 | Multi-language selector prominence in navigation and landing header | 7 | 8 | 9 | **24** | Done |
