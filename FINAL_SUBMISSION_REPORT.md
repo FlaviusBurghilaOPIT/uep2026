@@ -1,9 +1,11 @@
 # University Engagement Program 5.0
+
 ## Final Submission Template Document
 
 **Project Title:** RemoteCare Pro — Intelligent Post-Operative Remote Patient Monitoring & Clinical Safety Platform  
 **Team Name:** [Enter Team Name]  
-**Team Members:**  
+**Team Members:**
+
 - Flavius Burghila [Student ID: OPIT-2026-001, Email: flavius@opit.edu]
 - [Member 2 Full Name, Student ID, Email]
 - [Member 3 Full Name, Student ID, Email]
@@ -15,9 +17,11 @@
 # 1. Final Report
 
 ### • Project Overview
-**RemoteCare Pro** is an enterprise-grade, closed-loop remote patient monitoring (RPM) and surgical recovery platform designed for hospital surgical departments, orthopedic/ambulatory clinics, and post-operative patients. It bridges the critical "discharge care cliff" between hospital release and the 30-day recovery window. 
+
+**RemoteCare Pro** is an enterprise-grade, closed-loop remote patient monitoring (RPM) and surgical recovery platform designed for hospital surgical departments, orthopedic/ambulatory clinics, and post-operative patients. It bridges the critical "discharge care cliff" between hospital release and the 30-day recovery window.
 
 The platform consists of:
+
 1. **Clinician Web Portal (React 18 + TypeScript + Tailwind CSS)**: Enables surgeons and care teams to author surgical regimens, monitor real-time medication adherence, inspect safety alerts via openFDA intelligence, and triage high-risk patients through an automated "Needs Attention" exception queue.
 2. **Patient Mobile Companion (Flutter 3.27 + Dart + Riverpod)**: An accessible, offline-first mobile app providing 1-tap medication logging, intelligent reminders, acute symptom check-ins with automated emergency red-flag escalation, multi-language support (English, Italian, Spanish, French, German), and an AI Recovery Assistant.
 3. **Clinical Core Backend (FastAPI + Python 3.11 + PostgreSQL / AWS RDS)**: A high-performance, asynchronous REST backend featuring Row-Level Security (RLS), streaming Retrieval-Augmented Generation (RAG) with clinical guardrails, AWS SNS mobile push notifications, and automated compliance checks.
@@ -25,6 +29,7 @@ The platform consists of:
 ---
 
 ### • Problem Statement
+
 - **The Issue:** Over 50 million surgical procedures occur annually in the US and Europe. Following discharge, patients transition abruptly from 24/7 continuous clinical observation to complete self-management. This creates a severe "care cliff":
   - **48% of post-op patients** mismanage prescribed medications (underdosing due to confusion, or overdosing on opioids/NSAIDs).
   - **19.6% 30-day readmission rates** occur in surgical cohorts, with over 60% deemed preventable through early symptom interception.
@@ -35,7 +40,9 @@ The platform consists of:
 ---
 
 ### • Solution Overview
+
 RemoteCare Pro replaces passive paper discharge instructions with an **active, synchronized recovery loop**:
+
 - **Continuous Adherence & Symptom Tracking:** Patients receive schedule-aware medication prompts and log doses in 1 tap with zero data entry friction.
 - **Clinical Triage Exception Engine:** Clinicians do not monitor healthy data; an automated triage algorithm detects missed critical doses, acute symptoms ("bad" mood / high pain), and FDA drug recall interactions, bubbling high-risk patients to the top of a color-coded priority queue.
 - **Guardrailed AI Recovery Assistant:** Patients can query their post-op protocol ("Can I shower today?", "Should I take Ibuprofen with food?") 24/7. The assistant retrieves grounded discharge notes and drug safety labels via RAG while strictly refusing diagnostic advice and escalating acute red flags (fever >101°F, calf pain, bleeding) to emergency services.
@@ -44,7 +51,9 @@ RemoteCare Pro replaces passive paper discharge instructions with an **active, s
 ---
 
 ### • Development Process
+
 Our team followed an agile, contract-first **Simple, Lovable, Complete (SLC)** engineering methodology over 10 structured sprint weeks:
+
 - **Phase 1: API & Data Model Freezing (Weeks 1–2):** Established OpenAPI 3.1 specs, PostgreSQL schema with Row-Level Security, and mock adapters so frontend and backend development proceeded concurrently without blocking.
 - **Phase 2: Core Loop Implementation (Weeks 3–5):** Built the Clinician Prescribing Portal, Patient Mobile Onboarding, and adherence synchronization pipelines.
 - **Phase 3: AI Safety, openFDA & Mobile Polish (Weeks 6–8):** Implemented Streaming RAG with Llama-3/Claude via OpenRouter, automated openFDA safety ingestion, 5-locale internationalization, and WCAG 2.1 AA accessibility compliance.
@@ -54,18 +63,18 @@ Our team followed an agile, contract-first **Simple, Lovable, Complete (SLC)** e
 
 ### • Technical Stack
 
-| Category | Technology / Tool | Rationale & Use in Project |
-|---|---|---|
-| **Frontend (Mobile)** | **Flutter 3.27 / Dart / Riverpod** | Cross-platform (iOS/Android), offline-first state management, 60fps animations, WCAG high-contrast compliance. |
-| **Frontend (Web)** | **Astro 7.2 / React / TypeScript / Lucide Icons** | Clinician dashboard, sub-second load times, Refactoring UI design tokens, responsive triage cards. |
-| **Backend API** | **FastAPI / Python 3.11 / Pydantic v2 / Uvicorn** | Asynchronous execution, auto-generated OpenAPI documentation, sub-millisecond serialization. |
-| **Database & ORM** | **PostgreSQL 16 / SQLAlchemy 2.0 / Alembic** | Relational integrity, ACID compliance, Row-Level Security (RLS) policies, schema migrations. |
-| **AI & LLM Services** | **OpenRouter (Llama 3, Claude 3.5 Sonnet) / Streaming RAG** | Retrieval-Augmented Generation over clinical case guidelines, structured JSON outputs, guardrail refusal detection. |
-| **LLM Observability** | **Arize Phoenix / OpenTelemetry / OpenInference** | Self-hosted LLM tracing UI, real-time token count estimation, USD cost attribution, and guardrail refusal auditing. |
-| **Cloud & Deployment** | **AWS (ECS Fargate, RDS, SNS, SES, Cognito, CloudWatch) / Docker** | Scalable container orchestration, automated mobile push notifications, transactional emails. |
-| **External APIs** | **openFDA Drug Label API** | Real-time pharmaceutical adverse reaction warnings, boxed warning ingestion, and recall monitoring. |
-| **Testing & Quality** | **Pytest (183 tests), Flutter Test (207 tests), Vitest (12 tests)** | 402 total automated tests covering unit, widget, security authorization, and end-to-end integration flows. |
-| **Version Control & CI** | **GitHub / GitHub Actions / Docker Compose** | Branch protection, automated test execution, containerized local development parity. |
+| Category                 | Technology / Tool                                                   | Rationale & Use in Project                                                                                          |
+| ------------------------ | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **Frontend (Mobile)**    | **Flutter 3.27 / Dart / Riverpod**                                  | Cross-platform (iOS/Android), offline-first state management, 60fps animations, WCAG high-contrast compliance.      |
+| **Frontend (Web)**       | **Astro 7.2 / React / TypeScript / Lucide Icons**                   | Clinician dashboard, sub-second load times, Refactoring UI design tokens, responsive triage cards.                  |
+| **Backend API**          | **FastAPI / Python 3.11 / Pydantic v2 / Uvicorn**                   | Asynchronous execution, auto-generated OpenAPI documentation, sub-millisecond serialization.                        |
+| **Database & ORM**       | **PostgreSQL 16 / SQLAlchemy 2.0 / Alembic**                        | Relational integrity, ACID compliance, Row-Level Security (RLS) policies, schema migrations.                        |
+| **AI & LLM Services**    | **OpenRouter (Llama 3, Claude 3.5 Sonnet) / Streaming RAG**         | Retrieval-Augmented Generation over clinical case guidelines, structured JSON outputs, guardrail refusal detection. |
+| **LLM Observability**    | **Arize Phoenix / OpenTelemetry / OpenInference**                   | Self-hosted LLM tracing UI, real-time token count estimation, USD cost attribution, and guardrail refusal auditing. |
+| **Cloud & Deployment**   | **AWS (ECS Fargate, RDS, SNS, SES, Cognito, CloudWatch) / Docker**  | Scalable container orchestration, automated mobile push notifications, transactional emails.                        |
+| **External APIs**        | **openFDA Drug Label API**                                          | Real-time pharmaceutical adverse reaction warnings, boxed warning ingestion, and recall monitoring.                 |
+| **Testing & Quality**    | **Pytest (183 tests), Flutter Test (207 tests), Vitest (12 tests)** | 402 total automated tests covering unit, widget, security authorization, and end-to-end integration flows.          |
+| **Version Control & CI** | **GitHub / GitHub Actions / Docker Compose**                        | Branch protection, automated test execution, containerized local development parity.                                |
 
 ---
 
@@ -113,6 +122,7 @@ Our team followed an agile, contract-first **Simple, Lovable, Complete (SLC)** e
 ```
 
 **Data Flow Architecture:**
+
 1. **Prescription & Protocol Ingestion:** Clinician inputs surgical discharge regimen on Astro 7.2 Web Portal → Persisted in PostgreSQL with encrypted patient references → Push notification anchor scheduled via AWS SNS.
 2. **Patient Interaction & Dose Logging:** Mobile app receives regimen via API → User logs dose offline or online → Optimistic local UI updates instantly with 5-second undo toast → Synchronized to Backend `/adherence/log` with idempotency tokens.
 3. **Closed-Loop Exception Triage:** Missed doses or "bad" symptom check-ins trigger Backend Triage Engine → Evaluates risk score (`CRITICAL`, `WARNING`, `STABLE`) → Real-time Triage Dashboard updates clinician view.
@@ -139,14 +149,17 @@ Our team followed an agile, contract-first **Simple, Lovable, Complete (SLC)** e
 ### • Challenges Faced & Solutions
 
 #### Challenge 1: Ensuring Zero-Hallucination AI Safety for Patient Medical Inquiries
+
 - **Description:** Post-op patients frequently ask dangerous questions ("Can I double my pain dose?", "Does this wound look infected?"). Standard LLMs often hallucinate dosage recommendations or offer medical diagnoses, creating severe liability and patient risk.
-- **Solution:** We engineered a dual-layer RAG guardrail architecture. System prompts strictly bound the LLM to retrieved discharge instructions. An algorithmic heuristic and guardrail classifier intercepts medical diagnosis prompts, returning standardized refusal text (*"I cannot provide medical diagnoses or alter dosages. Please contact your surgeon immediately."*) and highlighting the clinic emergency hotline.
+- **Solution:** We engineered a dual-layer RAG guardrail architecture. System prompts strictly bound the LLM to retrieved discharge instructions. An algorithmic heuristic and guardrail classifier intercepts medical diagnosis prompts, returning standardized refusal text (_"I cannot provide medical diagnoses or alter dosages. Please contact your surgeon immediately."_) and highlighting the clinic emergency hotline.
 
 #### Challenge 2: Reliable Offline Adherence Logging with Deterministic Sync & Undo Windows
+
 - **Description:** Patients in hospital recovery wings, elevators, or rural areas often experience intermittent connectivity. Dropping dose logs or duplicating writes on reconnect would corrupt clinical adherence metrics.
 - **Solution:** We designed an offline queue in Flutter backed by local persistent storage. Every dose write generates a UUIDv4 idempotency key. A 5-second undo window holds the write locally before scheduling background dispatch. On network restoration, a deterministic queue flush reconciles server state with automatic conflict resolution.
 
 #### Challenge 3: Multi-Role Authorization & Preventing Cross-Tenant Data Leaks
+
 - **Description:** Ensuring clinicians can only inspect patients belonging to their authorized clinical case, while patients can only view their personal schedule, required strict multi-tenant boundary enforcement.
 - **Solution:** We implemented database-level Row-Level Security (RLS) policies coupled with FastAPI dependency injection (`require_clinician`, `get_current_user`). Every database query enforces session-scoped tenant filtering, verified by 10+ adversarial authorization unit tests.
 
@@ -167,9 +180,10 @@ Our team followed an agile, contract-first **Simple, Lovable, Complete (SLC)** e
 **GitHub Repository Link:** [https://github.com/FlaviusBurghilaOPIT/uep2026](https://github.com/FlaviusBurghilaOPIT/uep2026)
 
 ### Notes on Setup & Environment:
+
 - **Clean Architecture Parity:** All code is organized into modular directories (`backend/`, `web/`, `mobile/`, `docs/`).
-- **One-Command Local Docker Setup:** `docker-compose up` runs PostgreSQL and FastAPI with zero external prerequisites.
-- **Database Seeding:** `docker-compose exec backend python app/scripts/seed_data.py` instantly seeds demo clinicians, patients, surgical cases, and medication schedules.
+- **One-Command Local Docker Setup:** `docker compose up` runs PostgreSQL and FastAPI with zero external prerequisites.
+- **Database Seeding:** `docker compose exec backend python app/scripts/seed_data.py` instantly seeds demo clinicians, patients, surgical cases, and medication schedules.
 - **Test Execution:**
   - Backend: `cd backend && pytest` (164 tests passing)
   - Web: `cd web && npm test` (5 tests passing)
@@ -183,6 +197,7 @@ Our team followed an agile, contract-first **Simple, Lovable, Complete (SLC)** e
 **Video Demo Link (Google Drive):** `[Insert Google Drive Link Here — Set to "Anyone with the link can view"]`
 
 ### Demo Video Checklist (Strictly ≤ 2 Minutes):
+
 - [x] **0:00 – 0:25 (The Problem & Clinician Prescribing):** Show clinician logging in to Web Portal, creating a surgical case (e.g., Total Knee Arthroplasty), prescribing Ibuprofen & Amoxicillin, and checking openFDA safety warnings.
 - [x] **0:25 – 0:55 (Patient Mobile Experience):** Show patient opening Flutter Mobile app, entering the 6-digit OTP code, viewing today's medication agenda with pill form badges, and logging scheduled morning dose in 1 tap.
 - [x] **0:55 – 1:20 (Signature Moments & AI Guardrails):** Complete remaining doses to trigger the 600ms "Day Complete" Ring Closure sparkle moment; ask AI Assistant "Can I take extra pills?" to demonstrate strict safety refusal guardrail.
@@ -190,6 +205,7 @@ Our team followed an agile, contract-first **Simple, Lovable, Complete (SLC)** e
 - [x] **1:45 – 2:00 (Value Summary & AWS Impact):** Conclude with the closed-loop recovery impact: 35% readmission reduction, 70% nurse time saved, AWS-scalable architecture.
 
 **Deployed EC2 Endpoints & Ports:**
+
 - **Web Portal (Clinician Gateway):** `http://<YOUR_EC2_IP>` (Port `80` via Nginx)
 - **Swagger API Documentation:** `http://<YOUR_EC2_IP>/docs` (or `http://<YOUR_EC2_IP>:8000/docs`)
 - **FastAPI Backend API (Mobile & Docs):** `http://<YOUR_EC2_IP>:8000` (Port `8000`)
@@ -211,5 +227,5 @@ Our team followed an agile, contract-first **Simple, Lovable, Complete (SLC)** e
    - **Novel Closed-Loop Paradigm:** Unlike passive medication reminder apps, RemoteCare Pro connects patient adherence directly to a clinician triage exception engine.
    - **Safety-First AI:** Addresses the real clinical problem of LLM hallucinations through RAG guardrails and FDA label grounding.
 4. **Presentation & Q&A Mastery (15% Pitching Ceremony):**
-   - **Anticipated Judge Question 1:** *"How do you prevent dangerous AI advice?"* → *Answer: Context-grounded RAG with strict refusal guardrails and direct emergency escalation triggers.*
-   - **Anticipated Judge Question 2:** *"How does this scale across hospitals?"* → *Answer: Cloud-native AWS ECS Fargate containerization, RDS Postgres with tenant isolation, and asynchronous decoupled services.*
+   - **Anticipated Judge Question 1:** _"How do you prevent dangerous AI advice?"_ → _Answer: Context-grounded RAG with strict refusal guardrails and direct emergency escalation triggers._
+   - **Anticipated Judge Question 2:** _"How does this scale across hospitals?"_ → _Answer: Cloud-native AWS ECS Fargate containerization, RDS Postgres with tenant isolation, and asynchronous decoupled services._

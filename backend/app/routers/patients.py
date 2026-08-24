@@ -1,16 +1,19 @@
 import csv
 import io
+import logging
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
-from sqlalchemy import or_
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app import models, schemas
 from app.dependencies import get_current_user, get_db_for_user, require_clinician
 from app.security import hash_password
 from app.services.email_service import EmailService
+
+logger = logging.getLogger("app.routers.patients")
 
 router = APIRouter(
     prefix="/patients",
@@ -25,24 +28,27 @@ def invite_patient(
     db: Session = Depends(get_db_for_user),
     current_user: models.User = Depends(require_clinician),
 ):
-    existing_user = db.query(models.User).filter(models.User.email == req.email).first()
+    clean_email = req.email.strip().lower()
+    existing_user = db.query(models.User).filter(func.lower(models.User.email) == clean_email).first()
     if existing_user:
+        logger.warning(f"[/patients/invite] User with email '{clean_email}' already exists")
         raise HTTPException(status_code=400, detail="User with this email already exists")
 
     invite_code = f"{secrets.randbelow(900000) + 100000}"
 
     patient = models.User(
-        email=req.email,
-        full_name=req.full_name,
+        email=clean_email,
+        full_name=req.full_name.strip(),
         role=models.UserRole.patient,
         status="pending_onboarding",
         invite_code=invite_code,
-        invite_code_expires_at=datetime.utcnow() + timedelta(days=7),
+        invite_code_expires_at=datetime.now(timezone.utc) + timedelta(days=7),
         date_of_birth=req.date_of_birth,
     )
     db.add(patient)
     db.commit()
     db.refresh(patient)
+    logger.info(f"[/patients/invite] Enrolled patient '{clean_email}' with invite_code='{invite_code}'")
 
     EmailService().send_patient_code(patient.email, invite_code)
 

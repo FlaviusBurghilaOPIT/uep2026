@@ -1,3 +1,4 @@
+import logging
 import os
 import secrets
 from datetime import datetime, timedelta, timezone
@@ -11,6 +12,8 @@ from app.database import get_db
 from app.dependencies import get_current_user
 from app.security import create_access_token, hash_password, verify_password
 from app.services.email_service import EmailService
+
+logger = logging.getLogger("app.routers.auth")
 
 router = APIRouter(
     prefix="/auth",
@@ -33,11 +36,14 @@ def login(login: schemas.LoginRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(func.lower(models.User.email) == clean_email).first()
 
     if not user or not user.password_hash:
+        logger.warning(f"[/auth/login] Login failed: user '{clean_email}' not found or has no password")
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     if not verify_password(login.password, user.password_hash):
+        logger.warning(f"[/auth/login] Login failed: invalid password for '{clean_email}'")
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
+    logger.info(f"[/auth/login] Successful login for '{clean_email}' (role={user.role.value})")
     token = create_access_token({"sub": user.id, "role": user.role.value, "email": user.email})
 
     return {"access_token": token, "token_type": "bearer"}
@@ -74,17 +80,26 @@ def complete_onboarding(req: schemas.CompleteOnboardingRequest, db: Session = De
     clean_email = req.email.strip().lower()
     clean_code = str(req.invite_code).strip()
 
+    logger.info(f"[/auth/complete-onboarding] Attempt for email='{clean_email}', code='{clean_code}'")
+
     user = (
         db.query(models.User)
         .filter(
             func.lower(models.User.email) == clean_email,
-            models.User.invite_code == clean_code,
             models.User.status == "pending_onboarding",
         )
         .first()
     )
 
-    if not user or _is_expired(user.invite_code_expires_at):
+    if not user:
+        logger.warning(f"[/auth/complete-onboarding] No pending_onboarding user found for '{clean_email}'")
+        raise HTTPException(status_code=400, detail="Invalid email or invite code")
+
+    stored_code = str(user.invite_code).strip() if user.invite_code else None
+    if not stored_code or not secrets.compare_digest(stored_code, clean_code) or _is_expired(user.invite_code_expires_at):
+        logger.warning(
+            f"[/auth/complete-onboarding] Invalid code for '{clean_email}': received='{clean_code}', stored='{stored_code}'"
+        )
         raise HTTPException(status_code=400, detail="Invalid email or invite code")
 
     if req.date_of_birth is not None:
@@ -100,6 +115,7 @@ def complete_onboarding(req: schemas.CompleteOnboardingRequest, db: Session = De
 
     db.commit()
     db.refresh(user)
+    logger.info(f"[/auth/complete-onboarding] Activated patient {user.id} ({user.email})")
 
     token = create_access_token({"sub": user.id, "role": user.role.value, "email": user.email})
     return {"access_token": token, "token_type": "bearer"}
@@ -149,6 +165,7 @@ def update_me(
 @router.post("/patient/request-code", response_model=schemas.PatientRequestCodeResponse)
 def request_patient_code(req: schemas.PatientRequestCodeRequest, db: Session = Depends(get_db)):
     clean_email = req.email.strip().lower()
+    logger.info(f"[/auth/patient/request-code] Requesting code for email: '{clean_email}'")
     user = (
         db.query(models.User)
         .filter(func.lower(models.User.email) == clean_email, models.User.role == models.UserRole.patient)
@@ -156,13 +173,21 @@ def request_patient_code(req: schemas.PatientRequestCodeRequest, db: Session = D
     )
 
     if user:
-        code = f"{secrets.randbelow(900000) + 100000}"
-        user.invite_code = code
-        user.invite_code_expires_at = datetime.now(timezone.utc) + timedelta(minutes=15)
-        db.commit()
+        # If user is in pending_onboarding and already has a valid invite code from clinician intake, preserve it
+        if user.status == "pending_onboarding" and user.invite_code and not _is_expired(user.invite_code_expires_at):
+            code = str(user.invite_code).strip()
+            logger.info(f"[/auth/patient/request-code] Preserved active onboarding code '{code}' for '{user.email}'")
+        else:
+            code = f"{secrets.randbelow(900000) + 100000}"
+            user.invite_code = code
+            user.invite_code_expires_at = datetime.now(timezone.utc) + timedelta(minutes=15)
+            db.commit()
+            logger.info(f"[/auth/patient/request-code] Generated fresh code '{code}' for '{user.email}'")
 
         email_service = EmailService()
         email_service.send_patient_code(user.email, code)
+    else:
+        logger.warning(f"[/auth/patient/request-code] Patient not found for email: '{clean_email}'")
 
     return schemas.PatientRequestCodeResponse()
 
@@ -172,21 +197,41 @@ def verify_patient_code(req: schemas.PatientVerifyCodeRequest, db: Session = Dep
     clean_email = req.email.strip().lower()
     clean_code = str(req.code).strip()
 
+    logger.info(f"[/auth/patient/verify-code] Verify attempt: email='{clean_email}', code='{clean_code}'")
+
     user = (
         db.query(models.User)
         .filter(func.lower(models.User.email) == clean_email, models.User.role == models.UserRole.patient)
         .first()
     )
 
-    valid_stored_code = False
-    if user and user.invite_code:
-        valid_stored_code = (
-            secrets.compare_digest(str(user.invite_code).strip(), clean_code)
-            and not _is_expired(user.invite_code_expires_at)
-        )
-
-    if not user or not valid_stored_code:
+    if not user:
+        logger.warning(f"[/auth/patient/verify-code] Patient not found for email: '{clean_email}'")
         raise HTTPException(status_code=400, detail="Invalid or expired code")
+
+    stored_code = str(user.invite_code).strip() if user.invite_code else None
+    logger.info(
+        f"[/auth/patient/verify-code] Found user {user.id} ({user.email}), status='{user.status}', "
+        f"stored_code='{stored_code}', expires_at={user.invite_code_expires_at}"
+    )
+
+    if not stored_code:
+        logger.warning(f"[/auth/patient/verify-code] User '{user.email}' has no invite_code set")
+        raise HTTPException(status_code=400, detail="Invalid or expired code")
+
+    if _is_expired(user.invite_code_expires_at):
+        logger.warning(
+            f"[/auth/patient/verify-code] Code expired for '{user.email}': expires_at={user.invite_code_expires_at}, now={datetime.now(timezone.utc)}"
+        )
+        raise HTTPException(status_code=400, detail="Invalid or expired code")
+
+    if not secrets.compare_digest(stored_code, clean_code):
+        logger.warning(
+            f"[/auth/patient/verify-code] Code mismatch for '{user.email}': received='{clean_code}', stored='{stored_code}'"
+        )
+        raise HTTPException(status_code=400, detail="Invalid or expired code")
+
+    logger.info(f"[/auth/patient/verify-code] Code successfully verified for '{user.email}' (status='{user.status}')")
 
     if user.status == "pending_onboarding":
         return {

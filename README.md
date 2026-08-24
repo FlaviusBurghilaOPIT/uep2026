@@ -85,7 +85,7 @@ The entire stack (Nginx, Arize Phoenix, PostgreSQL + pgvector, FastAPI Backend, 
 ### 1. Start the Complete Stack
 
 ```bash
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 Verify services are healthy:
@@ -104,10 +104,10 @@ The seed script (`backend/app/scripts/seed_data.py`) supports **2 distinct test 
 
 ```bash
 # SIMULATION 1: Clinician Only (For live authoring from scratch)
-docker-compose exec backend python app/scripts/seed_data.py --mode clinician-only --reset
+docker compose exec backend python app/scripts/seed_data.py --mode clinician-only --reset
 
 # SIMULATION 2: Full Simulation (For end-to-end demo with pre-seeded patient & roster)
-docker-compose exec backend python app/scripts/seed_data.py --mode full --reset
+docker compose exec backend python app/scripts/seed_data.py --mode full --reset
 ```
 
 ### Execution Locally (Direct Python):
