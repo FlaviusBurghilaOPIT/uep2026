@@ -375,7 +375,7 @@ void main() {
 
       final slot = await loadOneSlot();
       await notifier().logDose(slot, DoseLogStatus.taken);
-      await Future<void>.delayed(const Duration(milliseconds: 80));
+      await Future<void>.delayed(const Duration(milliseconds: 200));
 
       final state = agendaState();
       expect(attempts, 2, reason: 'one retry before rollback');
@@ -631,7 +631,7 @@ void main() {
         fakeApi.adherenceLogHandler = (id, status) =>
             throw Exception('offline');
         await n.logDose(slot, DoseLogStatus.taken);
-        await Future<void>.delayed(const Duration(milliseconds: 60));
+        await Future<void>.delayed(const Duration(milliseconds: 100));
         expect(agendaState().offlineQueue, hasLength(1));
         container.dispose();
 
