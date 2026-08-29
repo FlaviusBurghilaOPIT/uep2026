@@ -212,26 +212,27 @@ class GuardrailBanner extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
-      decoration: BoxDecoration(
-        color: AppColors.softCyan,
+      decoration: const BoxDecoration(
+        color: Color(0xFFF0FDF4),
         border: Border(
           bottom: BorderSide(
-            color: AppColors.deepTeal.withValues(alpha: 0.3),
+            color: Color(0xFFDCFCE7),
             width: 1,
           ),
         ),
       ),
       child: Row(
         children: [
-          Icon(LucideIcons.shieldCheck, color: AppColors.deepTeal, size: 18.sp),
+          Icon(LucideIcons.shieldCheck, color: const Color(0xFF166534), size: 18.sp),
           SizedBox(width: 8.w),
           Expanded(
             child: Text(
               text,
               style: TextStyle(
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w600,
-                color: AppColors.deepTeal,
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF334155),
+                height: 1.4,
               ),
             ),
           ),

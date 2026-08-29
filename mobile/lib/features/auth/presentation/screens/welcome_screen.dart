@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/navigation/app_routes.dart';
@@ -134,7 +133,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
 
                 // Primary patient onboarding action: Invitation Code
                 AppButton(
-                  text: 'I got an invitation code',
+                  text: 'New Patient? Enter Clinic Invitation',
                   isOutlined: true,
                   icon: LucideIcons.keyRound,
                   onPressed: _openInviteCodeSignIn,

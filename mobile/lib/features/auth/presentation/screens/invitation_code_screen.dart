@@ -130,6 +130,14 @@ class _InvitationCodeScreenState extends ConsumerState<InvitationCodeScreen> {
                   prefixIcon: LucideIcons.keyRound,
                   keyboardType: TextInputType.number,
                   controller: _codeController,
+                  autofillHints: const [AutofillHints.oneTimeCode],
+                  onChanged: (val) {
+                    if (val.trim().length == 6 &&
+                        RegExp(r'^\d{6}$').hasMatch(val.trim()) &&
+                        _emailController.text.trim().isNotEmpty) {
+                      _verifyInviteCode();
+                    }
+                  },
                   validator: (value) {
                     final v = value?.trim() ?? '';
                     if (v.isEmpty) return 'Please enter your 6-digit code';
@@ -138,6 +146,36 @@ class _InvitationCodeScreenState extends ConsumerState<InvitationCodeScreen> {
                     }
                     return null;
                   },
+                ),
+                SizedBox(height: AppSpacing.md),
+
+                Container(
+                  padding: EdgeInsets.all(12.w),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0FDF4),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    border: Border.all(color: const Color(0xFFDCFCE7)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        LucideIcons.hospital,
+                        color: const Color(0xFF166534),
+                        size: 18.sp,
+                      ),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: Text(
+                          'Verified Partner Clinic • St. Jude Post-Op Care Network',
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF166534),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 SizedBox(height: AppSpacing.xl),
 

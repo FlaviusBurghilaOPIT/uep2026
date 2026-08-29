@@ -251,6 +251,9 @@ class ProfileScreen extends ConsumerWidget {
     TextInputType keyboardType = TextInputType.text,
   }) async {
     final controller = TextEditingController(text: initial ?? '');
+    controller.selection = TextSelection.fromPosition(
+      TextPosition(offset: controller.text.length),
+    );
     final saved = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
@@ -509,22 +512,28 @@ class ProfileScreen extends ConsumerWidget {
       child: Row(
         children: [
           GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () => Navigator.maybePop(context),
             child: Container(
-              width: 36.w,
-              height: 36.w,
-              decoration: const BoxDecoration(
-                color: AppColors.inputFill,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.arrow_back,
-                color: AppColors.black,
-                size: AppSpacing.iconMd,
+              width: 48,
+              height: 48,
+              alignment: Alignment.center,
+              child: Container(
+                width: 36.w,
+                height: 36.w,
+                decoration: const BoxDecoration(
+                  color: AppColors.inputFill,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.arrow_back,
+                  color: AppColors.black,
+                  size: AppSpacing.iconMd,
+                ),
               ),
             ),
           ),
-          SizedBox(width: AppSpacing.hMd),
+          SizedBox(width: AppSpacing.hSm),
           Text(l10n.profileTitle, style: AppTextStyles.heading3),
         ],
       ),
@@ -642,18 +651,21 @@ class ProfileScreen extends ConsumerWidget {
     final isSelected = currentLocale.languageCode == localeCode;
     return InkWell(
       onTap: onTap,
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-        child: Row(
-          children: [
-            Expanded(child: Text(label, style: AppTextStyles.bodyMedium)),
-            if (isSelected)
-              Icon(
-                Icons.check,
-                color: AppColors.deepTeal,
-                size: AppSpacing.iconMd,
-              ),
-          ],
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+          child: Row(
+            children: [
+              Expanded(child: Text(label, style: AppTextStyles.bodyMedium)),
+              if (isSelected)
+                Icon(
+                  Icons.check,
+                  color: AppColors.deepTeal,
+                  size: AppSpacing.iconMd,
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -665,52 +677,58 @@ class ProfileScreen extends ConsumerWidget {
     final hasValue = value != null && value.isNotEmpty;
     return InkWell(
       onTap: onEdit,
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-        child: Row(
-          children: [
-            Expanded(child: Text(label, style: AppTextStyles.bodyMedium)),
-            SizedBox(width: 8.w),
-            Flexible(
-              child: Text(
-                hasValue ? value : notProvided,
-                style: hasValue
-                    ? AppTextStyles.bodyLarge.copyWith(
-                        fontWeight: FontWeight.w500,
-                      )
-                    : AppTextStyles.bodyLarge.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.greyText,
-                      ),
-                overflow: TextOverflow.ellipsis,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+          child: Row(
+            children: [
+              Expanded(child: Text(label, style: AppTextStyles.bodyMedium)),
+              SizedBox(width: 8.w),
+              Flexible(
+                child: Text(
+                  hasValue ? value : notProvided,
+                  style: hasValue
+                      ? AppTextStyles.bodyLarge.copyWith(
+                          fontWeight: FontWeight.w500,
+                        )
+                      : AppTextStyles.bodyLarge.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.greyText,
+                        ),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-            ),
-            if (onEdit != null) ...[
-              SizedBox(width: AppSpacing.hSm),
-              Icon(
-                Icons.edit_outlined,
-                color: AppColors.greyText,
-                size: AppSpacing.iconMd,
-              ),
+              if (onEdit != null) ...[
+                SizedBox(width: AppSpacing.hSm),
+                Icon(
+                  Icons.edit_outlined,
+                  color: AppColors.greyText,
+                  size: AppSpacing.iconMd,
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
   }
 
   Widget _toggleRow(String label, bool value, ValueChanged<bool> onChanged) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      child: Row(
-        children: [
-          Expanded(child: Text(label, style: AppTextStyles.bodyMedium)),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeTrackColor: AppColors.primaryGreen,
-          ),
-        ],
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 48),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+        child: Row(
+          children: [
+            Expanded(child: Text(label, style: AppTextStyles.bodyMedium)),
+            Switch(
+              value: value,
+              onChanged: onChanged,
+              activeTrackColor: AppColors.primaryGreen,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -718,19 +736,22 @@ class ProfileScreen extends ConsumerWidget {
   Widget _arrowRow(String label, IconData icon, {required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-        child: Row(
-          children: [
-            Icon(icon, color: AppColors.greyText, size: AppSpacing.iconLg),
-            SizedBox(width: AppSpacing.hMd),
-            Expanded(child: Text(label, style: AppTextStyles.bodyMedium)),
-            Icon(
-              Icons.chevron_right,
-              color: AppColors.greyLight,
-              size: AppSpacing.iconMd,
-            ),
-          ],
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+          child: Row(
+            children: [
+              Icon(icon, color: AppColors.greyText, size: AppSpacing.iconLg),
+              SizedBox(width: AppSpacing.hMd),
+              Expanded(child: Text(label, style: AppTextStyles.bodyMedium)),
+              Icon(
+                Icons.chevron_right,
+                color: AppColors.greyLight,
+                size: AppSpacing.iconMd,
+              ),
+            ],
+          ),
         ),
       ),
     );

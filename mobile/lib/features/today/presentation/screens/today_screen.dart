@@ -430,6 +430,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
           children: [
             Text(
               dateLine.toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: AppTextStyles.labelSmall.copyWith(
                 color: AppColors.white.withValues(alpha: 0.7),
                 letterSpacing: 1.5,
@@ -438,6 +440,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
             SizedBox(height: AppSpacing.sm),
             Text(
               greetingLine,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: AppTextStyles.heading2.copyWith(color: AppColors.white),
             ),
             SizedBox(height: AppSpacing.md),

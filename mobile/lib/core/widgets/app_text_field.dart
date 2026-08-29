@@ -12,6 +12,9 @@ class AppTextField extends StatefulWidget {
   final bool isPassword;
   final TextEditingController? controller;
   final TextInputType? keyboardType;
+  final TextCapitalization textCapitalization;
+  final bool autocorrect;
+  final Iterable<String>? autofillHints;
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
   final bool enabled;
@@ -24,6 +27,9 @@ class AppTextField extends StatefulWidget {
     this.isPassword = false,
     this.controller,
     this.keyboardType,
+    this.textCapitalization = TextCapitalization.none,
+    this.autocorrect = false,
+    this.autofillHints,
     this.validator,
     this.onChanged,
     this.enabled = true,
@@ -50,6 +56,13 @@ class _AppTextFieldState extends State<AppTextField> {
           controller: widget.controller,
           obscureText: widget.isPassword && _obscureText,
           keyboardType: widget.keyboardType,
+          textCapitalization: widget.keyboardType == TextInputType.emailAddress
+              ? TextCapitalization.none
+              : widget.textCapitalization,
+          autocorrect: widget.keyboardType == TextInputType.emailAddress
+              ? false
+              : widget.autocorrect,
+          autofillHints: widget.autofillHints,
           validator: widget.validator,
           onChanged: widget.onChanged,
           enabled: widget.enabled,

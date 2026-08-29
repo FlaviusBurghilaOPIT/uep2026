@@ -218,6 +218,20 @@ class DoseSlotCard extends StatelessWidget {
     return l10n.pillFormTablet;
   }
 
+  IconData _pillFormIcon() {
+    final medLower = '${slot.medicationName} ${slot.dose}'.toLowerCase();
+    if (medLower.contains('liquid') ||
+        medLower.contains('drops') ||
+        medLower.contains('syrup') ||
+        medLower.contains('ml')) {
+      return Icons.water_drop_outlined;
+    }
+    if (medLower.contains('capsule') || medLower.contains('cap')) {
+      return Icons.medication_liquid_outlined;
+    }
+    return Icons.medication_outlined;
+  }
+
   List<_ActionSpec> _actions(AppLocalizations l10n) => [
     _ActionSpec(
       status: DoseLogStatus.taken,

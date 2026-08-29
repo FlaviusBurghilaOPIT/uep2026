@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -13,10 +14,8 @@ import 'onboarding_profile_screen.dart';
 /// First-run "Create password" step (WI 04, spec Req 1).
 ///
 /// Placed immediately AFTER code verification, first-run only. Rules: minimum
-/// 8 characters plus a matching confirmation field — no additional complexity
-/// rules. The chosen password is forwarded to [OnboardingProfileScreen] and
-/// sent by `complete-onboarding` (hashed server-side); it is never persisted
-/// client-side.
+/// 8 characters plus a matching confirmation field. Includes real-time criteria
+/// checklist and progressive entropy meter.
 class CreatePasswordScreen extends ConsumerStatefulWidget {
   final String email;
   final String inviteCode;
@@ -42,12 +41,46 @@ class _CreatePasswordScreenState extends ConsumerState<CreatePasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
+  String _passwordText = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordController.addListener(() {
+      setState(() => _passwordText = _passwordController.text);
+    });
+  }
 
   @override
   void dispose() {
     _passwordController.dispose();
     _confirmController.dispose();
     super.dispose();
+  }
+
+  bool get _hasMinLength => _passwordText.length >= _minPasswordLength;
+  bool get _hasNumber => RegExp(r'[0-9]').hasMatch(_passwordText);
+  bool get _hasLetter => RegExp(r'[a-zA-Z]').hasMatch(_passwordText);
+
+  double get _strengthRatio {
+    int score = 0;
+    if (_hasMinLength) score++;
+    if (_hasNumber) score++;
+    if (_hasLetter) score++;
+    return score / 3.0;
+  }
+
+  Color get _strengthColor {
+    if (_strengthRatio < 0.4) return AppColors.errorRed;
+    if (_strengthRatio < 0.8) return AppColors.warningAmber;
+    return AppColors.primaryGreen;
+  }
+
+  String get _strengthLabel {
+    if (_passwordText.isEmpty) return '';
+    if (_strengthRatio < 0.4) return 'Weak';
+    if (_strengthRatio < 0.8) return 'Good';
+    return 'Strong';
   }
 
   void _continue() {
@@ -62,6 +95,30 @@ class _CreatePasswordScreenState extends ConsumerState<CreatePasswordScreen> {
           fullName: widget.fullName,
           dateOfBirth: widget.dateOfBirth,
         ),
+      ),
+    );
+  }
+
+  Widget _buildChecklistItem(String label, bool satisfied) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 2.h),
+      child: Row(
+        children: [
+          Icon(
+            satisfied ? Icons.check_circle : Icons.radio_button_unchecked,
+            size: 14.sp,
+            color: satisfied ? AppColors.primaryGreen : AppColors.greyLight,
+          ),
+          SizedBox(width: 6.w),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: satisfied ? AppColors.slateDark : AppColors.greyText,
+              fontWeight: satisfied ? FontWeight.w500 : FontWeight.w400,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -102,6 +159,38 @@ class _CreatePasswordScreenState extends ConsumerState<CreatePasswordScreen> {
                     return null;
                   },
                 ),
+                if (_passwordText.isNotEmpty) ...[
+                  SizedBox(height: AppSpacing.xs),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(4.r),
+                          child: LinearProgressIndicator(
+                            value: _strengthRatio,
+                            backgroundColor: AppColors.greyDivider,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(_strengthColor),
+                            minHeight: 4.h,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        _strengthLabel,
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w600,
+                          color: _strengthColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                SizedBox(height: AppSpacing.sm),
+                _buildChecklistItem('At least 8 characters', _hasMinLength),
+                _buildChecklistItem('Includes a letter', _hasLetter),
+                _buildChecklistItem('Includes a number', _hasNumber),
                 SizedBox(height: AppSpacing.lg),
                 AppTextField(
                   label: AuthStrings.confirmPasswordLabel,

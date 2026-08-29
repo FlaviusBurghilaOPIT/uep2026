@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/navigation/app_routes.dart';
@@ -28,11 +30,42 @@ class VerifyCodeScreen extends ConsumerStatefulWidget {
 class _VerifyCodeScreenState extends ConsumerState<VerifyCodeScreen> {
   final _formKey = GlobalKey<FormState>();
   final _codeController = TextEditingController();
+  int _secondsRemaining = 60;
+  Timer? _countdownTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startCountdown();
+  }
 
   @override
   void dispose() {
+    _countdownTimer?.cancel();
     _codeController.dispose();
     super.dispose();
+  }
+
+  void _startCountdown() {
+    setState(() => _secondsRemaining = 60);
+    _countdownTimer?.cancel();
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_secondsRemaining > 0) {
+        setState(() => _secondsRemaining--);
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  Future<void> _resendCode() async {
+    if (_secondsRemaining > 0) return;
+    _startCountdown();
+    await ref.read(authProvider.notifier).requestCode(email: widget.email);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Code resent to ${widget.email}')),
+    );
   }
 
   Future<void> _verify() async {
@@ -100,6 +133,13 @@ class _VerifyCodeScreenState extends ConsumerState<VerifyCodeScreen> {
                   prefixIcon: LucideIcons.keyRound,
                   keyboardType: TextInputType.number,
                   controller: _codeController,
+                  autofillHints: const [AutofillHints.oneTimeCode],
+                  onChanged: (val) {
+                    if (val.trim().length == 6 &&
+                        RegExp(r'^\d{6}$').hasMatch(val.trim())) {
+                      _verify();
+                    }
+                  },
                   validator: (value) {
                     final v = value?.trim() ?? '';
                     if (!RegExp(r'^\d{6}$').hasMatch(v)) {
@@ -113,6 +153,24 @@ class _VerifyCodeScreenState extends ConsumerState<VerifyCodeScreen> {
                   text: AuthStrings.verifyAndContinueButton,
                   isLoading: auth.isLoading,
                   onPressed: _verify,
+                ),
+                SizedBox(height: AppSpacing.md),
+                Center(
+                  child: TextButton(
+                    onPressed: _secondsRemaining == 0 ? _resendCode : null,
+                    child: Text(
+                      _secondsRemaining > 0
+                          ? 'Resend Code in ${_secondsRemaining}s'
+                          : 'Resend Code',
+                      style: TextStyle(
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                        color: _secondsRemaining > 0
+                            ? AppColors.greyLight
+                            : AppColors.primaryGreen,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 ),
                 SizedBox(height: 24.h),
               ],
