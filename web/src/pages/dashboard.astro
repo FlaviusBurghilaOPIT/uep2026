@@ -159,13 +159,13 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
           </div>
           <div>
             <h3 class="ai-summary-title">{t('triage.aiSummaryTitle', 'Clinical Cohort Intelligence Brief')}</h3>
-            <p class="ai-summary-sub">Automated multi-patient telemetry synthesis & recovery protocol verification</p>
+            <p class="ai-summary-sub">{t('triage.aiSummarySubtitle', 'Automated multi-patient telemetry synthesis & recovery protocol verification')}</p>
           </div>
         </div>
         <div class="ai-header-actions">
           <span class="ai-badge-verified">
             <HeartPulse size={13} aria-hidden="true" />
-            <span>Clinical Intelligence Engine</span>
+            <span>{t('triage.aiEngineBadge', 'Clinical Intelligence Engine')}</span>
           </span>
           <button type="button" class="ai-close-icon-btn" id="ai-top-close-btn" aria-label="Close summary">
             <X size={16} aria-hidden="true" />
@@ -193,7 +193,7 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
           <AlertCircle size={18} class="stat-icon-red" aria-hidden="true" />
         </div>
         <div class="stat-number" id="count-red">{redItems.length}</div>
-        <div class="stat-sub">{redItems.length > 0 ? 'Immediate clinical review required' : 'Zero critical exceptions'}</div>
+        <div class="stat-sub">{redItems.length > 0 ? t('triage.statSubRed', 'Immediate clinical review required') : t('triage.statSubRedClean', 'Zero critical exceptions')}</div>
       </div>
 
       <div class="stat-card stat-amber">
@@ -202,7 +202,7 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
           <TriangleAlert size={18} class="stat-icon-amber" aria-hidden="true" />
         </div>
         <div class="stat-number" id="count-amber">{amberItems.length}</div>
-        <div class="stat-sub">{amberItems.length > 0 ? 'Discomfort or adherence flagged' : 'No moderate flags'}</div>
+        <div class="stat-sub">{amberItems.length > 0 ? t('triage.statSubAmber', 'Discomfort or adherence flagged') : t('triage.statSubAmberClean', 'No moderate flags')}</div>
       </div>
 
       <div class="stat-card stat-blue">
@@ -211,7 +211,7 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
           <Activity size={18} class="stat-icon-blue" aria-hidden="true" />
         </div>
         <div class="stat-number" id="count-total">{totalPatients}</div>
-        <div class="stat-sub">Active surgical recovery cohort</div>
+        <div class="stat-sub">{t('triage.statSubBlue', 'Active surgical recovery cohort')}</div>
       </div>
 
       <div class="stat-card stat-green">
@@ -269,7 +269,7 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
           </div>
           <div>
             <h2 class="section-title">{t('triage.queueTitle', 'Emergency Triage Queue')}</h2>
-            <p class="section-sub">Patients flagged with symptom discomfort, severe pain, or medication non-adherence</p>
+            <p class="section-sub">{t('triage.queueSubtitle', 'Patients flagged with symptom discomfort, severe pain, or medication non-adherence')}</p>
           </div>
         </div>
         <span class="priority-count-pill">{attentionItems.length} Exception{attentionItems.length !== 1 ? 's' : ''}</span>
@@ -281,7 +281,7 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
             <div class="empty-icon-circle">
               <CheckCircle2 size={28} aria-hidden="true" />
             </div>
-            <h3 class="empty-title">All Patient Pathways Stable</h3>
+            <h3 class="empty-title">{t('triage.emptyTitle', 'All Patient Pathways Stable')}</h3>
             <p class="empty-text">{t('triage.allOnTrack', 'All patient recovery pathways are currently on track. No active triage exceptions.')}</p>
           </div>
         ) : (
@@ -308,12 +308,12 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
                           {isRed ? (
                             <>
                               <AlertCircle size={12} aria-hidden="true" />
-                              <span>CRITICAL EXCEPTION</span>
+                              <span>{t('triage.criticalException', 'CRITICAL EXCEPTION')}</span>
                             </>
                           ) : (
                             <>
                               <TriangleAlert size={12} aria-hidden="true" />
-                              <span>MODERATE ATTENTION</span>
+                              <span>{t('triage.moderateAttention', 'MODERATE ATTENTION')}</span>
                             </>
                           )}
                         </span>
@@ -326,7 +326,7 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
 
                   <div class="adherence-gauge-wrap">
                     <div class="gauge-label-row">
-                      <span class="gauge-label">Adherence</span>
+                      <span class="gauge-label">{t('patientCard.adherence', 'Adherence')}</span>
                       <strong class="gauge-pct">{item.adherenceRate}%</strong>
                     </div>
                     <div class="progress-track">
@@ -342,7 +342,7 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
                 <div class="triage-triggers-box">
                   <div class="trigger-label-row">
                     <ShieldAlert size={14} class="trigger-icon" aria-hidden="true" />
-                    <span class="trigger-title">Clinical Escalation Triggers:</span>
+                    <span class="trigger-title">{t('triage.escalationTriggers', 'Clinical Escalation Triggers:')}</span>
                   </div>
                   <ul class="trigger-list">
                     {item.triggers.map((trig: string) => (
@@ -354,7 +354,7 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
                 <!-- Active Medications Chips -->
                 {item.medications.length > 0 && (
                   <div class="card-meds-row">
-                    <span class="meds-sub-label">Prescribed Regimen:</span>
+                    <span class="meds-sub-label">{t('landing.telemetryPrescribedLabel', 'Prescribed Regimen')}:</span>
                     <div class="meds-tags">
                       {item.medications.map((m: any) => (
                         <span class="med-tag">
@@ -372,10 +372,10 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
                     {p.phone || pCase?.emergency_contact_phone ? (
                       <a href={`tel:${p.phone || pCase?.emergency_contact_phone}`} class="action-btn-call" aria-label={`Call ${p.full_name}`}>
                         <Phone size={14} aria-hidden="true" />
-                        <span>Call Patient</span>
+                        <span>{t('triage.callPatient', 'Call Patient')}</span>
                       </a>
                     ) : (
-                      <span class="text-muted-contact">No phone registered</span>
+                      <span class="text-muted-contact">{t('triage.noPhone', 'No phone registered')}</span>
                     )}
                   </div>
 
@@ -419,7 +419,7 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
           </div>
           <div>
             <h2 class="section-title">{t('triage.stableRosterTitle', 'Stable Patient Roster')}</h2>
-            <p class="section-sub">Patients with optimal medication compliance and positive check-in sentiments</p>
+            <p class="section-sub">{t('triage.stableSubtitle', 'Patients with optimal medication compliance and positive check-in sentiments')}</p>
           </div>
         </div>
         <span class="stable-count-pill">{stableItems.length} Patient{stableItems.length !== 1 ? 's' : ''} Stable</span>
@@ -444,16 +444,16 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
                       <span class="roster-sub-meta">{t('patientCard.surgeryType', 'Surgery')}: {pCase?.surgery_type || 'Post-Op'}</span>
                     </div>
                   </div>
-                  <span class="status-badge-stable">STABLE</span>
+                  <span class="status-badge-stable">{t('triage.statusStable', 'STABLE')}</span>
                 </div>
 
                 <div class="roster-metrics">
                   <div class="metric-col">
-                    <span class="metric-label">Adherence</span>
+                    <span class="metric-label">{t('patientCard.adherence', 'Adherence')}</span>
                     <strong class="metric-val text-green">{item.adherenceRate}%</strong>
                   </div>
                   <div class="metric-col">
-                    <span class="metric-label">Latest Check-In</span>
+                    <span class="metric-label">{t('patientCard.lastCheckin', 'Latest Check-In')}</span>
                     <strong class="metric-val">{item.latestSymptom?.feeling?.toUpperCase() || 'OK'}</strong>
                   </div>
                 </div>

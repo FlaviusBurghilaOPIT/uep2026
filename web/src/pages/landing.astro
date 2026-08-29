@@ -110,13 +110,13 @@ const t = createTranslator(lang)
             <span class="patient-avatar">MR</span>
             <div>
               <h3 class="patient-name">Maria Rossi, 62yo</h3>
-              <span class="patient-sub">Total Knee Arthroplasty • Post-Op Day 3</span>
+              <span class="patient-sub">{t('landing.previewPatientSub', 'Total Knee Arthroplasty • Post-Op Day 3')}</span>
             </div>
           </div>
           <div class="status-badge" id="demo-badge">
             <TriangleAlert size={14} id="badge-icon-alert" aria-hidden="true" />
             <CheckCircle2 size={14} id="badge-icon-resolved" class="hidden" aria-hidden="true" />
-            <span id="badge-text">HIGH PRIORITY • Missed Morning Dose</span>
+            <span id="badge-text">{t('landing.previewAlertBadge', 'HIGH PRIORITY • Missed Morning Dose')}</span>
           </div>
         </div>
 
@@ -124,17 +124,17 @@ const t = createTranslator(lang)
           <div class="telemetry-box">
             <div class="telemetry-label">
               <Pill size={14} aria-hidden="true" />
-              <span>Prescribed Regimen</span>
+              <span>{t('landing.telemetryPrescribedLabel', 'Prescribed Regimen')}</span>
             </div>
-            <div class="telemetry-value">Oxycodone 5mg (Every 6h PRN)</div>
+            <div class="telemetry-value">{t('landing.telemetryOxycodone', 'Oxycodone 5mg (Every 6h PRN)')}</div>
           </div>
           <div class="telemetry-box">
             <div class="telemetry-label">
               <Clock size={14} aria-hidden="true" />
-              <span>Dose Adherence Status</span>
+              <span>{t('landing.telemetryAdherenceLabel', 'Dose Adherence Status')}</span>
             </div>
             <div class="telemetry-status" id="telemetry-status">
-              Overdue by 4.5 hours (0 / 2 doses logged today)
+              {t('landing.previewOverdueStatus', 'Overdue by 4.5 hours (0 / 2 doses logged today)')}
             </div>
           </div>
         </div>
@@ -142,11 +142,11 @@ const t = createTranslator(lang)
         <div class="preview-action-row">
           <button class="preview-action-btn" id="simulate-outreach-btn">
             <Phone size={16} aria-hidden="true" />
-            <span id="simulate-btn-text">Simulate 1-Click Clinical Outreach</span>
+            <span id="simulate-btn-text">{t('landing.telemetrySimulateOutreach', 'Simulate 1-Click Clinical Outreach')}</span>
           </button>
           <div class="resolved-banner hidden" id="resolved-banner">
             <CheckCircle2 size={16} aria-hidden="true" />
-            <span>Clinical Outreach Logged • Patient Status Resolved</span>
+            <span>{t('landing.telemetryOutreachLogged', 'Clinical Outreach Logged • Patient Status Resolved')}</span>
           </div>
         </div>
       </div>
@@ -166,19 +166,19 @@ const t = createTranslator(lang)
             <X size={14} aria-hidden="true" />
             <span>{t('landing.traditionalTitle', 'Traditional Discharge')}</span>
           </div>
-          <h3 class="comp-heading">Static Paper Instructions & Blind Spots</h3>
+          <h3 class="comp-heading">{t('landing.traditionalHeading', 'Static Paper Instructions & Blind Spots')}</h3>
           <ul class="comp-list">
             <li class="comp-item">
               <span class="bullet-x" aria-hidden="true">✕</span>
-              <span>Patients forget complex medication tapers and dosing schedules.</span>
+              <span>{t('landing.traditional1', 'Patients forget complex medication tapers and dosing schedules.')}</span>
             </li>
             <li class="comp-item">
               <span class="bullet-x" aria-hidden="true">✕</span>
-              <span>Severe side effects escalate to ER readmissions before clinicians are alerted.</span>
+              <span>{t('landing.traditional2', 'Severe side effects escalate to ER readmissions before clinicians are alerted.')}</span>
             </li>
             <li class="comp-item">
               <span class="bullet-x" aria-hidden="true">✕</span>
-              <span>No continuous adherence telemetry or automated exception queues.</span>
+              <span>{t('landing.traditional3', 'No continuous adherence telemetry or automated exception queues.')}</span>
             </li>
           </ul>
         </div>
@@ -189,19 +189,19 @@ const t = createTranslator(lang)
             <Check size={14} aria-hidden="true" />
             <span>{t('landing.remoteCareTitle', 'RemoteCare Pro Platform')}</span>
           </div>
-          <h3 class="comp-heading-blue">Proactive Guarded Care & Instant Escalation</h3>
+          <h3 class="comp-heading-blue">{t('landing.remoteCareHeading', 'Proactive Guarded Care & Instant Escalation')}</h3>
           <ul class="comp-list">
             <li class="comp-item">
               <span class="bullet-check" aria-hidden="true">✓</span>
-              <span>1-tap mobile dose logging with offline-first state and haptic feedback.</span>
+              <span>{t('landing.platform1', '1-tap mobile dose logging with offline-first state and haptic feedback.')}</span>
             </li>
             <li class="comp-item">
               <span class="bullet-check" aria-hidden="true">✓</span>
-              <span>Dynamically prioritized triage dashboard with sub-60s resolution targets.</span>
+              <span>{t('landing.platform2', 'Dynamically prioritized triage dashboard with sub-60s resolution targets.')}</span>
             </li>
             <li class="comp-item">
               <span class="bullet-check" aria-hidden="true">✓</span>
-              <span>Clinical AI safety intelligence and openFDA adverse event intelligence.</span>
+              <span>{t('landing.platform3', 'Clinical AI safety intelligence and openFDA adverse event intelligence.')}</span>
             </li>
           </ul>
         </div>
@@ -218,7 +218,7 @@ const t = createTranslator(lang)
       <div class="features-grid">
         <!-- Feature 1 -->
         <div class="feature-card">
-          <div class="feature-badge">ADHERENCE</div>
+          <div class="feature-badge">{t('landing.pillar1Badge', 'ADHERENCE')}</div>
           <div class="feature-icon">
             <Pill size={24} aria-hidden="true" />
           </div>
@@ -228,7 +228,7 @@ const t = createTranslator(lang)
 
         <!-- Feature 2 -->
         <div class="feature-card">
-          <div class="feature-badge">AI SAFETY</div>
+          <div class="feature-badge">{t('landing.pillar2Badge', 'AI SAFETY')}</div>
           <div class="feature-icon">
             <ShieldCheck size={24} aria-hidden="true" />
           </div>
@@ -238,7 +238,7 @@ const t = createTranslator(lang)
 
         <!-- Feature 3 -->
         <div class="feature-card">
-          <div class="feature-badge">CLINICAL TRIAGE</div>
+          <div class="feature-badge">{t('landing.pillar3Badge', 'CLINICAL TRIAGE')}</div>
           <div class="feature-icon">
             <Activity size={24} aria-hidden="true" />
           </div>
@@ -407,7 +407,7 @@ const t = createTranslator(lang)
       <div class="clinical-disclaimer-banner">
         <ShieldCheck size={20} class="disclaimer-icon" aria-hidden="true" />
         <div class="disclaimer-content">
-          <strong class="disclaimer-heading">Clinical Governance & Truth Gate Notice:</strong>
+          <strong class="disclaimer-heading">{t('landing.complianceNoticeTitle', 'Clinical Governance & Truth Gate Notice:')}</strong>
           <p class="disclaimer-text">
             {t('landing.complianceDisclaimer', 'Clinical Disclaimer: RemoteCare Pro is a clinical triage and patient adherence monitoring platform designed for licensed healthcare professionals. It does not provide autonomous medical diagnoses, alter prescribed treatment protocols, or replace independent clinical judgment.')}
           </p>
@@ -429,7 +429,7 @@ const t = createTranslator(lang)
 
     <!-- Footer -->
     <footer class="footer">
-      <p class="footer-text">RemoteCare Pro • Surgical Recovery & Telemetry Platform • {new Date().getFullYear()}</p>
+      <p class="footer-text">{t('landing.footerText', 'RemoteCare Pro • Surgical Recovery & Telemetry Platform')} • {new Date().getFullYear()}</p>
     </footer>
   </div>
 </Layout>

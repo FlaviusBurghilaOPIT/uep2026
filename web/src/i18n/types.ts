@@ -82,9 +82,21 @@ export interface TriageTranslations {
   tabAll?: string
   tabRed?: string
   tabAmber?: string
-  totalActive?: string
   reasonSeverePain?: string
   reasonDiscomfort?: string
+  aiSummarySubtitle?: string
+  aiEngineBadge?: string
+  statSubRed?: string
+  statSubRedClean?: string
+  statSubAmber?: string
+  statSubAmberClean?: string
+  statSubBlue?: string
+  queueSubtitle?: string
+  emptyTitle?: string
+  criticalException?: string
+  moderateAttention?: string
+  escalationTriggers?: string
+  stableSubtitle?: string
 }
 
 export interface PatientCardTranslations {
@@ -275,6 +287,32 @@ export interface LandingTranslations {
   complianceAwsDesc?: string
   complianceAwsBadge?: string
   complianceDisclaimer?: string
+  accessPortal?: string
+  previewPatientSub?: string
+  previewAlertBadge?: string
+  previewOverdueStatus?: string
+  traditionalHeading?: string
+  remoteCareHeading?: string
+  pillar1Badge?: string
+  pillar2Badge?: string
+  pillar3Badge?: string
+  complianceNoticeTitle?: string
+  brandName?: string
+  loginButton?: string
+  awsTrack?: string
+  interactivePreview?: string
+  liveTelemetryTitle?: string
+  liveTelemetrySubtitle?: string
+  comparisonTitle?: string
+  comparisonSubtitle?: string
+  pillarsTitle?: string
+  pillarsSubtitle?: string
+  pillar1Title?: string
+  pillar1Text?: string
+  pillar2Title?: string
+  pillar2Text?: string
+  pillar3Title?: string
+  pillar3Text?: string
 }
 
 export interface LoginTranslations {
@@ -453,6 +491,12 @@ export interface CaseDetailTranslations {
   statusSkipped: string
   statusPending: string
   caseNotFound: string
+  notFound?: string
+  backToCaseDetail?: string
+  surgeryDate?: string
+  adherenceRate?: string
+  latestFeeling?: string
+  totalCheckins?: string
 }
 
 export interface Translations {

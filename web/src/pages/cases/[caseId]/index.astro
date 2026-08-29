@@ -129,7 +129,7 @@ const postOpDay = calculatePostOpDay(caseData?.surgery_date)
       <div class="triage-status-pill" data-priority={triagePriority}>
         <span class="pulse-dot"></span>
         <span>
-          {triagePriority === 'red' ? 'CRITICAL ATTENTION REQUIRED' : triagePriority === 'amber' ? 'CLINICAL REVIEW RECOMMENDED' : 'RECOVERY ON TRACK (STABLE)'}
+          {triagePriority === 'red' ? t('triage.criticalException', 'CRITICAL ATTENTION REQUIRED') : triagePriority === 'amber' ? t('triage.moderateAttention', 'CLINICAL REVIEW RECOMMENDED') : t('triage.statusStable', 'RECOVERY ON TRACK (STABLE)')}
         </span>
       </div>
     </div>
@@ -140,7 +140,7 @@ const postOpDay = calculatePostOpDay(caseData?.surgery_date)
         <AlertTriangle size={20} class="banner-icon" />
         <div>
           <h4 class="banner-title">
-            {triagePriority === 'red' ? 'High Priority Recovery Exception' : 'Moderate Clinical Exception'}
+            {triagePriority === 'red' ? t('triage.highPriority', 'High Priority Recovery Exception') : t('triage.mediumPriority', 'Moderate Clinical Exception')}
           </h4>
           <ul class="banner-list">
             {triageReasons.map((r) => <li>{r}</li>)}
@@ -158,7 +158,7 @@ const postOpDay = calculatePostOpDay(caseData?.surgery_date)
           <span class="status-pill open">{status}</span>
         </div>
         <p class="patient-sub" id="case-surgery-sub">
-          <strong>Procedure:</strong> {surgeryType} • <strong>Surgery Date:</strong> {caseData?.surgery_date || 'N/A'} • <strong>DOB:</strong> {dob}
+          <strong>{t('patientCard.surgeryType', 'Procedure')}:</strong> {surgeryType} • <strong>{t('caseDetail.surgeryDate', 'Surgery Date')}:</strong> {caseData?.surgery_date || 'N/A'} • <strong>{t('patients.dob', 'DOB')}:</strong> {dob}
         </p>
       </div>
 
@@ -183,7 +183,7 @@ const postOpDay = calculatePostOpDay(caseData?.surgery_date)
           <Pill size={22} class="text-blue" />
         </div>
         <div class="metric-body">
-          <span class="metric-label">Adherence Rate</span>
+          <span class="metric-label">{t('caseDetail.adherenceRate', 'Adherence Rate')}</span>
           <div class="metric-val-row">
             <span class="metric-value">{adherenceRate}%</span>
             <span class={`status-tag ${adherenceRate >= 80 ? 'good' : 'bad'}`}>
@@ -201,7 +201,7 @@ const postOpDay = calculatePostOpDay(caseData?.surgery_date)
           <HeartPulse size={22} class="text-emerald" />
         </div>
         <div class="metric-body">
-          <span class="metric-label">Latest Check-In Feeling</span>
+          <span class="metric-label">{t('caseDetail.latestFeeling', 'Latest Check-In Feeling')}</span>
           <div class="metric-val-row">
             <span class="metric-value capitalize">
               {latestSymptom?.feeling ? latestSymptom.feeling.replace('_', ' ') : 'Pending'}
@@ -210,7 +210,7 @@ const postOpDay = calculatePostOpDay(caseData?.surgery_date)
               {latestSymptom?.checkin_date || 'Today'}
             </span>
           </div>
-          <p class="metric-subtext">Total Check-Ins: {symptoms.length}</p>
+          <p class="metric-subtext">{t('caseDetail.totalCheckins', 'Total Check-Ins')}: {symptoms.length}</p>
         </div>
       </div>
 
