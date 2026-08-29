@@ -25,6 +25,8 @@ abstract class AuthState with _$AuthState {
     String? dateOfBirth,
     String? primaryCondition,
     String? inviteCode,
+    String? physicianName,
+    String? clinicName,
 
     /// From `GET /auth/me` `has_password` — whether the change-password form
     /// must require the current password (WI 06).

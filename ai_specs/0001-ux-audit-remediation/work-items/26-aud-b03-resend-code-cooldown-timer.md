@@ -12,9 +12,9 @@ Add a 60-second countdown timer to the "Resend Code" button on Screen B03 (`Veri
 - Target file: `mobile/lib/features/auth/presentation/screens/otp_screen.dart`
 
 ## Acceptance criteria
-- [ ] After requesting a code, "Resend Code" button is disabled for 60 seconds.
-- [ ] Displays remaining seconds: "Resend Code in 58s".
-- [ ] Re-enables automatically when countdown reaches 0.
+- [x] After requesting a code, "Resend Code" button is disabled for 60 seconds.
+- [x] Displays remaining seconds: "Resend Code in 58s".
+- [x] Re-enables automatically when countdown reaches 0.
 
 ## Covers
 - User Stories: US5

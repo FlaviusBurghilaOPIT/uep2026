@@ -12,12 +12,20 @@ class VerifyCodeResult {
   /// pre-fill it (editable). Optional: the backend may omit it.
   final String? dateOfBirth;
 
+  /// Verified clinic name (e.g. "St. Jude Recovery Clinic").
+  final String? clinicName;
+
+  /// Inviting physician / clinician name (e.g. "Dr. Miller").
+  final String? physicianName;
+
   const VerifyCodeResult({
     required this.result,
     this.accessToken,
     this.email,
     this.fullName,
     this.dateOfBirth,
+    this.clinicName,
+    this.physicianName,
   });
 }
 
@@ -33,7 +41,7 @@ abstract class AuthRepository {
 
   /// `GET /patients/{patientId}/case` — returns case info to merge into
   /// [AuthState], or `null` on failure.
-  Future<({String? caseId, String? primaryCondition})> fetchCase(
+  Future<({String? caseId, String? primaryCondition, String? physicianName})> fetchCase(
     String patientId,
   );
 

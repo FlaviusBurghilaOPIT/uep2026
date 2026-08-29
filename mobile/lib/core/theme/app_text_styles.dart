@@ -121,4 +121,19 @@ class AppTextStyles {
         color: AppColors.greyLight,
         height: 1.4,
       );
+
+  static TextStyle get otpDigitText => GoogleFonts.inter(
+        fontSize: 18.sp,
+        fontWeight: FontWeight.w600,
+        color: AppColors.slateDark,
+        letterSpacing: 2.0,
+        height: 1.4,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      );
+
+  static TextStyle get countdownText => GoogleFonts.inter(
+        fontSize: 14.sp,
+        fontWeight: FontWeight.w600,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      );
 }

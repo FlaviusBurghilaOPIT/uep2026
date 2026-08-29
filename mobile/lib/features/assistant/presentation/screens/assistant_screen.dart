@@ -145,7 +145,14 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
             if (isAwaitingFirstChunk) const TypingIndicator(),
 
             // 4. Suggestion chips row (visible when messages is empty)
-            if (chatState.messages.isEmpty) SuggestionChips(caseId: caseId),
+            if (chatState.messages.isEmpty)
+              SuggestionChips(
+                caseId: caseId,
+                onChipSelected: (promptText) {
+                  _inputController.text = promptText;
+                  _handleSend();
+                },
+              ),
 
             // 5. Message input row
             Container(
@@ -231,7 +238,7 @@ class GuardrailBanner extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13.sp,
                 fontWeight: FontWeight.w500,
-                color: AppColors.slateDark,
+                color: const Color(0xFF334155),
                 height: 1.4,
               ),
             ),
@@ -244,18 +251,22 @@ class GuardrailBanner extends StatelessWidget {
 
 class SuggestionChips extends ConsumerWidget {
   final String caseId;
+  final ValueChanged<String>? onChipSelected;
 
-  const SuggestionChips({super.key, required this.caseId});
+  const SuggestionChips({
+    super.key,
+    required this.caseId,
+    this.onChipSelected,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
 
     final chips = [
-      l10n.chipMedicationSideEffects,
-      l10n.chipWoundCareTips,
-      l10n.chipPhysioTargets,
-      l10n.chipEmergencyContact,
+      l10n.chipSwellingNormal,
+      l10n.chipShowering,
+      l10n.chipMedicationInstructions,
     ];
 
     return Padding(
@@ -276,9 +287,13 @@ class SuggestionChips extends ConsumerWidget {
             backgroundColor: AppColors.softCyan,
             side: BorderSide(color: AppColors.deepTeal.withValues(alpha: 0.4)),
             onPressed: () {
-              ref
-                  .read(chatAssistantNotifierProvider.notifier)
-                  .sendSuggestion(caseId: caseId, chipText: chipText);
+              if (onChipSelected != null) {
+                onChipSelected!(chipText);
+              } else {
+                ref
+                    .read(chatAssistantNotifierProvider.notifier)
+                    .sendSuggestion(caseId: caseId, chipText: chipText);
+              }
             },
           );
         }).toList(),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:remotecare/core/l10n/app_localizations.dart';
 import 'package:remotecare/features/today/domain/entities/agenda_entities.dart';
@@ -292,15 +293,74 @@ void main() {
               )
               .map((i) => i.icon)
               .toList();
-          // icons[0] is always the "scheduled time" clock icon; icons[1] is
-          // the state badge's icon (any action-row icons follow after it).
-          expect(icons.length, greaterThanOrEqualTo(2));
-          iconsByState[state] = icons[1]!;
+          // icons[0] is always the "scheduled time" clock icon;
+          // icons[1] is the dosage format badge icon (VIS-03);
+          // icons[2] is the state badge's icon (any action-row icons follow after it).
+          expect(icons.length, greaterThanOrEqualTo(3));
+          iconsByState[state] = icons[2]!;
         }
 
         // Pairwise distinct across all 6 states (M-03 grayscale requirement).
         expect(iconsByState.values.toSet().length, SlotState.values.length);
       },
     );
+  });
+
+  group('DoseSlotCard dosage format badges (VIS-03)', () {
+    testWidgets('capsule medications render with capsule icon glyph and text', (
+      tester,
+    ) async {
+      final slot = buildSlot(
+        medicationName: 'Amoxicillin 500mg Capsule',
+        dose: '500 mg',
+      );
+      await tester.pumpWidget(wrap(DoseSlotCard(slot: slot)));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(LucideIcons.pill), findsOneWidget);
+      expect(find.text('Capsule'), findsOneWidget);
+    });
+
+    testWidgets('tablet medications render with tablet icon glyph and text', (
+      tester,
+    ) async {
+      final slot = buildSlot(
+        medicationName: 'Ibuprofen 400mg Tablet',
+        dose: '400 mg',
+      );
+      await tester.pumpWidget(wrap(DoseSlotCard(slot: slot)));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(LucideIcons.tablets), findsOneWidget);
+      expect(find.text('Tablet'), findsOneWidget);
+    });
+
+    testWidgets('liquid medications render with liquid icon glyph and text', (
+      tester,
+    ) async {
+      final slot = buildSlot(
+        medicationName: 'Paracetamol Oral Liquid 15ml',
+        dose: '15 ml',
+      );
+      await tester.pumpWidget(wrap(DoseSlotCard(slot: slot)));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(LucideIcons.droplet), findsOneWidget);
+      expect(find.text('Liquid'), findsOneWidget);
+    });
+
+    testWidgets('drops medications render with liquid drop icon glyph', (
+      tester,
+    ) async {
+      final slot = buildSlot(
+        medicationName: 'predniSOLONE eye drops',
+        dose: '2 drops',
+      );
+      await tester.pumpWidget(wrap(DoseSlotCard(slot: slot)));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(LucideIcons.droplet), findsOneWidget);
+      expect(find.text('Liquid'), findsOneWidget);
+    });
   });
 }

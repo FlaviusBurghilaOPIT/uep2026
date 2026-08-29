@@ -1,7 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro'
 import LanguageSwitcher from '../components/LanguageSwitcher.astro'
-import { Lock, ArrowLeft } from '@lucide/astro'
+import { Lock, ArrowLeft, ShieldCheck } from '@lucide/astro'
 import { createTranslator, isLanguage } from '../i18n'
 import '../index.css'
 
@@ -62,6 +62,11 @@ const t = createTranslator(lang)
         <button class="submit-btn" id="submit-btn" type="submit">
           {t('login.button', 'Sign In to Dashboard')}
         </button>
+
+        <div class="security-badge-row">
+          <ShieldCheck size={14} class="security-icon" aria-hidden="true" />
+          <span>{t('login.securityNotice', 'Sign in with your authorized healthcare organization credentials')}</span>
+        </div>
       </form>
     </div>
   </div>
@@ -182,6 +187,20 @@ const t = createTranslator(lang)
   }
   .submit-btn:hover {
     background-color: #1e293b;
+  }
+  .security-badge-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #64748b;
+    text-align: center;
+  }
+  .security-icon {
+    color: #0284c7;
+    flex-shrink: 0;
   }
 </style>
 

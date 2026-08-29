@@ -11,11 +11,12 @@ import '../../../../core/widgets/app_text_field.dart';
 import '../auth_strings.dart';
 import 'onboarding_profile_screen.dart';
 
-/// First-run "Create password" step (WI 04, spec Req 1).
+/// First-run "Create password" step (WI 04, WI 08, spec Req 1/Req 8).
 ///
 /// Placed immediately AFTER code verification, first-run only. Rules: minimum
-/// 8 characters plus a matching confirmation field. Includes real-time criteria
-/// checklist and progressive entropy meter.
+/// 8 characters, uppercase, lowercase, number, special character plus a matching
+/// confirmation field. Includes real-time criteria checklist and progressive
+/// entropy meter.
 class CreatePasswordScreen extends ConsumerStatefulWidget {
   final String email;
   final String inviteCode;
@@ -59,27 +60,46 @@ class _CreatePasswordScreenState extends ConsumerState<CreatePasswordScreen> {
   }
 
   bool get _hasMinLength => _passwordText.length >= _minPasswordLength;
+  bool get _hasUppercase => RegExp(r'[A-Z]').hasMatch(_passwordText);
+  bool get _hasLowercase => RegExp(r'[a-z]').hasMatch(_passwordText);
   bool get _hasNumber => RegExp(r'[0-9]').hasMatch(_passwordText);
-  bool get _hasLetter => RegExp(r'[a-zA-Z]').hasMatch(_passwordText);
+  bool get _hasSpecialChar => RegExp(r'[^a-zA-Z0-9]').hasMatch(_passwordText);
 
-  double get _strengthRatio {
+  bool get _allCriteriaMet =>
+      _hasMinLength &&
+      _hasUppercase &&
+      _hasLowercase &&
+      _hasNumber &&
+      _hasSpecialChar;
+
+  int get _strengthScore {
     int score = 0;
     if (_hasMinLength) score++;
+    if (_hasUppercase) score++;
+    if (_hasLowercase) score++;
     if (_hasNumber) score++;
-    if (_hasLetter) score++;
-    return score / 3.0;
+    if (_hasSpecialChar) score++;
+    return score;
+  }
+
+  int get _activeStrengthSegments {
+    if (_passwordText.isEmpty) return 0;
+    if (_strengthScore <= 2) return 1;
+    if (_strengthScore <= 4) return 2;
+    return 3;
   }
 
   Color get _strengthColor {
-    if (_strengthRatio < 0.4) return AppColors.errorRed;
-    if (_strengthRatio < 0.8) return AppColors.warningAmber;
+    if (_passwordText.isEmpty) return AppColors.greyDivider;
+    if (_activeStrengthSegments == 1) return AppColors.errorRed;
+    if (_activeStrengthSegments == 2) return AppColors.warningAmber;
     return AppColors.primaryGreen;
   }
 
   String get _strengthLabel {
     if (_passwordText.isEmpty) return '';
-    if (_strengthRatio < 0.4) return 'Weak';
-    if (_strengthRatio < 0.8) return 'Good';
+    if (_activeStrengthSegments == 1) return 'Weak';
+    if (_activeStrengthSegments == 2) return 'Medium';
     return 'Strong';
   }
 
@@ -96,6 +116,46 @@ class _CreatePasswordScreenState extends ConsumerState<CreatePasswordScreen> {
           dateOfBirth: widget.dateOfBirth,
         ),
       ),
+    );
+  }
+
+  Widget _buildSegmentedStrengthBar() {
+    final activeSegments = _activeStrengthSegments;
+    final color = _strengthColor;
+
+    return Row(
+      children: [
+        Expanded(
+          child: Row(
+            children: List.generate(3, (index) {
+              final isFilled = index < activeSegments;
+              return Expanded(
+                child: Container(
+                  key: Key('strength_segment_$index'),
+                  height: 4.h,
+                  margin: EdgeInsets.only(right: index < 2 ? 6.w : 0),
+                  decoration: BoxDecoration(
+                    color: isFilled ? color : AppColors.greyDivider,
+                    borderRadius: BorderRadius.circular(2.r),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
+        if (_strengthLabel.isNotEmpty) ...[
+          SizedBox(width: 8.w),
+          Text(
+            _strengthLabel,
+            key: const Key('strength_label'),
+            style: TextStyle(
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -159,44 +219,22 @@ class _CreatePasswordScreenState extends ConsumerState<CreatePasswordScreen> {
                     return null;
                   },
                 ),
-                if (_passwordText.isNotEmpty) ...[
-                  SizedBox(height: AppSpacing.xs),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(4.r),
-                          child: LinearProgressIndicator(
-                            value: _strengthRatio,
-                            backgroundColor: AppColors.greyDivider,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(_strengthColor),
-                            minHeight: 4.h,
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-                      Text(
-                        _strengthLabel,
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w600,
-                          color: _strengthColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                SizedBox(height: AppSpacing.xs),
+                _buildSegmentedStrengthBar(),
                 SizedBox(height: AppSpacing.sm),
                 _buildChecklistItem('At least 8 characters', _hasMinLength),
-                _buildChecklistItem('Includes a letter', _hasLetter),
-                _buildChecklistItem('Includes a number', _hasNumber),
+                _buildChecklistItem('Uppercase letter', _hasUppercase),
+                _buildChecklistItem('Lowercase letter', _hasLowercase),
+                _buildChecklistItem('Number', _hasNumber),
+                _buildChecklistItem('Special character', _hasSpecialChar),
                 SizedBox(height: AppSpacing.lg),
                 AppTextField(
+                  key: const Key('confirm_password_field'),
                   label: AuthStrings.confirmPasswordLabel,
                   hintText: AuthStrings.passwordHint,
                   prefixIcon: LucideIcons.lock,
                   isPassword: true,
+                  enabled: _allCriteriaMet,
                   controller: _confirmController,
                   validator: (value) {
                     if (value != _passwordController.text) {
@@ -208,7 +246,7 @@ class _CreatePasswordScreenState extends ConsumerState<CreatePasswordScreen> {
                 SizedBox(height: AppSpacing.xl),
                 AppButton(
                   text: AuthStrings.continueButton,
-                  onPressed: _continue,
+                  onPressed: _allCriteriaMet ? _continue : null,
                 ),
                 SizedBox(height: 24.h),
               ],

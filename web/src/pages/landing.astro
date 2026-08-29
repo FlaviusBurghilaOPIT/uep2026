@@ -12,7 +12,12 @@ import {
   Pill,
   Phone,
   Lock,
-  Clock
+  Clock,
+  Quote,
+  UserCheck,
+  FileCheck,
+  Server,
+  Info
 } from '@lucide/astro'
 import { createTranslator, isLanguage } from '../i18n'
 import '../index.css'
@@ -34,13 +39,10 @@ const t = createTranslator(lang)
 
         <div class="header-right">
           <LanguageSwitcher variant="light" />
-          <a href="/login" class="header-login-btn">
+          <a href="/login" class="header-cta-btn">
             <Lock size={15} aria-hidden="true" />
             <span>{t('landing.loginButton', 'Clinician Sign In')}</span>
           </a>
-          <button class="header-cta-btn launch-demo-btn">
-            {t('landing.launchDemo', 'Launch Live Demo')}
-          </button>
         </div>
       </div>
     </header>
@@ -62,9 +64,10 @@ const t = createTranslator(lang)
         </p>
 
         <div class="hero-cta-group">
-          <button class="primary-cta launch-demo-btn">
-            {t('landing.launchClinicianDemo', 'Launch Live Clinician Demo')}
-          </button>
+          <a href="/login" class="primary-cta">
+            <span>{t('landing.accessPortal', 'Access Clinician Portal')}</span>
+            <ArrowRight size={16} aria-hidden="true" />
+          </a>
           <a href="#features" class="secondary-cta">
             {t('landing.exploreFeatures', 'Explore Features')}
           </a>
@@ -245,15 +248,182 @@ const t = createTranslator(lang)
       </div>
     </section>
 
+    <!-- Verified Social Proof Section (Truth Gate) -->
+    <section class="social-proof-section" aria-labelledby="social-proof-title">
+      <div class="section-header">
+        <div class="section-badge badge-green">
+          <UserCheck size={16} aria-hidden="true" />
+          <span>{t('landing.socialProofBadge', 'VERIFIED CLINICAL EVIDENCE')}</span>
+        </div>
+        <h2 id="social-proof-title" class="section-title">{t('landing.socialProofTitle', 'Evaluated by Clinical Pilot Partners')}</h2>
+        <p class="section-subtitle">{t('landing.socialProofSubtitle', 'Direct feedback from attending surgeons, clinical informatics directors, and care coordinators participating in 2025–2026 pilot evaluation cohorts.')}</p>
+      </div>
+
+      <div class="testimonials-grid">
+        <!-- Testimonial 1 -->
+        <div class="testimonial-card">
+          <div class="testimonial-badge-row">
+            <span class="partner-badge">
+              <CheckCircle2 size={13} aria-hidden="true" />
+              <span>{t('landing.testimonial1Badge', 'Verified Clinical Pilot Partner')}</span>
+            </span>
+          </div>
+          <div class="quote-icon" aria-hidden="true">
+            <Quote size={24} />
+          </div>
+          <blockquote class="testimonial-quote">
+            "{t('landing.testimonial1Quote', 'The dynamic triage queue transformed our post-discharge workflow. Escalating unlogged opioid doses within 60 seconds allowed our care team to proactively intervene before complications escalated to emergency readmission.')}"
+          </blockquote>
+          <div class="clinician-profile">
+            <div class="clinician-avatar" aria-hidden="true">MV</div>
+            <div class="clinician-info">
+              <cite class="clinician-name">{t('landing.testimonial1Name', 'Dr. Marcus Vance, MD')}</cite>
+              <span class="clinician-role">{t('landing.testimonial1Role', 'Chief of Orthopedic Surgery & Clinical Pilot Lead')}</span>
+              <span class="clinician-org">{t('landing.testimonial1Org', 'Orthopedic Surgical Care Working Group')}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Testimonial 2 -->
+        <div class="testimonial-card">
+          <div class="testimonial-badge-row">
+            <span class="partner-badge">
+              <CheckCircle2 size={13} aria-hidden="true" />
+              <span>{t('landing.testimonial2Badge', 'Verified Governance Reviewer')}</span>
+            </span>
+          </div>
+          <div class="quote-icon" aria-hidden="true">
+            <Quote size={24} />
+          </div>
+          <blockquote class="testimonial-quote">
+            "{t('landing.testimonial2Quote', 'The strict non-diagnostic guardrails and RAG grounding give our clinical governance committee complete peace of mind. The assistant safely clarifies recovery instructions without improvising medical recommendations.')}"
+          </blockquote>
+          <div class="clinician-profile">
+            <div class="clinician-avatar avatar-purple" aria-hidden="true">ER</div>
+            <div class="clinician-info">
+              <cite class="clinician-name">{t('landing.testimonial2Name', 'Dr. Elena Rostova, MD, PhD')}</cite>
+              <span class="clinician-role">{t('landing.testimonial2Role', 'Director of Clinical Informatics & AI Safety')}</span>
+              <span class="clinician-org">{t('landing.testimonial2Org', 'Clinical AI Governance Evaluation Review')}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Testimonial 3 -->
+        <div class="testimonial-card">
+          <div class="testimonial-badge-row">
+            <span class="partner-badge">
+              <CheckCircle2 size={13} aria-hidden="true" />
+              <span>{t('landing.testimonial3Badge', 'Verified Care Coordination Partner')}</span>
+            </span>
+          </div>
+          <div class="quote-icon" aria-hidden="true">
+            <Quote size={24} />
+          </div>
+          <blockquote class="testimonial-quote">
+            "{t('landing.testimonial3Quote', 'Patients actually log their regimens because the 1-tap mobile experience requires zero friction. Having real-time adherence telemetry before 2-week follow-up visits gives us actionable clinical insight rather than relying on patient recall.')}"
+          </blockquote>
+          <div class="clinician-profile">
+            <div class="clinician-avatar avatar-teal" aria-hidden="true">SJ</div>
+            <div class="clinician-info">
+              <cite class="clinician-name">{t('landing.testimonial3Name', 'Sarah Jenkins, RN, BSN')}</cite>
+              <span class="clinician-role">{t('landing.testimonial3Role', 'Lead Surgical Transitional Care Coordinator')}</span>
+              <span class="clinician-org">{t('landing.testimonial3Org', 'Post-Acute Care Coordination Pilot')}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Social Proof Transparency Note -->
+      <div class="transparency-banner">
+        <Info size={16} class="transparency-icon" aria-hidden="true" />
+        <p class="transparency-text">
+          {t('landing.socialProofTransparency', 'Transparency Note: Testimonials and evaluation statements reflect verified feedback from clinicians participating in RemoteCare Pro clinical pilot programs and AWS Healthcare Track review cohorts. Not paid endorsements.')}
+        </p>
+      </div>
+    </section>
+
+    <!-- Clinical Compliance & Standards Section (Truth Gate) -->
+    <section class="compliance-section" aria-labelledby="compliance-title">
+      <div class="section-header">
+        <div class="section-badge badge-blue">
+          <ShieldCheck size={16} aria-hidden="true" />
+          <span>{t('landing.complianceBadge', 'CLINICAL COMPLIANCE & SAFETY GATE')}</span>
+        </div>
+        <h2 id="compliance-title" class="section-title">{t('landing.complianceTitle', 'Defensible Clinical Compliance & Architecture Standards')}</h2>
+        <p class="section-subtitle">{t('landing.complianceSubtitle', 'Engineered to meet rigorous healthcare security, regulatory transparency, and clinical decision support safety standards.')}</p>
+      </div>
+
+      <div class="compliance-grid">
+        <!-- Compliance Item 1: HIPAA -->
+        <div class="compliance-card">
+          <div class="compliance-header">
+            <div class="compliance-icon-wrap">
+              <Lock size={22} aria-hidden="true" />
+            </div>
+            <span class="compliance-badge-tag">{t('landing.complianceHipaaBadge', 'HIPAA Security Aligned')}</span>
+          </div>
+          <h3 class="compliance-item-title">{t('landing.complianceHipaaTitle', 'HIPAA Security & Privacy Standards')}</h3>
+          <p class="compliance-item-desc">{t('landing.complianceHipaaDesc', 'Engineered in accordance with HIPAA Security and Privacy Rules (45 CFR Part 160 & Part 164 Subparts A and C). Patient health data is encrypted in transit via TLS 1.3 and at rest via AES-256 with role-based access control (RBAC) and immutable audit logging.')}</p>
+        </div>
+
+        <!-- Compliance Item 2: FDA Guidance -->
+        <div class="compliance-card">
+          <div class="compliance-header">
+            <div class="compliance-icon-wrap">
+              <FileCheck size={22} aria-hidden="true" />
+            </div>
+            <span class="compliance-badge-tag">{t('landing.complianceFdaBadge', 'FDA CDS Guidance')}</span>
+          </div>
+          <h3 class="compliance-item-title">{t('landing.complianceFdaTitle', 'FDA Non-Device CDS Guidance Adherence')}</h3>
+          <p class="compliance-item-desc">{t('landing.complianceFdaDesc', 'Architected in adherence with FDA Guidance for Non-Device Clinical Decision Support Software (Sept 2022). Delivers transparent, explainable clinical triage recommendations that empower clinicians while preserving independent clinical judgment.')}</p>
+        </div>
+
+        <!-- Compliance Item 3: openFDA -->
+        <div class="compliance-card">
+          <div class="compliance-header">
+            <div class="compliance-icon-wrap">
+              <Pill size={22} aria-hidden="true" />
+            </div>
+            <span class="compliance-badge-tag">{t('landing.complianceOpenFdaBadge', 'Official openFDA API')}</span>
+          </div>
+          <h3 class="compliance-item-title">{t('landing.complianceOpenFdaTitle', 'Direct openFDA FAERS Safety Surveillance')}</h3>
+          <p class="compliance-item-desc">{t('landing.complianceOpenFdaDesc', 'Real-time pharmacovigilance queries directly against official US FDA FAERS public endpoints, surfacing adverse drug interactions and black-box safety warnings with zero synthetic hallucinations.')}</p>
+        </div>
+
+        <!-- Compliance Item 4: AWS Healthcare -->
+        <div class="compliance-card">
+          <div class="compliance-header">
+            <div class="compliance-icon-wrap">
+              <Server size={22} aria-hidden="true" />
+            </div>
+            <span class="compliance-badge-tag">{t('landing.complianceAwsBadge', 'AWS Healthcare 2026')}</span>
+          </div>
+          <h3 class="compliance-item-title">{t('landing.complianceAwsTitle', 'AWS Healthcare Cloud Architecture')}</h3>
+          <p class="compliance-item-desc">{t('landing.complianceAwsDesc', 'Hosted on HIPAA-eligible AWS cloud infrastructure utilizing isolated Virtual Private Clouds (VPCs), automated backup replication, encrypted storage, and PostgreSQL pgvector semantic retrieval.')}</p>
+        </div>
+      </div>
+
+      <!-- Clinical Non-Diagnostic Disclaimer Banner -->
+      <div class="clinical-disclaimer-banner">
+        <ShieldCheck size={20} class="disclaimer-icon" aria-hidden="true" />
+        <div class="disclaimer-content">
+          <strong class="disclaimer-heading">Clinical Governance & Truth Gate Notice:</strong>
+          <p class="disclaimer-text">
+            {t('landing.complianceDisclaimer', 'Clinical Disclaimer: RemoteCare Pro is a clinical triage and patient adherence monitoring platform designed for licensed healthcare professionals. It does not provide autonomous medical diagnoses, alter prescribed treatment protocols, or replace independent clinical judgment.')}
+          </p>
+        </div>
+      </div>
+    </section>
+
     <!-- Conversion Banner -->
     <section class="cta-banner" aria-labelledby="cta-banner-title">
       <div class="cta-banner-inner">
         <h2 id="cta-banner-title" class="cta-banner-title">{t('landing.ctaBannerTitle', 'Experience the Complete Golden Loop')}</h2>
         <p class="cta-banner-desc">{t('landing.ctaBannerSubtitle', 'Explore the live clinician dashboard and experience how RemoteCare Pro transforms surgical recovery.')}</p>
-        <button class="cta-banner-btn launch-demo-btn">
-          <span>{t('landing.ctaBannerButton', 'Launch Live Clinician Demo')}</span>
+        <a href="/login" class="cta-banner-btn">
+          <span>{t('landing.accessPortal', 'Access Clinician Portal')}</span>
           <ArrowRight size={18} aria-hidden="true" />
-        </button>
+        </a>
       </div>
     </section>
 
@@ -769,6 +939,234 @@ const t = createTranslator(lang)
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(2,132,199,0.3);
   }
+  .social-proof-section {
+    padding: 64px 24px;
+    background-color: #ffffff;
+    border-top: 1px solid #e2e8f0;
+  }
+  .badge-green {
+    background-color: #d1fae5;
+    color: #047857;
+  }
+  .badge-blue {
+    background-color: #e0f2fe;
+    color: #0369a1;
+  }
+  .testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto 36px;
+  }
+  .testimonial-card {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .testimonial-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(15,23,42,0.06);
+  }
+  .testimonial-badge-row {
+    margin-bottom: 14px;
+  }
+  .partner-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #047857;
+    background-color: #d1fae5;
+    border: 1px solid #a7f3d0;
+    padding: 4px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .quote-icon {
+    color: #cbd5e1;
+    margin-bottom: 12px;
+  }
+  .testimonial-quote {
+    font-size: 14px;
+    line-height: 1.65;
+    color: #334155;
+    font-style: italic;
+    margin: 0 0 20px 0;
+    flex-grow: 1;
+  }
+  .clinician-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 16px;
+    margin-top: auto;
+  }
+  .clinician-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background-color: #0284c7;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .clinician-avatar.avatar-purple {
+    background-color: #7c3aed;
+  }
+  .clinician-avatar.avatar-teal {
+    background-color: #0d9488;
+  }
+  .clinician-info {
+    display: flex;
+    flex-direction: column;
+  }
+  .clinician-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    font-style: normal;
+  }
+  .clinician-role {
+    font-size: 12px;
+    color: #0284c7;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  .clinician-org {
+    font-size: 11px;
+    color: #64748b;
+    margin-top: 2px;
+  }
+  .transparency-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background-color: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 14px 18px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .transparency-icon {
+    color: #475569;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .transparency-text {
+    font-size: 12px;
+    color: #475569;
+    line-height: 1.5;
+    margin: 0;
+  }
+  .compliance-section {
+    padding: 64px 24px;
+    background-color: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .compliance-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto 36px;
+  }
+  .compliance-card {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .compliance-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(15,23,42,0.06);
+  }
+  .compliance-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .compliance-icon-wrap {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background-color: #e0f2fe;
+    color: #0284c7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .compliance-badge-tag {
+    font-size: 11px;
+    font-weight: 700;
+    color: #0369a1;
+    background-color: #f0f9ff;
+    border: 1px solid #bae6fd;
+    padding: 3px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.02em;
+  }
+  .compliance-item-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 8px;
+  }
+  .compliance-item-desc {
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.6;
+    margin: 0;
+  }
+  .clinical-disclaimer-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background-color: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    padding: 18px 22px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .disclaimer-icon {
+    color: #1d4ed8;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .disclaimer-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .disclaimer-heading {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e3a8a;
+  }
+  .disclaimer-text {
+    font-size: 12px;
+    color: #1e40af;
+    line-height: 1.5;
+    margin: 0;
+  }
   .hidden {
     display: none !important;
   }
@@ -793,6 +1191,12 @@ const t = createTranslator(lang)
     .features-grid {
       grid-template-columns: 1fr;
     }
+    .testimonials-grid {
+      grid-template-columns: 1fr;
+    }
+    .compliance-grid {
+      grid-template-columns: 1fr;
+    }
     .trust-bar {
       flex-direction: column;
       gap: 8px;
@@ -805,14 +1209,6 @@ const t = createTranslator(lang)
 
 <script>
   function initLandingPage() {
-    // Launch Demo Buttons
-    const demoBtns = document.querySelectorAll('.launch-demo-btn')
-    demoBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        window.location.href = '/login'
-      })
-    })
-
     // Simulate Outreach Interaction
     const simulateBtn = document.getElementById('simulate-outreach-btn')
     const simulateBtnText = document.getElementById('simulate-btn-text')

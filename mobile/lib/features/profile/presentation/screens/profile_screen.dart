@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +8,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/utils/e164_phone_formatter.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/l10n/locale_notifier.dart';
 import '../../../../core/navigation/app_routes.dart';
@@ -121,6 +123,7 @@ class ProfileScreen extends ConsumerWidget {
                           label: 'Phone',
                           initial: auth.phone,
                           keyboardType: TextInputType.phone,
+                          inputFormatters: const [E164PhoneInputFormatter()],
                           onSave: (v) => ref
                               .read(authProvider.notifier)
                               .updateProfile(phone: v),
@@ -249,88 +252,18 @@ class ProfileScreen extends ConsumerWidget {
     required Future<bool> Function(String value) onSave,
     String? hint,
     TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
   }) async {
-    final controller = TextEditingController(text: initial ?? '');
-    controller.selection = TextSelection.fromPosition(
-      TextPosition(offset: controller.text.length),
-    );
     final saved = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) {
-        var saving = false;
-        String? error;
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            Future<void> submit() async {
-              final value = controller.text.trim();
-              if (value.isEmpty) {
-                setDialogState(() => error = '$label cannot be empty');
-                return;
-              }
-              setDialogState(() {
-                saving = true;
-                error = null;
-              });
-              final ok = await onSave(value);
-              if (!context.mounted) return;
-              if (ok) {
-                Navigator.of(dialogContext).pop(true);
-              } else {
-                setDialogState(() {
-                  saving = false;
-                  error = 'Could not save. Please try again.';
-                });
-              }
-            }
-
-            return AlertDialog(
-              title: Text('Edit $label'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextField(
-                    key: Key('edit_field_${label.toLowerCase().replaceAll(' ', '_')}'),
-                    controller: controller,
-                    autofocus: true,
-                    keyboardType: keyboardType,
-                    decoration: InputDecoration(hintText: hint),
-                    onSubmitted: (_) => submit(),
-                  ),
-                  if (error != null) ...[
-                    SizedBox(height: 8.h),
-                    Text(
-                      error!,
-                      key: const Key('edit_field_error'),
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.errorRed,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: saving
-                      ? null
-                      : () => Navigator.of(dialogContext).pop(false),
-                  child: const Text('Cancel'),
-                ),
-                FilledButton(
-                  onPressed: saving ? null : submit,
-                  child: saving
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Save'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      builder: (dialogContext) => _EditFieldDialog(
+        label: label,
+        initial: initial,
+        hint: hint,
+        keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
+        onSave: onSave,
+      ),
     );
     if (saved == true && context.mounted) {
       ScaffoldMessenger.of(
@@ -649,20 +582,26 @@ class ProfileScreen extends ConsumerWidget {
     required VoidCallback onTap,
   }) {
     final isSelected = currentLocale.languageCode == localeCode;
-    return InkWell(
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 48),
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
           child: Row(
             children: [
               Expanded(child: Text(label, style: AppTextStyles.bodyMedium)),
               if (isSelected)
-                Icon(
-                  Icons.check,
-                  color: AppColors.deepTeal,
-                  size: AppSpacing.iconMd,
+                Container(
+                  width: 48,
+                  height: 48,
+                  alignment: Alignment.centerRight,
+                  child: Icon(
+                    Icons.check,
+                    color: AppColors.deepTeal,
+                    size: AppSpacing.iconMd,
+                  ),
                 ),
             ],
           ),
@@ -675,38 +614,77 @@ class ProfileScreen extends ConsumerWidget {
   /// absence); [onEdit] non-null adds an edit affordance.
   Widget _infoRow(String label, String? value, {VoidCallback? onEdit}) {
     final hasValue = value != null && value.isNotEmpty;
-    return InkWell(
-      onTap: onEdit,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 48),
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-          child: Row(
-            children: [
-              Expanded(child: Text(label, style: AppTextStyles.bodyMedium)),
-              SizedBox(width: 8.w),
-              Flexible(
-                child: Text(
-                  hasValue ? value : notProvided,
-                  style: hasValue
-                      ? AppTextStyles.bodyLarge.copyWith(
-                          fontWeight: FontWeight.w500,
-                        )
-                      : AppTextStyles.bodyLarge.copyWith(
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.greyText,
-                        ),
-                  overflow: TextOverflow.ellipsis,
-                ),
+    final rowContent = ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 48),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+        child: Row(
+          children: [
+            Expanded(child: Text(label, style: AppTextStyles.bodyMedium)),
+            SizedBox(width: 8.w),
+            Flexible(
+              child: Text(
+                hasValue ? value : notProvided,
+                style: hasValue
+                    ? AppTextStyles.bodyLarge.copyWith(
+                        fontWeight: FontWeight.w500,
+                      )
+                    : AppTextStyles.bodyLarge.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.greyText,
+                      ),
+                overflow: TextOverflow.ellipsis,
               ),
-              if (onEdit != null) ...[
-                SizedBox(width: AppSpacing.hSm),
-                Icon(
+            ),
+            if (onEdit != null) ...[
+              SizedBox(width: AppSpacing.hSm),
+              Container(
+                width: 48,
+                height: 48,
+                alignment: Alignment.centerRight,
+                child: Icon(
                   Icons.edit_outlined,
                   color: AppColors.greyText,
                   size: AppSpacing.iconMd,
                 ),
-              ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+
+    if (onEdit != null) {
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onEdit,
+        child: rowContent,
+      );
+    }
+    return rowContent;
+  }
+
+  Widget _toggleRow(String label, bool value, ValueChanged<bool> onChanged) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => onChanged(!value),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+          child: Row(
+            children: [
+              Expanded(child: Text(label, style: AppTextStyles.bodyMedium)),
+              Container(
+                width: 48,
+                height: 48,
+                alignment: Alignment.centerRight,
+                child: Switch(
+                  value: value,
+                  onChanged: onChanged,
+                  activeTrackColor: AppColors.primaryGreen,
+                ),
+              ),
             ],
           ),
         ),
@@ -714,41 +692,28 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _toggleRow(String label, bool value, ValueChanged<bool> onChanged) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 48),
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-        child: Row(
-          children: [
-            Expanded(child: Text(label, style: AppTextStyles.bodyMedium)),
-            Switch(
-              value: value,
-              onChanged: onChanged,
-              activeTrackColor: AppColors.primaryGreen,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _arrowRow(String label, IconData icon, {required VoidCallback onTap}) {
-    return InkWell(
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 48),
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
           child: Row(
             children: [
               Icon(icon, color: AppColors.greyText, size: AppSpacing.iconLg),
               SizedBox(width: AppSpacing.hMd),
               Expanded(child: Text(label, style: AppTextStyles.bodyMedium)),
-              Icon(
-                Icons.chevron_right,
-                color: AppColors.greyLight,
-                size: AppSpacing.iconMd,
+              Container(
+                width: 48,
+                height: 48,
+                alignment: Alignment.centerRight,
+                child: Icon(
+                  Icons.chevron_right,
+                  color: AppColors.greyLight,
+                  size: AppSpacing.iconMd,
+                ),
               ),
             ],
           ),
@@ -797,6 +762,146 @@ class ProfileScreen extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _EditFieldDialog extends StatefulWidget {
+  final String label;
+  final String? initial;
+  final String? hint;
+  final TextInputType keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
+  final Future<bool> Function(String value) onSave;
+
+  const _EditFieldDialog({
+    required this.label,
+    required this.initial,
+    required this.onSave,
+    this.hint,
+    this.keyboardType = TextInputType.text,
+    this.inputFormatters,
+  });
+
+  @override
+  State<_EditFieldDialog> createState() => _EditFieldDialogState();
+}
+
+class _EditFieldDialogState extends State<_EditFieldDialog> {
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+  var _saving = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initial ?? '');
+    _focusNode = FocusNode();
+
+    _placeCursorAtEnd();
+
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  void _placeCursorAtEnd() {
+    if (_controller.text.isNotEmpty) {
+      _controller.selection = TextSelection.collapsed(
+        offset: _controller.text.length,
+      );
+    }
+  }
+
+  void _onFocusChange() {
+    if (_focusNode.hasFocus) {
+      _placeCursorAtEnd();
+    }
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final value = _controller.text.trim();
+    if (value.isEmpty) {
+      setState(() => _error = '${widget.label} cannot be empty');
+      return;
+    }
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    final ok = await widget.onSave(value);
+    if (!mounted) return;
+    if (ok) {
+      Navigator.of(context).pop(true);
+    } else {
+      setState(() {
+        _saving = false;
+        _error = 'Could not save. Please try again.';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Edit ${widget.label}'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextField(
+            key: Key(
+              'edit_field_${widget.label.toLowerCase().replaceAll(' ', '_')}',
+            ),
+            controller: _controller,
+            focusNode: _focusNode,
+            autofocus: true,
+            keyboardType: widget.keyboardType,
+            inputFormatters: widget.inputFormatters,
+            decoration: InputDecoration(hintText: widget.hint),
+            onTap: () {
+              if (_controller.selection.baseOffset <= 0 &&
+                  _controller.text.isNotEmpty) {
+                _placeCursorAtEnd();
+              }
+            },
+            onSubmitted: (_) => _submit(),
+          ),
+          if (_error != null) ...[
+            SizedBox(height: 8.h),
+            Text(
+              _error!,
+              key: const Key('edit_field_error'),
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.errorRed,
+              ),
+            ),
+          ],
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: _saving ? null : () => Navigator.of(context).pop(false),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _saving ? null : _submit,
+          child: _saving
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Save'),
+        ),
+      ],
     );
   }
 }

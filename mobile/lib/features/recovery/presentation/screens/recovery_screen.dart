@@ -123,6 +123,8 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen> {
       ],
       _buildHeaderSubtitle(recovery),
       SizedBox(height: AppSpacing.xl),
+      _buildCareTeamSection(recovery),
+      SizedBox(height: AppSpacing.xl),
       _buildAdherenceSection(recovery),
       SizedBox(height: AppSpacing.xl),
       _buildCareInstructionsSection(recovery),
@@ -130,8 +132,7 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen> {
   }
 
   /// Surgery type + surgery date from the case; each renders only when the
-  /// server provides it. The clinician name is NOT exposed by any
-  /// patient-accessible endpoint, so it is never rendered (honest absence).
+  /// server provides it.
   Widget _buildHeaderSubtitle(RecoveryState recovery) {
     final parts = <String>[
       if (recovery.surgeryType != null && recovery.surgeryType!.isNotEmpty)
@@ -141,6 +142,63 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen> {
     ];
     if (parts.isEmpty) return const SizedBox.shrink();
     return Text(parts.join(' · '), style: AppTextStyles.bodyMedium);
+  }
+
+  // -- Care team section (honest absence when unassigned) -----------------------
+
+  Widget _buildCareTeamSection(RecoveryState recovery) {
+    final doctor = recovery.doctorName?.trim();
+    final hasDoctor = doctor != null && doctor.isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('CARE TEAM', style: AppTextStyles.label),
+        SizedBox(height: AppSpacing.md),
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: Border.all(color: AppColors.greyDivider, width: 0.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: hasDoctor
+              ? Row(
+                  children: [
+                    Icon(
+                      Icons.medical_services_outlined,
+                      color: AppColors.primaryGreen,
+                      size: 20.sp,
+                    ),
+                    SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        doctor,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : Text(
+                  'No dedicated care team assigned — contact clinic main desk',
+                  key: const Key('recovery_care_team_empty'),
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.greyText,
+                  ),
+                ),
+        ),
+      ],
+    );
   }
 
   // -- 7-day adherence (derived from real agenda slot states) -------------------
@@ -170,15 +228,14 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen> {
               Text(
                 '7-Day Adherence',
                 style: AppTextStyles.bodyLarge.copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w400,
                 ),
               ),
               const Spacer(),
               if (percent != null)
                 Text(
                   '$percent%',
-                  style: TextStyle(
-                    fontSize: 16.sp,
+                  style: AppTextStyles.bodyLarge.copyWith(
                     fontWeight: FontWeight.w700,
                     color: AppColors.primaryGreen,
                   ),

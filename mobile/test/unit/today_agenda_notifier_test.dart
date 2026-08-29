@@ -837,4 +837,95 @@ void main() {
       expect(agendaState().c8PromptSlotId, isNull);
     });
   });
+
+  group('AUD-A01 Optimistic Dose Logging', () {
+    test(
+      'logDose mutates Riverpod state immediately and persists to local cache in background',
+      () async {
+        fakeApi.agendaHandler = (date) =>
+            http.Response(jsonEncode(agendaJson()), 200);
+        final n = notifier()..undoWindow = const Duration(seconds: 10);
+        await n.loadAgenda();
+
+        final slot = agendaState().slots.single;
+        expect(slot.state, SlotState.due);
+
+        final stopwatch = Stopwatch()..start();
+        await n.logDose(slot, DoseLogStatus.taken);
+        stopwatch.stop();
+
+        // Mutated in <50ms without waiting for network or undo timer
+        expect(stopwatch.elapsedMilliseconds, lessThan(50));
+        expect(agendaState().slots.single.state, SlotState.taken);
+
+        // Persistent cache is updated immediately in the background
+        final cachedBody = prefs.getString('today_agenda_cache_body_v1');
+        expect(cachedBody, isNotNull);
+        final cachedJson = jsonDecode(cachedBody!) as Map<String, dynamic>;
+        final cachedSlots = cachedJson['slots'] as List;
+        expect(cachedSlots.first['state'], 'taken');
+      },
+    );
+
+    test(
+      'cold start restores optimistically mutated dose from cache if restarted before network sync',
+      () async {
+        fakeApi.agendaHandler = (date) =>
+            http.Response(jsonEncode(agendaJson()), 200);
+        final n = notifier()..undoWindow = const Duration(seconds: 10);
+        await n.loadAgenda();
+
+        final slot = agendaState().slots.single;
+        await n.logDose(slot, DoseLogStatus.taken);
+        expect(agendaState().slots.single.state, SlotState.taken);
+
+        // Dispose container simulating app kill before undoWindow expires
+        container.dispose();
+
+        // Restart app offline
+        final restartedApi = FakeApiService()
+          ..agendaHandler = (date) => throw Exception('offline');
+        final restarted = ProviderContainer(
+          overrides: [
+            apiServiceProvider.overrideWithValue(restartedApi),
+            sharedPreferencesProvider.overrideWithValue(prefs),
+          ],
+        );
+        addTearDown(restarted.dispose);
+
+        await restarted.read(todayAgendaNotifierProvider.notifier).start();
+        final state = restarted.read(todayAgendaNotifierProvider).value!;
+        expect(state.slots.single.state, SlotState.taken);
+      },
+    );
+
+    test(
+      'terminal error on offline queue flush triggers rollback and rollbackErrorSlotId notification',
+      () async {
+        fakeApi.agendaHandler = (date) =>
+            http.Response(jsonEncode(agendaJson()), 200);
+        final n = notifier()..undoWindow = const Duration(milliseconds: 10);
+        await n.loadAgenda();
+
+        final slot = agendaState().slots.single;
+
+        // Offline when logging
+        fakeApi.adherenceLogHandler = (id, status) => throw Exception('offline');
+        await n.logDose(slot, DoseLogStatus.taken);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        expect(agendaState().offlineQueue, hasLength(1));
+
+        // Network comes back, but server rejects with 422 Unprocessable Entity
+        fakeApi.adherenceLogHandler = (id, status) =>
+            http.Response(jsonEncode({'detail': 'Invalid slot'}), 422);
+
+        await n.flushOfflineQueue();
+
+        final state = agendaState();
+        expect(state.offlineQueue, isEmpty);
+        expect(state.slots.single.state, SlotState.due);
+        expect(state.rollbackErrorSlotId, 'rem-1');
+      },
+    );
+  });
 }

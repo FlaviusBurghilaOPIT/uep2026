@@ -394,4 +394,163 @@ void main() {
       expect(prefs.getBool(NotificationPrefsKeys.medReminders), false);
     });
   });
+
+  group('FORM-05 / Req 9 (US4) — phone input cursor & E.164 mask', () {
+    testWidgets(
+      'focusing phone number input places cursor at end of text and prevents jumping to 0',
+      (tester) async {
+        await pumpProfile(tester);
+
+        await tester.tap(find.text('+39 333 1234567'));
+        await tester.pumpAndSettle();
+
+        final textFieldFinder = find.byKey(const Key('edit_field_phone'));
+        expect(textFieldFinder, findsOneWidget);
+        final textField = tester.widget<TextField>(textFieldFinder);
+        expect(
+          textField.controller?.selection.baseOffset,
+          textField.controller?.text.length,
+        );
+        expect(textField.controller?.selection.baseOffset, isNot(0));
+
+        // Unfocus the field
+        textField.focusNode?.unfocus();
+        await tester.pumpAndSettle();
+
+        // Re-focus the field and verify cursor is preserved at the end of text (not jumping to 0)
+        textField.focusNode?.requestFocus();
+        await tester.pumpAndSettle();
+
+        expect(
+          textField.controller?.selection.baseOffset,
+          textField.controller?.text.length,
+        );
+        expect(textField.controller?.selection.baseOffset, isNot(0));
+      },
+    );
+
+    testWidgets(
+      'formats telephone input according to standard E.164 telecommunication mask',
+      (tester) async {
+        final container = await pumpProfile(tester);
+
+        await tester.tap(find.text('+39 333 1234567'));
+        await tester.pumpAndSettle();
+
+        final textFieldFinder = find.byKey(const Key('edit_field_phone'));
+        await tester.enterText(textFieldFinder, '15552483901');
+        await tester.pumpAndSettle();
+
+        final textField = tester.widget<TextField>(textFieldFinder);
+        expect(textField.controller?.text, '+1 555 248 3901');
+
+        await tester.tap(find.text('Save'));
+        await tester.pumpAndSettle();
+
+        final patch = fakeApi.requestsTo('/auth/me', method: 'PATCH').single;
+        expect(patch['body'], {'phone': '+1 555 248 3901'});
+        expect(container.read(authProvider).phone, '+1 555 248 3901');
+      },
+    );
+  });
+
+  group('VIS-02 / Req 15 (US4) — 48x48dp touch target expansion', () {
+    testWidgets(
+      'interactive settings rows and chevrons measure at least 48x48dp with opaque hit testing',
+      (tester) async {
+        await pumpProfile(tester);
+
+        // Back button target is at least 48x48dp
+        final backIcon = find.byIcon(Icons.arrow_back);
+        expect(backIcon, findsOneWidget);
+        final backGesture = find.ancestor(
+          of: backIcon,
+          matching: find.byWidgetPredicate(
+            (w) => w is GestureDetector && w.behavior == HitTestBehavior.opaque,
+          ),
+        ).first;
+        final backSize = tester.getSize(backGesture);
+        expect(backSize.width, greaterThanOrEqualTo(48.0));
+        expect(backSize.height, greaterThanOrEqualTo(48.0));
+
+        // Chevron in security section measures at least 48x48dp
+        await tester.ensureVisible(find.byIcon(Icons.chevron_right));
+        await tester.pumpAndSettle();
+        final chevronIcon = find.byIcon(Icons.chevron_right);
+        expect(chevronIcon, findsOneWidget);
+        final chevronContainer = find.ancestor(
+          of: chevronIcon,
+          matching: find.byType(Container),
+        ).first;
+        final chevronSize = tester.getSize(chevronContainer);
+        expect(chevronSize.width, greaterThanOrEqualTo(48.0));
+        expect(chevronSize.height, greaterThanOrEqualTo(48.0));
+
+        // Edit icons on editable rows measure at least 48x48dp
+        final editIcons = find.byIcon(Icons.edit_outlined);
+        expect(editIcons, findsWidgets);
+        for (var i = 0; i < editIcons.evaluate().length; i++) {
+          final editIcon = editIcons.at(i);
+          final editContainer = find.ancestor(
+            of: editIcon,
+            matching: find.byType(Container),
+          ).first;
+          final editSize = tester.getSize(editContainer);
+          expect(editSize.width, greaterThanOrEqualTo(48.0));
+          expect(editSize.height, greaterThanOrEqualTo(48.0));
+        }
+
+        // Language selected check icon measures at least 48x48dp
+        final checkIcon = find.byIcon(Icons.check);
+        expect(checkIcon, findsOneWidget);
+        final checkContainer = find.ancestor(
+          of: checkIcon,
+          matching: find.byType(Container),
+        ).first;
+        final checkSize = tester.getSize(checkContainer);
+        expect(checkSize.width, greaterThanOrEqualTo(48.0));
+        expect(checkSize.height, greaterThanOrEqualTo(48.0));
+
+        // Switch containers measure at least 48x48dp
+        final switches = find.byType(Switch);
+        expect(switches, findsWidgets);
+        for (var i = 0; i < switches.evaluate().length; i++) {
+          final sw = switches.at(i);
+          final swContainer = find.ancestor(
+            of: sw,
+            matching: find.byType(Container),
+          ).first;
+          final swSize = tester.getSize(swContainer);
+          expect(swSize.width, greaterThanOrEqualTo(48.0));
+          expect(swSize.height, greaterThanOrEqualTo(48.0));
+        }
+
+        // Verify row heights are all >= 48dp with HitTestBehavior.opaque
+        for (final text in [
+          'Full name',
+          'Phone',
+          'Date of birth',
+          'Change password',
+          'English',
+          'Medication reminders',
+          'Daily check-in',
+        ]) {
+          final rowText = find.text(text);
+          final rowGesture = find.ancestor(
+            of: rowText,
+            matching: find.byWidgetPredicate(
+              (w) =>
+                  w is GestureDetector && w.behavior == HitTestBehavior.opaque,
+            ),
+          ).first;
+          final rowSize = tester.getSize(rowGesture);
+          expect(
+            rowSize.height,
+            greaterThanOrEqualTo(48.0),
+            reason: '$text row height should be >= 48dp',
+          );
+        }
+      },
+    );
+  });
 }

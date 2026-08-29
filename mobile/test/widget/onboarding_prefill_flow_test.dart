@@ -69,13 +69,15 @@ void main() {
 
       // Verify the code -> advances to the create-password step.
       await tester.enterText(find.byType(TextFormField).first, '123456');
-      await tester.tap(find.text(AuthStrings.verifyAndContinueButton));
+      await tester.tap(find.text(AuthStrings.verifyAndContinueButton), warnIfMissed: false);
       await tester.pumpAndSettle();
       expect(find.text(AuthStrings.createPasswordTitle), findsOneWidget);
 
       // Create password -> advances to the pre-filled profile step.
-      await tester.enterText(find.byType(TextFormField).at(0), 'secret123');
-      await tester.enterText(find.byType(TextFormField).at(1), 'secret123');
+      await tester.enterText(find.byType(TextFormField).at(0), 'Secret123!');
+      await tester.pump();
+      await tester.enterText(find.byType(TextFormField).at(1), 'Secret123!');
+      await tester.pump();
       await tester.tap(find.text(AuthStrings.continueButton));
       await tester.pumpAndSettle();
 

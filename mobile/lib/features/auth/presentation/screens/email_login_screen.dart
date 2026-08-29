@@ -41,7 +41,7 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.authErrorSendingOtp(e.toString()))),
+            SnackBar(content: Text(l10n.authErrorSendingOtp)),
           );
         }
       }
@@ -64,6 +64,8 @@ class _EmailLoginScreenState extends ConsumerState<EmailLoginScreen> {
                 controller: _emailController,
                 decoration: InputDecoration(labelText: l10n.authEmailLabel),
                 keyboardType: TextInputType.emailAddress,
+                textCapitalization: TextCapitalization.none,
+                autocorrect: false,
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {
                     return l10n.authRequiredError;

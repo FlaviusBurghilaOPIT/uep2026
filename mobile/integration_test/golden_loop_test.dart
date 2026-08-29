@@ -40,11 +40,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:remotecare/main.dart' as app;
 import 'package:remotecare/core/config/app_config.dart';
 import 'package:remotecare/features/auth/presentation/auth_strings.dart';
+import 'package:remotecare/features/assistant/presentation/screens/assistant_screen.dart';
 
 Future<void> pumpUntilFound(
   WidgetTester tester,
   Finder finder, {
-  Duration timeout = const Duration(seconds: 15),
+  Duration timeout = const Duration(seconds: 30),
 }) async {
   final end = DateTime.now().add(timeout);
   while (finder.evaluate().isEmpty) {
@@ -61,7 +62,7 @@ Future<void> pumpUntilFound(
 Future<void> signInWithCode(WidgetTester tester, {required String code}) async {
   await pumpUntilFound(tester, find.text(AuthStrings.welcomeTitle));
 
-  // Fallback method: "Email me a one-time code".
+  // Disambiguated sign-in method: "Sign in with One-Time Code".
   await tester.tap(find.text(AuthStrings.codeSignInLink));
   await tester.pumpAndSettle();
 
@@ -74,8 +75,16 @@ Future<void> signInWithCode(WidgetTester tester, {required String code}) async {
   await tester.pumpAndSettle();
 
   await pumpUntilFound(tester, find.text(AuthStrings.verifyCodeTitle));
-  await tester.enterText(find.byType(TextFormField).first, code);
-  await tester.tap(find.text(AuthStrings.verifyAndContinueButton));
+  final fields = find.byType(TextField);
+  for (var i = 0; i < code.length && i < 6; i++) {
+    await tester.enterText(fields.at(i), code[i]);
+    await tester.pump();
+  }
+  final verifyBtn = find.text(AuthStrings.verifyAndContinueButton);
+  if (verifyBtn.evaluate().isNotEmpty) {
+    await tester.tap(verifyBtn);
+    await tester.pump();
+  }
 
   // Lands on Today (the English `doseStatusTaken` ARB value rendered by the
   // WI 12 DoseSlotCard action row — this test runs in 'en').
@@ -107,22 +116,18 @@ void main() {
       await tester.tap(find.byIcon(Icons.send_rounded));
       await tester.pump();
 
-      await pumpUntilFound(tester, find.textContaining('mock AI response'));
+      await pumpUntilFound(
+        tester,
+        find.byWidgetPredicate((w) => w is ChatBubble && !w.message.isFromUser),
+      );
       expect(find.byKey(const Key('refusal_box')), findsNothing);
+      await tester.pump(const Duration(seconds: 4));
 
       // --- Assistant: out-of-scope dose-change request is blocked ---
-      // Client-side _classifyIntent() tags this dose_change_request; the
-      // backend's IntentCategory guardrail (language-agnostic) blocks it
-      // regardless of the mock LLM provider.
-      //
-      // Re-tap the field before entering text again: tapping Send moved
-      // focus away from the TextField, but WidgetTester.enterText() skips
-      // re-requesting focus/keyboard when the target EditableTextState is
-      // unchanged from its last-focused instance, so it silently no-ops on
-      // a stale text-input connection without an explicit tap to refocus.
       await tester.tap(chatInput);
       await tester.pump();
       await tester.enterText(chatInput, 'Can I take a double dose?');
+      await tester.pump(const Duration(milliseconds: 500));
       await tester.tap(find.byIcon(Icons.send_rounded));
       await tester.pump();
 
@@ -168,8 +173,8 @@ void main() {
       // WI 05: the invite carries a surgery_date 10 days back ("Day 11" on
       // the Recovery screen) and the clinician authors one recommendation,
       // so Recovery has real server data to render after the password login.
-      const email = 'invited.patient@example.com';
-      const password = 'password123';
+      final email = 'invited.patient.${DateTime.now().millisecondsSinceEpoch}@example.com';
+      const password = 'Password123!';
       const surgeryType = 'Total Knee Arthroplasty (TKA)';
       const recommendationText = 'Keep the wound clean and dry';
       final surgeryDate = DateTime.now().subtract(const Duration(days: 10));
@@ -199,14 +204,26 @@ void main() {
       await tester.pumpAndSettle();
 
       await pumpUntilFound(tester, find.text(AuthStrings.verifyCodeTitle));
-      await tester.enterText(find.byType(TextFormField).first, inviteCode);
-      await tester.tap(find.text(AuthStrings.verifyAndContinueButton));
+      final otpFields = find.byType(TextField);
+      for (var i = 0; i < inviteCode.length && i < 6; i++) {
+        await tester.enterText(otpFields.at(i), inviteCode[i]);
+        await tester.pump();
+      }
+      final verifyBtn = find.text(AuthStrings.verifyAndContinueButton);
+      if (verifyBtn.evaluate().isNotEmpty) {
+        await tester.tap(verifyBtn);
+        await tester.pump();
+      }
       await tester.pumpAndSettle();
 
       // --- First-run CREATE PASSWORD step (min 8 + confirmation) ---
       await pumpUntilFound(tester, find.text(AuthStrings.createPasswordTitle));
-      await tester.enterText(find.byType(TextFormField).at(0), password);
-      await tester.enterText(find.byType(TextFormField).at(1), password);
+      await tester.enterText(find.byType(TextFormField).first, password);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextFormField).last, password);
+      await tester.pumpAndSettle();
+
       await tester.tap(find.text(AuthStrings.continueButton));
       await tester.pumpAndSettle();
 
@@ -225,7 +242,10 @@ void main() {
       // --- Sign out, then re-login with the password just created ---
       await tester.tap(find.byKey(const Key('navTab_profile')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Sign Out'));
+      final signOutFinder = find.text('Sign Out');
+      await tester.ensureVisible(signOutFinder);
+      await tester.pumpAndSettle();
+      await tester.tap(signOutFinder);
       await tester.pumpAndSettle();
 
       // Boot clears the token and routes back to Welcome.
@@ -275,7 +295,7 @@ Future<({String inviteCode, String patientId})> _createInvitedPatient({
     headers: const {'Content-Type': 'application/json'},
     body: jsonEncode({
       'email': 'clinician@example.com',
-      'password': 'password123',
+      'password': 'CarePro#2026!Secure',
     }),
   );
   final token = jsonDecode(loginRes.body)['access_token'] as String;

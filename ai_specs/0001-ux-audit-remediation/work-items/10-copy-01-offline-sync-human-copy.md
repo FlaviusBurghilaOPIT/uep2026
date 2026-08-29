@@ -14,8 +14,8 @@ Replace raw technical network exception strings (`SocketException`, `HTTP 422`, 
   - `mobile/lib/features/recovery/presentation/screens/recovery_screen.dart`
 
 ## Acceptance criteria
-- [ ] Network failures during background dose logging or recovery refresh display human-centered localized text: "Saved locally. Will sync automatically once reconnected."
-- [ ] No raw exception names or HTTP status codes are displayed to patients.
+- [x] Network failures during background dose logging or recovery refresh display human-centered localized text: "Saved locally. Will sync automatically once reconnected."
+- [x] No raw exception names or HTTP status codes are displayed to patients.
 
 ## Covers
 - User Stories: US1, US4

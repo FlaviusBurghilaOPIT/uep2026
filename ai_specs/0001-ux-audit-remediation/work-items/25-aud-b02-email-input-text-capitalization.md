@@ -13,9 +13,9 @@ Set `textCapitalization: TextCapitalization.none`, `autocorrect: false`, and `ke
 - Target file: `mobile/lib/core/widgets/app_text_field.dart`
 
 ## Acceptance criteria
-- [ ] Email input fields explicitly disable autocapitalization and autocorrection.
-- [ ] Keyboard opens in email-optimized format (`TextInputType.emailAddress`).
-- [ ] Entering an email begins with lowercase by default.
+- [x] Email input fields explicitly disable autocapitalization and autocorrection.
+- [x] Keyboard opens in email-optimized format (`TextInputType.emailAddress`).
+- [x] Entering an email begins with lowercase by default.
 
 ## Covers
 - User Stories: US5

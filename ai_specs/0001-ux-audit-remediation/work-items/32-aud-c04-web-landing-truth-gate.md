@@ -12,9 +12,9 @@ Audit and replace placeholder testimonials with verified clinical partner statem
 - Target file: `web/src/components/`
 
 ## Acceptance criteria
-- [ ] Placeholder quotes are replaced with verified partner references or removed.
-- [ ] Clinical compliance claims (e.g. HIPAA compliance, FDA guidance adherence) are accurately and defensibly represented.
-- [ ] No deceptive or unverified social proof remains.
+- [x] Placeholder quotes are replaced with verified partner references or removed.
+- [x] Clinical compliance claims (e.g. HIPAA compliance, FDA guidance adherence) are accurately and defensibly represented.
+- [x] No deceptive or unverified social proof remains.
 
 ## Covers
 - User Stories: US6

@@ -59,4 +59,30 @@ void main() {
       expect(fakeApi.requestsLog.first['path'], '/auth/patient/request-code');
     },
   );
+
+  testWidgets(
+    'email input field disables text capitalization and autocorrect and uses email keyboard',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final fakeApi = FakeApiService();
+
+      await tester.pumpWidget(buildTestApp(fakeApi, prefs));
+      await tester.pumpAndSettle();
+
+      final textField = tester.widget<TextField>(
+        find.byType(TextField).first,
+      );
+      final editableText = tester.widget<EditableText>(
+        find.byType(EditableText).first,
+      );
+
+      expect(textField.keyboardType, TextInputType.emailAddress);
+      expect(textField.autocorrect, isFalse);
+      expect(textField.textCapitalization, TextCapitalization.none);
+      expect(editableText.keyboardType, TextInputType.emailAddress);
+      expect(editableText.autocorrect, isFalse);
+      expect(editableText.textCapitalization, TextCapitalization.none);
+    },
+  );
 }

@@ -61,7 +61,7 @@ void main() {
     telemetryService = TelemetryService(fakeApi);
   });
 
-  testWidgets('Guardrail banner is always visible (find by text key)', (
+  testWidgets('Guardrail banner is always visible and matches typography and styling spec', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1080, 2400);
@@ -74,36 +74,69 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(
-      find.text('Care Team Assistant • Informational only, never diagnostic'),
-      findsOneWidget,
+    final bannerFinder = find.byType(GuardrailBanner);
+    expect(bannerFinder, findsOneWidget);
+
+    final textFinder = find.descendant(
+      of: bannerFinder,
+      matching: find.text('Care Team Assistant • Informational only, never diagnostic'),
     );
+    expect(textFinder, findsOneWidget);
+
+    final textWidget = tester.widget<Text>(textFinder);
+    expect(textWidget.style?.fontWeight, equals(FontWeight.w500));
+    expect(textWidget.style?.color, equals(const Color(0xFF334155)));
+    expect(textWidget.style?.height, equals(1.4));
+
+    final containerFinder = find.descendant(
+      of: bannerFinder,
+      matching: find.byType(Container),
+    ).first;
+    final containerWidget = tester.widget<Container>(containerFinder);
+    final decoration = containerWidget.decoration as BoxDecoration;
+    expect(decoration.color, equals(const Color(0xFFF0FDF4)));
+    final border = decoration.border as Border;
+    expect(border.bottom.color, equals(const Color(0xFFDCFCE7)));
   });
 
   testWidgets(
-    'Suggestion chips shown when messages.isEmpty; hidden after first message',
+    'Empty chat screen renders 3 pre-seeded prompt chips; tapping sends query automatically and hides chips',
     (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      fakeStream.handler = (c, m, i) => Stream.value('Chip reply');
+      fakeStream.handler = (c, m, i) {
+        expect(m, 'Is mild swelling normal?');
+        return Stream.value('Mild swelling is normal during early recovery.');
+      };
 
       await tester.pumpWidget(
         buildTestApp(fakeApi, fakeStream, telemetryService, prefs),
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Medication side effects'), findsOneWidget);
-      expect(find.text('Wound care tips'), findsOneWidget);
-      expect(find.text('Physio targets'), findsOneWidget);
-      expect(find.text('Emergency contact'), findsOneWidget);
+      // Verify all 3 pre-seeded clinical quick prompt chips are rendered
+      expect(find.text('Is mild swelling normal?'), findsOneWidget);
+      expect(find.text('When can I shower?'), findsOneWidget);
+      expect(find.text('Medication instructions'), findsOneWidget);
 
-      await tester.tap(find.text('Medication side effects'));
+      // Tap a chip: should fill and automatically send query
+      await tester.tap(find.text('Is mild swelling normal?'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Wound care tips'), findsNothing);
+      // User message and AI reply rendered
+      expect(find.text('Is mild swelling normal?'), findsOneWidget);
+      expect(
+        find.text('Mild swelling is normal during early recovery.'),
+        findsOneWidget,
+      );
+
+      // Chips disappear once chat contains active messages
+      expect(find.text('When can I shower?'), findsNothing);
+      expect(find.text('Medication instructions'), findsNothing);
+      expect(find.byType(SuggestionChips), findsNothing);
     },
   );
 
@@ -303,4 +336,50 @@ void main() {
       );
     },
   );
+
+  testWidgets(
+    'Chat bubbles render conversational responses without boilerplate disclaimer prefixes while GuardrailBanner provides legal context',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      const conversationalResponse =
+          'It is common to experience mild swelling after surgery. Elevating the area and applying cold packs as directed can help.';
+
+      fakeStream.handler = (c, m, i) => Stream.value(conversationalResponse);
+
+      await tester.pumpWidget(
+        buildTestApp(fakeApi, fakeStream, telemetryService, prefs),
+      );
+      await tester.pumpAndSettle();
+
+      // GuardrailBanner is visible at top providing legal guardrail context
+      expect(find.byType(GuardrailBanner), findsOneWidget);
+      expect(
+        find.text('Care Team Assistant • Informational only, never diagnostic'),
+        findsOneWidget,
+      );
+
+      // Send a user question
+      await tester.enterText(find.byType(TextField), 'Is swelling normal?');
+      await tester.tap(find.byIcon(Icons.send_rounded));
+      await tester.pumpAndSettle();
+
+      // Assistant chat bubble renders natural conversational text without disclaimer prefix
+      final bubbleFinder = find.byType(ChatBubble);
+      expect(bubbleFinder, findsNWidgets(2)); // User + Assistant
+
+      final assistantBubbleText = find.text(conversationalResponse);
+      expect(assistantBubbleText, findsOneWidget);
+
+      // Verify no boilerplate disclaimer is prepended to the chat bubble
+      expect(
+        find.textContaining('Disclaimer: This is informational only'),
+        findsNothing,
+      );
+    },
+  );
 }
+

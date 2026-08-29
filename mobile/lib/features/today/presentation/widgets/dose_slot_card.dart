@@ -97,21 +97,28 @@ class DoseSlotCard extends StatelessWidget {
                                 style: AppTextStyles.bodySmall,
                               ),
                               SizedBox(height: 2.h),
-                              Row(
+                              Wrap(
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                spacing: 4.w,
+                                runSpacing: 2.h,
                                 children: [
                                   Icon(
                                     Icons.schedule,
                                     size: 14.sp,
                                     color: AppColors.greyLight,
                                   ),
-                                  SizedBox(width: 4.w),
-                                  // M-02: at large text scales this row must
-                                  // not overflow horizontally.
-                                  Flexible(
-                                    child: Text(
-                                      '$timeText · ${_pillForm(l10n)}',
-                                      style: AppTextStyles.bodySmall,
-                                      overflow: TextOverflow.ellipsis,
+                                  Text(
+                                    timeText,
+                                    style: AppTextStyles.bodySmall,
+                                  ),
+                                  Text(
+                                    '·',
+                                    style: AppTextStyles.bodySmall,
+                                  ),
+                                  DoseFormatBadge(
+                                    form: detectDosageForm(
+                                      medicationName: slot.medicationName,
+                                      dose: slot.dose,
                                     ),
                                   ),
                                 ],
@@ -151,16 +158,17 @@ class DoseSlotCard extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(height: AppSpacing.md),
-              if (writeInFlight)
+              if (writeInFlight && _isActionable) ...[
+                SizedBox(height: AppSpacing.md),
                 const Center(
                   child: SizedBox(
-                    width: 28,
-                    height: 28,
+                    width: 24,
+                    height: 24,
                     child: CircularProgressIndicator(strokeWidth: 2.5),
                   ),
-                )
-              else if (_isActionable)
+                ),
+              ] else if (_isActionable) ...[
+                SizedBox(height: AppSpacing.md),
                 Column(
                   children: [
                     for (final (i, action) in _actions(l10n).indexed) ...[
@@ -177,6 +185,7 @@ class DoseSlotCard extends StatelessWidget {
                     ],
                   ],
                 ),
+              ],
             ],
           ),
         ),
@@ -202,20 +211,6 @@ class DoseSlotCard extends StatelessWidget {
       l10n.doseStatusMissed,
     ].map((s) => s.toLowerCase()).join(', ');
     return '$base Actions: $actions.';
-  }
-
-  String _pillForm(AppLocalizations l10n) {
-    final medLower = '${slot.medicationName} ${slot.dose}'.toLowerCase();
-    if (medLower.contains('liquid') ||
-        medLower.contains('drops') ||
-        medLower.contains('syrup') ||
-        medLower.contains('ml')) {
-      return l10n.pillFormLiquid;
-    }
-    if (medLower.contains('capsule') || medLower.contains('cap')) {
-      return l10n.pillFormCapsule;
-    }
-    return l10n.pillFormTablet;
   }
 
   List<_ActionSpec> _actions(AppLocalizations l10n) => [

@@ -12,6 +12,7 @@ import 'package:remotecare/core/navigation/app_routes.dart';
 import 'package:remotecare/core/network/api_service.dart';
 import 'package:remotecare/core/providers/shared_preferences_provider.dart';
 import 'package:remotecare/features/auth/presentation/auth_strings.dart';
+import 'package:remotecare/features/auth/presentation/screens/invitation_code_screen.dart';
 import 'package:remotecare/features/auth/presentation/screens/welcome_screen.dart';
 
 import '../unit/fake_api_service.dart';
@@ -48,16 +49,19 @@ void main() {
   });
 
   testWidgets(
-    'Welcome offers password sign-in (primary) and a one-time-code fallback',
+    'Welcome offers clinician sign-in, clinic invitation, and one-time code sign-in',
     (tester) async {
       await tester.pumpWidget(buildTestApp(prefs, fakeApi));
       await tester.pumpAndSettle();
 
       expect(find.text(AuthStrings.welcomeTitle), findsOneWidget);
-      // Two TextFormFields: email + password (the password form is primary).
+      // Two TextFormFields: email + password.
       expect(find.byType(TextFormField), findsNWidgets(2));
-      expect(find.text(AuthStrings.signInButton), findsOneWidget);
-      // The fallback alternative.
+      expect(find.text('Clinician Sign In'), findsOneWidget);
+      expect(find.text(AuthStrings.clinicianSignInButton), findsOneWidget);
+      expect(find.text('New Patient? Enter Clinic Invitation'), findsOneWidget);
+      expect(find.text(AuthStrings.clinicInvitationButton), findsOneWidget);
+      expect(find.text('Sign in with One-Time Code'), findsOneWidget);
       expect(find.text(AuthStrings.codeSignInLink), findsOneWidget);
     },
   );
@@ -149,4 +153,22 @@ void main() {
 
     expect(find.text(AuthStrings.requestCodeTitle), findsOneWidget);
   });
+
+  testWidgets(
+    'tapping the clinic invitation option opens InvitationCodeScreen',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(buildTestApp(prefs, fakeApi));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(AuthStrings.clinicInvitationButton));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(InvitationCodeScreen), findsOneWidget);
+    },
+  );
 }

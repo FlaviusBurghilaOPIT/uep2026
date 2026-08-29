@@ -11,9 +11,9 @@ Establish a single dominant primary CTA button (Email Sign In) on Screen B01 (`W
 - Target file: `mobile/lib/features/auth/presentation/screens/welcome_screen.dart`
 
 ## Acceptance criteria
-- [ ] Primary button is styled with solid fill and prominent contrast.
-- [ ] Secondary actions use clear outlined/text link styling.
-- [ ] Clear visual hierarchy directs patients smoothly toward their intended sign-in path.
+- [x] Primary button is styled with solid fill and prominent contrast.
+- [x] Secondary actions use clear outlined/text link styling.
+- [x] Clear visual hierarchy directs patients smoothly toward their intended sign-in path.
 
 ## Covers
 - User Stories: US5

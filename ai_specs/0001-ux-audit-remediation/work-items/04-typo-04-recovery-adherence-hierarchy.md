@@ -11,9 +11,9 @@ Update recovery adherence percentage stat typography in `RecoveryScreen` (`A04`)
 - Target file: `mobile/lib/features/recovery/presentation/screens/recovery_screen.dart`
 
 ## Acceptance criteria
-- [ ] Adherence percentage renders in bold display style (`FontWeight.w700`).
-- [ ] Percentage color is styled with `AppColors.primaryGreen` / emerald accent.
-- [ ] Category label maintains subtle secondary styling (`FontWeight.w400`).
+- [x] Adherence percentage renders in bold display style (`FontWeight.w700`).
+- [x] Percentage color is styled with `AppColors.primaryGreen` / emerald accent.
+- [x] Category label maintains subtle secondary styling (`FontWeight.w400`).
 
 ## Covers
 - User Stories: US4

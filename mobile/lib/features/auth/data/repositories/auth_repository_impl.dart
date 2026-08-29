@@ -18,7 +18,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<AuthState?> fetchProfile() => remote.fetchProfile();
 
   @override
-  Future<({String? caseId, String? primaryCondition})> fetchCase(
+  Future<({String? caseId, String? primaryCondition, String? physicianName})> fetchCase(
     String patientId,
   ) => remote.fetchCase(patientId);
 

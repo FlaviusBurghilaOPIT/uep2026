@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/navigation/app_routes.dart';
@@ -13,11 +14,12 @@ import '../providers/auth_provider.dart';
 import 'invitation_code_screen.dart';
 import 'request_code_screen.dart';
 
-/// Hybrid-auth Welcome screen (WI 04, spec Req 2).
+/// Hybrid-auth Welcome screen (WI 04, WI 12 COPY-03).
 ///
-/// Offers sign-in methods: email + password (PRIMARY),
-/// "I got an invitation code" (for newly enrolled patients),
-/// and an "email me a one-time code" fallback. Both land on Today on success.
+/// Offers disambiguated sign-in methods:
+/// 1. "Clinician Sign In" (email + password form),
+/// 2. "New Patient? Enter Clinic Invitation" (for newly enrolled patients),
+/// 3. "Sign in with One-Time Code" (email OTP code request).
 class WelcomeScreen extends ConsumerStatefulWidget {
   const WelcomeScreen({super.key});
 
@@ -87,17 +89,36 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: AppSpacing.xxxl),
+                SizedBox(height: AppSpacing.md),
+                Container(
+                  key: const Key('welcome_hero_illustration'),
+                  height: 140.h.clamp(120.0, 180.0),
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: AppColors.softCyan,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      LucideIcons.heartHandshake,
+                      size: 48.sp.clamp(36.0, 60.0),
+                      color: AppColors.primaryGreen,
+                    ),
+                  ),
+                ),
+                SizedBox(height: AppSpacing.lg),
                 Text(AuthStrings.welcomeTitle, style: AppTextStyles.heading1),
                 SizedBox(height: AppSpacing.sm),
                 Text(AuthStrings.welcomeSubtitle, style: AppTextStyles.subtitle),
-                SizedBox(height: AppSpacing.xxl),
+                SizedBox(height: AppSpacing.xl),
 
                 AppTextField(
                   label: AuthStrings.emailLabel,
                   hintText: AuthStrings.emailHint,
                   prefixIcon: LucideIcons.mail,
                   keyboardType: TextInputType.emailAddress,
+                  textCapitalization: TextCapitalization.none,
+                  autocorrect: false,
                   controller: _emailController,
                   validator: (value) {
                     final v = value?.trim() ?? '';
@@ -125,7 +146,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 SizedBox(height: AppSpacing.xl),
 
                 AppButton(
-                  text: AuthStrings.signInButton,
+                  text: AuthStrings.clinicianSignInButton,
                   isLoading: auth.isLoading,
                   onPressed: _signInWithPassword,
                 ),
@@ -133,7 +154,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
 
                 // Primary patient onboarding action: Invitation Code
                 AppButton(
-                  text: 'New Patient? Enter Clinic Invitation',
+                  text: AuthStrings.clinicInvitationButton,
                   isOutlined: true,
                   icon: LucideIcons.keyRound,
                   onPressed: _openInviteCodeSignIn,

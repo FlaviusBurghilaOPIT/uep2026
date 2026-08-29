@@ -305,8 +305,14 @@ abstract class AppLocalizations {
   /// No description provided for @checkinSuccessBanner.
   ///
   /// In en, this message translates to:
-  /// **'Daily check-in logged. Thank you for updating your care team.'**
+  /// **'Check-in received • Care team updated'**
   String get checkinSuccessBanner;
+
+  /// No description provided for @checkinSuccessBannerWithPhysician.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-in received • {physician}\'s care team updated'**
+  String checkinSuccessBannerWithPhysician(String physician);
 
   /// No description provided for @assistantTitle.
   ///
@@ -326,29 +332,23 @@ abstract class AppLocalizations {
   /// **'Type your question...'**
   String get typeMessagePlaceholder;
 
-  /// No description provided for @chipMedicationSideEffects.
+  /// No description provided for @chipSwellingNormal.
   ///
   /// In en, this message translates to:
-  /// **'Medication side effects'**
-  String get chipMedicationSideEffects;
+  /// **'Is mild swelling normal?'**
+  String get chipSwellingNormal;
 
-  /// No description provided for @chipWoundCareTips.
+  /// No description provided for @chipShowering.
   ///
   /// In en, this message translates to:
-  /// **'Wound care tips'**
-  String get chipWoundCareTips;
+  /// **'When can I shower?'**
+  String get chipShowering;
 
-  /// No description provided for @chipPhysioTargets.
+  /// No description provided for @chipMedicationInstructions.
   ///
   /// In en, this message translates to:
-  /// **'Physio targets'**
-  String get chipPhysioTargets;
-
-  /// No description provided for @chipEmergencyContact.
-  ///
-  /// In en, this message translates to:
-  /// **'Emergency contact'**
-  String get chipEmergencyContact;
+  /// **'Medication instructions'**
+  String get chipMedicationInstructions;
 
   /// No description provided for @emergencyCallCta.
   ///
@@ -629,8 +629,8 @@ abstract class AppLocalizations {
   /// No description provided for @authErrorSendingOtp.
   ///
   /// In en, this message translates to:
-  /// **'Error sending OTP: {error}'**
-  String authErrorSendingOtp(String error);
+  /// **'Unable to send verification code. Check your connection and try again.'**
+  String get authErrorSendingOtp;
 
   /// No description provided for @authEnterInvitationCodeTitle.
   ///
@@ -643,6 +643,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Welcome!'**
   String get authWelcomeTitle;
+
+  /// No description provided for @authNewPatientClinicInvitation.
+  ///
+  /// In en, this message translates to:
+  /// **'New Patient? Enter Clinic Invitation'**
+  String get authNewPatientClinicInvitation;
+
+  /// No description provided for @authSignInWithOneTimeCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with One-Time Code'**
+  String get authSignInWithOneTimeCode;
+
+  /// No description provided for @authClinicianSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Clinician Sign In'**
+  String get authClinicianSignIn;
 
   /// No description provided for @authInvitationCodeSubtitle.
   ///
@@ -715,6 +733,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Verify and Log In'**
   String get authVerifyAndLogInButton;
+
+  /// No description provided for @authResendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend Code'**
+  String get authResendCode;
+
+  /// No description provided for @authResendCodeCountdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend Code in {seconds}s'**
+  String authResendCodeCountdown(int seconds);
+
+  /// No description provided for @authCodeResentSnackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Code resent to {email}'**
+  String authCodeResentSnackbar(String email);
+
+  /// No description provided for @authCodeResentSnackbarFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Code resent'**
+  String get authCodeResentSnackbarFallback;
 
   /// No description provided for @authProfileSetupTitle.
   ///
@@ -791,7 +833,7 @@ abstract class AppLocalizations {
   /// No description provided for @todayOfflineBanner.
   ///
   /// In en, this message translates to:
-  /// **'Log saved on your device. We will update your care team once you are back online.'**
+  /// **'Saved locally. Will sync automatically once reconnected.'**
   String get todayOfflineBanner;
 
   /// No description provided for @todayPlanUpdatedBanner.

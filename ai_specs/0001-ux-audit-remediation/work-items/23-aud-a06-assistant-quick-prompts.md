@@ -12,9 +12,9 @@ Provide 3 pre-seeded clinical quick prompt chips in empty `AssistantScreen` (`A0
 - Widget: `SuggestionChips`
 
 ## Acceptance criteria
-- [ ] Empty chat screen renders 3 prompt chips: "Is mild swelling normal?", "When can I shower?", "Medication instructions".
-- [ ] Tapping a chip fills the message field and sends the query automatically.
-- [ ] Chips disappear once the chat contains active messages.
+- [x] Empty chat screen renders 3 prompt chips: "Is mild swelling normal?", "When can I shower?", "Medication instructions".
+- [x] Tapping a chip fills the message field and sends the query automatically.
+- [x] Chips disappear once the chat contains active messages.
 
 ## Covers
 - User Stories: US3

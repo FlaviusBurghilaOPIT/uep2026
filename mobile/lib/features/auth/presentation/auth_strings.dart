@@ -7,7 +7,7 @@
 class AuthStrings {
   AuthStrings._();
 
-  // --- Welcome (two-method sign-in) ---
+  // --- Welcome (disambiguated auth methods - COPY-03) ---
   static const String welcomeTitle = 'Welcome back';
   static const String welcomeSubtitle =
       'Sign in to continue your recovery journey';
@@ -15,11 +15,11 @@ class AuthStrings {
   static const String emailHint = 'you@email.com';
   static const String passwordLabel = 'PASSWORD';
   static const String passwordHint = '••••••••';
-  static const String signInButton = 'Sign In';
-
-  /// Fallback method (spec Req 2 / Open Questions): password form is primary,
-  /// this is the "or email me a one-time code" alternative.
-  static const String codeSignInLink = 'Email me a one-time code';
+  static const String signInButton = 'Clinician Sign In';
+  static const String clinicianSignInButton = 'Clinician Sign In';
+  static const String clinicInvitationButton =
+      'New Patient? Enter Clinic Invitation';
+  static const String codeSignInLink = 'Sign in with One-Time Code';
   static const String invalidCredentials = 'Invalid email or password';
 
   // --- Request code (code fallback entry) ---
@@ -35,6 +35,8 @@ class AuthStrings {
   static const String codeLabel = 'VERIFICATION CODE';
   static const String codeHint = '000000';
   static const String verifyAndContinueButton = 'Verify & Continue';
+  static const String resendCode = 'Resend Code';
+  static String resendCodeCountdown(int seconds) => 'Resend Code in ${seconds}s';
 
   // --- Create password (first-run, immediately after code verification) ---
   static const String createPasswordTitle = 'Create a password';

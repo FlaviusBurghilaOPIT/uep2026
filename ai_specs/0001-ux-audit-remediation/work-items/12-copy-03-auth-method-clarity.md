@@ -12,9 +12,9 @@ Re-label auth option buttons on Screen B01 (`WelcomeScreen`) to eliminate semant
 - Target file: `mobile/lib/features/auth/presentation/auth_strings.dart`
 
 ## Acceptance criteria
-- [ ] Primary button explicitly states "Sign in with One-Time Code" (or email).
-- [ ] Clinic invitation option clearly reads "New Patient? Enter Clinic Invitation".
-- [ ] Clinician option clearly labeled "Clinician Sign In".
+- [x] Primary button explicitly states "Sign in with One-Time Code" (or email).
+- [x] Clinic invitation option clearly reads "New Patient? Enter Clinic Invitation".
+- [x] Clinician option clearly labeled "Clinician Sign In".
 
 ## Covers
 - User Stories: US5

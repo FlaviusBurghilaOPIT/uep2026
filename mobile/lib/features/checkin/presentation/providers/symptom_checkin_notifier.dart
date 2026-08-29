@@ -20,12 +20,17 @@ class SymptomCheckinNotifier extends AsyncNotifier<bool> {
   ///
   /// Resolves [AsyncData(true)] on success, [AsyncError] on failure.
   Future<void> submit({required String caseId, required String feeling}) async {
+    final normalizedFeeling = switch (feeling) {
+      'poor' => 'not_great',
+      'unwell' => 'bad',
+      _ => feeling,
+    };
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       final res = await _api.post(
         '/symptoms/checkin'
         '?case_id=${Uri.encodeQueryComponent(caseId)}'
-        '&feeling=${Uri.encodeQueryComponent(feeling)}',
+        '&feeling=${Uri.encodeQueryComponent(normalizedFeeling)}',
         const {},
       );
       if (res.statusCode == 200) {

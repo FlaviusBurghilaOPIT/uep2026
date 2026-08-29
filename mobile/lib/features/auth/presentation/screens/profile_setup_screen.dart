@@ -58,6 +58,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                 controller: _emailController,
                 decoration: InputDecoration(labelText: l10n.authEmailLabel),
                 keyboardType: TextInputType.emailAddress,
+                textCapitalization: TextCapitalization.none,
+                autocorrect: false,
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {
                     return l10n.authRequiredError;

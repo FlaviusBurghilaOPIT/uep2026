@@ -116,7 +116,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get checkinSuccessBanner =>
-      'Check-in giornaliero registrato. Grazie per aver aggiornato il tuo team medico.';
+      'Check-in ricevuto • Team medico aggiornato';
+
+  @override
+  String checkinSuccessBannerWithPhysician(String physician) {
+    return 'Check-in ricevuto • Team medico di $physician aggiornato';
+  }
 
   @override
   String get assistantTitle => 'Assistente del Team Medico';
@@ -129,16 +134,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get typeMessagePlaceholder => 'Scrivi la tua domanda...';
 
   @override
-  String get chipMedicationSideEffects => 'Effetti collaterali dei farmaci';
+  String get chipSwellingNormal => 'Un lieve gonfiore è normale?';
 
   @override
-  String get chipWoundCareTips => 'Consigli per la cura delle ferite';
+  String get chipShowering => 'Quando posso fare la doccia?';
 
   @override
-  String get chipPhysioTargets => 'Obiettivi di fisioterapia';
-
-  @override
-  String get chipEmergencyContact => 'Contatto di emergenza';
+  String get chipMedicationInstructions => 'Istruzioni sui farmaci';
 
   @override
   String get emergencyCallCta => 'Chiama il contatto di emergenza';
@@ -297,15 +299,23 @@ class AppLocalizationsIt extends AppLocalizations {
   String get authSendOtpButton => 'Invia OTP';
 
   @override
-  String authErrorSendingOtp(String error) {
-    return 'Errore durante l\'invio dell\'OTP: $error';
-  }
+  String get authErrorSendingOtp => 'Errore durante l\'invio dell\'OTP: null';
 
   @override
   String get authEnterInvitationCodeTitle => 'Inserisci il codice di invito';
 
   @override
   String get authWelcomeTitle => 'Benvenuto!';
+
+  @override
+  String get authNewPatientClinicInvitation =>
+      'New Patient? Enter Clinic Invitation';
+
+  @override
+  String get authSignInWithOneTimeCode => 'Sign in with One-Time Code';
+
+  @override
+  String get authClinicianSignIn => 'Clinician Sign In';
 
   @override
   String get authInvitationCodeSubtitle =>
@@ -348,6 +358,22 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get authVerifyAndLogInButton => 'Verifica e Accedi';
+
+  @override
+  String get authResendCode => 'Reinvia codice';
+
+  @override
+  String authResendCodeCountdown(int seconds) {
+    return 'Reinvia codice tra ${seconds}s';
+  }
+
+  @override
+  String authCodeResentSnackbar(String email) {
+    return 'Codice reinviato a $email';
+  }
+
+  @override
+  String get authCodeResentSnackbarFallback => 'Codice reinviato';
 
   @override
   String get authProfileSetupTitle => 'Configurazione profilo';

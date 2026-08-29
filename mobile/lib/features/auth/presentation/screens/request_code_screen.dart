@@ -86,6 +86,8 @@ class _RequestCodeScreenState extends ConsumerState<RequestCodeScreen> {
                   hintText: AuthStrings.emailHint,
                   prefixIcon: LucideIcons.mail,
                   keyboardType: TextInputType.emailAddress,
+                  textCapitalization: TextCapitalization.none,
+                  autocorrect: false,
                   controller: _emailController,
                   validator: (value) {
                     final v = value?.trim() ?? '';

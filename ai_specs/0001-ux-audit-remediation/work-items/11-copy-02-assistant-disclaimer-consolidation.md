@@ -12,8 +12,8 @@ Remove repetitive medical disclaimers prepended to individual assistant chat bub
 - Target file: `mobile/lib/features/assistant/presentation/providers/chat_assistant_notifier.dart`
 
 ## Acceptance criteria
-- [ ] Chat bubbles render conversational medical responses without boilerplate disclaimer prefixes.
-- [ ] The persistent `GuardrailBanner` at the top of the screen provides the legal guardrail context.
+- [x] Chat bubbles render conversational medical responses without boilerplate disclaimer prefixes.
+- [x] The persistent `GuardrailBanner` at the top of the screen provides the legal guardrail context.
 
 ## Covers
 - User Stories: US3

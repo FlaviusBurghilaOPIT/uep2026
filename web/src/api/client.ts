@@ -130,3 +130,29 @@ export async function apiFetch<T>(endpoint: string, options: ApiFetchOptions = {
 
   return response.json();
 }
+
+export interface TriageResolvePayload {
+  outreach_method: string;
+  clinical_note: string;
+}
+
+export interface TriageResolution {
+  id: string;
+  patient_id: string;
+  clinician_id: string;
+  outreach_method: string;
+  clinical_note: string;
+  resolved_at: string;
+}
+
+export async function resolveTriageAlert(
+  patientId: string,
+  payload: TriageResolvePayload,
+  options: ApiFetchOptions = {}
+): Promise<TriageResolution> {
+  return apiFetch<TriageResolution>(`/patients/${patientId}/triage-resolve`, {
+    ...options,
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}

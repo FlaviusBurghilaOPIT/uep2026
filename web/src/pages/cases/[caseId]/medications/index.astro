@@ -1,6 +1,6 @@
 ---
 import AppLayout from '../../../../layouts/AppLayout.astro'
-import { Pill, ShieldCheck, ArrowLeft } from '@lucide/astro'
+import { Pill, ShieldCheck, ArrowLeft, Clock, Info } from '@lucide/astro'
 import { createTranslator, isLanguage } from '../../../../i18n'
 import '../../../../index.css'
 
@@ -50,15 +50,64 @@ const t = createTranslator(lang)
           <input id="dose" class="input" type="text" placeholder={t('medication.dosePlaceholder', 'e.g. 5mg, 500mg, 10ml')} required aria-required="true" />
         </div>
 
+        <!-- Frequency & Clinical Schedule Picker (Norman Constraints) -->
         <div class="form-group">
-          <label for="frequency" class="label">{t('medication.frequencyLabel', 'Dosing Frequency *')}</label>
-          <select id="frequency" class="select" required aria-required="true">
-            <option value="QD">{t('medication.frequencyQD', 'Once Daily (QD — 08:00 AM)')}</option>
+          <label id="freq-group-label" for="frequency" class="label">{t('medication.frequencyLabel', 'Dosing Frequency *')}</label>
+          
+          <!-- Interactive Segmented Selector -->
+          <div class="frequency-segmented" role="radiogroup" aria-labelledby="freq-group-label" id="frequency-segmented">
+            <button type="button" class="segment-btn active" data-freq="QD" role="radio" aria-checked="true" aria-label="Once Daily (QD)">
+              <span class="segment-code">QD</span>
+              <span class="segment-desc">Once daily</span>
+            </button>
+            <button type="button" class="segment-btn" data-freq="BID" role="radio" aria-checked="false" aria-label="Twice Daily (BID)">
+              <span class="segment-code">BID</span>
+              <span class="segment-desc">2x / day</span>
+            </button>
+            <button type="button" class="segment-btn" data-freq="TID" role="radio" aria-checked="false" aria-label="Three Times Daily (TID)">
+              <span class="segment-code">TID</span>
+              <span class="segment-desc">3x / day</span>
+            </button>
+            <button type="button" class="segment-btn" data-freq="QID" role="radio" aria-checked="false" aria-label="Four Times Daily (QID)">
+              <span class="segment-code">QID</span>
+              <span class="segment-desc">4x / day</span>
+            </button>
+            <button type="button" class="segment-btn" data-freq="PRN" role="radio" aria-checked="false" aria-label="As Needed (PRN)">
+              <span class="segment-code">PRN</span>
+              <span class="segment-desc">As needed</span>
+            </button>
+          </div>
+
+          <!-- Select dropdown synced with segmented control -->
+          <select id="frequency" name="frequency" class="select select-frequency" required aria-required="true">
+            <option value="QD" selected>{t('medication.frequencyQD', 'Once Daily (QD — 08:00 AM)')}</option>
             <option value="BID">{t('medication.frequencyBID', 'Twice Daily (BID — 08:00 AM, 08:00 PM)')}</option>
             <option value="TID">{t('medication.frequencyTID', 'Three Times Daily (TID — 08:00, 13:00, 20:00)')}</option>
             <option value="QID">{t('medication.frequencyQID', 'Four Times Daily (QID — 08:00, 12:00, 16:00, 20:00)')}</option>
             <option value="PRN">{t('medication.frequencyPRN', 'As Needed (PRN)')}</option>
           </select>
+        </div>
+
+        <!-- Structured Dose Time Selectors Section -->
+        <div class="form-group dose-slots-section" id="dose-slots-section">
+          <div class="slots-header">
+            <div class="slots-header-left">
+              <Clock size={15} class="clock-icon" aria-hidden="true" />
+              <span class="slots-title">{t('medication.scheduledTimesLabel', 'Standardized Scheduled Slot Times')}</span>
+            </div>
+            <span class="slots-badge" id="slots-badge">1 dose / day</span>
+          </div>
+
+          <!-- Dynamic structured time slot inputs -->
+          <div id="slots-container" class="slots-grid"></div>
+
+          <!-- PRN on-demand explanatory notice -->
+          <div id="prn-notice" class="prn-notice hidden" role="note">
+            <Info size={16} class="prn-icon" aria-hidden="true" />
+            <div class="prn-text">
+              <strong>{t('medication.frequencyPRN', 'As Needed (PRN)')}</strong>: {t('medication.prnHelpText', 'Patient logs doses on demand. No fixed scheduled reminder alarms required.')}
+            </div>
+          </div>
         </div>
 
         <div class="form-group">
@@ -118,7 +167,7 @@ const t = createTranslator(lang)
     border: 1px solid #e2e8f0;
     box-shadow: 0 4px 6px -1px rgba(15,23,42,0.08);
     width: 100%;
-    max-width: 500px;
+    max-width: 520px;
     display: flex;
     flex-direction: column;
     gap: 18px;
@@ -193,6 +242,172 @@ const t = createTranslator(lang)
     cursor: pointer;
     padding: 0;
   }
+  .fda-check-btn:hover {
+    color: #0369a1;
+    text-decoration: underline;
+  }
+
+  /* Segmented Frequency Selector */
+  .frequency-segmented {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    background-color: #f8fafc;
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+  }
+  .segment-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 4px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+  }
+  .segment-btn:hover:not(.active) {
+    background-color: #e2e8f0;
+  }
+  .segment-btn.active {
+    background-color: #0284c7;
+    border-color: #0284c7;
+    box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25);
+  }
+  .segment-code {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e293b;
+  }
+  .segment-desc {
+    font-size: 10px;
+    color: #64748b;
+    margin-top: 2px;
+  }
+  .segment-btn.active .segment-code {
+    color: #ffffff;
+  }
+  .segment-btn.active .segment-desc {
+    color: #e0f2fe;
+    font-weight: 500;
+  }
+
+  .select-frequency {
+    margin-top: 4px;
+  }
+
+  /* Dose Slots Section */
+  .dose-slots-section {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px;
+    gap: 10px;
+  }
+  .slots-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .slots-header-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .clock-icon {
+    color: #0284c7;
+  }
+  .slots-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #334155;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+  }
+  .slots-badge {
+    background-color: #e0f2fe;
+    color: #0369a1;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 9999px;
+  }
+  .slots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 8px;
+  }
+  .slot-card {
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .slot-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: #475569;
+  }
+  .slot-period {
+    color: #0284c7;
+    font-weight: 600;
+  }
+  .slot-input-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .slot-time-input {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #0f172a;
+    background-color: #ffffff;
+    outline: none;
+    box-sizing: border-box;
+  }
+  .slot-time-input:focus {
+    border-color: #0284c7;
+    box-shadow: 0 0 0 2px rgba(2,132,199,0.15);
+  }
+  .slot-time-formatted {
+    font-size: 10px;
+    color: #64748b;
+    text-align: right;
+  }
+
+  .prn-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background-color: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: #1e40af;
+  }
+  .prn-icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: #3b82f6;
+  }
+  .prn-text {
+    line-height: 1.4;
+  }
+
   .input, .select, .textarea {
     padding: 10px 12px;
     border-radius: 8px;
@@ -257,6 +472,45 @@ const t = createTranslator(lang)
 </style>
 
 <script>
+  function formatTime12h(time24: string): string {
+    if (!time24 || !time24.includes(':')) return time24
+    const [hourStr, minStr] = time24.split(':')
+    const hour = parseInt(hourStr, 10)
+    const minutes = minStr || '00'
+    if (isNaN(hour)) return time24
+    const period = hour >= 12 ? 'PM' : 'AM'
+    const hour12 = hour % 12 === 0 ? 12 : hour % 12
+    return `${hour12}:${minutes.padStart(2, '0')} ${period}`
+  }
+
+  const SCHEDULE_MAP: Record<string, { times: string[]; labels: string[]; badge: string }> = {
+    QD: {
+      times: ['08:00'],
+      labels: ['Morning'],
+      badge: '1 dose / day'
+    },
+    BID: {
+      times: ['08:00', '20:00'],
+      labels: ['Morning', 'Evening'],
+      badge: '2 doses / day'
+    },
+    TID: {
+      times: ['08:00', '13:00', '20:00'],
+      labels: ['Morning', 'Midday', 'Evening'],
+      badge: '3 doses / day'
+    },
+    QID: {
+      times: ['08:00', '12:00', '16:00', '20:00'],
+      labels: ['Morning', 'Midday', 'Afternoon', 'Night'],
+      badge: '4 doses / day'
+    },
+    PRN: {
+      times: [],
+      labels: [],
+      badge: 'On-demand (PRN)'
+    }
+  }
+
   function initPrescribe() {
     const form = document.getElementById('med-form')
     const formCard = document.getElementById('prescribe-card')
@@ -265,6 +519,104 @@ const t = createTranslator(lang)
     const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement
     const drugNameInput = document.getElementById('drug-name') as HTMLInputElement
     const fdaCheckBtn = document.getElementById('fda-check-btn')
+    const freqSelect = document.getElementById('frequency') as HTMLSelectElement
+    const freqSegmented = document.getElementById('frequency-segmented')
+    const slotsContainer = document.getElementById('slots-container')
+    const slotsBadge = document.getElementById('slots-badge')
+    const prnNotice = document.getElementById('prn-notice')
+
+    function renderSlotsForFrequency(code: string) {
+      const schedule = SCHEDULE_MAP[code] || SCHEDULE_MAP.QD
+      
+      // Update segmented selector state
+      if (freqSegmented) {
+        const buttons = freqSegmented.querySelectorAll<HTMLButtonElement>('.segment-btn')
+        buttons.forEach((btn) => {
+          const isSelected = btn.getAttribute('data-freq') === code
+          if (isSelected) {
+            btn.classList.add('active')
+            btn.setAttribute('aria-checked', 'true')
+          } else {
+            btn.classList.remove('active')
+            btn.setAttribute('aria-checked', 'false')
+          }
+        })
+      }
+
+      // Update select dropdown value
+      if (freqSelect && freqSelect.value !== code) {
+        freqSelect.value = code
+      }
+
+      // Update slots display
+      if (slotsBadge) {
+        slotsBadge.textContent = schedule.badge
+      }
+
+      if (code === 'PRN') {
+        if (slotsContainer) slotsContainer.innerHTML = ''
+        if (prnNotice) prnNotice.classList.remove('hidden')
+      } else {
+        if (prnNotice) prnNotice.classList.add('hidden')
+        if (slotsContainer) {
+          slotsContainer.innerHTML = schedule.times.map((slotTime, idx) => {
+            const label = schedule.labels[idx] || `Slot ${idx + 1}`
+            const formatted = formatTime12h(slotTime)
+            return `
+              <div class="slot-card">
+                <div class="slot-label">
+                  <span>Dose ${idx + 1}</span>
+                  <span class="slot-period">${label}</span>
+                </div>
+                <div class="slot-input-wrap">
+                  <input
+                    type="time"
+                    id="dose-time-${idx + 1}"
+                    class="slot-time-input"
+                    value="${slotTime}"
+                    aria-label="Dose ${idx + 1} time"
+                  />
+                  <span class="slot-time-formatted" id="dose-time-formatted-${idx + 1}">${formatted}</span>
+                </div>
+              </div>
+            `
+          }).join('')
+
+          // Attach time formatting updater listeners
+          const timeInputs = slotsContainer.querySelectorAll<HTMLInputElement>('.slot-time-input')
+          timeInputs.forEach((input, i) => {
+            input.addEventListener('input', () => {
+              const formattedSpan = document.getElementById(`dose-time-formatted-${i + 1}`)
+              if (formattedSpan) {
+                formattedSpan.textContent = formatTime12h(input.value)
+              }
+            })
+          })
+        }
+      }
+    }
+
+    // Segmented button click handler
+    if (freqSegmented) {
+      const buttons = freqSegmented.querySelectorAll<HTMLButtonElement>('.segment-btn')
+      buttons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const freqCode = btn.getAttribute('data-freq') || 'QD'
+          renderSlotsForFrequency(freqCode)
+        })
+      })
+    }
+
+    // Select dropdown change handler
+    if (freqSelect) {
+      freqSelect.addEventListener('change', () => {
+        renderSlotsForFrequency(freqSelect.value)
+      })
+    }
+
+    // Initial render
+    const initialFreq = freqSelect?.value || 'QD'
+    renderSlotsForFrequency(initialFreq)
 
     if (fdaCheckBtn && drugNameInput) {
       fdaCheckBtn.addEventListener('click', () => {
@@ -295,7 +647,7 @@ const t = createTranslator(lang)
 
         const name = (document.getElementById('drug-name') as HTMLInputElement)?.value.trim()
         const dose = (document.getElementById('dose') as HTMLInputElement)?.value.trim()
-        const freq = (document.getElementById('frequency') as HTMLSelectElement)?.value
+        const freq = (document.getElementById('frequency') as HTMLSelectElement)?.value || 'QD'
         const duration = (document.getElementById('duration') as HTMLInputElement)?.value.trim()
         const notes = (document.getElementById('instructions') as HTMLTextAreaElement)?.value.trim()
 

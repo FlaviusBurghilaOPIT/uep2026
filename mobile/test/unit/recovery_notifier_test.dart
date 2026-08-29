@@ -79,7 +79,7 @@ void main() {
     await container.read(authProvider.notifier).fetchProfile();
   }
 
-  void seedCase({String? surgeryDate = '2026-07-08'}) {
+  void seedCase({String? surgeryDate = '2026-07-08', String? doctorName}) {
     fakeApi.caseHandler = (patientId) => http.Response(
       jsonEncode({
         'id': 'case-1',
@@ -87,6 +87,7 @@ void main() {
         'patient_id': 'p1',
         'surgery_type': 'Knee Arthroscopy',
         'surgery_date': surgeryDate,
+        'doctor_name': doctorName,
         'patient_date_of_birth': '1988-03-14',
         'status': 'active',
         'emergency_contact_name': null,
@@ -270,5 +271,31 @@ void main() {
     );
     expect(failed.total, 0);
     expect(s.hasAdherenceData, isTrue);
+  });
+
+  test('doctor_name mapped to state when present in case', () async {
+    await seedAuth();
+    seedCase(doctorName: 'Dr. Sarah Miller');
+    seedRecommendations([]);
+    seedAgendas([]);
+
+    await notifier().load();
+
+    final s = state();
+    expect(s.sourceState, RecoverySourceState.ready);
+    expect(s.doctorName, 'Dr. Sarah Miller');
+  });
+
+  test('doctor_name absent in case -> null in state (honest absence)', () async {
+    await seedAuth();
+    seedCase(doctorName: null);
+    seedRecommendations([]);
+    seedAgendas([]);
+
+    await notifier().load();
+
+    final s = state();
+    expect(s.sourceState, RecoverySourceState.ready);
+    expect(s.doctorName, isNull);
   });
 }

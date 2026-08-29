@@ -54,14 +54,21 @@
   "checkinOkOption": "Je me sens correct 😐",
   "checkinNotGreatOption": "Je ne me sens pas très bien 😟",
   "checkinBadOption": "Je me sens mal 😣",
-  "checkinSuccessBanner": "Suivi quotidien enregistré. Merci d'avoir informé votre équipe soignante.",
+  "checkinSuccessBanner": "Bilan reçu • Équipe soignante informée",
+  "checkinSuccessBannerWithPhysician": "Bilan reçu • Équipe soignante du Dr {physician} informée",
+  "@checkinSuccessBannerWithPhysician": {
+    "placeholders": {
+      "physician": {
+        "type": "String"
+      }
+    }
+  },
   "assistantTitle": "Assistant de l'Équipe Soignante",
   "assistantGuardrailBanner": "Assistant de l'Équipe Soignante • Informations uniquement, jamais de diagnostic",
   "typeMessagePlaceholder": "Écrivez votre question...",
-  "chipMedicationSideEffects": "Effets secondaires des médicaments",
-  "chipWoundCareTips": "Conseils de soins des plaies",
-  "chipPhysioTargets": "Objectifs de physiothérapie",
-  "chipEmergencyContact": "Contact d'urgence",
+  "chipSwellingNormal": "Un léger gonflement est-il normal ?",
+  "chipShowering": "Quand puis-je me doucher ?",
+  "chipMedicationInstructions": "Instructions de médication",
   "emergencyCallCta": "Appeler le contact d'urgence",
   "emergencyCallCtaWithPhone": "Appeler le contact d'urgence ({phone})",
   "@emergencyCallCtaWithPhone": {
@@ -182,6 +189,10 @@
   "authOtpCodeLengthError": "Code must be exactly 6 digits",
   "authOtpCodeNumericError": "Code must be numeric",
   "authVerifyAndLogInButton": "Verify and Log In",
+  "authResendCode": "Renvoyer le code",
+  "authResendCodeCountdown": "Renvoyer le code dans {seconds}s",
+  "authCodeResentSnackbar": "Code renvoyé à {email}",
+  "authCodeResentSnackbarFallback": "Code renvoyé",
   "authProfileSetupTitle": "Profile Setup",
   "authNameLabel": "Name",
   "authSurnameLabel": "Surname",

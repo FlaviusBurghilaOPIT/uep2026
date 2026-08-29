@@ -34,11 +34,13 @@
 
   /* Clinical Alerts */
   --badge-red-bg: #fef2f2;
-  --badge-red-text: #b91c1c;
-  --badge-red-border: #fca5a5;
+  --badge-red-text: #991b1b;
+  --badge-red-border: #f87171;
+  --triage-border-critical: #ef4444;
   --badge-amber-bg: #fffbeb;
-  --badge-amber-text: #b45309;
-  --badge-amber-border: #fcd34d;
+  --badge-amber-text: #92400e;
+  --badge-amber-border: #fbbf24;
+  --triage-border-moderate: #f59e0b;
   --badge-green-bg: #f0fdf4;
   --badge-green-text: #15803d;
   --badge-green-border: #86efac;

@@ -17,7 +17,9 @@ import '../providers/symptom_checkin_notifier.dart';
 /// Posts via [symptomCheckinNotifierProvider]; shows Emergency Red Flag Banner
 /// with direct dial (911 / Clinic Direct) when acute symptoms ('bad') are selected.
 class CheckInCard extends ConsumerStatefulWidget {
-  const CheckInCard({super.key});
+  const CheckInCard({super.key, this.physicianName});
+
+  final String? physicianName;
 
   @override
   ConsumerState<CheckInCard> createState() => _CheckInCardState();
@@ -87,6 +89,23 @@ class _CheckInCardState extends ConsumerState<CheckInCard> {
     } catch (_) {}
   }
 
+  Color _getMoodColor(String mood) {
+    switch (mood) {
+      case 'great':
+        return AppColors.primaryGreen;
+      case 'ok':
+        return AppColors.deepTeal;
+      case 'not_great':
+      case 'poor':
+        return AppColors.warningAmber;
+      case 'bad':
+      case 'unwell':
+        return AppColors.errorRed;
+      default:
+        return AppColors.primaryGreen;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -94,7 +113,7 @@ class _CheckInCardState extends ConsumerState<CheckInCard> {
     final isSuccess = checkinState.value == true;
     final isSubmitting = checkinState.isLoading;
     final isError = checkinState.hasError;
-    final isBadMood = _selectedMood == 'bad';
+    final isBadMood = _selectedMood == 'bad' || _selectedMood == 'unwell';
 
     final moods = <(String, String)>[
       ('great', l10n.checkinGreatOption),
@@ -102,6 +121,13 @@ class _CheckInCardState extends ConsumerState<CheckInCard> {
       ('not_great', l10n.checkinNotGreatOption),
       ('bad', l10n.checkinBadOption),
     ];
+
+    final auth = ref.watch(authProvider);
+    final physicianName = (widget.physicianName ?? auth.physicianName)?.trim();
+    final hasPhysician = physicianName != null && physicianName.isNotEmpty;
+    final successBannerText = hasPhysician
+        ? l10n.checkinSuccessBannerWithPhysician(physicianName)
+        : l10n.checkinSuccessBanner;
 
     return Container(
       key: const Key('checkin_card'),
@@ -136,7 +162,7 @@ class _CheckInCardState extends ConsumerState<CheckInCard> {
                 SizedBox(width: AppSpacing.hSm),
                 Expanded(
                   child: Text(
-                    l10n.checkinSuccessBanner,
+                    successBannerText,
                     style: AppTextStyles.bodySmall,
                   ),
                 ),
@@ -176,7 +202,9 @@ class _CheckInCardState extends ConsumerState<CheckInCard> {
               children: moods.map((mood) {
                 final (value, label) = mood;
                 final isSelected = _selectedMood == value;
+                final moodColor = _getMoodColor(value);
                 return GestureDetector(
+                  key: Key('checkin_chip_$value'),
                   onTap: isSubmitting ? null : () => _selectMood(value),
                   child: Container(
                     constraints: const BoxConstraints(minHeight: 48),
@@ -186,16 +214,12 @@ class _CheckInCardState extends ConsumerState<CheckInCard> {
                     ),
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: isSelected
-                          ? (value == 'bad' ? AppColors.errorRed : AppColors.primaryGreen)
-                          : AppColors.white,
+                      color: isSelected ? moodColor : AppColors.white,
                       borderRadius: BorderRadius.circular(
                         AppSpacing.radiusRound,
                       ),
                       border: Border.all(
-                        color: isSelected
-                            ? (value == 'bad' ? AppColors.errorRed : AppColors.primaryGreen)
-                            : AppColors.greyDivider,
+                        color: isSelected ? moodColor : AppColors.greyDivider,
                         width: isSelected ? 1.5 : 1.0,
                       ),
                     ),

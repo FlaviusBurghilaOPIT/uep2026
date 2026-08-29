@@ -74,4 +74,26 @@ void main() {
     // Verify navigation to OTP screen
     expect(find.text('Enter OTP'), findsOneWidget);
   });
+
+  testWidgets('EmailLoginScreen configures email input with no autocapitalization and no autocorrect', (WidgetTester tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+
+    await tester.pumpWidget(buildTestApp(prefs));
+    await tester.pumpAndSettle();
+
+    final textField = tester.widget<TextField>(
+      find.byType(TextField).first,
+    );
+    final editableText = tester.widget<EditableText>(
+      find.byType(EditableText).first,
+    );
+
+    expect(textField.keyboardType, TextInputType.emailAddress);
+    expect(textField.autocorrect, isFalse);
+    expect(textField.textCapitalization, TextCapitalization.none);
+    expect(editableText.keyboardType, TextInputType.emailAddress);
+    expect(editableText.autocorrect, isFalse);
+    expect(editableText.textCapitalization, TextCapitalization.none);
+  });
 }

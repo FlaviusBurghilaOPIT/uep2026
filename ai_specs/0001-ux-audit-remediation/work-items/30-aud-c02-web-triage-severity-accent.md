@@ -12,9 +12,9 @@ Add a subtle 4px left accent border (red `#EF4444` for critical/urgent status, a
 - Styles: `web/src/index.css`
 
 ## Acceptance criteria
-- [ ] Critical/urgent triage rows feature a 4px solid red left border (`border-l-4 border-red-500`).
-- [ ] Moderate triage rows feature a 4px solid amber left border (`border-l-4 border-amber-500`).
-- [ ] Status badges use high-contrast color pills with clear text labels.
+- [x] Critical/urgent triage rows feature a 4px solid red left border (`border-l-4 border-red-500`).
+- [x] Moderate triage rows feature a 4px solid amber left border (`border-l-4 border-amber-500`).
+- [x] Status badges use high-contrast color pills with clear text labels.
 
 ## Covers
 - User Stories: US6

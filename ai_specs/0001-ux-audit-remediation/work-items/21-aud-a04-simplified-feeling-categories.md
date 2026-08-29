@@ -12,9 +12,9 @@ Simplify the symptom check-in feeling choices in `CheckInCard` (`A03`) to 4 dist
 - Notifier: `mobile/lib/features/checkin/presentation/providers/symptom_checkin_notifier.dart`
 
 ## Acceptance criteria
-- [ ] Renders exactly 4 mood chips: Great (green), OK (blue/teal), Not Great (amber), Unwell (rose/red).
-- [ ] Selecting "Unwell" triggers the emergency red flag banner (FORM-01).
-- [ ] Submissions map accurately to backend feeling telemetry values (`great`, `ok`, `poor`, `bad`).
+- [x] Renders exactly 4 mood chips: Great (green), OK (blue/teal), Not Great (amber), Unwell (rose/red).
+- [x] Selecting "Unwell" triggers the emergency red flag banner (FORM-01).
+- [x] Submissions map accurately to backend feeling telemetry values (`great`, `ok`, `poor`, `bad`).
 
 ## Covers
 - User Stories: US2

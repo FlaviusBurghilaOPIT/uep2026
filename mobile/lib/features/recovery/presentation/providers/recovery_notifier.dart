@@ -34,6 +34,7 @@ class RecoveryState {
     this.surgeryType,
     this.surgeryDate,
     this.dayOfRecovery,
+    this.doctorName,
     this.recommendations = const [],
     this.adherenceDays = const [],
   });
@@ -45,6 +46,7 @@ class RecoveryState {
   /// 1-based day count since [surgeryDate]; null when the date is absent
   /// or in the future (never a fabricated number).
   final int? dayOfRecovery;
+  final String? doctorName;
   final List<String> recommendations;
   final List<AdherenceDay> adherenceDays;
 
@@ -120,6 +122,9 @@ class RecoveryNotifier extends AsyncNotifier<RecoveryState> {
           surgeryType: caseJson['surgery_type'] as String?,
           surgeryDate: surgeryDate,
           dayOfRecovery: _dayOfRecovery(surgeryDate, today),
+          doctorName: (caseJson['doctor_name'] ??
+                  caseJson['clinician_name'] ??
+                  caseJson['doctorName']) as String?,
           recommendations: recommendations,
           adherenceDays: days,
         ),

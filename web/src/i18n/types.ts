@@ -173,6 +173,9 @@ export interface MedicationTranslations {
   frequencyPRN:     string
   remindersAt:      string
   noReminders:      string
+  scheduledTimesLabel: string
+  doseSlot:         string
+  prnHelpText:      string
 }
 
 
@@ -237,6 +240,41 @@ export interface LandingTranslations {
   ctaBannerDesc: string
   ctaBannerButton: string
   footerText: string
+  socialProofBadge?: string
+  socialProofTitle?: string
+  socialProofSubtitle?: string
+  socialProofTransparency?: string
+  testimonial1Name?: string
+  testimonial1Role?: string
+  testimonial1Org?: string
+  testimonial1Quote?: string
+  testimonial1Badge?: string
+  testimonial2Name?: string
+  testimonial2Role?: string
+  testimonial2Org?: string
+  testimonial2Quote?: string
+  testimonial2Badge?: string
+  testimonial3Name?: string
+  testimonial3Role?: string
+  testimonial3Org?: string
+  testimonial3Quote?: string
+  testimonial3Badge?: string
+  complianceBadge?: string
+  complianceTitle?: string
+  complianceSubtitle?: string
+  complianceHipaaTitle?: string
+  complianceHipaaDesc?: string
+  complianceHipaaBadge?: string
+  complianceFdaTitle?: string
+  complianceFdaDesc?: string
+  complianceFdaBadge?: string
+  complianceOpenFdaTitle?: string
+  complianceOpenFdaDesc?: string
+  complianceOpenFdaBadge?: string
+  complianceAwsTitle?: string
+  complianceAwsDesc?: string
+  complianceAwsBadge?: string
+  complianceDisclaimer?: string
 }
 
 export interface LoginTranslations {
@@ -247,10 +285,11 @@ export interface LoginTranslations {
   errorInvalid: string
   button: string
   loggingIn: string
-  quickDemoButton: string
-  demoHelper: string
+  securityNotice?: string
+  quickDemoButton?: string
+  demoHelper?: string
   backToHome: string
-  orSignInWithPassword: string
+  orSignInWithPassword?: string
 }
 
 export interface AuthTranslations {

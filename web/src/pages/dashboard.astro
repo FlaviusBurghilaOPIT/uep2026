@@ -305,7 +305,17 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
                       <div class="patient-name-line">
                         <h3 class="patient-card-name">{p.full_name}</h3>
                         <span class={`priority-badge ${isRed ? 'badge-critical' : 'badge-moderate'}`}>
-                          {isRed ? 'CRITICAL EXCEPTION' : 'MODERATE ATTENTION'}
+                          {isRed ? (
+                            <>
+                              <AlertCircle size={12} aria-hidden="true" />
+                              <span>CRITICAL EXCEPTION</span>
+                            </>
+                          ) : (
+                            <>
+                              <TriangleAlert size={12} aria-hidden="true" />
+                              <span>MODERATE ATTENTION</span>
+                            </>
+                          )}
                         </span>
                       </div>
                       <p class="patient-meta-sub">
@@ -376,9 +386,15 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
                       data-patient-name={p.full_name}
                       data-patient-id={p.id}
                       data-case-id={pCase?.id}
+                      data-priority={item.priority}
+                      data-surgery={pCase?.surgery_type || 'Post-Op'}
+                      data-dob={p.date_of_birth || 'N/A'}
+                      data-adherence={item.adherenceRate}
+                      data-symptom={item.latestSymptom?.feeling?.toUpperCase() || 'OK'}
+                      aria-label={`Resolve alert for ${p.full_name}`}
                     >
                       <FileCheck2 size={15} aria-hidden="true" />
-                      <span>{t('triage.resolveException', 'Document Outreach & Resolve')}</span>
+                      <span>{t('patientCard.resolve', 'Resolve')}</span>
                     </button>
 
                     <a href={pCase ? `/cases/${pCase.id}` : `/patients`} class="action-btn-review">
@@ -471,13 +487,20 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
 
       <form id="resolution-form" class="modal-form">
         <p class="modal-patient-name" id="modal-patient-info"></p>
+        <input type="hidden" id="modal-patient-id" value="" />
+        <input type="hidden" id="modal-case-id" value="" />
+        <input type="hidden" id="modal-patient-priority" value="" />
+        <input type="hidden" id="modal-patient-surgery" value="" />
+        <input type="hidden" id="modal-patient-dob" value="" />
+        <input type="hidden" id="modal-patient-adherence" value="" />
+        <input type="hidden" id="modal-patient-symptom" value="" />
 
         <div class="form-group">
           <label class="form-label" for="outreach-channel">{t('triage.outreachMethod', 'Clinical Contact Method *')}</label>
           <select id="outreach-channel" class="modal-select" required>
-            <option value="phone">{t('triage.outreachPhone', 'Phone Consultation with Patient / Family')}</option>
-            <option value="sms">{t('triage.outreachSms', 'Secure Clinical SMS / Mobile Direct Message')}</option>
-            <option value="visit">{t('triage.outreachVisit', 'In-Clinic / Bedside Review')}</option>
+            <option value="phone_call">{t('triage.outreachPhone', 'Phone Consultation with Patient / Family')}</option>
+            <option value="secure_sms">{t('triage.outreachSms', 'Secure Clinical SMS / Mobile Direct Message')}</option>
+            <option value="in_clinic_visit">{t('triage.outreachVisit', 'In-Clinic / Bedside Review')}</option>
           </select>
         </div>
 
@@ -491,8 +514,10 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
             required
             minlength="10"
           ></textarea>
-          <span class="note-helper">Minimum 10 characters required for clinical audit compliance.</span>
+          <span class="note-helper">{t('triage.noteRequired', 'Minimum 10 characters required for clinical audit compliance.')}</span>
         </div>
+
+        <div id="modal-error-msg" class="modal-error hidden" role="alert"></div>
 
         <div class="modal-actions">
           <button type="button" class="btn-cancel" id="modal-cancel-btn">
@@ -500,7 +525,7 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
           </button>
           <button type="submit" class="btn-submit-resolve" id="modal-submit-btn">
             <FileCheck2 size={16} aria-hidden="true" />
-            <span>{t('cta.submit', 'Resolve & Archive Alert')}</span>
+            <span id="modal-submit-btn-text">{t('cta.submit', 'Resolve & Archive Alert')}</span>
           </button>
         </div>
       </form>
@@ -1287,11 +1312,11 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
   }
 
   .card-priority-red {
-    border-left: 4px solid #dc2626;
+    border-left: 4px solid #EF4444;
   }
 
   .card-priority-amber {
-    border-left: 4px solid #d97706;
+    border-left: 4px solid #F59E0B;
   }
 
   .triage-card-header {
@@ -1336,23 +1361,28 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
   }
 
   .priority-badge {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
-    padding: 2px 8px;
+    padding: 3px 9px;
     border-radius: 9999px;
     letter-spacing: 0.05em;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    line-height: 1;
+    text-transform: uppercase;
   }
 
   .badge-critical {
-    background-color: #fef2f2;
-    color: #b91c1c;
-    border: 1px solid #fecaca;
+    background-color: #FEF2F2;
+    color: #991B1B;
+    border: 1px solid #F87171;
   }
 
   .badge-moderate {
-    background-color: #fffbeb;
-    color: #b45309;
-    border: 1px solid #fde68a;
+    background-color: #FFFBEB;
+    color: #92400E;
+    border: 1px solid #FBBF24;
   }
 
   .patient-meta-sub {
@@ -1761,6 +1791,17 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     color: #64748b;
   }
 
+  .modal-error {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 500;
+    margin-top: 10px;
+  }
+
   .modal-actions {
     display: flex;
     justify-content: flex-end;
@@ -1842,6 +1883,7 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
 
 <script>
   import { parseClinicalSummary, renderClinicalBriefHtml } from '../utils/clinicalSummaryFormatter'
+  import { resolveTriageAlert } from '../api/client'
 
   function initDashboard() {
     // 1. Live Search filter
@@ -2002,13 +2044,33 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     const modal = document.getElementById('resolution-modal')
     const modalCloseBtn = document.getElementById('modal-close-btn')
     const modalCancelBtn = document.getElementById('modal-cancel-btn')
-    const modalForm = document.getElementById('resolution-form')
+    const modalForm = document.getElementById('resolution-form') as HTMLFormElement | null
     const modalPatientInfo = document.getElementById('modal-patient-info')
+    const modalPatientId = document.getElementById('modal-patient-id') as HTMLInputElement | null
+    const modalCaseId = document.getElementById('modal-case-id') as HTMLInputElement | null
+    const modalPriority = document.getElementById('modal-patient-priority') as HTMLInputElement | null
+    const modalSurgery = document.getElementById('modal-patient-surgery') as HTMLInputElement | null
+    const modalDob = document.getElementById('modal-patient-dob') as HTMLInputElement | null
+    const modalAdherence = document.getElementById('modal-patient-adherence') as HTMLInputElement | null
+    const modalSymptom = document.getElementById('modal-patient-symptom') as HTMLInputElement | null
+    const modalErrorMsg = document.getElementById('modal-error-msg')
+    const modalSubmitBtn = document.getElementById('modal-submit-btn') as HTMLButtonElement | null
+    const modalSubmitBtnText = document.getElementById('modal-submit-btn-text')
     let currentResolvingCard: HTMLElement | null = null
 
     function closeModal() {
       modal?.classList.add('hidden')
       currentResolvingCard = null
+      if (modalErrorMsg) {
+        modalErrorMsg.textContent = ''
+        modalErrorMsg.classList.add('hidden')
+      }
+      if (modalSubmitBtn) {
+        modalSubmitBtn.removeAttribute('disabled')
+      }
+      if (modalSubmitBtnText) {
+        modalSubmitBtnText.textContent = 'Resolve & Archive Alert'
+      }
     }
 
     if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeModal)
@@ -2018,34 +2080,218 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     resolveButtons.forEach((btn) => {
       btn.addEventListener('click', () => {
         const patientName = btn.getAttribute('data-patient-name') || 'Patient'
-        if (modalPatientInfo) modalPatientInfo.textContent = `Patient: ${patientName} (Clinical Exception)`
+        const patientId = btn.getAttribute('data-patient-id') || ''
+        const caseId = btn.getAttribute('data-case-id') || ''
+        const priority = btn.getAttribute('data-priority') || 'red'
+        const surgery = btn.getAttribute('data-surgery') || 'Post-Op'
+        const dob = btn.getAttribute('data-dob') || 'N/A'
+        const adherence = btn.getAttribute('data-adherence') || '100'
+        const symptom = btn.getAttribute('data-symptom') || 'OK'
+
+        if (modalPatientInfo) {
+          modalPatientInfo.textContent = `Patient: ${patientName} (${priority === 'red' ? 'Critical Exception' : 'Moderate Exception'})`
+        }
+        if (modalPatientId) modalPatientId.value = patientId
+        if (modalCaseId) modalCaseId.value = caseId
+        if (modalPriority) modalPriority.value = priority
+        if (modalSurgery) modalSurgery.value = surgery
+        if (modalDob) modalDob.value = dob
+        if (modalAdherence) modalAdherence.value = adherence
+        if (modalSymptom) modalSymptom.value = symptom
+
+        const noteEl = document.getElementById('resolution-note') as HTMLTextAreaElement | null
+        if (noteEl) noteEl.value = ''
+
+        if (modalErrorMsg) {
+          modalErrorMsg.textContent = ''
+          modalErrorMsg.classList.add('hidden')
+        }
+
         currentResolvingCard = btn.closest('.triage-card')
         modal?.classList.remove('hidden')
+        setTimeout(() => noteEl?.focus(), 50)
       })
     })
 
     if (modalForm) {
-      modalForm.addEventListener('submit', (e) => {
+      modalForm.addEventListener('submit', async (e) => {
         e.preventDefault()
-        const noteEl = document.getElementById('resolution-note') as HTMLTextAreaElement
-        const noteVal = noteEl?.value || ''
+        const noteEl = document.getElementById('resolution-note') as HTMLTextAreaElement | null
+        const channelEl = document.getElementById('outreach-channel') as HTMLSelectElement | null
+        const noteVal = (noteEl?.value || '').trim()
+        const channelVal = channelEl?.value || 'phone_call'
+        const patientId = modalPatientId?.value || ''
+        const caseId = modalCaseId?.value || ''
+        const priority = modalPriority?.value || 'red'
+        const surgery = modalSurgery?.value || 'Post-Op'
+        const dob = modalDob?.value || 'N/A'
+        const adherence = modalAdherence?.value || '100'
+        const symptom = modalSymptom?.value || 'OK'
+        const patientName = currentResolvingCard?.querySelector('.patient-card-name')?.textContent || 'Patient'
+
         if (noteVal.length < 10) {
-          alert('Please enter at least 10 characters for the clinical note.')
+          if (modalErrorMsg) {
+            modalErrorMsg.textContent = 'Please enter at least 10 characters for the clinical note.'
+            modalErrorMsg.classList.remove('hidden')
+          }
           return
         }
 
-        if (currentResolvingCard) {
-          currentResolvingCard.style.transition = 'all 0.3s ease'
-          currentResolvingCard.style.opacity = '0'
-          currentResolvingCard.style.transform = 'translateY(-10px)'
-          setTimeout(() => {
-            currentResolvingCard?.remove()
-            showToast('✓ Triage exception resolved & clinical outreach documented')
-          }, 300)
+        if (modalErrorMsg) {
+          modalErrorMsg.classList.add('hidden')
         }
 
-        closeModal()
-        if (noteEl) noteEl.value = ''
+        if (modalSubmitBtn) modalSubmitBtn.setAttribute('disabled', 'true')
+        if (modalSubmitBtnText) modalSubmitBtnText.textContent = 'Resolving...'
+
+        try {
+          // Call triage resolution API helper
+          await resolveTriageAlert(patientId, {
+            outreach_method: channelVal,
+            clinical_note: noteVal
+          })
+
+          // In-place resolution: remove card from exception queue
+          if (currentResolvingCard) {
+            currentResolvingCard.style.transition = 'all 0.3s ease'
+            currentResolvingCard.style.opacity = '0'
+            currentResolvingCard.style.transform = 'translateY(-10px)'
+            setTimeout(() => {
+              currentResolvingCard?.remove()
+
+              // Check if any exceptions remain
+              const remainingCards = document.querySelectorAll('#triage-queue-list .triage-card')
+              if (remainingCards.length === 0) {
+                const queueList = document.getElementById('triage-queue-list')
+                if (queueList) {
+                  queueList.innerHTML = `
+                    <div class="empty-box" id="empty-state">
+                      <div class="empty-icon-circle">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                      </div>
+                      <h3 class="empty-title">All Patient Pathways Stable</h3>
+                      <p class="empty-text">All patient recovery pathways are currently on track. No active triage exceptions.</p>
+                    </div>
+                  `
+                }
+              }
+            }, 300)
+          }
+
+          // Update KPI stats counts
+          if (priority === 'red') {
+            const redCountEl = document.getElementById('count-red')
+            const tabRedEl = document.getElementById('tab-count-red')
+            if (redCountEl) {
+              const current = Math.max(0, parseInt(redCountEl.textContent || '0', 10) - 1)
+              redCountEl.textContent = String(current)
+            }
+            if (tabRedEl) {
+              const current = Math.max(0, parseInt(tabRedEl.textContent || '0', 10) - 1)
+              tabRedEl.textContent = String(current)
+            }
+          } else {
+            const amberCountEl = document.getElementById('count-amber')
+            const tabAmberEl = document.getElementById('tab-count-amber')
+            if (amberCountEl) {
+              const current = Math.max(0, parseInt(amberCountEl.textContent || '0', 10) - 1)
+              amberCountEl.textContent = String(current)
+            }
+            if (tabAmberEl) {
+              const current = Math.max(0, parseInt(tabAmberEl.textContent || '0', 10) - 1)
+              tabAmberEl.textContent = String(current)
+            }
+          }
+
+          // Update priority count pill
+          const pillEl = document.querySelector('#triage-queue-section .priority-count-pill')
+          if (pillEl) {
+            const currentTotal = Math.max(0, parseInt(pillEl.textContent || '0', 10) - 1)
+            pillEl.textContent = `${currentTotal} Exception${currentTotal !== 1 ? 's' : ''}`
+          }
+
+          // Update stable roster counts
+          const tabStableEl = document.getElementById('tab-count-stable')
+          const stablePillEl = document.querySelector('#stable-roster-section .stable-count-pill')
+          if (tabStableEl) {
+            const current = parseInt(tabStableEl.textContent || '0', 10) + 1
+            tabStableEl.textContent = String(current)
+          }
+          if (stablePillEl) {
+            const current = parseInt(stablePillEl.textContent || '0', 10) + 1
+            stablePillEl.textContent = `${current} Patient${current !== 1 ? 's' : ''} Stable`
+          }
+
+          // Add to Stable Patient Grid
+          const stableGrid = document.getElementById('stable-patient-grid')
+          if (stableGrid) {
+            const emptyStable = stableGrid.querySelector('.empty-box')
+            if (emptyStable) emptyStable.remove()
+
+            const initials = patientName.slice(0, 2).toUpperCase()
+            const caseHref = caseId ? `/cases/${caseId}` : `/patients`
+            const newRosterCard = document.createElement('div')
+            newRosterCard.className = 'patient-card roster-card'
+            newRosterCard.setAttribute('data-name', patientName.toLowerCase())
+            newRosterCard.setAttribute('data-priority', 'stable')
+            newRosterCard.innerHTML = `
+              <div class="roster-header">
+                <div class="roster-identity">
+                  <div class="roster-avatar">${initials}</div>
+                  <div>
+                    <h4 class="roster-name">${patientName}</h4>
+                    <span class="roster-sub-meta">Surgery: ${surgery}</span>
+                  </div>
+                </div>
+                <span class="status-badge-stable">STABLE</span>
+              </div>
+              <div class="roster-metrics">
+                <div class="metric-col">
+                  <span class="metric-label">Adherence</span>
+                  <strong class="metric-val text-green">${adherence}%</strong>
+                </div>
+                <div class="metric-col">
+                  <span class="metric-label">Latest Check-In</span>
+                  <strong class="metric-val">${symptom}</strong>
+                </div>
+              </div>
+              <div class="roster-footer">
+                <span class="dob-text">DOB: ${dob}</span>
+                <a href="${caseHref}" class="view-case-link">View Case &rarr;</a>
+              </div>
+            `
+            stableGrid.prepend(newRosterCard)
+          }
+
+          // Update median resolution time dynamically
+          try {
+            const token = localStorage.getItem('token') || (document.cookie.match(/(^| )carepro_token=([^;]+)/)?.[2])
+            const statRes = await fetch('/api/analytics/triage-response', {
+              headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+            })
+            if (statRes.ok) {
+              const statData = await statRes.json()
+              const medianEl = document.getElementById('median-response-time')
+              if (medianEl && statData?.median_seconds) {
+                medianEl.textContent = `${Math.round(statData.median_seconds)}s`
+              }
+            }
+          } catch {
+            // Ignore stats refresh failure
+          }
+
+          showToast('✓ Triage alert resolved & documented.')
+          closeModal()
+        } catch (err: any) {
+          if (modalErrorMsg) {
+            modalErrorMsg.textContent = err?.message || 'Failed to save triage resolution. Please try again.'
+            modalErrorMsg.classList.remove('hidden')
+          } else {
+            showToast('⚠️ Failed to save triage resolution. Please try again.')
+          }
+          if (modalSubmitBtn) modalSubmitBtn.removeAttribute('disabled')
+          if (modalSubmitBtnText) modalSubmitBtnText.textContent = 'Resolve & Archive Alert'
+        }
       })
     }
 

@@ -12,9 +12,9 @@ Allow patients to log doses anytime during the active day in `DoseSlotCard` / `T
 - Target file: `mobile/lib/features/today/presentation/providers/today_agenda_notifier.dart`
 
 ## Acceptance criteria
-- [ ] Due, overdue, and upcoming doses for the current day can be logged at any time.
-- [ ] If logged outside scheduled slot time, displays clear subtle timestamp (e.g. "Logged at 10:14 AM").
-- [ ] No restrictive window blocking dialogs or errors occur.
+- [x] Due, overdue, and upcoming doses for the current day can be logged at any time.
+- [x] If logged outside scheduled slot time, displays clear subtle timestamp (e.g. "Logged at 10:14 AM").
+- [x] No restrictive window blocking dialogs or errors occur.
 
 ## Covers
 - User Stories: US1

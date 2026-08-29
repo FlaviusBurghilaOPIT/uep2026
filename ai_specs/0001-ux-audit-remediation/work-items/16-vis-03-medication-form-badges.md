@@ -13,10 +13,10 @@ Add dedicated visual icon glyphs for Capsule, Tablet, and Liquid medication dosa
 - Icons: `lucide_icons_flutter` or Material `Icons.medication`, `Icons.water_drop`
 
 ## Acceptance criteria
-- [ ] Capsule medications render with capsule icon glyph.
-- [ ] Tablet medications render with tablet/pill icon glyph.
-- [ ] Liquid/drops render with drop/liquid icon glyph.
-- [ ] Icons pair cleanly with localized format text badges.
+- [x] Capsule medications render with capsule icon glyph.
+- [x] Tablet medications render with tablet/pill icon glyph.
+- [x] Liquid/drops render with drop/liquid icon glyph.
+- [x] Icons pair cleanly with localized format text badges.
 
 ## Covers
 - User Stories: US1

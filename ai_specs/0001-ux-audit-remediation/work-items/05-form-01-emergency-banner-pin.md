@@ -12,10 +12,10 @@ Pin a sticky Emergency Red Flag banner with 1-tap direct dial (`tel:911` / Clini
 - Emergency phone lookup seam: `/cases/{caseId}/emergency-contact` and `url_launcher`
 
 ## Acceptance criteria
-- [ ] Selecting "Unwell" ('bad') immediately displays the Red Flag emergency banner above the fold.
-- [ ] Banner contains prominent 1-tap direct dial button invoking `url_launcher` with `tel:` URI scheme.
-- [ ] Emergency contact phone number defaults to clinic hotline or 911 if no custom case number is assigned.
-- [ ] Emergency banner remains sticky and visible during symptom detail entry.
+- [x] Selecting "Unwell" ('bad') immediately displays the Red Flag emergency banner above the fold.
+- [x] Banner contains prominent 1-tap direct dial button invoking `url_launcher` with `tel:` URI scheme.
+- [x] Emergency contact phone number defaults to clinic hotline or 911 if no custom case number is assigned.
+- [x] Emergency banner remains sticky and visible during symptom detail entry.
 
 ## Covers
 - User Stories: US2

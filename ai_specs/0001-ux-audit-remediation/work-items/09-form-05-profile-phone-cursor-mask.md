@@ -11,9 +11,9 @@ Preserve cursor position at the end of text upon re-focus and enforce standard E
 - Target file: `mobile/lib/features/profile/presentation/screens/profile_screen.dart`
 
 ## Acceptance criteria
-- [ ] Focusing the phone number input places the cursor at the end of the existing text string.
-- [ ] Formats telephone input according to standard telecommunication masks.
-- [ ] Prevents cursor jumping to index 0 on tap/focus.
+- [x] Focusing the phone number input places the cursor at the end of the existing text string.
+- [x] Formats telephone input according to standard telecommunication masks.
+- [x] Prevents cursor jumping to index 0 on tap/focus.
 
 ## Covers
 - User Stories: US4

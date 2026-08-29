@@ -13,9 +13,9 @@ Provide a 1-click inline resolution modal with a mandatory reason note directly 
 - Backend API endpoint: `POST /cases/{caseId}/triage-resolutions` or patch case status
 
 ## Acceptance criteria
-- [ ] Triage table rows include a "Resolve" button.
-- [ ] Clicking "Resolve" opens an inline modal requesting resolution reason notes.
-- [ ] Submitting the modal resolves the alert in-place and updates the table row status without full page reload.
+- [x] Triage table rows include a "Resolve" button.
+- [x] Clicking "Resolve" opens an inline modal requesting resolution reason notes.
+- [x] Submitting the modal resolves the alert in-place and updates the table row status without full page reload.
 
 ## Covers
 - User Stories: US6

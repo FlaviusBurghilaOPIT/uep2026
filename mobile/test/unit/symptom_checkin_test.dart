@@ -44,6 +44,34 @@ void main() {
     },
   );
 
+  test('submit with feeling poor maps to not_great query parameter', () async {
+    fakeApi.postHandlers['/symptoms/checkin?case_id=case_1&feeling=not_great'] =
+        (body) {
+          return http.Response(jsonEncode({'id': 'checkin_ng'}), 200);
+        };
+
+    final notifier = container.read(symptomCheckinNotifierProvider.notifier);
+    await notifier.submit(caseId: 'case_1', feeling: 'poor');
+
+    final state = container.read(symptomCheckinNotifierProvider);
+    expect(state.hasValue, isTrue);
+    expect(state.value, isTrue);
+  });
+
+  test('submit with feeling unwell maps to bad query parameter', () async {
+    fakeApi.postHandlers['/symptoms/checkin?case_id=case_1&feeling=bad'] =
+        (body) {
+          return http.Response(jsonEncode({'id': 'checkin_bad'}), 200);
+        };
+
+    final notifier = container.read(symptomCheckinNotifierProvider.notifier);
+    await notifier.submit(caseId: 'case_1', feeling: 'unwell');
+
+    final state = container.read(symptomCheckinNotifierProvider);
+    expect(state.hasValue, isTrue);
+    expect(state.value, isTrue);
+  });
+
   test('submit network failure -> AsyncError', () async {
     fakeApi.postHandlers['/symptoms/checkin?case_id=case_1&feeling=bad'] =
         (body) {

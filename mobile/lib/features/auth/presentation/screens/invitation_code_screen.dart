@@ -112,6 +112,8 @@ class _InvitationCodeScreenState extends ConsumerState<InvitationCodeScreen> {
                   hintText: AuthStrings.emailHint,
                   prefixIcon: LucideIcons.mail,
                   keyboardType: TextInputType.emailAddress,
+                  textCapitalization: TextCapitalization.none,
+                  autocorrect: false,
                   controller: _emailController,
                   validator: (value) {
                     final v = value?.trim() ?? '';
@@ -130,6 +132,9 @@ class _InvitationCodeScreenState extends ConsumerState<InvitationCodeScreen> {
                   prefixIcon: LucideIcons.keyRound,
                   keyboardType: TextInputType.number,
                   controller: _codeController,
+                  style: const TextStyle(
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
                   autofillHints: const [AutofillHints.oneTimeCode],
                   onChanged: (val) {
                     if (val.trim().length == 6 &&

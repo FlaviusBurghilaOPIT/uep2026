@@ -238,10 +238,12 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
       final nextRollback = nextState.rollbackErrorSlotId;
       if (nextRollback != null &&
           nextRollback != prevState?.rollbackErrorSlotId) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.todayLogRollbackError)));
-        ref.read(todayAgendaNotifierProvider.notifier).acknowledgeRollback();
+        final messenger = ScaffoldMessenger.of(context);
+        messenger.hideCurrentSnackBar();
+        messenger.showSnackBar(SnackBar(content: Text(l10n.todayLogRollbackError)));
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ref.read(todayAgendaNotifierProvider.notifier).acknowledgeRollback();
+        });
       }
     });
 
@@ -433,6 +435,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.labelSmall.copyWith(
+                fontSize: 10.sp.clamp(9.0, 12.0),
                 color: AppColors.white.withValues(alpha: 0.7),
                 letterSpacing: 1.5,
               ),
@@ -442,7 +445,10 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
               greetingLine,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.heading2.copyWith(color: AppColors.white),
+              style: AppTextStyles.heading2.copyWith(
+                fontSize: 24.sp.clamp(18.0, 24.0),
+                color: AppColors.white,
+              ),
             ),
             SizedBox(height: AppSpacing.md),
             Row(

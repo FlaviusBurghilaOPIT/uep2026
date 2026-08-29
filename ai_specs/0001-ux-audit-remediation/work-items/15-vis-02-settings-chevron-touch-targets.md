@@ -11,8 +11,8 @@ Expand touch target areas for interactive row chevrons and settings action trigg
 - Target file: `mobile/lib/features/profile/presentation/screens/profile_screen.dart`
 
 ## Acceptance criteria
-- [ ] Settings rows and chevrons wrap interactive triggers with `HitTestBehavior.opaque` container measuring at least 48x48dp.
-- [ ] No interactive tap targets measure below 48x48dp.
+- [x] Settings rows and chevrons wrap interactive triggers with `HitTestBehavior.opaque` container measuring at least 48x48dp.
+- [x] No interactive tap targets measure below 48x48dp.
 
 ## Covers
 - User Stories: US4

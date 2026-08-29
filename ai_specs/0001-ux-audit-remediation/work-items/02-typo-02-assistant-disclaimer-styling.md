@@ -12,9 +12,9 @@ Refactor the legal guardrail disclaimer banner in `AssistantScreen` (`A05`) from
 - Widget: `GuardrailBanner`
 
 ## Acceptance criteria
-- [ ] `GuardrailBanner` uses `TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w500, color: Color(0xFF334155), height: 1.4)`.
-- [ ] Background container uses `Color(0xFFF0FDF4)` with subtle border `#DCFCE7`.
-- [ ] Meets WCAG 2.1 AA 4.5:1 contrast requirement.
+- [x] `GuardrailBanner` uses `TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w500, color: Color(0xFF334155), height: 1.4)`.
+- [x] Background container uses `Color(0xFFF0FDF4)` with subtle border `#DCFCE7`.
+- [x] Meets WCAG 2.1 AA 4.5:1 contrast requirement.
 
 ## Covers
 - User Stories: US3

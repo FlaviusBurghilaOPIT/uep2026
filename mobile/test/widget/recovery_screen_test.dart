@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
+import 'package:remotecare/core/constants/app_colors.dart';
 import 'package:remotecare/core/network/api_service.dart';
 import 'package:remotecare/core/providers/shared_preferences_provider.dart';
 import 'package:remotecare/core/widgets/app_skeleton_loader.dart';
@@ -59,7 +60,7 @@ void main() {
   /// Case payload served to the recovery notifier (typed getPatientCase).
   /// [surgeryDate] defaults to 10 days before today so "Day 11" is
   /// deterministic without a clock seam on the screen.
-  void seedCase({String? surgeryDate}) {
+  void seedCase({String? surgeryDate, String? doctorName}) {
     fakeApi.caseHandler = (patientId) => http.Response(
       jsonEncode({
         'id': 'case-1',
@@ -69,6 +70,7 @@ void main() {
         'surgery_date':
             surgeryDate ??
             _iso(DateTime.now().subtract(const Duration(days: 10))),
+        'doctor_name': doctorName,
         'patient_date_of_birth': '1988-03-14',
         'status': 'active',
         'emergency_contact_name': null,
@@ -180,6 +182,12 @@ void main() {
       expect(find.text('Keep wound clean and dry'), findsOneWidget);
       expect(find.text('Light walking 10 min'), findsOneWidget);
       expect(find.text('50%'), findsOneWidget); // 1 taken of 2 each day
+      final percentWidget = tester.widget<Text>(find.text('50%'));
+      expect(percentWidget.style?.fontWeight, FontWeight.w700);
+      expect(percentWidget.style?.color, AppColors.primaryGreen);
+
+      final adherenceLabel = tester.widget<Text>(find.text('7-Day Adherence'));
+      expect(adherenceLabel.style?.fontWeight, FontWeight.w400);
 
       // Fabricated artifacts are gone.
       expect(find.text('Day 19 of Recovery'), findsNothing);
@@ -249,5 +257,72 @@ void main() {
       expect(find.text('Day 11 of Recovery'), findsOneWidget);
       expect(find.text('Rest the knee'), findsOneWidget);
     });
+
+    testWidgets(
+      'care team: absent/empty clinician displays honest absence copy',
+      (tester) async {
+        seedCase(doctorName: null);
+        seedRecommendations([]);
+        fakeApi.agendaHandler = (date) => http.Response(_agendaBody([]), 200);
+
+        await pumpRecovery(tester);
+        await tester.pumpAndSettle();
+
+        expect(find.text('CARE TEAM'), findsOneWidget);
+        expect(
+          find.text(
+            'No dedicated care team assigned — contact clinic main desk',
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('recovery_care_team_empty')),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'care team: empty whitespace clinician displays honest absence copy',
+      (tester) async {
+        seedCase(doctorName: '   ');
+        seedRecommendations([]);
+        fakeApi.agendaHandler = (date) => http.Response(_agendaBody([]), 200);
+
+        await pumpRecovery(tester);
+        await tester.pumpAndSettle();
+
+        expect(find.text('CARE TEAM'), findsOneWidget);
+        expect(
+          find.text(
+            'No dedicated care team assigned — contact clinic main desk',
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('recovery_care_team_empty')),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'care team: assigned clinician renders doctor name cleanly',
+      (tester) async {
+        seedCase(doctorName: 'Dr. Sarah Miller');
+        seedRecommendations([]);
+        fakeApi.agendaHandler = (date) => http.Response(_agendaBody([]), 200);
+
+        await pumpRecovery(tester);
+        await tester.pumpAndSettle();
+
+        expect(find.text('CARE TEAM'), findsOneWidget);
+        expect(find.text('Dr. Sarah Miller'), findsOneWidget);
+        expect(
+          find.byKey(const Key('recovery_care_team_empty')),
+          findsNothing,
+        );
+      },
+    );
   });
 }

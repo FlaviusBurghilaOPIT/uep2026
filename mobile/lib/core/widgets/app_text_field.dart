@@ -18,6 +18,8 @@ class AppTextField extends StatefulWidget {
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
   final bool enabled;
+  final TextStyle? style;
+  final TextAlign textAlign;
 
   const AppTextField({
     super.key,
@@ -33,6 +35,8 @@ class AppTextField extends StatefulWidget {
     this.validator,
     this.onChanged,
     this.enabled = true,
+    this.style,
+    this.textAlign = TextAlign.start,
   });
 
   @override
@@ -56,6 +60,7 @@ class _AppTextFieldState extends State<AppTextField> {
           controller: widget.controller,
           obscureText: widget.isPassword && _obscureText,
           keyboardType: widget.keyboardType,
+          textAlign: widget.textAlign,
           textCapitalization: widget.keyboardType == TextInputType.emailAddress
               ? TextCapitalization.none
               : widget.textCapitalization,
@@ -66,7 +71,9 @@ class _AppTextFieldState extends State<AppTextField> {
           validator: widget.validator,
           onChanged: widget.onChanged,
           enabled: widget.enabled,
-          style: AppTextStyles.inputText,
+          style: widget.style != null
+              ? AppTextStyles.inputText.merge(widget.style)
+              : AppTextStyles.inputText,
           decoration: InputDecoration(
             hintText: widget.hintText,
             hintStyle: AppTextStyles.inputHint,

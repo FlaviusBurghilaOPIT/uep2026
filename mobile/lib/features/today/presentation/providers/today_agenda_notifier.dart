@@ -237,12 +237,42 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
     previousStatus: m['previous_status'] as String?,
   );
 
+  Map<String, dynamic> _slotToJson(AgendaSlot slot) => {
+    'slot_id': slot.slotId,
+    'medication_id': slot.medicationId,
+    'medication_name': slot.medicationName,
+    'dose': slot.dose,
+    'notes': slot.notes,
+    'scheduled_time': slot.scheduledTime.toIso8601String(),
+    'state': slot.state.name,
+    'logged_at': slot.loggedAt?.toIso8601String(),
+    'dose_log_id': slot.doseLogId,
+    'previous_status': slot.previousStatus,
+  };
+
   PrnMedication _prnFromJson(Map<String, dynamic> m) => PrnMedication(
     medicationId: m['medication_id'] as String,
     medicationName: m['medication_name'] as String,
     dose: m['dose'] as String? ?? '',
     notes: m['notes'] as String?,
   );
+
+  Map<String, dynamic> _prnToJson(PrnMedication prn) => {
+    'medication_id': prn.medicationId,
+    'medication_name': prn.medicationName,
+    'dose': prn.dose,
+    'notes': prn.notes,
+  };
+
+  Future<void> _persistCurrentStateToCache() async {
+    final current = state.value;
+    if (current == null) return;
+    final map = {
+      'slots': current.slots.map(_slotToJson).toList(),
+      'prn': current.prn.map(_prnToJson).toList(),
+    };
+    await _persistCache(jsonEncode(map));
+  }
 
   // -- Write — single path, per-slot lock (spec §6) ---------------------------
 
@@ -263,6 +293,7 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
         ],
       ),
     );
+    unawaited(_persistCurrentStateToCache());
   }
 
   void _markWriteInFlight(String slotId, bool inFlight) {
@@ -688,6 +719,7 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
       return;
     }
     state = AsyncValue.data(current.copyWith(slots: [...current.slots, slot]));
+    unawaited(_persistCurrentStateToCache());
   }
 
   // -- Offline queue (C4) ------------------------------------------------------
@@ -797,6 +829,20 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
             _apply409(entry.slotId!, res.body);
             return true;
           }
+          if (res.statusCode >= 400 && res.statusCode < 500) {
+            final slot = entry.slotId != null ? _slotById(entry.slotId!) : null;
+            if (slot != null) {
+              _rollback(
+                entry.slotId!,
+                _StagedWrite(
+                  slotBefore: slot.copyWith(state: SlotState.due),
+                  status: entry.status,
+                ),
+                'http_${res.statusCode}',
+              );
+            }
+            return true;
+          }
           return false;
         case OfflineQueueKind.adhoc:
           final res = await _api.logAdhocAdherence(
@@ -807,6 +853,16 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
           if (_isCreated(res)) {
             _applyAdhocCommit(res.body);
             _markOfflineCommitted(entry);
+            return true;
+          }
+          if (res.statusCode >= 400 && res.statusCode < 500) {
+            final current = state.value ?? const AgendaState();
+            state = AsyncValue.data(
+              current.copyWith(rollbackErrorSlotId: entry.medicationId),
+            );
+            _track('mobile.today.dose_log_rolled_back', {
+              'error_class': 'http_${res.statusCode}',
+            });
             return true;
           }
           return false;
@@ -833,6 +889,27 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
           // 400 (status unchanged — already applied) and 404 (log gone)
           // are terminal: drop the entry rather than retry forever.
           if (res.statusCode == 400 || res.statusCode == 404) {
+            return true;
+          }
+          if (res.statusCode >= 400 && res.statusCode < 500) {
+            final slotId = entry.slotId;
+            if (slotId != null) {
+              final slot = _slotById(slotId);
+              if (slot != null) {
+                _rollback(
+                  slotId,
+                  _StagedWrite(
+                    slotBefore: slot.copyWith(
+                      state: slot.previousStatus != null
+                          ? slotStateFromName(slot.previousStatus!)
+                          : SlotState.taken,
+                    ),
+                    status: entry.status,
+                  ),
+                  'http_${res.statusCode}',
+                );
+              }
+            }
             return true;
           }
           return false;

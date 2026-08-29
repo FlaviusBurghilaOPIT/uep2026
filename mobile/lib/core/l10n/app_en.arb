@@ -54,14 +54,21 @@
   "checkinOkOption": "Feeling Ok 😐",
   "checkinNotGreatOption": "Not Feeling Great 😟",
   "checkinBadOption": "Feeling Unwell 😣",
-  "checkinSuccessBanner": "Daily check-in logged. Thank you for updating your care team.",
+  "checkinSuccessBanner": "Check-in received • Care team updated",
+  "checkinSuccessBannerWithPhysician": "Check-in received • {physician}'s care team updated",
+  "@checkinSuccessBannerWithPhysician": {
+    "placeholders": {
+      "physician": {
+        "type": "String"
+      }
+    }
+  },
   "assistantTitle": "Care Team Assistant",
   "assistantGuardrailBanner": "Care Team Assistant • Informational only, never diagnostic",
   "typeMessagePlaceholder": "Type your question...",
-  "chipMedicationSideEffects": "Medication side effects",
-  "chipWoundCareTips": "Wound care tips",
-  "chipPhysioTargets": "Physio targets",
-  "chipEmergencyContact": "Emergency contact",
+  "chipSwellingNormal": "Is mild swelling normal?",
+  "chipShowering": "When can I shower?",
+  "chipMedicationInstructions": "Medication instructions",
   "emergencyCallCta": "Call Emergency Contact",
   "emergencyCallCtaWithPhone": "Call Emergency Contact ({phone})",
   "@emergencyCallCtaWithPhone": {
@@ -153,16 +160,12 @@
   "authRequiredError": "Required",
   "authInvalidEmailError": "Enter a valid email",
   "authSendOtpButton": "Send OTP",
-  "authErrorSendingOtp": "Error sending OTP: {error}",
-  "@authErrorSendingOtp": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
+  "authErrorSendingOtp": "Unable to send verification code. Check your connection and try again.",
   "authEnterInvitationCodeTitle": "Enter Invitation Code",
   "authWelcomeTitle": "Welcome!",
+  "authNewPatientClinicInvitation": "New Patient? Enter Clinic Invitation",
+  "authSignInWithOneTimeCode": "Sign in with One-Time Code",
+  "authClinicianSignIn": "Clinician Sign In",
   "authInvitationCodeSubtitle": "Please enter your invitation code to continue.",
   "authInvitationCodeLabel": "Invitation Code",
   "authInvalidInvitationCodeError": "Please enter a valid invitation code",
@@ -182,6 +185,24 @@
   "authOtpCodeLengthError": "Code must be exactly 6 digits",
   "authOtpCodeNumericError": "Code must be numeric",
   "authVerifyAndLogInButton": "Verify and Log In",
+  "authResendCode": "Resend Code",
+  "authResendCodeCountdown": "Resend Code in {seconds}s",
+  "@authResendCodeCountdown": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "authCodeResentSnackbar": "Code resent to {email}",
+  "@authCodeResentSnackbar": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "authCodeResentSnackbarFallback": "Code resent",
   "authProfileSetupTitle": "Profile Setup",
   "authNameLabel": "Name",
   "authSurnameLabel": "Surname",
@@ -201,7 +222,7 @@
       }
     }
   },
-  "todayOfflineBanner": "Log saved on your device. We will update your care team once you are back online.",
+  "todayOfflineBanner": "Saved locally. Will sync automatically once reconnected.",
   "todayPlanUpdatedBanner": "Your care team updated your prescribed medications.",
   "todayTimezoneAdjusted": "Your reminder times have adjusted to your current time zone.",
   "todayLogUndo": "Undo",

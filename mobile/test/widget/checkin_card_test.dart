@@ -20,18 +20,26 @@ class _TestAuthNotifier extends AuthNotifier {
   AuthState build() => _initial;
 }
 
-Widget wrapCheckIn(Widget child, {required FakeApiService fakeApi, String caseId = 'case-123'}) {
+Widget wrapCheckIn(
+  Widget child, {
+  required FakeApiService fakeApi,
+  String caseId = 'case-123',
+  AuthState? authState,
+}) {
   return ProviderScope(
     overrides: [
       apiServiceProvider.overrideWithValue(fakeApi),
-      authProvider.overrideWith(() => _TestAuthNotifier(
-        AuthState(
-          patientId: 'pat-123',
-          caseId: caseId,
-          isSignedIn: true,
-          isInitializing: false,
+      authProvider.overrideWith(
+        () => _TestAuthNotifier(
+          authState ??
+              AuthState(
+                patientId: 'pat-123',
+                caseId: caseId,
+                isSignedIn: true,
+                isInitializing: false,
+              ),
         ),
-      )),
+      ),
     ],
     child: ScreenUtilInit(
       designSize: const Size(375, 812),
@@ -39,7 +47,7 @@ Widget wrapCheckIn(Widget child, {required FakeApiService fakeApi, String caseId
       builder: (context, _) => MaterialApp(
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
-        home: const Scaffold(body: SingleChildScrollView(child: CheckInCard())),
+        home: Scaffold(body: SingleChildScrollView(child: child)),
       ),
     ),
   );
@@ -59,6 +67,12 @@ void main() {
       fakeApi.postHandlers['/symptoms/checkin?case_id=case-123&feeling=great'] = (body) {
         return http.Response(jsonEncode({'id': 'chk-1'}), 200);
       };
+      fakeApi.postHandlers['/symptoms/checkin?case_id=case-123&feeling=ok'] = (body) {
+        return http.Response(jsonEncode({'id': 'chk-ok'}), 200);
+      };
+      fakeApi.postHandlers['/symptoms/checkin?case_id=case-123&feeling=not_great'] = (body) {
+        return http.Response(jsonEncode({'id': 'chk-ng'}), 200);
+      };
       fakeApi.postHandlers['/symptoms/checkin?case_id=case-123&feeling=bad'] = (body) {
         return http.Response(jsonEncode({'id': 'chk-2'}), 200);
       };
@@ -74,18 +88,106 @@ void main() {
       expect(find.text('Feeling Ok 😐'), findsOneWidget);
       expect(find.text('Not Feeling Great 😟'), findsOneWidget);
       expect(find.text('Feeling Unwell 😣'), findsOneWidget);
+
+      expect(find.byKey(const Key('checkin_chip_great')), findsOneWidget);
+      expect(find.byKey(const Key('checkin_chip_ok')), findsOneWidget);
+      expect(find.byKey(const Key('checkin_chip_not_great')), findsOneWidget);
+      expect(find.byKey(const Key('checkin_chip_bad')), findsOneWidget);
     });
 
-    testWidgets('selecting great shows success banner and no emergency banner', (tester) async {
+    testWidgets(
+      'selecting great shows default telemetry confirmation banner when physician is null',
+      (tester) async {
+        await tester.pumpWidget(wrapCheckIn(const CheckInCard(), fakeApi: fakeApi));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Feeling Great 🙂'));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('checkin_success')), findsOneWidget);
+        expect(
+          find.text('Check-in received • Care team updated'),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('emergency_red_flag_banner')), findsNothing);
+      },
+    );
+
+    testWidgets('selecting ok submits ok and shows success banner', (tester) async {
       await tester.pumpWidget(wrapCheckIn(const CheckInCard(), fakeApi: fakeApi));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Feeling Great 🙂'));
+      await tester.tap(find.text('Feeling Ok 😐'));
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('checkin_success')), findsOneWidget);
       expect(find.byKey(const Key('emergency_red_flag_banner')), findsNothing);
     });
+
+    testWidgets('selecting not_great submits not_great and shows success banner', (tester) async {
+      await tester.pumpWidget(wrapCheckIn(const CheckInCard(), fakeApi: fakeApi));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Not Feeling Great 😟'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('checkin_success')), findsOneWidget);
+      expect(find.byKey(const Key('emergency_red_flag_banner')), findsNothing);
+    });
+
+    testWidgets(
+      'selecting great shows physician telemetry confirmation banner when physicianName is in AuthState',
+      (tester) async {
+        final authWithDoctor = const AuthState(
+          patientId: 'pat-123',
+          caseId: 'case-123',
+          physicianName: 'Dr. Miller',
+          isSignedIn: true,
+          isInitializing: false,
+        );
+
+        await tester.pumpWidget(
+          wrapCheckIn(
+            const CheckInCard(),
+            fakeApi: fakeApi,
+            authState: authWithDoctor,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Feeling Great 🙂'));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('checkin_success')), findsOneWidget);
+        expect(
+          find.text("Check-in received • Dr. Miller's care team updated"),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('emergency_red_flag_banner')), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'selecting great shows physician telemetry confirmation banner when physicianName is passed as prop',
+      (tester) async {
+        await tester.pumpWidget(
+          wrapCheckIn(
+            const CheckInCard(physicianName: 'Dr. Miller'),
+            fakeApi: fakeApi,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Feeling Great 🙂'));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('checkin_success')), findsOneWidget);
+        expect(
+          find.text("Check-in received • Dr. Miller's care team updated"),
+          findsOneWidget,
+        );
+      },
+    );
 
     testWidgets('selecting bad reveals emergency red flag banner with 911 and clinic CTAs', (tester) async {
       await tester.pumpWidget(wrapCheckIn(const CheckInCard(), fakeApi: fakeApi));

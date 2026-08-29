@@ -12,8 +12,8 @@ Display an explicit status confirmation banner in `CheckInCard` (`A03`) after sy
 - L10n: `mobile/lib/core/l10n/`
 
 ## Acceptance criteria
-- [ ] Successful check-in submission displays a confirmation card/banner with text "Telemetry received • Care team notified".
-- [ ] Incorporates physician's name when available in patient profile/auth state.
+- [x] Successful check-in submission displays a confirmation card/banner with text "Telemetry received • Care team notified".
+- [x] Incorporates physician's name when available in patient profile/auth state.
 
 ## Covers
 - User Stories: US2

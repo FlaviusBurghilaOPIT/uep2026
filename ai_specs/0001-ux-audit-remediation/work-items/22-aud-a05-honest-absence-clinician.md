@@ -11,8 +11,8 @@ Display explicit honest absence copy in `RecoveryScreen` (`A04`) when a patient 
 - Target file: `mobile/lib/features/recovery/presentation/screens/recovery_screen.dart`
 
 ## Acceptance criteria
-- [ ] If `doctorName` is absent or empty, displays "No dedicated care team assigned — contact clinic main desk".
-- [ ] Preserves clean card layout without awkward empty spacing or dummy strings.
+- [x] If `doctorName` is absent or empty, displays "No dedicated care team assigned — contact clinic main desk".
+- [x] Preserves clean card layout without awkward empty spacing or dummy strings.
 
 ## Covers
 - User Stories: US4

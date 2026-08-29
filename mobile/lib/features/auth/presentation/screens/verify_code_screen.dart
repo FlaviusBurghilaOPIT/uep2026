@@ -2,14 +2,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/app_text_field.dart';
+import '../../../../core/widgets/segmented_otp_input.dart';
 import '../auth_strings.dart';
 import '../providers/auth_provider.dart';
 import 'create_password_screen.dart';
@@ -47,13 +46,18 @@ class _VerifyCodeScreenState extends ConsumerState<VerifyCodeScreen> {
   }
 
   void _startCountdown() {
-    setState(() => _secondsRemaining = 60);
     _countdownTimer?.cancel();
+    setState(() => _secondsRemaining = 60);
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_secondsRemaining > 0) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      if (_secondsRemaining > 1) {
         setState(() => _secondsRemaining--);
       } else {
         timer.cancel();
+        setState(() => _secondsRemaining = 0);
       }
     });
   }
@@ -127,19 +131,14 @@ class _VerifyCodeScreenState extends ConsumerState<VerifyCodeScreen> {
                   style: AppTextStyles.subtitle,
                 ),
                 SizedBox(height: AppSpacing.xxl),
-                AppTextField(
-                  label: AuthStrings.codeLabel,
-                  hintText: AuthStrings.codeHint,
-                  prefixIcon: LucideIcons.keyRound,
-                  keyboardType: TextInputType.number,
+                Text(
+                  AuthStrings.codeLabel,
+                  style: AppTextStyles.label,
+                ),
+                SizedBox(height: AppSpacing.sm),
+                SegmentedOtpInput(
                   controller: _codeController,
-                  autofillHints: const [AutofillHints.oneTimeCode],
-                  onChanged: (val) {
-                    if (val.trim().length == 6 &&
-                        RegExp(r'^\d{6}$').hasMatch(val.trim())) {
-                      _verify();
-                    }
-                  },
+                  onCompleted: (val) => _verify(),
                   validator: (value) {
                     final v = value?.trim() ?? '';
                     if (!RegExp(r'^\d{6}$').hasMatch(v)) {
@@ -160,8 +159,8 @@ class _VerifyCodeScreenState extends ConsumerState<VerifyCodeScreen> {
                     onPressed: _secondsRemaining == 0 ? _resendCode : null,
                     child: Text(
                       _secondsRemaining > 0
-                          ? 'Resend Code in ${_secondsRemaining}s'
-                          : 'Resend Code',
+                          ? AuthStrings.resendCodeCountdown(_secondsRemaining)
+                          : AuthStrings.resendCode,
                       style: TextStyle(
                         fontFeatures: const [FontFeature.tabularFigures()],
                         color: _secondsRemaining > 0

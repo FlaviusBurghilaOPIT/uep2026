@@ -13,8 +13,8 @@ Standardize all arbitrary margins (6px, 10px, 14px, 15px) across card layouts in
 - Tokens: `mobile/lib/core/constants/app_spacing.dart`
 
 ## Acceptance criteria
-- [ ] Dose slot cards and section containers use standardized `AppSpacing.md` vertical and horizontal spacing.
-- [ ] No arbitrary non-token integer margins remain in card wrappers.
+- [x] Dose slot cards and section containers use standardized `AppSpacing.md` vertical and horizontal spacing.
+- [x] No arbitrary non-token integer margins remain in card wrappers.
 
 ## Covers
 - User Stories: US1

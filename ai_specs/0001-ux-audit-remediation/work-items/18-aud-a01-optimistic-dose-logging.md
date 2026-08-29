@@ -12,10 +12,10 @@ Implement optimistic UI updates (<50ms) in `TodayAgendaNotifier` when logging do
 - Target file: `mobile/lib/features/today/presentation/screens/today_screen.dart`
 
 ## Acceptance criteria
-- [ ] Tapping "Mark as Taken" updates slot state in UI immediately (<50ms) without showing a blocking spinner.
-- [ ] SQLite local cache is updated immediately in the background.
-- [ ] Network synchronization executes asynchronously.
-- [ ] Rollback occurs with error notification if offline retry queue fails.
+- [x] Tapping "Mark as Taken" updates slot state in UI immediately (<50ms) without showing a blocking spinner.
+- [x] SQLite local cache is updated immediately in the background.
+- [x] Network synchronization executes asynchronously.
+- [x] Rollback occurs with error notification if offline retry queue fails.
 
 ## Covers
 - User Stories: US1

@@ -23,6 +23,9 @@ class AuthRemoteDatasource {
         phone: data['phone'] as String?,
         dateOfBirth: data['date_of_birth'] as String?,
         hasPassword: data['has_password'] as bool? ?? false,
+        physicianName: data['physician_name'] as String? ??
+            data['doctor_name'] as String? ??
+            data['assigned_clinician'] as String?,
         isSignedIn: true,
       );
     }
@@ -72,7 +75,7 @@ class AuthRemoteDatasource {
   }
 
   /// `GET /patients/{patientId}/case`
-  Future<({String? caseId, String? primaryCondition})> fetchCase(
+  Future<({String? caseId, String? primaryCondition, String? physicianName})> fetchCase(
     String patientId,
   ) async {
     try {
@@ -82,10 +85,13 @@ class AuthRemoteDatasource {
         return (
           caseId: data['id'] as String?,
           primaryCondition: data['surgery_type'] as String?,
+          physicianName: data['physician_name'] as String? ??
+              data['doctor_name'] as String? ??
+              data['assigned_clinician'] as String?,
         );
       }
     } catch (_) {}
-    return (caseId: null, primaryCondition: null);
+    return (caseId: null, primaryCondition: null, physicianName: null);
   }
 
   /// `POST /auth/login` (email + password) — hybrid auth returning-login.

@@ -12,8 +12,8 @@ Display verified clinic name and inviting physician name immediately upon valid 
 - Target file: `mobile/lib/features/auth/presentation/screens/profile_setup_screen.dart`
 
 ## Acceptance criteria
-- [ ] Validating an invitation code retrieves and displays the clinic name (e.g. "St. Jude Recovery Clinic") and physician name.
-- [ ] Confirms trust before prompting for password or personal profile details.
+- [x] Validating an invitation code retrieves and displays the clinic name (e.g. "St. Jude Recovery Clinic") and physician name.
+- [x] Confirms trust before prompting for password or personal profile details.
 
 ## Covers
 - User Stories: US5

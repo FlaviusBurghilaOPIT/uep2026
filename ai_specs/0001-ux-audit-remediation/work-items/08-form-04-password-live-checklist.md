@@ -11,9 +11,9 @@ Add a live interactive requirement checklist (8+ characters, uppercase letter, l
 - Target file: `mobile/lib/features/auth/presentation/screens/create_password_screen.dart`
 
 ## Acceptance criteria
-- [ ] Checklist displays all password requirements beneath the password field.
-- [ ] Each requirement dynamically turns green with a checkmark when satisfied as the user types.
-- [ ] Submit button is enabled only when all criteria are satisfied.
+- [x] Checklist displays all password requirements beneath the password field.
+- [x] Each requirement dynamically turns green with a checkmark when satisfied as the user types.
+- [x] Submit button is enabled only when all criteria are satisfied.
 
 ## Covers
 - User Stories: US5

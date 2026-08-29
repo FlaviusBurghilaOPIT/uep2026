@@ -55,6 +55,7 @@ class AuthNotifier extends Notifier<AuthState> {
               phone: profile.phone,
               dateOfBirth: profile.dateOfBirth,
               hasPassword: profile.hasPassword,
+              physicianName: profile.physicianName,
               isSignedIn: true,
             );
 
@@ -64,6 +65,7 @@ class AuthNotifier extends Notifier<AuthState> {
                 next = next.copyWith(
                   caseId: caseInfo.caseId,
                   primaryCondition: caseInfo.primaryCondition,
+                  physicianName: caseInfo.physicianName ?? profile.physicianName,
                 );
               } catch (_) {}
             }
@@ -115,6 +117,7 @@ class AuthNotifier extends Notifier<AuthState> {
           phone: profile.phone,
           dateOfBirth: profile.dateOfBirth,
           hasPassword: profile.hasPassword,
+          physicianName: profile.physicianName,
           isSignedIn: true,
         );
 
@@ -123,6 +126,7 @@ class AuthNotifier extends Notifier<AuthState> {
           next = next.copyWith(
             caseId: caseInfo.caseId,
             primaryCondition: caseInfo.primaryCondition,
+            physicianName: caseInfo.physicianName ?? profile.physicianName,
           );
         }
         state = next;

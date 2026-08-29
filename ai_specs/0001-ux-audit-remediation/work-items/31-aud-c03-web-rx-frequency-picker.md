@@ -12,9 +12,9 @@ Replace free-text frequency input with a constrained clinical schedule picker (Q
 - Target file: `web/src/pages/cases/[caseId]/medications/new.astro` (or relevant form)
 
 ## Acceptance criteria
-- [ ] Frequency selection uses a dropdown/segmented selector with options: QD, BID, TID, QID, PRN.
-- [ ] Selecting a frequency pre-populates standardized scheduled slot times (e.g. BID -> 08:00, 20:00).
-- [ ] Eliminates malformed free-text frequency entries.
+- [x] Frequency selection uses a dropdown/segmented selector with options: QD, BID, TID, QID, PRN.
+- [x] Selecting a frequency pre-populates standardized scheduled slot times (e.g. BID -> 08:00, 20:00).
+- [x] Eliminates malformed free-text frequency entries.
 
 ## Covers
 - User Stories: US6

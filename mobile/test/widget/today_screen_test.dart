@@ -265,8 +265,7 @@ void main() {
 
       expect(
         find.text(
-          'Log saved on your device. '
-          'We will update your care team once you are back online.',
+          'Saved locally. Will sync automatically once reconnected.',
         ),
         findsOneWidget,
       );
@@ -275,6 +274,165 @@ void main() {
 
       // A non-empty offline queue starts a 30s retry Timer — dispose
       // explicitly so it's cancelled before this test's invariant check.
+      container.dispose();
+    });
+  });
+
+  group('TYPO-01 Fluid Clamp and Single-Line Clamping on Greeting & Date Header', () {
+    testWidgets('Date and greeting lines have single-line clamp and ellipsis overflow', (
+      tester,
+    ) async {
+      fakeApi.agendaHandler = (date) => http.Response(agendaBody(), 200);
+
+      final container = await pumpToday(tester);
+      await tester.pumpAndSettle();
+
+      final dateFinder = find.byWidgetPredicate(
+        (w) => w is Text && w.data == 'SUNDAY, JULY 26',
+      );
+      expect(dateFinder, findsOneWidget);
+      final dateText = tester.widget<Text>(dateFinder);
+      expect(dateText.maxLines, 1);
+      expect(dateText.overflow, TextOverflow.ellipsis);
+      expect(dateText.style?.fontSize, isNotNull);
+      expect(dateText.style!.fontSize!, inInclusiveRange(9.0, 12.0));
+
+      final greetingFinder = find.byWidgetPredicate(
+        (w) => w is Text && w.data == 'Good morning, Pat',
+      );
+      expect(greetingFinder, findsOneWidget);
+      final greetingText = tester.widget<Text>(greetingFinder);
+      expect(greetingText.maxLines, 1);
+      expect(greetingText.overflow, TextOverflow.ellipsis);
+      expect(greetingText.style?.fontSize, isNotNull);
+      expect(greetingText.style!.fontSize!, inInclusiveRange(18.0, 24.0));
+
+      container.dispose();
+    });
+
+    testWidgets('Renders without RenderFlex overflow on 320dp narrow viewport with long user name', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(320 * 2, 640 * 2);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      fakeApi.getHandlers['/auth/me'] = () => http.Response(
+        jsonEncode({
+          'id': 'p1',
+          'email': 'p@x.io',
+          'full_name': 'Alexander Bartholomew Montgomery-Smith',
+        }),
+        200,
+      );
+      fakeApi.agendaHandler = (date) => http.Response(agendaBody(), 200);
+
+      final container = ProviderContainer(
+        overrides: [
+          apiServiceProvider.overrideWithValue(fakeApi),
+          sharedPreferencesProvider.overrideWithValue(prefs),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: ScreenUtilInit(
+            designSize: const Size(375, 812),
+            minTextAdapt: true,
+            builder: (context, _) => MaterialApp(
+              supportedLocales: AppLocalizations.supportedLocales,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              home: TodayScreen(clock: fixedMorning),
+            ),
+          ),
+        ),
+      );
+      await container.read(authProvider.notifier).fetchProfile();
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('SUNDAY, JULY 26'), findsOneWidget);
+      expect(find.text('Good morning, Alexander'), findsOneWidget);
+
+      final greetingText = tester.widget<Text>(find.text('Good morning, Alexander'));
+      expect(greetingText.maxLines, 1);
+      expect(greetingText.overflow, TextOverflow.ellipsis);
+
+      container.dispose();
+    });
+  });
+
+  group('AUD-A01 Optimistic UI Updates', () {
+    testWidgets(
+      'tapping Mark as Taken updates slot state to Taken immediately without blocking spinner',
+      (tester) async {
+        fakeApi.agendaHandler = (date) => http.Response(agendaBody(), 200);
+        fakeApi.adherenceLogHandler = (id, status) => http.Response(
+          jsonEncode({'id': 'log-1', 'logged_at': '2026-07-26T08:42:00Z'}),
+          201,
+        );
+
+        final container = await pumpToday(tester);
+        await tester.pumpAndSettle();
+
+        // Initial state: due slot with Taken action button
+        expect(find.text('Due now'), findsOneWidget);
+        final takenButton = find.byKey(const Key('slot_action_taken_rem-1'));
+        expect(takenButton, findsOneWidget);
+
+        // Tap "Taken"
+        await tester.tap(takenButton);
+        await tester.pump(); // Single frame immediate render
+
+        // Slot updates immediately to Taken without showing any CircularProgressIndicator
+        expect(find.byType(CircularProgressIndicator), findsNothing);
+        expect(find.text('Taken'), findsOneWidget);
+        expect(find.byKey(const Key('slot_action_taken_rem-1')), findsNothing);
+
+        // Undo SnackBar is displayed
+        expect(find.text('Logged as Taken.'), findsOneWidget);
+        expect(find.text('Undo'), findsOneWidget);
+
+        container.dispose();
+      },
+    );
+
+    testWidgets('shows rollback error snackbar when rollback occurs', (
+      tester,
+    ) async {
+      fakeApi.agendaHandler = (date) => http.Response(agendaBody(), 200);
+      var attempts = 0;
+      fakeApi.adherenceLogHandler = (id, status) {
+        attempts++;
+        return http.Response(jsonEncode({'detail': 'Server error'}), 500);
+      };
+
+      final container = await pumpToday(tester);
+      await tester.pumpAndSettle();
+
+      final takenButton = find.byKey(const Key('slot_action_taken_rem-1'));
+      await tester.tap(takenButton);
+      await tester.pump();
+
+      expect(find.text('Taken'), findsOneWidget);
+
+      // Fast-forward past 5s undo window and server retry
+      await tester.pump(const Duration(seconds: 6));
+      await tester.pumpAndSettle();
+
+      // Rollback occurred: reverted to Due now and error snackbar shown
+      expect(attempts, 2);
+      expect(find.text('Due now'), findsOneWidget);
+      expect(
+        find.text(
+          "We couldn't save that log. Your dose shows as unlogged — tap to try again.",
+        ),
+        findsOneWidget,
+      );
+
       container.dispose();
     });
   });

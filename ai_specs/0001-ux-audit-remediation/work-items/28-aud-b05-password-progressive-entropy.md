@@ -11,9 +11,9 @@ Render an inline progressive entropy meter that evaluates password strength dyna
 - Target file: `mobile/lib/features/auth/presentation/screens/create_password_screen.dart`
 
 ## Acceptance criteria
-- [ ] Renders a segmented strength bar (Weak, Medium, Strong) beneath the password field.
-- [ ] Updates bar color and fill level dynamically on each keystroke.
-- [ ] Confirmation password field is enabled only when strength reaches acceptable threshold.
+- [x] Renders a segmented strength bar (Weak, Medium, Strong) beneath the password field.
+- [x] Updates bar color and fill level dynamically on each keystroke.
+- [x] Confirmation password field is enabled only when strength reaches acceptable threshold.
 
 ## Covers
 - User Stories: US5

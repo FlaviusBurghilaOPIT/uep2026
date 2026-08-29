@@ -14,8 +14,8 @@ Configure 6-digit OTP entry cells and countdown timers on Screen B03 (`VerifyCod
   - `mobile/lib/features/auth/presentation/screens/otp_screen.dart`
 
 ## Acceptance criteria
-- [ ] OTP digit text fields use `TextStyle(fontFeatures: [FontFeature.tabularFigures()])`.
-- [ ] Countdown timer display preserves fixed character width without jitter.
+- [x] OTP digit text fields use `TextStyle(fontFeatures: [FontFeature.tabularFigures()])`.
+- [x] Countdown timer display preserves fixed character width without jitter.
 
 ## Covers
 - User Stories: US5

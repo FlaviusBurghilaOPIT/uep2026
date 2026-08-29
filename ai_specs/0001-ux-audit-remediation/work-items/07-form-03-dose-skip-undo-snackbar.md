@@ -13,9 +13,9 @@ Replace disruptive modal confirmation dialogs when skipping a dose in `DoseSlotC
 - Notifier: `TodayAgendaNotifier` (`undoDoseLog`)
 
 ## Acceptance criteria
-- [ ] Tapping "Skip Dose" updates slot state optimistically without opening a blocking modal alert.
-- [ ] Displays a 5-second non-blocking SnackBar with text "Dose marked as Skipped" and an "Undo" action.
-- [ ] Tapping "Undo" within 5 seconds reverts the slot back to its previous state immediately.
+- [x] Tapping "Skip Dose" updates slot state optimistically without opening a blocking modal alert.
+- [x] Displays a 5-second non-blocking SnackBar with text "Dose marked as Skipped" and an "Undo" action.
+- [x] Tapping "Undo" within 5 seconds reverts the slot back to its previous state immediately.
 
 ## Covers
 - User Stories: US1

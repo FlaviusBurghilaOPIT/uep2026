@@ -157,6 +157,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     hintText: AppStrings.emailHint,
                     prefixIcon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
+                    textCapitalization: TextCapitalization.none,
+                    autocorrect: false,
                     controller: _emailController,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
@@ -175,6 +177,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     prefixIcon: Icons.vpn_key_outlined,
                     keyboardType: TextInputType.number,
                     controller: _codeController,
+                    style: const TextStyle(
+                      fontFeatures: [FontFeature.tabularFigures()],
+                    ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
                         return 'Please enter your code';
@@ -196,6 +201,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             : AppStrings.resendCode,
                         style: AppTextStyles.linkText.copyWith(
                           decoration: TextDecoration.none,
+                          fontFeatures: const [FontFeature.tabularFigures()],
                         ),
                       ),
                     ),

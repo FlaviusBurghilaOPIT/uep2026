@@ -13,10 +13,10 @@ Implement automatic clipboard paste detection, segmented digit focus auto-advanc
 - Services: `Clipboard.getData(Clipboard.kTextPlain)` and `FocusScope`
 
 ## Acceptance criteria
-- [ ] Pasting a 6-digit code into any OTP cell automatically populates all 6 cells.
-- [ ] Typing a digit automatically shifts focus to the next cell.
-- [ ] Backspace on an empty cell automatically shifts focus back to the preceding cell.
-- [ ] Populating the 6th digit automatically triggers code verification submit without requiring an extra tap.
+- [x] Pasting a 6-digit code into any OTP cell automatically populates all 6 cells.
+- [x] Typing a digit automatically shifts focus to the next cell.
+- [x] Backspace on an empty cell automatically shifts focus back to the preceding cell.
+- [x] Populating the 6th digit automatically triggers code verification submit without requiring an extra tap.
 
 ## Covers
 - User Stories: US5

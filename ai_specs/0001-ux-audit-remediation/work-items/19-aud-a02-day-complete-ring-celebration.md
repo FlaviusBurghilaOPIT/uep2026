@@ -13,9 +13,9 @@ Trigger a "Day Complete" Ring Closure animation with an emerald glow sweep and m
 - Haptics: `package:flutter/services.dart`
 
 ## Acceptance criteria
-- [ ] Transitioning from <100% to 100% completed doses animates the progress ring with an emerald glow sweep.
-- [ ] Triggers `HapticFeedback.mediumImpact()` when 100% is reached.
-- [ ] Shows positive reinforcement message ("All doses completed for today!").
+- [x] Transitioning from <100% to 100% completed doses animates the progress ring with an emerald glow sweep.
+- [x] Triggers `HapticFeedback.mediumImpact()` when 100% is reached.
+- [x] Shows positive reinforcement message ("All doses completed for today!").
 
 ## Covers
 - User Stories: US1
