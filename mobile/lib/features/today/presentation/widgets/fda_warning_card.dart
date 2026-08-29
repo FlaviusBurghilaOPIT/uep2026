@@ -80,7 +80,7 @@ class FdaWarningCard extends StatelessWidget {
           width: double.infinity,
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: const Color(0xFFFFF8E1),
+            color: AppColors.pendingBg,
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             border: Border.all(
               color: AppColors.warningAmber.withValues(alpha: 0.3),

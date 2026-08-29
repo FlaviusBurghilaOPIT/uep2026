@@ -152,15 +152,15 @@ class _InvitationCodeScreenState extends ConsumerState<InvitationCodeScreen> {
                 Container(
                   padding: EdgeInsets.all(12.w),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF0FDF4),
+                    color: AppColors.softCyan,
                     borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    border: Border.all(color: const Color(0xFFDCFCE7)),
+                    border: Border.all(color: AppColors.takenBg),
                   ),
                   child: Row(
                     children: [
                       Icon(
                         LucideIcons.hospital,
-                        color: const Color(0xFF166534),
+                        color: AppColors.takenText,
                         size: 18.sp,
                       ),
                       SizedBox(width: 8.w),
@@ -170,7 +170,7 @@ class _InvitationCodeScreenState extends ConsumerState<InvitationCodeScreen> {
                           style: TextStyle(
                             fontSize: 12.sp,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFF166534),
+                            color: AppColors.takenText,
                           ),
                         ),
                       ),
