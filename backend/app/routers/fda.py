@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 from app import models, schemas
 from app.database import get_db
 from app.dependencies import get_current_user, require_clinician
-from app.observability import track_llm_ops
+from app.observability import CHAT_MODEL, track_llm_ops
 from app.providers.fda import get_fda_provider
 from openai import AsyncOpenAI
 
@@ -57,7 +57,7 @@ client_async = AsyncOpenAI(
 @track_llm_ops(name="fda.summarize")
 async def _summarize_drug_label(raw: dict) -> str:
     response = await client_async.chat.completions.create(
-        model=os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3-8b-instruct"),
+        model=CHAT_MODEL,
         messages=[
             {"role": "system", "content": FDA_SUMMARY_SYSTEM_PROMPT},
             {"role": "user", "content": json.dumps(raw)[:4000]}

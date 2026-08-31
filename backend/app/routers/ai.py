@@ -238,6 +238,10 @@ async def chat(
             patient_context=patient_ctx,
             history=history,
             locale=request.locale,
+            case_id=case.id,
+            patient_id=case.patient_id,
+            clinician_id=case.clinician_id,
+            requester_role=current_user.role.value,
         ):
             chunks.append(chunk)
         reply = "".join(chunks)
@@ -283,6 +287,10 @@ async def chat_stream(
             patient_context=patient_ctx,
             history=history,
             locale=request.locale,
+            case_id=case.id,
+            patient_id=case.patient_id,
+            clinician_id=case.clinician_id,
+            requester_role=current_user.role.value,
         )
         chunks = []
         try:
@@ -332,5 +340,5 @@ async def patients_summary(
         )
 
     patients_context = "\n\n---\n\n".join(lines)
-    summary = await generate_patients_summary(patients_context, locale=locale)
+    summary = await generate_patients_summary(patients_context, locale=locale, clinician_id=current_user.id)
     return {"summary": summary, "patient_count": len(cases)}

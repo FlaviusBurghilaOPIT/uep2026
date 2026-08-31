@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from unittest.mock import MagicMock
 
@@ -121,23 +123,32 @@ def test_track_llm_ops_sync_function(caplog):
     assert any("[LLMOps AFTER] test_sync_op finished" in record.message for record in caplog.records)
 
 
-@pytest.mark.anyio
-async def test_track_llm_ops_populates_span_attributes():
+def _in_memory_tracer(monkeypatch):
+    """Point app.observability's tracer at an in-memory exporter so tests can
+    inspect what actually landed on the span (this is what production relies
+    on too — a span must exist and be recording for set_attribute to stick)."""
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
     from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+    import app.observability as observability
 
     exporter = InMemorySpanExporter()
     provider = TracerProvider()
     provider.add_span_processor(SimpleSpanProcessor(exporter))
     tracer = provider.get_tracer("test-tracer")
+    monkeypatch.setattr(observability, "_get_tracer", lambda: tracer)
+    return exporter
+
+
+@pytest.mark.anyio
+async def test_track_llm_ops_populates_span_attributes(monkeypatch):
+    exporter = _in_memory_tracer(monkeypatch)
 
     @track_llm_ops(name="span_tracked_op", model="openai/gpt-4o-mini")
     async def sample_llm_call(prompt: str) -> str:
         return "You should rest for 2 days."
 
-    with tracer.start_as_current_span("parent_span"):
-        result = await sample_llm_call("How much should I rest?")
+    result = await sample_llm_call("How much should I rest?")
 
     assert result == "You should rest for 2 days."
     spans = exporter.get_finished_spans()
@@ -145,11 +156,42 @@ async def test_track_llm_ops_populates_span_attributes():
     span = spans[0]
     assert span.attributes["llm.operation"] == "span_tracked_op"
     assert span.attributes["llm.model_name"] == "openai/gpt-4o-mini"
+    assert span.attributes["llm.provider"] == "openrouter"
     assert span.attributes["llm.token_count.prompt"] > 0
     assert span.attributes["llm.token_count.completion"] > 0
     assert (
         span.attributes["llm.token_count.total"]
         == span.attributes["llm.token_count.prompt"] + span.attributes["llm.token_count.completion"]
     )
-    assert "llm.cost.total_cost_usd" in span.attributes
-    assert span.attributes["llm.cost.total_cost_usd"] > 0
+    assert "llm.cost.total" in span.attributes
+    assert span.attributes["llm.cost.total"] > 0
+
+
+@pytest.mark.anyio
+async def test_track_llm_ops_stamps_audit_attributes_for_session_grouping(monkeypatch):
+    """case_id becomes session.id so Phoenix groups every span from the same
+    conversation together; patient_id becomes user.id for per-patient lookup."""
+    exporter = _in_memory_tracer(monkeypatch)
+
+    @track_llm_ops(name="audited_op", model="openai/gpt-4o-mini")
+    async def sample_llm_call(prompt: str, *, case_id=None, patient_id=None, clinician_id=None, requester_role=None) -> str:
+        return "ok"
+
+    await sample_llm_call(
+        "Hi",
+        case_id="case-123",
+        patient_id="patient-456",
+        clinician_id="clinician-789",
+        requester_role="patient",
+    )
+
+    span = exporter.get_finished_spans()[0]
+    assert span.attributes["session.id"] == "case-123"
+    assert span.attributes["user.id"] == "patient-456"
+    audit_meta = json.loads(span.attributes["metadata"])
+    assert audit_meta == {
+        "case_id": "case-123",
+        "patient_id": "patient-456",
+        "clinician_id": "clinician-789",
+        "requester_role": "patient",
+    }

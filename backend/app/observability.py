@@ -6,7 +6,26 @@ import os
 import time
 from typing import Any, Callable
 
+from dotenv import load_dotenv
+
 logger = logging.getLogger(__name__)
+
+load_dotenv()
+
+# Single source of truth for "which model answers chat" — every LLM call site
+# (recommendation stream, patient summary, FDA triage) must import CHAT_MODEL
+# instead of reading OPENROUTER_MODEL itself, otherwise a missing env var used
+# to make different code paths silently fall back to different models, which
+# breaks response consistency and prompt caching. No default: unset must fail
+# startup loudly instead of guessing.
+CHAT_MODEL = os.getenv("OPENROUTER_MODEL")
+if not CHAT_MODEL:
+    raise RuntimeError(
+        "CRITICAL: OPENROUTER_MODEL must be set in .env — there is no default. "
+        "Every LLM call in the app must share this one model."
+    )
+
+EMBEDDING_MODEL = os.getenv("OPENROUTER_EMBEDDING_MODEL", "openai/text-embedding-ada-002")
 
 # Token pricing per 1,000,000 tokens (USD)
 MODEL_PRICING: dict[str, dict[str, float]] = {
@@ -137,6 +156,56 @@ def _extract_prompt_text(*args: Any, **kwargs: Any) -> str:
     return " ".join(parts)
 
 
+LLM_PROVIDER_NAME = "openrouter"
+
+
+def _get_tracer():
+    """Module tracer. Safe to call even when Phoenix was never configured —
+    returns a no-op tracer whose spans don't record, so set_attribute() is a
+    harmless no-op instead of raising."""
+    from opentelemetry import trace
+    return trace.get_tracer(__name__)
+
+
+def _audit_attributes(kwargs: dict[str, Any]) -> dict[str, Any]:
+    """Ties a span back to the case/patient/clinician that triggered it.
+
+    `session.id` and `user.id` are OpenInference's own conventions — Phoenix
+    uses `session.id` to group every span from the same case's back-and-forth
+    conversation into one thread in its Sessions view, so setting it to
+    `case_id` is what makes turns of the same conversation link together.
+    """
+    case_id = kwargs.get("case_id") or kwargs.get("session_id")
+    patient_id = kwargs.get("patient_id") or kwargs.get("user_id")
+    clinician_id = kwargs.get("clinician_id")
+    requester_role = kwargs.get("requester_role")
+
+    attrs: dict[str, Any] = {}
+    if case_id:
+        attrs["session.id"] = str(case_id)
+    if patient_id:
+        attrs["user.id"] = str(patient_id)
+
+    audit_meta = {
+        k: v
+        for k, v in {
+            "case_id": case_id,
+            "patient_id": patient_id,
+            "clinician_id": clinician_id,
+            "requester_role": requester_role,
+        }.items()
+        if v
+    }
+    if audit_meta:
+        attrs["metadata"] = json.dumps(audit_meta)
+    return attrs
+
+
+def _set_span_attributes(span: Any, attrs: dict[str, Any]) -> None:
+    for key, value in attrs.items():
+        span.set_attribute(key, value)
+
+
 def track_llm_ops(
     name: str = "llm_operation",
     model: str | None = None,
@@ -144,11 +213,18 @@ def track_llm_ops(
     """Decorator to measure and log LLM Ops token counts and estimated costs.
 
     Runs before (estimating input tokens & prompt cost) and after (measuring
-    generated output tokens, latency, and full cost) execution. Also records
-    telemetry on active OpenTelemetry / Phoenix spans if present.
+    generated output tokens, latency, and full cost) execution, and always
+    opens its own OpenTelemetry span for that window — a decorated call used
+    to only *look for* an already-current span and silently do nothing if
+    none was active (which was always true in production, since nothing else
+    in the request path opens one), so no cost/token attribute was ever
+    actually attached to a span and Phoenix showed $0. Recognizes optional
+    `case_id`/`patient_id`/`clinician_id`/`requester_role` kwargs (any of
+    them) on the decorated call and stamps them onto the span for
+    session grouping and per-case/per-patient audit lookups.
     """
     def decorator(func: Callable) -> Callable:
-        target_model = model or os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3-8b-instruct")
+        target_model = model or CHAT_MODEL
 
         if inspect.isasyncgenfunction(func):
             @functools.wraps(func)
@@ -157,58 +233,48 @@ def track_llm_ops(
                 prompt_tokens = count_tokens(prompt_text, model=target_model)
                 initial_cost = calculate_cost(prompt_tokens, 0, model=target_model)
 
-                # BEFORE execution
                 logger.info(
-                    "[LLMOps BEFORE] %s starting | model=%s | prompt_tokens_est=%d | prompt_cost_est=$%.6f",
+                    "[LLMOps BEFORE] %s starting | model=%s | prompt_tokens_est=%d | prompt_cost_est=$%.8f",
                     name, target_model, prompt_tokens, initial_cost["prompt_cost_usd"]
                 )
 
-                try:
-                    from opentelemetry import trace
-                    span = trace.get_current_span()
-                    if span.is_recording():
-                        span.set_attribute("llm.operation", name)
-                        span.set_attribute("llm.model_name", target_model)
-                        span.set_attribute("llm.token_count.prompt_estimated", prompt_tokens)
-                        span.set_attribute("llm.cost.prompt_estimated_usd", initial_cost["prompt_cost_usd"])
-                except Exception:
-                    pass
+                tracer = _get_tracer()
+                with tracer.start_as_current_span(name) as span:
+                    span.set_attribute("llm.operation", name)
+                    span.set_attribute("llm.model_name", target_model)
+                    span.set_attribute("llm.provider", LLM_PROVIDER_NAME)
+                    span.set_attribute("llm.token_count.prompt_estimated", prompt_tokens)
+                    span.set_attribute("llm.cost.prompt_estimated_usd", initial_cost["prompt_cost_usd"])
+                    _set_span_attributes(span, _audit_attributes(kwargs))
 
-                start_time = time.perf_counter()
-                accumulated_chunks: list[str] = []
-
-                try:
-                    async for chunk in func(*args, **kwargs):
-                        if isinstance(chunk, str):
-                            accumulated_chunks.append(chunk)
-                        yield chunk
-                finally:
-                    # AFTER execution
-                    duration_ms = (time.perf_counter() - start_time) * 1000.0
-                    output_text = "".join(accumulated_chunks)
-                    completion_tokens = count_tokens(output_text, model=target_model)
-                    final_cost = calculate_cost(prompt_tokens, completion_tokens, model=target_model)
-
-                    logger.info(
-                        "[LLMOps AFTER] %s finished in %.2fms | model=%s | prompt_tokens=%d | completion_tokens=%d | total_tokens=%d | total_cost=$%.6f",
-                        name, duration_ms, target_model,
-                        final_cost["prompt_tokens"], final_cost["completion_tokens"],
-                        final_cost["total_tokens"], final_cost["total_cost_usd"]
-                    )
+                    start_time = time.perf_counter()
+                    accumulated_chunks: list[str] = []
 
                     try:
-                        from opentelemetry import trace
-                        span = trace.get_current_span()
-                        if span.is_recording():
-                            span.set_attribute("llm.token_count.prompt", final_cost["prompt_tokens"])
-                            span.set_attribute("llm.token_count.completion", final_cost["completion_tokens"])
-                            span.set_attribute("llm.token_count.total", final_cost["total_tokens"])
-                            span.set_attribute("llm.cost.prompt_usd", final_cost["prompt_cost_usd"])
-                            span.set_attribute("llm.cost.completion_usd", final_cost["completion_cost_usd"])
-                            span.set_attribute("llm.cost.total_cost_usd", final_cost["total_cost_usd"])
-                            span.set_attribute("llm.duration_ms", round(duration_ms, 2))
-                    except Exception:
-                        pass
+                        async for chunk in func(*args, **kwargs):
+                            if isinstance(chunk, str):
+                                accumulated_chunks.append(chunk)
+                            yield chunk
+                    finally:
+                        duration_ms = (time.perf_counter() - start_time) * 1000.0
+                        output_text = "".join(accumulated_chunks)
+                        completion_tokens = count_tokens(output_text, model=target_model)
+                        final_cost = calculate_cost(prompt_tokens, completion_tokens, model=target_model)
+
+                        logger.info(
+                            "[LLMOps AFTER] %s finished in %.2fms | model=%s | prompt_tokens=%d | completion_tokens=%d | total_tokens=%d | total_cost=$%.8f",
+                            name, duration_ms, target_model,
+                            final_cost["prompt_tokens"], final_cost["completion_tokens"],
+                            final_cost["total_tokens"], final_cost["total_cost_usd"]
+                        )
+
+                        span.set_attribute("llm.token_count.prompt", final_cost["prompt_tokens"])
+                        span.set_attribute("llm.token_count.completion", final_cost["completion_tokens"])
+                        span.set_attribute("llm.token_count.total", final_cost["total_tokens"])
+                        span.set_attribute("llm.cost.prompt", final_cost["prompt_cost_usd"])
+                        span.set_attribute("llm.cost.completion", final_cost["completion_cost_usd"])
+                        span.set_attribute("llm.cost.total", final_cost["total_cost_usd"])
+                        span.set_attribute("llm.duration_ms", round(duration_ms, 2))
 
             return async_gen_wrapper
 
@@ -219,59 +285,49 @@ def track_llm_ops(
                 prompt_tokens = count_tokens(prompt_text, model=target_model)
                 initial_cost = calculate_cost(prompt_tokens, 0, model=target_model)
 
-                # BEFORE execution
                 logger.info(
-                    "[LLMOps BEFORE] %s starting | model=%s | prompt_tokens_est=%d | prompt_cost_est=$%.6f",
+                    "[LLMOps BEFORE] %s starting | model=%s | prompt_tokens_est=%d | prompt_cost_est=$%.8f",
                     name, target_model, prompt_tokens, initial_cost["prompt_cost_usd"]
                 )
 
-                try:
-                    from opentelemetry import trace
-                    span = trace.get_current_span()
-                    if span.is_recording():
-                        span.set_attribute("llm.operation", name)
-                        span.set_attribute("llm.model_name", target_model)
-                        span.set_attribute("llm.token_count.prompt_estimated", prompt_tokens)
-                        span.set_attribute("llm.cost.prompt_estimated_usd", initial_cost["prompt_cost_usd"])
-                except Exception:
-                    pass
+                tracer = _get_tracer()
+                with tracer.start_as_current_span(name) as span:
+                    span.set_attribute("llm.operation", name)
+                    span.set_attribute("llm.model_name", target_model)
+                    span.set_attribute("llm.provider", LLM_PROVIDER_NAME)
+                    span.set_attribute("llm.token_count.prompt_estimated", prompt_tokens)
+                    span.set_attribute("llm.cost.prompt_estimated_usd", initial_cost["prompt_cost_usd"])
+                    _set_span_attributes(span, _audit_attributes(kwargs))
 
-                start_time = time.perf_counter()
-                result = await func(*args, **kwargs)
-                duration_ms = (time.perf_counter() - start_time) * 1000.0
+                    start_time = time.perf_counter()
+                    result = await func(*args, **kwargs)
+                    duration_ms = (time.perf_counter() - start_time) * 1000.0
 
-                # AFTER execution
-                completion_tokens = 0
-                if hasattr(result, "usage") and result.usage:
-                    prompt_tokens = getattr(result.usage, "prompt_tokens", prompt_tokens)
-                    completion_tokens = getattr(result.usage, "completion_tokens", 0)
-                elif isinstance(result, str):
-                    completion_tokens = count_tokens(result, model=target_model)
-                elif isinstance(result, dict) and "reply" in result:
-                    completion_tokens = count_tokens(str(result["reply"]), model=target_model)
+                    completion_tokens = 0
+                    if hasattr(result, "usage") and result.usage:
+                        prompt_tokens = getattr(result.usage, "prompt_tokens", prompt_tokens)
+                        completion_tokens = getattr(result.usage, "completion_tokens", 0)
+                    elif isinstance(result, str):
+                        completion_tokens = count_tokens(result, model=target_model)
+                    elif isinstance(result, dict) and "reply" in result:
+                        completion_tokens = count_tokens(str(result["reply"]), model=target_model)
 
-                final_cost = calculate_cost(prompt_tokens, completion_tokens, model=target_model)
+                    final_cost = calculate_cost(prompt_tokens, completion_tokens, model=target_model)
 
-                logger.info(
-                    "[LLMOps AFTER] %s finished in %.2fms | model=%s | prompt_tokens=%d | completion_tokens=%d | total_tokens=%d | total_cost=$%.6f",
-                    name, duration_ms, target_model,
-                    final_cost["prompt_tokens"], final_cost["completion_tokens"],
-                    final_cost["total_tokens"], final_cost["total_cost_usd"]
-                )
+                    logger.info(
+                        "[LLMOps AFTER] %s finished in %.2fms | model=%s | prompt_tokens=%d | completion_tokens=%d | total_tokens=%d | total_cost=$%.8f",
+                        name, duration_ms, target_model,
+                        final_cost["prompt_tokens"], final_cost["completion_tokens"],
+                        final_cost["total_tokens"], final_cost["total_cost_usd"]
+                    )
 
-                try:
-                    from opentelemetry import trace
-                    span = trace.get_current_span()
-                    if span.is_recording():
-                        span.set_attribute("llm.token_count.prompt", final_cost["prompt_tokens"])
-                        span.set_attribute("llm.token_count.completion", final_cost["completion_tokens"])
-                        span.set_attribute("llm.token_count.total", final_cost["total_tokens"])
-                        span.set_attribute("llm.cost.prompt_usd", final_cost["prompt_cost_usd"])
-                        span.set_attribute("llm.cost.completion_usd", final_cost["completion_cost_usd"])
-                        span.set_attribute("llm.cost.total_cost_usd", final_cost["total_cost_usd"])
-                        span.set_attribute("llm.duration_ms", round(duration_ms, 2))
-                except Exception:
-                    pass
+                    span.set_attribute("llm.token_count.prompt", final_cost["prompt_tokens"])
+                    span.set_attribute("llm.token_count.completion", final_cost["completion_tokens"])
+                    span.set_attribute("llm.token_count.total", final_cost["total_tokens"])
+                    span.set_attribute("llm.cost.prompt", final_cost["prompt_cost_usd"])
+                    span.set_attribute("llm.cost.completion", final_cost["completion_cost_usd"])
+                    span.set_attribute("llm.cost.total", final_cost["total_cost_usd"])
+                    span.set_attribute("llm.duration_ms", round(duration_ms, 2))
 
                 return result
 
@@ -284,32 +340,46 @@ def track_llm_ops(
                 prompt_tokens = count_tokens(prompt_text, model=target_model)
                 initial_cost = calculate_cost(prompt_tokens, 0, model=target_model)
 
-                # BEFORE execution
                 logger.info(
-                    "[LLMOps BEFORE] %s starting | model=%s | prompt_tokens_est=%d | prompt_cost_est=$%.6f",
+                    "[LLMOps BEFORE] %s starting | model=%s | prompt_tokens_est=%d | prompt_cost_est=$%.8f",
                     name, target_model, prompt_tokens, initial_cost["prompt_cost_usd"]
                 )
 
-                start_time = time.perf_counter()
-                result = func(*args, **kwargs)
-                duration_ms = (time.perf_counter() - start_time) * 1000.0
+                tracer = _get_tracer()
+                with tracer.start_as_current_span(name) as span:
+                    span.set_attribute("llm.operation", name)
+                    span.set_attribute("llm.model_name", target_model)
+                    span.set_attribute("llm.provider", LLM_PROVIDER_NAME)
+                    span.set_attribute("llm.token_count.prompt_estimated", prompt_tokens)
+                    span.set_attribute("llm.cost.prompt_estimated_usd", initial_cost["prompt_cost_usd"])
+                    _set_span_attributes(span, _audit_attributes(kwargs))
 
-                # AFTER execution
-                completion_tokens = 0
-                if hasattr(result, "usage") and result.usage:
-                    prompt_tokens = getattr(result.usage, "prompt_tokens", prompt_tokens)
-                    completion_tokens = getattr(result.usage, "completion_tokens", 0)
-                elif isinstance(result, str):
-                    completion_tokens = count_tokens(result, model=target_model)
+                    start_time = time.perf_counter()
+                    result = func(*args, **kwargs)
+                    duration_ms = (time.perf_counter() - start_time) * 1000.0
 
-                final_cost = calculate_cost(prompt_tokens, completion_tokens, model=target_model)
+                    completion_tokens = 0
+                    if hasattr(result, "usage") and result.usage:
+                        prompt_tokens = getattr(result.usage, "prompt_tokens", prompt_tokens)
+                        completion_tokens = getattr(result.usage, "completion_tokens", 0)
+                    elif isinstance(result, str):
+                        completion_tokens = count_tokens(result, model=target_model)
 
-                logger.info(
-                    "[LLMOps AFTER] %s finished in %.2fms | model=%s | prompt_tokens=%d | completion_tokens=%d | total_tokens=%d | total_cost=$%.6f",
-                    name, duration_ms, target_model,
-                    final_cost["prompt_tokens"], final_cost["completion_tokens"],
-                    final_cost["total_tokens"], final_cost["total_cost_usd"]
-                )
+                    final_cost = calculate_cost(prompt_tokens, completion_tokens, model=target_model)
+
+                    logger.info(
+                        "[LLMOps AFTER] %s finished in %.2fms | model=%s | prompt_tokens=%d | completion_tokens=%d | total_tokens=%d | total_cost=$%.8f",
+                        name, duration_ms, target_model,
+                        final_cost["prompt_tokens"], final_cost["completion_tokens"],
+                        final_cost["total_tokens"], final_cost["total_cost_usd"]
+                    )
+
+                    span.set_attribute("llm.token_count.prompt", final_cost["prompt_tokens"])
+                    span.set_attribute("llm.token_count.completion", final_cost["completion_tokens"])
+                    span.set_attribute("llm.token_count.total", final_cost["total_tokens"])
+                    span.set_attribute("llm.cost.prompt", final_cost["prompt_cost_usd"])
+                    span.set_attribute("llm.cost.completion", final_cost["completion_cost_usd"])
+                    span.set_attribute("llm.cost.total", final_cost["total_cost_usd"])
 
                 return result
 

@@ -1,12 +1,13 @@
 import os
 import asyncio
+import functools
 import anyio
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from openai import OpenAI, AsyncOpenAI
 
 from app.core.database import SessionLocal
-from app.observability import track_llm_ops
+from app.observability import CHAT_MODEL, EMBEDDING_MODEL, track_llm_ops
 
 client_async = AsyncOpenAI(
     api_key=os.getenv("OPENROUTER_API_KEY") or "dummy-openrouter-key",
@@ -18,8 +19,13 @@ client_async = AsyncOpenAI(
 # Embedding
 # ─────────────────────────────────────────
 
-@track_llm_ops(name="rag.embedding", model="openai/text-embedding-ada-002")
-def get_embedding(text_input: str) -> list[float]:
+@track_llm_ops(name="rag.embedding", model=EMBEDDING_MODEL)
+def get_embedding(
+    text_input: str,
+    *,
+    case_id: str | None = None,
+    patient_id: str | None = None,
+) -> list[float]:
     """
     Convert text into a vector using OpenAI / OpenRouter text embeddings.
     """
@@ -29,7 +35,7 @@ def get_embedding(text_input: str) -> list[float]:
         base_url="https://openrouter.ai/api/v1",
     )
     response = client.embeddings.create(
-        model="openai/text-embedding-ada-002",
+        model=EMBEDDING_MODEL,
         input=text_input,
     )
     return response.data[0].embedding
@@ -42,14 +48,17 @@ def get_embedding(text_input: str) -> list[float]:
 def retrieve_relevant_chunks(
     query: str,
     surgery_type: str | None = None,
-    top_k: int = 5
+    top_k: int = 5,
+    *,
+    case_id: str | None = None,
+    patient_id: str | None = None,
 ) -> list[dict]:
     """
     Embed the query and find the most similar chunks in pgvector.
     Optionally filter by surgery type.
     """
     try:
-        query_embedding = get_embedding(query)
+        query_embedding = get_embedding(query, case_id=case_id, patient_id=patient_id)
         embedding_str = str(query_embedding)
 
         with SessionLocal() as db:
@@ -115,8 +124,21 @@ async def generate_recommendation_stream(
     patient_context: dict | None = None,
     history: list[dict] | None = None,
     locale: str | None = None,
+    *,
+    case_id: str | None = None,
+    patient_id: str | None = None,
+    clinician_id: str | None = None,
+    requester_role: str | None = None,
 ):
-    chunks = await anyio.to_thread.run_sync(retrieve_relevant_chunks, doctor_message, surgery_type)
+    chunks = await anyio.to_thread.run_sync(
+        functools.partial(
+            retrieve_relevant_chunks,
+            doctor_message,
+            surgery_type,
+            case_id=case_id,
+            patient_id=patient_id,
+        )
+    )
     guidelines_context = "\n\n".join([f"[Source: {chunk['source']}]\n{chunk['content']}" for chunk in chunks])
 
     if patient_context:
@@ -164,9 +186,10 @@ Always end with: "Please review and adjust based on your clinical judgment."
         messages.append({"role": "user", "content": user_prompt})
 
         response = await client_async.chat.completions.create(
-            model=os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3-8b-instruct"),
+            model=CHAT_MODEL,
             messages=messages,
-            stream=True
+            stream=True,
+            stream_options={"include_usage": True},
         )
         
         async for chunk in response:
@@ -180,8 +203,13 @@ Always end with: "Please review and adjust based on your clinical judgment."
         yield fallback_reply
 
 
-@track_llm_ops(name="rag.generate_patients_summary", model=os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini"))
-async def generate_patients_summary(patients_context: str, locale: str | None = None) -> str:
+@track_llm_ops(name="rag.generate_patients_summary", model=CHAT_MODEL)
+async def generate_patients_summary(
+    patients_context: str,
+    locale: str | None = None,
+    *,
+    clinician_id: str | None = None,
+) -> str:
     """Summarize a clinician's full patient roster (plain chat completion,
     no retrieval/embeddings involved)."""
     system_prompt = (
@@ -194,7 +222,7 @@ async def generate_patients_summary(patients_context: str, locale: str | None = 
         + (f" Respond in the clinician's app language (locale code: {locale})." if locale else "")
     )
     response = await client_async.chat.completions.create(
-        model=os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini"),
+        model=CHAT_MODEL,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": f"Patient roster:\n\n{patients_context}\n\nPlease provide the summary."},
