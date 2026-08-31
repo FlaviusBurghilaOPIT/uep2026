@@ -16,7 +16,11 @@ import {
   X,
   FileCheck2,
   Clock,
-  HeartPulse
+  HeartPulse,
+  TrendingUp,
+  TrendingDown,
+  Eye,
+  ChevronDown
 } from '@lucide/astro'
 import { apiFetch } from '../api/client'
 import { createTranslator, isLanguage } from '../i18n'
@@ -31,20 +35,61 @@ if (!cookieToken) {
   return Astro.redirect('/login')
 }
 
+function calcAge(dob: string | null | undefined): number | null {
+  if (!dob) return null
+  const birth = new Date(dob)
+  if (isNaN(birth.getTime())) return null
+  const now = new Date()
+  let age = now.getFullYear() - birth.getFullYear()
+  const monthDiff = now.getMonth() - birth.getMonth()
+  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) age--
+  return age
+}
+
+function relativeTime(iso: string | null | undefined): string {
+  if (!iso) return 'No check-in yet'
+  const then = new Date(iso).getTime()
+  if (isNaN(then)) return 'No check-in yet'
+  const minutes = Math.floor((Date.now() - then) / 60000)
+  if (minutes < 1) return 'Just now'
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
+}
+
+// great < ok < not_great < bad/severe — used to rank check-in trend and triage urgency
+const FEELING_RANK: Record<string, number> = { great: 0, ok: 1, not_great: 2, bad: 3, severe: 3 }
+
+function urgencyScore(item: { latestSymptom: any; missedCount: number; adherenceRate: number }): number {
+  const feeling = item.latestSymptom?.feeling?.toLowerCase() || ''
+  let score = (FEELING_RANK[feeling] ?? 0) * 30
+  score += item.missedCount * 15
+  score += Math.max(0, 100 - item.adherenceRate) * 0.3
+  return score
+}
+
 let patients: any[] = []
 let cases: any[] = []
 let triageItems: any[] = []
 let triageStats: any = null
 
+let ackByPatientId: Record<string, string> = {}
+
 try {
-  const [pRes, cRes, statRes] = await Promise.all([
+  const [pRes, cRes, statRes, ackRes] = await Promise.all([
     apiFetch<any[]>('/patients', { token: cookieToken }).catch(() => []),
     apiFetch<any[]>('/cases', { token: cookieToken }).catch(() => []),
-    apiFetch<any>('/analytics/triage-response', { token: cookieToken }).catch(() => null)
+    apiFetch<any>('/analytics/triage-response', { token: cookieToken }).catch(() => null),
+    apiFetch<any>('/analytics/triage-acknowledgements', { token: cookieToken }).catch(() => null)
   ])
   patients = pRes || []
   cases = cRes || []
   triageStats = statRes
+  ackByPatientId = Object.fromEntries(
+    (ackRes?.acknowledgements || []).map((a: any) => [a.patient_id, a.acknowledged_at])
+  )
 
   // Fetch telemetry (symptoms & adherence) for each patient
   const telemetryPromises = patients.map(async (p) => {
@@ -64,9 +109,19 @@ try {
       medications = mRes || []
     }
 
-    const latestSymptom = symptoms.length > 0
-      ? symptoms.sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime())[0]
-      : null
+    const sortedSymptoms = [...symptoms].sort(
+      (a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()
+    )
+    const latestSymptom = sortedSymptoms[0] || null
+    const previousSymptom = sortedSymptoms[1] || null
+
+    let trend: 'worse' | 'better' | 'flat' = 'flat'
+    if (previousSymptom) {
+      const prevRank = FEELING_RANK[previousSymptom.feeling?.toLowerCase() || ''] ?? 0
+      const currRank = FEELING_RANK[latestSymptom?.feeling?.toLowerCase() || ''] ?? 0
+      if (currRank > prevRank) trend = 'worse'
+      else if (currRank < prevRank) trend = 'better'
+    }
 
     const completedLogs = doseLogs.filter((l) => ['taken', 'missed', 'skipped'].includes(l.status?.toLowerCase()))
     const takenCount = doseLogs.filter((l) => l.status?.toLowerCase() === 'taken').length
@@ -93,6 +148,12 @@ try {
       triggers.push(`1 medication dose missed (${adherenceRate}% adherence)`)
     }
 
+    // An acknowledgement only counts if it happened after the latest check-in —
+    // a new symptom report un-acknowledges the card so it can't hide a fresh problem.
+    const ackAt = ackByPatientId[p.id] || null
+    const symptomTime = latestSymptom?.created_at ? new Date(latestSymptom.created_at).getTime() : 0
+    const isAcknowledged = !!ackAt && new Date(ackAt).getTime() >= symptomTime
+
     return {
       patient: p,
       case: pCase,
@@ -103,7 +164,13 @@ try {
       adherenceRate,
       missedCount,
       priority,
-      triggers
+      triggers,
+      age: calcAge(p.date_of_birth),
+      lastCheckinRelative: relativeTime(latestSymptom?.created_at),
+      trend,
+      isAcknowledged,
+      acknowledgedAt: isAcknowledged ? ackAt : null,
+      acknowledgedRelative: isAcknowledged ? relativeTime(ackAt) : null
     }
   })
 
@@ -114,8 +181,9 @@ try {
   triageItems = []
 }
 
-const redItems = triageItems.filter((item) => item.priority === 'red')
-const amberItems = triageItems.filter((item) => item.priority === 'amber')
+// Worst patients first within each priority tier, so the doctor doesn't have to read every card to find the sickest one
+const redItems = triageItems.filter((item) => item.priority === 'red').sort((a, b) => urgencyScore(b) - urgencyScore(a))
+const amberItems = triageItems.filter((item) => item.priority === 'amber').sort((a, b) => urgencyScore(b) - urgencyScore(a))
 const attentionItems = [...redItems, ...amberItems]
 const stableItems = triageItems.filter((item) => item.priority === 'green')
 const totalPatients = patients.length
@@ -260,6 +328,10 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
       </div>
     </div>
 
+    <div id="no-results-msg" class="no-results-msg hidden" role="status">
+      {t('triage.noResults', 'No patients match your search and filter. Try clearing one of them.')}
+    </div>
+
     <!-- 1. NEEDS ATTENTION / TRIAGE EXCEPTION QUEUE -->
     <section class="section" id="triage-queue-section">
       <div class="section-title-row">
@@ -294,6 +366,7 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
                 class={`triage-card ${isRed ? 'card-priority-red' : 'card-priority-amber'} patient-card`}
                 data-name={(p.full_name || '').toLowerCase()}
                 data-priority={item.priority}
+                data-patient-id={p.id}
               >
                 <!-- Priority Header Strip -->
                 <div class="triage-card-header">
@@ -317,9 +390,25 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
                             </>
                           )}
                         </span>
+                        {item.trend === 'worse' && (
+                          <span class="trend-badge trend-worse" title={t('triage.trendWorseTitle', 'Condition has worsened since the last check-in')}>
+                            <TrendingUp size={12} aria-hidden="true" />
+                            <span>{t('triage.trendWorse', 'Worsening')}</span>
+                          </span>
+                        )}
+                        {item.trend === 'better' && (
+                          <span class="trend-badge trend-better" title={t('triage.trendBetterTitle', 'Condition has improved since the last check-in')}>
+                            <TrendingDown size={12} aria-hidden="true" />
+                            <span>{t('triage.trendBetter', 'Improving')}</span>
+                          </span>
+                        )}
+                        <span class="time-badge" title={item.latestSymptom?.created_at ? new Date(item.latestSymptom.created_at).toLocaleString() : ''}>
+                          <Clock size={11} aria-hidden="true" />
+                          <span>{item.lastCheckinRelative}</span>
+                        </span>
                       </div>
                       <p class="patient-meta-sub">
-                        {t('patientCard.surgeryType', 'Procedure')}: <strong>{pCase?.surgery_type || 'Post-Op Recovery'}</strong> • {t('patients.dob', 'DOB')}: {p.date_of_birth || 'N/A'} • Phone: {p.phone || pCase?.emergency_contact_phone || 'N/A'}
+                        {t('patientCard.surgeryType', 'Procedure')}: <strong>{pCase?.surgery_type || 'Post-Op Recovery'}</strong> • <span title={`DOB: ${p.date_of_birth || 'N/A'}`}>{t('patientCard.age', 'Age')}: <strong>{item.age ?? '—'}</strong></span> • Phone: {p.phone || pCase?.emergency_contact_phone || 'N/A'}
                       </p>
                     </div>
                   </div>
@@ -338,37 +427,18 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
                   </div>
                 </div>
 
-                <!-- Exception Triggers Box -->
-                <div class="triage-triggers-box">
-                  <div class="trigger-label-row">
-                    <ShieldAlert size={14} class="trigger-icon" aria-hidden="true" />
-                    <span class="trigger-title">{t('triage.escalationTriggers', 'Clinical Escalation Triggers:')}</span>
-                  </div>
-                  <ul class="trigger-list">
-                    {item.triggers.map((trig: string) => (
-                      <li class="trigger-item">{trig}</li>
-                    ))}
-                  </ul>
+                <!-- One-line reason — visible without expanding, so the doctor knows why this card is here -->
+                <div class="card-reason-line">
+                  <ShieldAlert size={13} class="trigger-icon" aria-hidden="true" />
+                  <span class="reason-text">{item.triggers[0]}</span>
+                  {item.triggers.length > 1 && (
+                    <span class="reason-more">+{item.triggers.length - 1} {t('triage.moreReasons', 'more')}</span>
+                  )}
                 </div>
 
-                <!-- Active Medications Chips -->
-                {item.medications.length > 0 && (
-                  <div class="card-meds-row">
-                    <span class="meds-sub-label">{t('landing.telemetryPrescribedLabel', 'Prescribed Regimen')}:</span>
-                    <div class="meds-tags">
-                      {item.medications.map((m: any) => (
-                        <span class="med-tag">
-                          <Pill size={12} aria-hidden="true" />
-                          <span>{m.name} ({m.dose || 'Standard'})</span>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <!-- Action Toolbar -->
-                <div class="triage-card-footer">
-                  <div class="footer-left-contact">
+                <!-- Quick actions — always visible, no need to expand -->
+                <div class="card-quick-actions">
+                  <div class="quick-actions-left">
                     {p.phone || pCase?.emergency_contact_phone ? (
                       <a href={`tel:${p.phone || pCase?.emergency_contact_phone}`} class="action-btn-call" aria-label={`Call ${p.full_name}`}>
                         <Phone size={14} aria-hidden="true" />
@@ -377,30 +447,78 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
                     ) : (
                       <span class="text-muted-contact">{t('triage.noPhone', 'No phone registered')}</span>
                     )}
+
+                    {item.isAcknowledged ? (
+                      <span class="ack-badge" title={item.acknowledgedAt ? new Date(item.acknowledgedAt).toLocaleString() : ''}>
+                        <CheckCircle2 size={13} aria-hidden="true" />
+                        <span>{t('triage.acknowledgedLabel', 'Seen')} {item.acknowledgedRelative}</span>
+                      </span>
+                    ) : (
+                      <button type="button" class="action-btn-ack" data-ack-patient-id={p.id} aria-label={`Mark ${p.full_name} as seen`}>
+                        <Eye size={14} aria-hidden="true" />
+                        <span>{t('triage.acknowledge', 'Mark as Seen')}</span>
+                      </button>
+                    )}
                   </div>
 
-                  <div class="footer-right-actions">
-                    <button
-                      type="button"
-                      class="action-btn-resolve"
-                      data-patient-name={p.full_name}
-                      data-patient-id={p.id}
-                      data-case-id={pCase?.id}
-                      data-priority={item.priority}
-                      data-surgery={pCase?.surgery_type || 'Post-Op'}
-                      data-dob={p.date_of_birth || 'N/A'}
-                      data-adherence={item.adherenceRate}
-                      data-symptom={item.latestSymptom?.feeling?.toUpperCase() || 'OK'}
-                      aria-label={`Resolve alert for ${p.full_name}`}
-                    >
-                      <FileCheck2 size={15} aria-hidden="true" />
-                      <span>{t('patientCard.resolve', 'Resolve')}</span>
-                    </button>
+                  <button type="button" class="expand-toggle-btn" data-expand-toggle aria-expanded="false">
+                    <span>{t('triage.viewDetails', 'Details')}</span>
+                    <ChevronDown size={14} class="expand-chevron" aria-hidden="true" />
+                  </button>
+                </div>
 
-                    <a href={pCase ? `/cases/${pCase.id}` : `/patients`} class="action-btn-review">
-                      <span>{t('triage.reviewCase', 'Review Case')}</span>
-                      <ArrowRight size={14} aria-hidden="true" />
-                    </a>
+                <!-- Full detail — hidden until the doctor asks for it -->
+                <div class="card-detail">
+                  <div class="triage-triggers-box">
+                    <div class="trigger-label-row">
+                      <ShieldAlert size={14} class="trigger-icon" aria-hidden="true" />
+                      <span class="trigger-title">{t('triage.escalationTriggers', 'Clinical Escalation Triggers:')}</span>
+                    </div>
+                    <ul class="trigger-list">
+                      {item.triggers.map((trig: string) => (
+                        <li class="trigger-item">{trig}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {item.medications.length > 0 && (
+                    <div class="card-meds-row">
+                      <span class="meds-sub-label">{t('landing.telemetryPrescribedLabel', 'Prescribed Regimen')}:</span>
+                      <div class="meds-tags">
+                        {item.medications.map((m: any) => (
+                          <span class="med-tag">
+                            <Pill size={12} aria-hidden="true" />
+                            <span>{m.name} ({m.dose || 'Standard'})</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div class="card-detail-footer">
+                    <div class="footer-right-actions">
+                      <button
+                        type="button"
+                        class="action-btn-resolve"
+                        data-patient-name={p.full_name}
+                        data-patient-id={p.id}
+                        data-case-id={pCase?.id}
+                        data-priority={item.priority}
+                        data-surgery={pCase?.surgery_type || 'Post-Op'}
+                        data-dob={p.date_of_birth || 'N/A'}
+                        data-adherence={item.adherenceRate}
+                        data-symptom={item.latestSymptom?.feeling?.toUpperCase() || 'OK'}
+                        aria-label={`Resolve alert for ${p.full_name}`}
+                      >
+                        <FileCheck2 size={15} aria-hidden="true" />
+                        <span>{t('patientCard.resolve', 'Resolve')}</span>
+                      </button>
+
+                      <a href={pCase ? `/cases/${pCase.id}` : `/patients`} class="action-btn-review">
+                        <span>{t('triage.reviewCase', 'Review Case')}</span>
+                        <ArrowRight size={14} aria-hidden="true" />
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -422,10 +540,22 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
             <p class="section-sub">{t('triage.stableSubtitle', 'Patients with optimal medication compliance and positive check-in sentiments')}</p>
           </div>
         </div>
-        <span class="stable-count-pill">{stableItems.length} Patient{stableItems.length !== 1 ? 's' : ''} Stable</span>
+        <div class="stable-toggle-right">
+          <span class="stable-count-pill">{stableItems.length} Patient{stableItems.length !== 1 ? 's' : ''} Stable</span>
+          <button
+            type="button"
+            class="stable-toggle-btn"
+            id="stable-toggle-btn"
+            aria-expanded="false"
+            aria-controls="stable-patient-grid"
+            aria-label={t('triage.toggleStableRoster', 'Show or hide the stable patient roster')}
+          >
+            <ChevronDown size={16} class="expand-chevron" aria-hidden="true" />
+          </button>
+        </div>
       </div>
 
-      <div id="stable-patient-grid" class="stable-grid">
+      <div id="stable-patient-grid" class="stable-grid hidden">
         {stableItems.length === 0 ? (
           <div class="empty-box full-grid-span">
             <p class="empty-text">{t('triage.noActivePatients', 'No patients currently in stable cohort.')}</p>
@@ -459,7 +589,7 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
                 </div>
 
                 <div class="roster-footer">
-                  <span class="dob-text">{t('patients.dob', 'DOB')}: {p.date_of_birth || 'N/A'}</span>
+                  <span class="dob-text" title={`DOB: ${p.date_of_birth || 'N/A'}`}>{t('patientCard.age', 'Age')}: {item.age ?? '—'}</span>
                   <a href={pCase ? `/cases/${pCase.id}` : `/patients`} class="view-case-link">
                     {t('patientCard.viewCase', 'View Case')} &rarr;
                   </a>
@@ -1276,6 +1406,33 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     border-radius: 9999px;
   }
 
+  .stable-toggle-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .stable-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    color: #475569;
+    cursor: pointer;
+  }
+
+  .stable-toggle-btn:hover {
+    background-color: #f1f5f9;
+  }
+
+  .stable-toggle-btn[aria-expanded="true"] .expand-chevron {
+    transform: rotate(180deg);
+  }
+
   /* Empty Box */
   .empty-box {
     background-color: #ffffff;
@@ -1371,7 +1528,49 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
   .patient-name-line {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
+    row-gap: 4px;
     gap: 8px;
+  }
+
+  .time-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: #64748b;
+  }
+
+  .trend-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 9999px;
+    line-height: 1;
+  }
+
+  .trend-worse {
+    background-color: #fef2f2;
+    color: #991b1b;
+  }
+
+  .trend-better {
+    background-color: #f0fdf4;
+    color: #15803d;
+  }
+
+  .no-results-msg {
+    text-align: center;
+    padding: 32px 16px;
+    color: #64748b;
+    font-size: 14px;
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    margin-bottom: 24px;
   }
 
   .patient-card-name {
@@ -1425,6 +1624,117 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
 
   .gauge-label { color: #64748b; }
   .gauge-pct { color: #0f172a; }
+
+  /* Scan-line summary: one-line reason, quick actions, expand toggle */
+  .card-reason-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 13px;
+    color: #334155;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+
+  .reason-text {
+    flex: 1;
+  }
+
+  .reason-more {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #64748b;
+    white-space: nowrap;
+  }
+
+  .card-quick-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .quick-actions-left {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .action-btn-ack {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #475569;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
+  }
+
+  .action-btn-ack:hover {
+    background-color: #f1f5f9;
+  }
+
+  .action-btn-ack:active {
+    transform: scale(0.97);
+  }
+
+  .ack-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #15803d;
+    background-color: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    padding: 5px 12px;
+    border-radius: 6px;
+  }
+
+  .expand-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    background: transparent;
+    border: 1px solid #e2e8f0;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .expand-toggle-btn:hover {
+    background-color: #f1f5f9;
+  }
+
+  .expand-chevron {
+    transition: transform 0.15s ease;
+  }
+
+  .triage-card.expanded .expand-chevron {
+    transform: rotate(180deg);
+  }
+
+  .card-detail {
+    display: none;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .triage-card.expanded .card-detail {
+    display: flex;
+  }
 
   /* Triggers Box */
   .triage-triggers-box {
@@ -1515,9 +1825,9 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
   }
 
   /* Card Footer Actions */
-  .triage-card-footer {
+  .card-detail-footer {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
     border-top: 1px solid #f1f5f9;
     padding-top: 12px;
@@ -1977,69 +2287,122 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
 <script>
   import { parseClinicalSummary, renderClinicalBriefHtml } from '../utils/clinicalSummaryFormatter'
   import { resolveTriageAlert } from '../api/client'
+  import { trackEvent } from '../api/analytics'
 
   function initDashboard() {
-    // 1. Live Search filter
-    const searchInput = document.getElementById('search-input') as HTMLInputElement
-    if (searchInput) {
-      searchInput.addEventListener('input', () => {
-        const query = searchInput.value.toLowerCase().trim()
-        const cards = document.querySelectorAll<HTMLElement>('.patient-card')
-        cards.forEach((card) => {
-          const name = card.getAttribute('data-name') || ''
-          const cardText = card.textContent?.toLowerCase() || ''
-          if (!query || name.includes(query) || cardText.includes(query)) {
-            card.style.display = ''
-          } else {
-            card.style.display = 'none'
-          }
-        })
-      })
+    // Stable roster is collapsed by default — it needs zero action, so it
+    // shouldn't compete with the triage queue for screen space.
+    const stableToggleBtn = document.getElementById('stable-toggle-btn')
+    const stableGrid = document.getElementById('stable-patient-grid')
+
+    function setStableExpanded(expanded: boolean) {
+      if (!stableGrid || !stableToggleBtn) return
+      stableGrid.classList.toggle('hidden', !expanded)
+      stableToggleBtn.setAttribute('aria-expanded', String(expanded))
     }
 
-    // 2. Priority Tab filter
+    stableToggleBtn?.addEventListener('click', () => {
+      setStableExpanded(stableToggleBtn.getAttribute('aria-expanded') !== 'true')
+    })
+
+    // 1 & 2. Search and priority tab filters — combined so they never fight each other,
+    // and a "no matches" message shows instead of a silent blank list.
+    const searchInput = document.getElementById('search-input') as HTMLInputElement
     const tabs = document.querySelectorAll<HTMLButtonElement>('.tab-btn')
+    const noResultsMsg = document.getElementById('no-results-msg')
+
+    function getActiveTab(): string {
+      return document.querySelector<HTMLButtonElement>('.tab-btn.active')?.getAttribute('data-tab') || 'all'
+    }
+
+    function applyFilters() {
+      const query = (searchInput?.value || '').toLowerCase().trim()
+      const activeTab = getActiveTab()
+      const cards = document.querySelectorAll<HTMLElement>('.patient-card')
+      const queueSection = document.getElementById('triage-queue-section')
+      const stableSection = document.getElementById('stable-roster-section')
+
+      if (activeTab === 'all') {
+        if (queueSection) queueSection.style.display = ''
+        if (stableSection) stableSection.style.display = ''
+      } else if (activeTab === 'stable') {
+        if (queueSection) queueSection.style.display = 'none'
+        if (stableSection) stableSection.style.display = ''
+      } else {
+        if (queueSection) queueSection.style.display = ''
+        if (stableSection) stableSection.style.display = 'none'
+      }
+
+      let anyVisible = false
+      let stableMatchExists = false
+      cards.forEach((card) => {
+        const name = card.getAttribute('data-name') || ''
+        const priority = card.getAttribute('data-priority') || ''
+        const matchesTab = activeTab === 'all' || activeTab === priority
+        const cardText = card.textContent?.toLowerCase() || ''
+        const matchesQuery = !query || name.includes(query) || cardText.includes(query)
+        const visible = matchesTab && matchesQuery
+        card.style.display = visible ? '' : 'none'
+        if (visible) {
+          anyVisible = true
+          if (priority === 'stable') stableMatchExists = true
+        }
+      })
+
+      // Auto-open the stable roster when the clinician asks for it directly,
+      // or when a search match is hiding inside it.
+      if (activeTab === 'stable' || (query !== '' && stableMatchExists)) {
+        setStableExpanded(true)
+      }
+
+      if (noResultsMsg) {
+        noResultsMsg.classList.toggle('hidden', anyVisible || cards.length === 0)
+      }
+    }
+
+    if (searchInput) {
+      searchInput.addEventListener('input', applyFilters)
+    }
+
     tabs.forEach((tab) => {
       tab.addEventListener('click', () => {
-        tabs.forEach((t) => {
-          t.classList.remove('active')
-          t.setAttribute('aria-selected', 'false')
+        tabs.forEach((tb) => {
+          tb.classList.remove('active')
+          tb.setAttribute('aria-selected', 'false')
         })
         tab.classList.add('active')
         tab.setAttribute('aria-selected', 'true')
-
-        const selectedTab = tab.getAttribute('data-tab')
-        const cards = document.querySelectorAll<HTMLElement>('.patient-card')
-        const queueSection = document.getElementById('triage-queue-section')
-        const stableSection = document.getElementById('stable-roster-section')
-
-        if (selectedTab === 'all') {
-          if (queueSection) queueSection.style.display = ''
-          if (stableSection) stableSection.style.display = ''
-          cards.forEach((c) => (c.style.display = ''))
-        } else if (selectedTab === 'red') {
-          if (queueSection) queueSection.style.display = ''
-          if (stableSection) stableSection.style.display = 'none'
-          cards.forEach((c) => {
-            c.style.display = c.getAttribute('data-priority') === 'red' ? '' : 'none'
-          })
-        } else if (selectedTab === 'amber') {
-          if (queueSection) queueSection.style.display = ''
-          if (stableSection) stableSection.style.display = 'none'
-          cards.forEach((c) => {
-            c.style.display = c.getAttribute('data-priority') === 'amber' ? '' : 'none'
-          })
-        } else if (selectedTab === 'stable') {
-          if (queueSection) queueSection.style.display = 'none'
-          if (stableSection) stableSection.style.display = ''
-          cards.forEach((c) => {
-            c.style.display = c.getAttribute('data-priority') === 'stable' ? '' : 'none'
-          })
-        }
+        applyFilters()
       })
     })
 
-    // 3. Refresh button
+    // Restore search text, tab, and scroll position after a manual refresh so the
+    // clinician doesn't lose their place in the roster.
+    const savedSearch = sessionStorage.getItem('dashboard-search')
+    const savedTab = sessionStorage.getItem('dashboard-tab')
+    const savedScroll = sessionStorage.getItem('dashboard-scroll')
+
+    if (savedTab) {
+      tabs.forEach((tb) => {
+        const isMatch = tb.getAttribute('data-tab') === savedTab
+        tb.classList.toggle('active', isMatch)
+        tb.setAttribute('aria-selected', String(isMatch))
+      })
+    }
+    if (savedSearch && searchInput) {
+      searchInput.value = savedSearch
+    }
+    if (savedSearch || savedTab) {
+      applyFilters()
+    }
+    if (savedScroll) {
+      window.scrollTo(0, parseInt(savedScroll, 10))
+    }
+    sessionStorage.removeItem('dashboard-search')
+    sessionStorage.removeItem('dashboard-tab')
+    sessionStorage.removeItem('dashboard-scroll')
+
+    // 3. Refresh button — saves the clinician's place before reloading
     const refreshBtn = document.getElementById('refresh-btn')
     const refreshIcon = document.getElementById('refresh-icon')
     if (refreshBtn) {
@@ -2047,9 +2410,57 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
         refreshBtn.classList.add('btn-loading')
         refreshBtn.setAttribute('disabled', 'true')
         if (refreshIcon) refreshIcon.classList.add('animate-spin')
+        sessionStorage.setItem('dashboard-search', searchInput?.value || '')
+        sessionStorage.setItem('dashboard-tab', getActiveTab())
+        sessionStorage.setItem('dashboard-scroll', String(window.scrollY))
         window.location.reload()
       })
     }
+
+    // 3b. Expand/collapse the full detail on a triage card
+    document.querySelectorAll<HTMLButtonElement>('[data-expand-toggle]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const card = btn.closest('.triage-card')
+        if (!card) return
+        const nowExpanded = !card.classList.contains('expanded')
+        card.classList.toggle('expanded', nowExpanded)
+        btn.setAttribute('aria-expanded', String(nowExpanded))
+        const label = btn.querySelector('span')
+        if (label) label.textContent = nowExpanded ? 'Hide Details' : 'Details'
+      })
+    })
+
+    // 3c. One-tap Acknowledge — a lightweight "seen" marker that doesn't require
+    // writing a full clinical note. Optimistic UI: the badge swaps immediately,
+    // telemetry is fire-and-forget per this app's analytics rules.
+    document.querySelectorAll<HTMLButtonElement>('.action-btn-ack').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const patientId = btn.getAttribute('data-ack-patient-id')
+        if (!patientId) return
+        trackEvent('web.triage.patient_acknowledged', { patient_id: patientId })
+        const badge = document.createElement('span')
+        badge.className = 'ack-badge'
+        badge.innerHTML = '✓ <span>Seen just now</span>'
+        btn.replaceWith(badge)
+      })
+    })
+
+    // 3d. Wire the existing (previously unused) view/call telemetry so the
+    // "Median Resolution Time" KPI card reflects real activity.
+    document.querySelectorAll<HTMLElement>('.triage-card').forEach((card) => {
+      const patientId = card.getAttribute('data-patient-id')
+      const severity = card.getAttribute('data-priority')
+      if (patientId && (severity === 'red' || severity === 'amber')) {
+        trackEvent('web.triage.exception_viewed', { patient_id: patientId, severity })
+      }
+    })
+
+    document.querySelectorAll<HTMLAnchorElement>('.action-btn-call').forEach((link) => {
+      link.addEventListener('click', () => {
+        const patientId = link.closest('.triage-card')?.getAttribute('data-patient-id')
+        if (patientId) trackEvent('web.triage.patient_called', { patient_id: patientId })
+      })
+    })
 
     // 4. Clinical Cohort Synthesis (AI Briefing)
     const aiBtn = document.getElementById('ai-summary-btn')
@@ -2350,11 +2761,12 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
                 </div>
               </div>
               <div class="roster-footer">
-                <span class="dob-text">DOB: ${dob}</span>
+                <span class="dob-text" title="DOB: ${dob}">Age: ${calcAgeClient(dob)}</span>
                 <a href="${caseHref}" class="view-case-link">View Case &rarr;</a>
               </div>
             `
             stableGrid.prepend(newRosterCard)
+            setStableExpanded(true)
           }
 
           // Update median resolution time dynamically
@@ -2389,7 +2801,18 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
       })
     }
 
-    // 6. Toast helper
+    // 6. Age helper for the roster card built client-side after a Resolve action
+    function calcAgeClient(dob: string): string {
+      const birth = new Date(dob)
+      if (isNaN(birth.getTime())) return '—'
+      const now = new Date()
+      let age = now.getFullYear() - birth.getFullYear()
+      const monthDiff = now.getMonth() - birth.getMonth()
+      if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) age--
+      return String(age)
+    }
+
+    // 7. Toast helper
     function showToast(msg: string) {
       const toast = document.getElementById('toast-msg')
       if (toast) {

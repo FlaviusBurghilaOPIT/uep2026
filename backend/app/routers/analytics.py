@@ -23,6 +23,7 @@ ALLOWED_EVENTS = {
     "web.recommendation.saved",
     "web.triage.exception_viewed",
     "web.triage.patient_called",
+    "web.triage.patient_acknowledged",
 }
 
 # Properties may carry IDs, enums, and timestamps only — never free text.
@@ -97,4 +98,38 @@ def triage_response_stats(
         median_seconds=median(deltas) if deltas else None,
         samples=len(deltas),
         resolutions_total=len(resolutions),
+    )
+
+
+@router.get("/triage-acknowledgements", response_model=schemas.TriageAcknowledgementsOut)
+def triage_acknowledgements(
+    db: Session = Depends(get_db_for_user),
+    current_user: models.User = Depends(require_clinician),
+):
+    """Latest 'seen' timestamp per patient, so the dashboard can mark an
+    exception as looked-at without requiring a full resolution note."""
+
+    events = (
+        db.query(models.AnalyticsEvent)
+        .filter(models.AnalyticsEvent.event_name == "web.triage.patient_acknowledged")
+        .order_by(models.AnalyticsEvent.created_at.asc())
+        .all()
+    )
+
+    latest: dict[str, object] = {}
+    for e in events:
+        if not e.properties:
+            continue
+        try:
+            patient_id = json.loads(e.properties).get("patient_id")
+        except (json.JSONDecodeError, AttributeError):
+            continue
+        if patient_id:
+            latest[patient_id] = e.created_at
+
+    return schemas.TriageAcknowledgementsOut(
+        acknowledgements=[
+            schemas.TriageAcknowledgement(patient_id=pid, acknowledged_at=ts)
+            for pid, ts in latest.items()
+        ]
     )

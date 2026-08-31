@@ -337,6 +337,15 @@ class TriageResponseStats(BaseModel):
     resolutions_total: int
 
 
+class TriageAcknowledgement(BaseModel):
+    patient_id: str
+    acknowledged_at: datetime
+
+
+class TriageAcknowledgementsOut(BaseModel):
+    acknowledgements: list[TriageAcknowledgement]
+
+
 # --- Adherence pipeline (spec: ai_specs/2026-07-26-adherence-pipeline-backend-spec.md §6) ---
 
 

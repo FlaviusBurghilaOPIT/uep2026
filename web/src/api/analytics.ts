@@ -24,6 +24,7 @@ export type AnalyticsEventName =
   | 'web.recommendation.saved'
   | 'web.triage.exception_viewed'
   | 'web.triage.patient_called'
+  | 'web.triage.patient_acknowledged'
 
 export type AnalyticsProperties = {
   patient_id?: string
@@ -52,4 +53,13 @@ export type TriageResponseStats = {
 
 export function fetchTriageResponseStats(): Promise<TriageResponseStats> {
   return apiFetch<TriageResponseStats>('/analytics/triage-response')
+}
+
+export type TriageAcknowledgement = {
+  patient_id: string
+  acknowledged_at: string
+}
+
+export function fetchTriageAcknowledgements(token?: string): Promise<{ acknowledgements: TriageAcknowledgement[] }> {
+  return apiFetch<{ acknowledgements: TriageAcknowledgement[] }>('/analytics/triage-acknowledgements', token ? { token } : undefined)
 }

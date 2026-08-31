@@ -97,6 +97,16 @@ export interface TriageTranslations {
   moderateAttention?: string
   escalationTriggers?: string
   stableSubtitle?: string
+  noResults?: string
+  trendWorse?: string
+  trendWorseTitle?: string
+  trendBetter?: string
+  trendBetterTitle?: string
+  moreReasons?: string
+  acknowledge?: string
+  acknowledgedLabel?: string
+  viewDetails?: string
+  toggleStableRoster?: string
 }
 
 export interface PatientCardTranslations {
