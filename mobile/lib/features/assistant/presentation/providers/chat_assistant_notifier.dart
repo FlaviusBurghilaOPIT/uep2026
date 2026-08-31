@@ -1,7 +1,9 @@
 import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 import '../../../../core/network/api_service.dart';
 import '../../../../core/telemetry/telemetry_service.dart';
 import '../../data/assistant_stream_client.dart';
@@ -103,9 +105,42 @@ class ChatAssistantNotifier extends Notifier<ChatState> {
   static const String _errorMessage =
       'Could not reach assistant. Please try again.';
 
+  /// Hydrates the screen with server-truth history (soft-hidden by age on
+  /// the backend, so this naturally comes back empty once the conversation
+  /// has aged out — see `CHAT_HISTORY_MAX_AGE` in `app/routers/ai.py`).
+  /// No-ops if the screen already has messages (e.g. mid-session revisit).
+  Future<void> loadHistory({required String caseId}) async {
+    if (state.messages.isNotEmpty) return;
+    try {
+      final res = await _api.get(
+        '/ai/chat/history?case_id=${Uri.encodeComponent(caseId)}',
+      );
+      if (res.statusCode != 200 || !ref.mounted) return;
+      final rows = jsonDecode(res.body) as List<dynamic>;
+      final messages = rows.map((raw) {
+        final row = raw as Map<String, dynamic>;
+        return ChatMessage(
+          id: row['id'] as String? ?? DateTime.now().toIso8601String(),
+          text: row['content'] as String? ?? '',
+          isFromUser: row['role'] == 'user',
+          timestamp:
+              DateTime.tryParse(row['created_at'] as String? ?? '') ??
+              DateTime.now(),
+          inScope: row['in_scope'] as bool? ?? true,
+          escalate: row['escalate'] as bool? ?? false,
+        );
+      }).toList();
+      if (messages.isEmpty || !ref.mounted) return;
+      state = state.copyWith(messages: messages);
+    } catch (_) {
+      // History hydration is best-effort — never blocks a fresh chat.
+    }
+  }
+
   Future<void> sendMessage({
     required String caseId,
     required String message,
+    String? locale,
   }) async {
     final trimmed = message.trim();
     if (trimmed.isEmpty) return;
@@ -132,6 +167,7 @@ class ChatAssistantNotifier extends Notifier<ChatState> {
         caseId: caseId,
         message: trimmed,
         intentCategory: intentCategory,
+        locale: locale,
       );
     } else {
       // In-scope: render the reply progressively via the streaming endpoint.
@@ -139,6 +175,7 @@ class ChatAssistantNotifier extends Notifier<ChatState> {
         caseId: caseId,
         message: trimmed,
         intentCategory: intentCategory,
+        locale: locale,
       );
     }
   }
@@ -150,12 +187,14 @@ class ChatAssistantNotifier extends Notifier<ChatState> {
     required String caseId,
     required String message,
     required String intentCategory,
+    String? locale,
   }) async {
     try {
       final res = await _api.post('/ai/chat', {
         'case_id': caseId,
         'message': message,
         'intent_category': intentCategory,
+        'locale': ?locale,
       });
 
       if (res.statusCode == 200) {
@@ -217,6 +256,7 @@ class ChatAssistantNotifier extends Notifier<ChatState> {
     required String caseId,
     required String message,
     required String intentCategory,
+    String? locale,
   }) async {
     final aiMsgId = (DateTime.now().microsecondsSinceEpoch + 1).toString();
     final buffer = StringBuffer();
@@ -227,6 +267,7 @@ class ChatAssistantNotifier extends Notifier<ChatState> {
         caseId: caseId,
         message: message,
         intentCategory: intentCategory,
+        locale: locale,
       );
 
       await for (final chunk in stream) {
@@ -289,8 +330,9 @@ class ChatAssistantNotifier extends Notifier<ChatState> {
   Future<void> sendSuggestion({
     required String caseId,
     required String chipText,
+    String? locale,
   }) async {
-    await sendMessage(caseId: caseId, message: chipText);
+    await sendMessage(caseId: caseId, message: chipText, locale: locale);
   }
 
   void clearError() {

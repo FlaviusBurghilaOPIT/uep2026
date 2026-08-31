@@ -9,11 +9,8 @@ import 'package:remotecare/features/assistant/data/assistant_stream_client.dart'
 /// a [StreamController]'s stream to control emission timing manually. Records
 /// every call in [requests] for assertions.
 class FakeAssistantStreamClient implements AssistantStreamClient {
-  Stream<String> Function(
-    String caseId,
-    String message,
-    String intentCategory,
-  )? handler;
+  Stream<String> Function(String caseId, String message, String intentCategory)?
+  handler;
 
   final List<Map<String, String>> requests = [];
 
@@ -22,11 +19,13 @@ class FakeAssistantStreamClient implements AssistantStreamClient {
     required String caseId,
     required String message,
     required String intentCategory,
+    String? locale,
   }) {
     requests.add({
       'caseId': caseId,
       'message': message,
       'intentCategory': intentCategory,
+      'locale': ?locale,
     });
     final h = handler;
     if (h != null) return h(caseId, message, intentCategory);

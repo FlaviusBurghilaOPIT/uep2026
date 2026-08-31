@@ -22,11 +22,25 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
   final ScrollController _scrollController = ScrollController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref
+          .read(chatAssistantNotifierProvider.notifier)
+          .loadHistory(caseId: _getCaseId());
+    });
+  }
+
+  @override
   void dispose() {
     _inputController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
+
+  /// Device OS locale (e.g. "en", "es") — sent as a fallback hint only; the
+  /// assistant primarily mirrors the language of the message itself.
+  String _getLocale() => Localizations.localeOf(context).languageCode;
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -53,7 +67,7 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
     _inputController.clear();
     ref
         .read(chatAssistantNotifierProvider.notifier)
-        .sendMessage(caseId: caseId, message: text);
+        .sendMessage(caseId: caseId, message: text, locale: _getLocale());
     _scrollToBottom();
   }
 
@@ -289,7 +303,11 @@ class SuggestionChips extends ConsumerWidget {
               } else {
                 ref
                     .read(chatAssistantNotifierProvider.notifier)
-                    .sendSuggestion(caseId: caseId, chipText: chipText);
+                    .sendSuggestion(
+                      caseId: caseId,
+                      chipText: chipText,
+                      locale: Localizations.localeOf(context).languageCode,
+                    );
               }
             },
           );

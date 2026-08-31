@@ -37,6 +37,7 @@ abstract class AssistantStreamClient {
     required String caseId,
     required String message,
     required String intentCategory,
+    String? locale,
   });
 }
 
@@ -54,18 +55,18 @@ class HttpAssistantStreamClient implements AssistantStreamClient {
     required String caseId,
     required String message,
     required String intentCategory,
+    String? locale,
   }) async* {
     final token = await _api.getToken();
-    final request = http.Request(
-      'POST',
-      Uri.parse('${AppConfig.baseUrl}/ai/chat/stream'),
-    )
-      ..headers['Content-Type'] = 'application/json'
-      ..body = jsonEncode({
-        'case_id': caseId,
-        'message': message,
-        'intent_category': intentCategory,
-      });
+    final request =
+        http.Request('POST', Uri.parse('${AppConfig.baseUrl}/ai/chat/stream'))
+          ..headers['Content-Type'] = 'application/json'
+          ..body = jsonEncode({
+            'case_id': caseId,
+            'message': message,
+            'intent_category': intentCategory,
+            'locale': ?locale,
+          });
     if (token != null) {
       request.headers['Authorization'] = 'Bearer $token';
     }

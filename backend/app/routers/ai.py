@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 import anyio
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
@@ -9,6 +11,12 @@ from app.dependencies import get_current_user, get_db_for_user, require_clinicia
 from app.services.rag import generate_recommendation_stream, generate_patients_summary
 
 router = APIRouter(prefix="/ai", tags=["ai"])
+
+# Chat is never deleted from Postgres (audit trail). It's soft-hidden by age
+# instead: once a message passes this window it drops out of both the
+# mobile/web history view and the LLM's conversation memory, so the patient
+# sees a fresh conversation start without any row ever being removed.
+CHAT_HISTORY_MAX_AGE = timedelta(days=4)
 
 GUARDRAIL_PREAMBLE = (
     "You are a post-surgery recovery assistant. Answer only using the patient's "
@@ -56,7 +64,29 @@ def _build_patient_context(case: models.Case) -> dict:
     }
 
 
-def _get_case_and_context_sync(case_id: str, user_id: str, user_role: models.UserRole) -> tuple[models.Case, dict] | None:
+def _visible_messages_query(db, case_id: str, limit: int):
+    cutoff = datetime.utcnow() - CHAT_HISTORY_MAX_AGE
+    rows = (
+        db.query(models.ChatMessage)
+        .filter(
+            models.ChatMessage.case_id == case_id,
+            models.ChatMessage.created_at >= cutoff,
+        )
+        .order_by(models.ChatMessage.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+    rows.reverse()
+    return rows
+
+
+def _get_case_context_and_history_sync(
+    case_id: str, user_id: str, user_role: models.UserRole, limit: int = 20
+) -> tuple[models.Case, dict, list[dict]] | None:
+    """Case lookup + recent-history fetch in one `SessionLocal()`/one thread
+    hop (not two) — two sequential `anyio.to_thread.run_sync` DB calls per
+    request raced with the SQLite test fixture's session and detached its
+    objects; one combined call doesn't."""
     with SessionLocal() as db:
         query = (
             db.query(models.Case)
@@ -76,17 +106,32 @@ def _get_case_and_context_sync(case_id: str, user_id: str, user_role: models.Use
         if not case:
             return None
         ctx = _build_patient_context(case)
+        history_rows = _visible_messages_query(db, case_id, limit)
+        history = [
+            {
+                "role": "user" if row.role == models.ChatRole.user else "assistant",
+                "content": row.content,
+            }
+            for row in history_rows
+        ]
         db.expunge(case)
-        return case, ctx
+        return case, ctx, history
 
 
-async def _process_chat_request(request: schemas.ChatRequest, current_user: models.User) -> tuple[models.Case, dict, bool, bool]:
-    res = await anyio.to_thread.run_sync(_get_case_and_context_sync, request.case_id, current_user.id, current_user.role)
+async def _process_chat_request(
+    request: schemas.ChatRequest, current_user: models.User
+) -> tuple[models.Case, dict, list[dict], bool, bool]:
+    res = await anyio.to_thread.run_sync(
+        _get_case_context_and_history_sync,
+        request.case_id,
+        current_user.id,
+        current_user.role,
+    )
     if not res:
         raise HTTPException(status_code=404, detail="Case not found")
-    case, patient_ctx = res
+    case, patient_ctx, history = res
     in_scope, escalate = _check_guardrail(request)
-    return case, patient_ctx, in_scope, escalate
+    return case, patient_ctx, history, in_scope, escalate
 
 
 def _save_message_sync(message: models.ChatMessage):
@@ -109,29 +154,25 @@ async def _save_user_message(case_id: str, content: str, in_scope: bool, escalat
     )
 
 
-def _fetch_recent_messages_sync(case_id: str, limit: int = 20) -> list[dict]:
+def _get_case_and_history_sync(
+    case_id: str, user_id: str, user_role: models.UserRole, limit: int = 20
+) -> tuple[models.Case, list[models.ChatMessage]] | None:
+    """Case-ownership check + recent-history rows in one `SessionLocal()`/one
+    thread hop, for the read-only history endpoint (see
+    `_get_case_context_and_history_sync` for the chat-turn variant)."""
     with SessionLocal() as db:
-        rows = (
-            db.query(models.ChatMessage)
-            .filter(models.ChatMessage.case_id == case_id)
-            .order_by(models.ChatMessage.created_at.desc())
-            .limit(limit)
-            .all()
-        )
-    rows.reverse()
-    return [
-        {
-            "role": "user" if row.role == models.ChatRole.user else "assistant",
-            "content": row.content,
-        }
-        for row in rows
-    ]
+        query = db.query(models.Case).filter(models.Case.id == case_id)
+        if user_role == models.UserRole.patient:
+            query = query.filter(models.Case.patient_id == user_id)
+        elif user_role == models.UserRole.clinician:
+            query = query.filter(models.Case.clinician_id == user_id)
 
-
-async def _fetch_recent_messages(case_id: str, limit: int = 20) -> list[dict]:
-    """Last `limit` turns for this case, oldest first — called before the
-    current turn is saved so it never includes the in-flight message."""
-    return await anyio.to_thread.run_sync(_fetch_recent_messages_sync, case_id, limit)
+        case = query.first()
+        if not case:
+            return None
+        rows = _visible_messages_query(db, case.id, limit)
+        db.expunge_all()
+        return case, rows
 
 
 async def _save_assistant_message_shielded(case_id: str, content: str):
@@ -146,13 +187,40 @@ async def _save_assistant_message_shielded(case_id: str, content: str):
         )
 
 
+@router.get("/chat/history")
+async def chat_history(
+    case_id: str,
+    current_user: models.User = Depends(get_current_user),
+):
+    """Chat as the client should currently see it — messages older than
+    `CHAT_HISTORY_MAX_AGE` are soft-hidden (filtered out here) but remain in
+    Postgres untouched, so the app just looks like a fresh conversation."""
+    res = await anyio.to_thread.run_sync(
+        _get_case_and_history_sync, case_id, current_user.id, current_user.role
+    )
+    if not res:
+        raise HTTPException(status_code=404, detail="Case not found")
+    _, rows = res
+
+    return [
+        {
+            "id": row.id,
+            "role": row.role.value,
+            "content": row.content,
+            "in_scope": row.in_scope,
+            "escalate": row.escalate,
+            "created_at": row.created_at.isoformat(),
+        }
+        for row in rows
+    ]
+
+
 @router.post("/chat", response_model=schemas.ChatResponse)
 async def chat(
     request: schemas.ChatRequest,
     current_user: models.User = Depends(get_current_user),
 ):
-    case, patient_ctx, in_scope, escalate = await _process_chat_request(request, current_user)
-    history = await _fetch_recent_messages(case.id)
+    case, patient_ctx, history, in_scope, escalate = await _process_chat_request(request, current_user)
 
     await _save_user_message(case.id, request.message, in_scope, escalate)
 
@@ -190,8 +258,7 @@ async def chat_stream(
     request: schemas.ChatRequest,
     current_user: models.User = Depends(get_current_user),
 ):
-    case, patient_ctx, in_scope, escalate = await _process_chat_request(request, current_user)
-    history = await _fetch_recent_messages(case.id)
+    case, patient_ctx, history, in_scope, escalate = await _process_chat_request(request, current_user)
 
     await _save_user_message(case.id, request.message, in_scope, escalate)
 
