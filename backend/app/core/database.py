@@ -1,28 +1,5 @@
-import os
-from dotenv import load_dotenv
+"""Core database module - re-exports unified engine and SessionLocal from app.database."""
+from app.database import DATABASE_URL, SessionLocal, engine, get_db, init_db
 
-load_dotenv()
+__all__ = ["DATABASE_URL", "SessionLocal", "engine", "get_db", "init_db"]
 
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
-
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://caredev:caredev@localhost:5432/remotecare")
-
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-def init_db():
-    """Enable pgvector extension on startup if available"""
-    try:
-        with engine.connect() as conn:
-            conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
-            conn.commit()
-    except Exception:
-        pass

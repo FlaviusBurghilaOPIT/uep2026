@@ -124,7 +124,6 @@ async def _save_assistant_message_shielded(case_id: str, content: str):
 @router.post("/chat", response_model=schemas.ChatResponse)
 async def chat(
     request: schemas.ChatRequest,
-    db: Session = Depends(get_db_for_user),
     current_user: models.User = Depends(get_current_user),
 ):
     case, patient_ctx, in_scope, escalate = await _process_chat_request(request, current_user)
@@ -157,7 +156,6 @@ async def chat(
 @router.post("/chat/stream")
 async def chat_stream(
     request: schemas.ChatRequest,
-    db: Session = Depends(get_db_for_user),
     current_user: models.User = Depends(get_current_user),
 ):
     case, patient_ctx, in_scope, escalate = await _process_chat_request(request, current_user)
