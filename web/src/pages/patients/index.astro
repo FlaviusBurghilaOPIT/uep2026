@@ -22,7 +22,9 @@ const successText =
       ? t('patients.deactivatedBanner', 'Patient deactivated. They no longer appear in the triage queue.')
       : successMsg === 'reactivated'
         ? t('patients.reactivatedBanner', 'Patient reactivated.')
-        : null
+        : successMsg === 'case_deleted'
+          ? t('patients.caseDeletedBanner', 'Case deleted.')
+          : null
 
 let patients: any[] = []
 let cases: any[] = []

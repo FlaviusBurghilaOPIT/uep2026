@@ -244,6 +244,7 @@ export const es: Translations = {
     savedBanner: 'Datos del paciente guardados.',
     deactivatedBanner: 'Paciente desactivado. Ya no aparece en la cola de triaje.',
     reactivatedBanner: 'Paciente reactivado.',
+    caseDeletedBanner: 'Caso eliminado.',
   },
   medicationsList: {
     title: 'Medicamentos',
@@ -322,6 +323,10 @@ export const es: Translations = {
     adherenceRate: 'Tasa de Adherencia',
     latestFeeling: 'Estado del Último Registro',
     totalCheckins: 'Registros Totales',
+    editCase: 'Editar Caso',
+    deleteCase: 'Eliminar Caso',
+    confirmDeleteTitle: '¿Eliminar este caso permanentemente?',
+    confirmDeleteText: 'Esto borra todos los medicamentos, recomendaciones y controles vinculados a este caso. El registro del paciente no se ve afectado. Esto no se puede deshacer.',
   },
   nav: {
     triageDashboard: 'Panel de Triaje',

@@ -14,7 +14,9 @@ import {
   FileText,
   ShieldCheck,
   Plus,
-  ArrowRight
+  ArrowRight,
+  Pencil,
+  Trash2
 } from '@lucide/astro'
 import { apiFetch } from '../../../api/client'
 import { createTranslator, isLanguage } from '../../../i18n'
@@ -126,11 +128,25 @@ const postOpDay = calculatePostOpDay(caseData?.surgery_date)
         <ArrowLeft size={16} aria-hidden="true" />
         <span>{t('caseDetail.backToPatients', 'Back to Patients Roster')}</span>
       </a>
-      <div class="triage-status-pill" data-priority={triagePriority}>
-        <span class="pulse-dot"></span>
-        <span>
-          {triagePriority === 'red' ? t('triage.criticalException', 'CRITICAL ATTENTION REQUIRED') : triagePriority === 'amber' ? t('triage.moderateAttention', 'CLINICAL REVIEW RECOMMENDED') : t('triage.statusStable', 'RECOVERY ON TRACK (STABLE)')}
-        </span>
+      <div class="top-nav-actions">
+        {caseData && (
+          <>
+            <a href={`/patients/${caseData.patient_id}/edit`} class="case-action-btn edit-case-btn">
+              <Pencil size={14} aria-hidden="true" />
+              <span>{t('caseDetail.editCase', 'Edit Case')}</span>
+            </a>
+            <button type="button" class="case-action-btn delete-case-btn" id="delete-case-btn">
+              <Trash2 size={14} aria-hidden="true" />
+              <span>{t('caseDetail.deleteCase', 'Delete Case')}</span>
+            </button>
+          </>
+        )}
+        <div class="triage-status-pill" data-priority={triagePriority}>
+          <span class="pulse-dot"></span>
+          <span>
+            {triagePriority === 'red' ? t('triage.criticalException', 'CRITICAL ATTENTION REQUIRED') : triagePriority === 'amber' ? t('triage.moderateAttention', 'CLINICAL REVIEW RECOMMENDED') : t('triage.statusStable', 'RECOVERY ON TRACK (STABLE)')}
+          </span>
+        </div>
       </div>
     </div>
 
@@ -418,6 +434,18 @@ const postOpDay = calculatePostOpDay(caseData?.surgery_date)
       </div>
     </section>
   </div>
+
+  <!-- Confirm Delete Case Modal -->
+  <div id="delete-case-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="delete-case-modal-title">
+    <div class="modal-card">
+      <h3 id="delete-case-modal-title" class="modal-title">{t('caseDetail.confirmDeleteTitle', 'Permanently delete this case?')}</h3>
+      <p class="modal-text">{t('caseDetail.confirmDeleteText', 'This erases every medication, recommendation, and check-in tied to this case. The patient record itself is not affected. This cannot be undone.')}</p>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="delete-case-cancel-btn">{t('cta.cancel', 'Cancel')}</button>
+        <button type="button" class="btn-confirm-delete" id="delete-case-confirm-btn">{t('caseDetail.deleteCase', 'Delete Case')}</button>
+      </div>
+    </div>
+  </div>
 </AppLayout>
 
 <style>
@@ -430,8 +458,40 @@ const postOpDay = calculatePostOpDay(caseData?.surgery_date)
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
     margin-bottom: 20px;
   }
+  .top-nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .case-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--duration-press) var(--ease-out);
+  }
+  .edit-case-btn {
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+  }
+  .edit-case-btn:hover { background-color: #e2e8f0; }
+  .delete-case-btn {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+  .delete-case-btn:hover { background-color: #fee2e2; }
   .back-link {
     display: inline-flex;
     align-items: center;
@@ -888,4 +948,90 @@ const postOpDay = calculatePostOpDay(caseData?.surgery_date)
     color: #0f172a;
     font-size: 15px;
   }
+
+  .hidden {
+    display: none !important;
+  }
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(15,23,42,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  .modal-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 25px -5px rgba(15,23,42,0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .modal-title { font-size: 17px; font-weight: 700; color: #0f172a; margin: 0; }
+  .modal-text { font-size: 13.5px; color: #64748b; margin: 0; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+  .btn-cancel {
+    padding: 9px 16px;
+    background-color: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-confirm-delete {
+    padding: 9px 16px;
+    background-color: #dc2626;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-confirm-delete:hover { background-color: #b91c1c; }
 </style>
+
+<script define:vars={{ caseId }}>
+  function initCaseDelete() {
+    function getToken() {
+      const cookieToken = document.cookie.split('; ').find((row) => row.startsWith('carepro_token='))?.split('=')[1]
+      return localStorage.getItem('token') || cookieToken || ''
+    }
+
+    const deleteBtn = document.getElementById('delete-case-btn')
+    const modal = document.getElementById('delete-case-modal')
+    const cancelBtn = document.getElementById('delete-case-cancel-btn')
+    const confirmBtn = document.getElementById('delete-case-confirm-btn')
+
+    deleteBtn?.addEventListener('click', () => modal?.classList.remove('hidden'))
+    cancelBtn?.addEventListener('click', () => modal?.classList.add('hidden'))
+    modal?.addEventListener('click', (e) => {
+      if (e.target === modal) modal.classList.add('hidden')
+    })
+
+    confirmBtn?.addEventListener('click', async () => {
+      confirmBtn.setAttribute('disabled', 'true')
+      try {
+        const res = await fetch(`/api/cases/${caseId}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${getToken()}` },
+        })
+        if (!res.ok) throw new Error('Failed to delete case.')
+        window.location.href = '/patients?msg=case_deleted'
+      } catch {
+        confirmBtn.removeAttribute('disabled')
+        modal?.classList.add('hidden')
+      }
+    })
+  }
+
+  initCaseDelete()
+  document.addEventListener('astro:page-load', initCaseDelete)
+</script>

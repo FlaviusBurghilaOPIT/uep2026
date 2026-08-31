@@ -244,6 +244,7 @@ export const en: Translations = {
     savedBanner: 'Patient details saved.',
     deactivatedBanner: 'Patient deactivated. They no longer appear in the triage queue.',
     reactivatedBanner: 'Patient reactivated.',
+    caseDeletedBanner: 'Case deleted.',
   },
   medicationsList: {
     title: 'Medications',
@@ -322,6 +323,10 @@ export const en: Translations = {
     adherenceRate: 'Adherence Rate',
     latestFeeling: 'Latest Check-In Feeling',
     totalCheckins: 'Total Check-Ins',
+    editCase: 'Edit Case',
+    deleteCase: 'Delete Case',
+    confirmDeleteTitle: 'Permanently delete this case?',
+    confirmDeleteText: 'This erases every medication, recommendation, and check-in tied to this case. The patient record itself is not affected. This cannot be undone.',
   },
   nav: {
     triageDashboard: 'Triage Dashboard',

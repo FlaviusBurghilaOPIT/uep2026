@@ -436,6 +436,7 @@ export interface PatientsTranslations {
   savedBanner?: string
   deactivatedBanner?: string
   reactivatedBanner?: string
+  caseDeletedBanner?: string
 }
 
 export interface EditPatientTranslations {
@@ -539,6 +540,10 @@ export interface CaseDetailTranslations {
   adherenceRate?: string
   latestFeeling?: string
   totalCheckins?: string
+  editCase?: string
+  deleteCase?: string
+  confirmDeleteTitle?: string
+  confirmDeleteText?: string
 }
 
 export interface Translations {

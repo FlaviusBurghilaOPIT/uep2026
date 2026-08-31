@@ -244,6 +244,7 @@ export const it: Translations = {
     savedBanner: 'Dati del paziente salvati.',
     deactivatedBanner: 'Paziente disattivato. Non compare più nella coda di triage.',
     reactivatedBanner: 'Paziente riattivato.',
+    caseDeletedBanner: 'Caso eliminato.',
   },
   medicationsList: {
     title: 'Farmaci',
@@ -322,6 +323,10 @@ export const it: Translations = {
     adherenceRate: 'Tasso di Aderenza',
     latestFeeling: 'Sensazione Ultimo Check-In',
     totalCheckins: 'Check-In Totali',
+    editCase: 'Modifica Caso',
+    deleteCase: 'Elimina Caso',
+    confirmDeleteTitle: 'Eliminare definitivamente questo caso?',
+    confirmDeleteText: 'Questo cancella tutti i farmaci, le raccomandazioni e i check-in legati a questo caso. Il record del paziente non viene modificato. Questa azione non può essere annullata.',
   },
   nav: {
     triageDashboard: 'Dashboard Triage',
