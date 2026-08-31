@@ -54,6 +54,12 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
   final Set<DoseGroup> _expandedGroups = {};
   final Map<String, GlobalKey> _cardKeys = {};
   StreamSubscription<NotificationResponse>? _notificationSubscription;
+  // Scopes this screen's own SnackBars (dose-log confirmation, rollback
+  // error) to its local ScaffoldMessenger below — `ScaffoldMessenger.of` on
+  // this State's own context would resolve to the ancestor (app-root)
+  // messenger instead, since that context sits above the subtree build()
+  // returns.
+  final _messengerKey = GlobalKey<ScaffoldMessengerState>();
 
   static const _terminal = {
     SlotState.taken,
@@ -145,7 +151,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
       Directionality.of(context),
     );
     if (!mounted) return;
-    final messenger = ScaffoldMessenger.of(context);
+    final messenger = _messengerKey.currentState;
+    if (messenger == null) return;
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
       SnackBar(
@@ -154,6 +161,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
         content: Text(
           l10n.todayLoggedAs(localizedDoseStatus(l10n, status.name)),
           style: const TextStyle(color: Colors.white),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         action: SnackBarAction(
           label: l10n.todayLogUndo,
@@ -257,9 +266,9 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
       final nextRollback = nextState.rollbackErrorSlotId;
       if (nextRollback != null &&
           nextRollback != prevState?.rollbackErrorSlotId) {
-        final messenger = ScaffoldMessenger.of(context);
-        messenger.hideCurrentSnackBar();
-        messenger.showSnackBar(
+        final messenger = _messengerKey.currentState;
+        messenger?.hideCurrentSnackBar();
+        messenger?.showSnackBar(
           SnackBar(content: Text(l10n.todayLogRollbackError)),
         );
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -273,15 +282,22 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
         agenda.slots.isEmpty &&
         agenda.prn.isEmpty;
 
-    return Scaffold(
-      backgroundColor: AppColors.scaffoldBg,
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () =>
-              ref.read(todayAgendaNotifierProvider.notifier).loadAgenda(),
-          child: isInitialLoading
-              ? _buildSkeleton(auth, l10n)
-              : _buildBody(auth, agenda, l10n),
+    // Scoped to this screen so the dose-log confirmation SnackBar lives and
+    // dies with the Today tab instead of floating over whichever tab the
+    // shell's IndexedStack shows next (it would otherwise attach to the
+    // app-root ScaffoldMessenger and outlast a tab switch).
+    return ScaffoldMessenger(
+      key: _messengerKey,
+      child: Scaffold(
+        backgroundColor: AppColors.scaffoldBg,
+        body: SafeArea(
+          child: RefreshIndicator(
+            onRefresh: () =>
+                ref.read(todayAgendaNotifierProvider.notifier).loadAgenda(),
+            child: isInitialLoading
+                ? _buildSkeleton(auth, l10n)
+                : _buildBody(auth, agenda, l10n),
+          ),
         ),
       ),
     );

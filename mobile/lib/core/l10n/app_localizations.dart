@@ -554,11 +554,11 @@ abstract class AppLocalizations {
   /// **'Care Team Instructions:'**
   String get medCardNotesHeader;
 
-  /// No description provided for @medCardReadOnlyBadge.
+  /// No description provided for @medicationsCareTeamNote.
   ///
   /// In en, this message translates to:
-  /// **'🔒 Prescribed by Care Team — Read Only'**
-  String get medCardReadOnlyBadge;
+  /// **'Prescribed by your care team — read-only'**
+  String get medicationsCareTeamNote;
 
   /// No description provided for @medicationsEmptyState.
   ///

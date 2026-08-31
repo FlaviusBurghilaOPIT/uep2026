@@ -54,31 +54,27 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       // verify-code returns the onboarding result WITH the intake DOB (Gap 1).
-      fakeApi.postHandlers['/auth/patient/verify-code'] = (body) => http.Response(
-        jsonEncode({
-          'result': 'onboarding',
-          'email': 'jane@example.com',
-          'full_name': 'Jane Doe',
-          'date_of_birth': '1988-03-14',
-        }),
-        200,
-      );
+      fakeApi.postHandlers['/auth/patient/verify-code'] = (body) =>
+          http.Response(
+            jsonEncode({
+              'result': 'onboarding',
+              'email': 'jane@example.com',
+              'full_name': 'Jane Doe',
+              'date_of_birth': '1988-03-14',
+            }),
+            200,
+          );
 
       await tester.pumpWidget(buildTestApp(prefs, fakeApi));
       await tester.pumpAndSettle();
 
-      // Verify the code -> advances to the create-password step.
+      // Verify the code -> advances directly to the pre-filled profile step
+      // (patients are passwordless, so there's no password step in between).
       await tester.enterText(find.byType(TextFormField).first, '123456');
-      await tester.tap(find.text(AuthStrings.verifyAndContinueButton), warnIfMissed: false);
-      await tester.pumpAndSettle();
-      expect(find.text(AuthStrings.createPasswordTitle), findsOneWidget);
-
-      // Create password -> advances to the pre-filled profile step.
-      await tester.enterText(find.byType(TextFormField).at(0), 'Secret123!');
-      await tester.pump();
-      await tester.enterText(find.byType(TextFormField).at(1), 'Secret123!');
-      await tester.pump();
-      await tester.tap(find.text(AuthStrings.continueButton));
+      await tester.tap(
+        find.text(AuthStrings.verifyAndContinueButton),
+        warnIfMissed: false,
+      );
       await tester.pumpAndSettle();
 
       expect(find.text(AuthStrings.profileTitle), findsOneWidget);

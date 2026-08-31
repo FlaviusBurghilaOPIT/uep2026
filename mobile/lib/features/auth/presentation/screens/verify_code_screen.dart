@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -11,12 +12,11 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/segmented_otp_input.dart';
 import '../auth_strings.dart';
 import '../providers/auth_provider.dart';
-import 'create_password_screen.dart';
+import 'onboarding_profile_screen.dart';
 
 /// One-time code verification (WI 04). `POST /auth/patient/verify-code`:
 /// - `authenticated` (returning patient) -> straight to Today.
-/// - `onboarding` (invited, first run) -> create-password step (default
-///   placement: immediately after code verification, first-run only).
+/// - `onboarding` (invited, first run) -> profile setup step.
 class VerifyCodeScreen extends ConsumerStatefulWidget {
   final String email;
 
@@ -67,18 +67,17 @@ class _VerifyCodeScreenState extends ConsumerState<VerifyCodeScreen> {
     _startCountdown();
     await ref.read(authProvider.notifier).requestCode(email: widget.email);
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Code resent to ${widget.email}')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Code resent to ${widget.email}')));
   }
 
   Future<void> _verify() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    final result = await ref.read(authProvider.notifier).verifyCode(
-      email: widget.email,
-      code: _codeController.text.trim(),
-    );
+    final result = await ref
+        .read(authProvider.notifier)
+        .verifyCode(email: widget.email, code: _codeController.text.trim());
 
     if (!mounted) return;
     if (result == 'authenticated') {
@@ -88,7 +87,7 @@ class _VerifyCodeScreenState extends ConsumerState<VerifyCodeScreen> {
       final state = ref.read(authProvider);
       Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => CreatePasswordScreen(
+          builder: (_) => OnboardingProfileScreen(
             email: state.email ?? widget.email,
             inviteCode: state.inviteCode ?? '',
             fullName: state.fullName ?? '',
@@ -99,9 +98,8 @@ class _VerifyCodeScreenState extends ConsumerState<VerifyCodeScreen> {
     } else {
       final message = ref.read(authProvider).errorMessage;
       if (message != null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(message)));
       }
     }
   }
@@ -131,10 +129,7 @@ class _VerifyCodeScreenState extends ConsumerState<VerifyCodeScreen> {
                   style: AppTextStyles.subtitle,
                 ),
                 SizedBox(height: AppSpacing.xxl),
-                Text(
-                  AuthStrings.codeLabel,
-                  style: AppTextStyles.label,
-                ),
+                Text(AuthStrings.codeLabel, style: AppTextStyles.label),
                 SizedBox(height: AppSpacing.sm),
                 SegmentedOtpInput(
                   controller: _codeController,

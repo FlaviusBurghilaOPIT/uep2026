@@ -126,7 +126,7 @@ def seed_database(
     c_email = clinician_email or os.getenv("CLINICIAN_EMAIL", "clinician@example.com")
     c_password = clinician_password or os.getenv("CLINICIAN_PASSWORD", "CarePro#2026!Secure")
     p_email = patient_email or os.getenv("DEMO_PATIENT_EMAIL", "patient@example.com")
-    p_otp = patient_otp or os.getenv("DEMO_PATIENT_OTP") or f"{secrets.randbelow(900000) + 100000}"
+    p_otp = patient_otp or os.getenv("DEMO_PATIENT_OTP") or "424242"
 
     # Ensure pgvector extension exists before table creation
     try:

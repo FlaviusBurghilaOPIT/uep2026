@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
+
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
@@ -168,14 +169,6 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                     ]),
                     SizedBox(height: AppSpacing.xl),
-                    _buildSection('SECURITY', [
-                      _arrowRow(
-                        'Change password',
-                        Icons.lock_outline,
-                        onTap: () => _changePassword(context, ref),
-                      ),
-                    ]),
-                    SizedBox(height: AppSpacing.xl),
                     _buildSignOutButton(context, ref, l10n),
                     SizedBox(height: 100.h),
                   ],
@@ -234,9 +227,7 @@ class ProfileScreen extends ConsumerWidget {
           child: Text(
             'Your care team has not added treatment details yet.',
             key: const Key('profile_treatment_empty'),
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.greyText,
-            ),
+            style: AppTextStyles.bodySmall.copyWith(color: AppColors.greyText),
           ),
         ),
       ];
@@ -266,139 +257,8 @@ class ProfileScreen extends ConsumerWidget {
       ),
     );
     if (saved == true && context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('$label updated')));
-    }
-  }
-
-  Future<void> _changePassword(BuildContext context, WidgetRef ref) async {
-    final hasPassword = ref.read(authProvider).hasPassword;
-    final currentController = TextEditingController();
-    final newController = TextEditingController();
-    final confirmController = TextEditingController();
-    final changed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        var saving = false;
-        String? error;
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            Future<void> submit() async {
-              final current = currentController.text;
-              final next = newController.text;
-              final confirm = confirmController.text;
-              // The current password is required only when one already
-              // exists (code-only patients set their first password).
-              if (hasPassword && current.isEmpty) {
-                setDialogState(
-                  () => error = 'Enter your current password',
-                );
-                return;
-              }
-              if (next.length < 8) {
-                setDialogState(
-                  () => error = 'New password must be at least 8 characters',
-                );
-                return;
-              }
-              if (next != confirm) {
-                setDialogState(() => error = 'Passwords do not match');
-                return;
-              }
-              setDialogState(() {
-                saving = true;
-                error = null;
-              });
-              final failure = await ref
-                  .read(authProvider.notifier)
-                  .changePassword(
-                    newPassword: next,
-                    currentPassword: hasPassword ? current : null,
-                  );
-              if (!context.mounted) return;
-              if (failure == null) {
-                Navigator.of(dialogContext).pop(true);
-              } else {
-                setDialogState(() {
-                  saving = false;
-                  error = failure;
-                });
-              }
-            }
-
-            return AlertDialog(
-              title: const Text('Change password'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (hasPassword)
-                    TextField(
-                      key: const Key('current_password_field'),
-                      controller: currentController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Current password',
-                      ),
-                    ),
-                  TextField(
-                    key: const Key('new_password_field'),
-                    controller: newController,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'New password',
-                    ),
-                  ),
-                  TextField(
-                    key: const Key('confirm_password_field'),
-                    controller: confirmController,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Confirm new password',
-                    ),
-                    onSubmitted: (_) => submit(),
-                  ),
-                  if (error != null) ...[
-                    SizedBox(height: 8.h),
-                    Text(
-                      error!,
-                      key: const Key('change_password_error'),
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.errorRed,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: saving
-                      ? null
-                      : () => Navigator.of(dialogContext).pop(false),
-                  child: const Text('Cancel'),
-                ),
-                FilledButton(
-                  key: const Key('change_password_submit'),
-                  onPressed: saving ? null : submit,
-                  child: saving
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Save'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-    if (changed == true && context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Password updated')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$label updated')));
     }
   }
 
@@ -636,19 +496,19 @@ class ProfileScreen extends ConsumerWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            if (onEdit != null) ...[
-              SizedBox(width: AppSpacing.hSm),
-              Container(
-                width: 48,
-                height: 48,
-                alignment: Alignment.centerRight,
-                child: Icon(
-                  Icons.edit_outlined,
-                  color: AppColors.greyText,
-                  size: AppSpacing.iconMd,
-                ),
-              ),
-            ],
+            SizedBox(width: AppSpacing.hSm),
+            Container(
+              width: 48,
+              height: 48,
+              alignment: Alignment.centerRight,
+              child: onEdit != null
+                  ? Icon(
+                      Icons.edit_outlined,
+                      color: AppColors.greyText,
+                      size: AppSpacing.iconMd,
+                    )
+                  : null,
+            ),
           ],
         ),
       ),
@@ -683,36 +543,6 @@ class ProfileScreen extends ConsumerWidget {
                   value: value,
                   onChanged: onChanged,
                   activeTrackColor: AppColors.primaryGreen,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _arrowRow(String label, IconData icon, {required VoidCallback onTap}) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 48),
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
-          child: Row(
-            children: [
-              Icon(icon, color: AppColors.greyText, size: AppSpacing.iconLg),
-              SizedBox(width: AppSpacing.hMd),
-              Expanded(child: Text(label, style: AppTextStyles.bodyMedium)),
-              Container(
-                width: 48,
-                height: 48,
-                alignment: Alignment.centerRight,
-                child: Icon(
-                  Icons.chevron_right,
-                  color: AppColors.greyLight,
-                  size: AppSpacing.iconMd,
                 ),
               ),
             ],

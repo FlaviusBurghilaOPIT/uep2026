@@ -1,7 +1,9 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -94,6 +96,27 @@ class _MedicationsScreenState extends ConsumerState<MedicationsScreen> {
                       Text(
                         l10n.medicationsScreenTitle.toUpperCase(),
                         style: AppTextStyles.label,
+                      ),
+                      SizedBox(height: 4.h),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.lock_outline,
+                            size: 13.sp,
+                            color: AppColors.greyText,
+                          ),
+                          SizedBox(width: 4.w),
+                          Expanded(
+                            child: Text(
+                              l10n.medicationsCareTeamNote,
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.greyText,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                       SizedBox(height: AppSpacing.md),
                       _buildBody(l10n, medicationsState),
@@ -226,22 +249,6 @@ class _MedicationsScreenState extends ConsumerState<MedicationsScreen> {
             SizedBox(height: 2.h),
             Text(medication.notes!, style: AppTextStyles.bodySmall),
           ],
-          SizedBox(height: AppSpacing.md),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-            decoration: BoxDecoration(
-              color: AppColors.lightGreen,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusRound),
-            ),
-            child: Text(
-              l10n.medCardReadOnlyBadge,
-              style: TextStyle(
-                fontSize: 11.sp,
-                fontWeight: FontWeight.w600,
-                color: AppColors.primaryGreen,
-              ),
-            ),
-          ),
         ],
       ),
     );

@@ -148,7 +148,7 @@
     }
   },
   "medCardNotesHeader": "Instructions du médecin :",
-  "medCardReadOnlyBadge": "🔒 Prescrit par l'équipe soignante — Lecture seule",
+  "medicationsCareTeamNote": "Prescrit par votre équipe soignante — lecture seule",
   "medicationsEmptyState": "Aucun médicament actif dans votre plan de soins pour le moment.",
   "frequencyQD": "Une fois par jour",
   "frequencyBID": "Deux fois par jour",

@@ -32,7 +32,6 @@ Widget buildTestApp(SharedPreferences prefs, FakeApiService fakeApi) {
         home: OnboardingProfileScreen(
           email: 'jane@example.com',
           inviteCode: '123456',
-          password: 'secret123',
           fullName: 'Jane Doe',
           dateOfBirth: '1988-03-14',
         ),
@@ -86,7 +85,7 @@ void main() {
   });
 
   testWidgets(
-    'persists the name edit, DOB edit, phone, and password via complete-onboarding',
+    'persists the name edit, DOB edit, and phone via complete-onboarding',
     (tester) async {
       Map<String, dynamic>? captured;
       fakeApi.postHandlers['/auth/complete-onboarding'] = (body) {
@@ -116,7 +115,7 @@ void main() {
       expect(captured?['full_name'], 'Jane Smith');
       expect(captured?['date_of_birth'], '1990-05-20');
       expect(captured?['phone'], '+15550000000');
-      expect(captured?['password'], 'secret123');
+      expect(captured?.containsKey('password'), false);
       expect(fakeApi.savedToken, 'jwt_onb');
       // Reached the main app.
       expect(find.byKey(const Key('navTab_today')), findsOneWidget);

@@ -148,7 +148,7 @@
     }
   },
   "medCardNotesHeader": "Care Team Instructions:",
-  "medCardReadOnlyBadge": "🔒 Prescribed by Care Team — Read Only",
+  "medicationsCareTeamNote": "Prescribed by your care team — read-only",
   "medicationsEmptyState": "No active medications on your care plan yet.",
   "frequencyQD": "Once daily",
   "frequencyBID": "Twice daily",

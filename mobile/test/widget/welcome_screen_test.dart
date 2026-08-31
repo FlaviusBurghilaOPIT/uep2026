@@ -1,10 +1,7 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:remotecare/core/l10n/app_localizations.dart';
@@ -49,90 +46,46 @@ void main() {
   });
 
   testWidgets(
-    'Welcome offers patient sign-in and clinic invitation',
+    'Welcome offers only the code-based invitation sign-in (no password)',
     (tester) async {
       await tester.pumpWidget(buildTestApp(prefs, fakeApi));
       await tester.pumpAndSettle();
 
       expect(find.text(AuthStrings.welcomeTitle), findsOneWidget);
-      // Two TextFormFields: email + password.
-      expect(find.byType(TextFormField), findsNWidgets(2));
-      expect(find.text(AuthStrings.signInButton), findsOneWidget);
+      // Patients are passwordless: only the email field, no password field.
+      expect(find.byType(TextFormField), findsOneWidget);
       expect(find.text(AuthStrings.clinicInvitationButton), findsOneWidget);
     },
   );
 
-  testWidgets('password sign-in success routes to the main app (Today)', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(1080, 2400);
-    tester.view.devicePixelRatio = 2.0;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-
-    Map<String, dynamic>? loginBody;
-    fakeApi.postHandlers['/auth/login'] = (body) {
-      loginBody = body;
-      return http.Response(
-        jsonEncode({'access_token': 'jwt_login', 'token_type': 'bearer'}),
-        200,
-      );
-    };
-    fakeApi.getHandlers['/auth/me'] = () => http.Response(
-      jsonEncode({'id': 'user_1', 'email': 'jane@example.com'}),
-      200,
-    );
-    fakeApi.getHandlers['/patients/user_1/case'] = () => http.Response(
-      jsonEncode({'id': 'case_1', 'surgery_type': 'Knee Replacement'}),
-      200,
-    );
-
-    await tester.pumpWidget(buildTestApp(prefs, fakeApi));
-    await tester.pumpAndSettle();
-
-    await tester.enterText(
-      find.byType(TextFormField).at(0),
-      'jane@example.com',
-    );
-    await tester.enterText(find.byType(TextFormField).at(1), 'secret123');
-    await tester.tap(find.text(AuthStrings.signInButton));
-    await tester.pumpAndSettle();
-
-    expect(loginBody?['email'], 'jane@example.com');
-    expect(loginBody?['password'], 'secret123');
-    expect(fakeApi.savedToken, 'jwt_login');
-    expect(find.byKey(const Key('navTab_today')), findsOneWidget);
-  });
-
   testWidgets(
-    'password sign-in failure (401) shows an error and stays on Welcome',
+    'tapping the invitation action opens InvitationCodeScreen with the entered email',
     (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      fakeApi.postHandlers['/auth/login'] = (body) =>
-          http.Response(jsonEncode({'detail': 'Invalid credentials'}), 401);
-
       await tester.pumpWidget(buildTestApp(prefs, fakeApi));
       await tester.pumpAndSettle();
 
       await tester.enterText(
-        find.byType(TextFormField).at(0),
+        find.byType(TextFormField).first,
         'jane@example.com',
       );
-      await tester.enterText(find.byType(TextFormField).at(1), 'wrong');
-      await tester.tap(find.text(AuthStrings.signInButton));
+      await tester.tap(find.text(AuthStrings.clinicInvitationButton));
       await tester.pumpAndSettle();
 
-      expect(find.text(AuthStrings.invalidCredentials), findsOneWidget);
-      expect(find.text(AuthStrings.welcomeTitle), findsOneWidget);
+      expect(find.byType(InvitationCodeScreen), findsOneWidget);
+      final screen = tester.widget<InvitationCodeScreen>(
+        find.byType(InvitationCodeScreen),
+      );
+      expect(screen.initialEmail, 'jane@example.com');
     },
   );
 
   testWidgets(
-    'tapping the clinic invitation option opens InvitationCodeScreen',
+    'empty email is rejected and does not open InvitationCodeScreen',
     (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
@@ -145,7 +98,8 @@ void main() {
       await tester.tap(find.text(AuthStrings.clinicInvitationButton));
       await tester.pumpAndSettle();
 
-      expect(find.byType(InvitationCodeScreen), findsOneWidget);
+      expect(find.text(AuthStrings.requiredError), findsOneWidget);
+      expect(find.byType(InvitationCodeScreen), findsNothing);
     },
   );
 }

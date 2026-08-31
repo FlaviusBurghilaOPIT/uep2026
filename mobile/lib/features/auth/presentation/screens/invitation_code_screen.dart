@@ -12,7 +12,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../auth_strings.dart';
 import '../providers/auth_provider.dart';
-import 'create_password_screen.dart';
+import 'onboarding_profile_screen.dart';
 
 /// Direct Invitation Code verification screen for newly enrolled patients.
 /// Patients enter their registered email and the 6-digit code provided by their clinician.
@@ -22,7 +22,8 @@ class InvitationCodeScreen extends ConsumerStatefulWidget {
   const InvitationCodeScreen({super.key, this.initialEmail});
 
   @override
-  ConsumerState<InvitationCodeScreen> createState() => _InvitationCodeScreenState();
+  ConsumerState<InvitationCodeScreen> createState() =>
+      _InvitationCodeScreenState();
 }
 
 class _InvitationCodeScreenState extends ConsumerState<InvitationCodeScreen> {
@@ -67,10 +68,9 @@ class _InvitationCodeScreenState extends ConsumerState<InvitationCodeScreen> {
     final email = _emailController.text.trim();
     final code = _codeController.text.trim();
 
-    final result = await ref.read(authProvider.notifier).verifyCode(
-      email: email,
-      code: code,
-    );
+    final result = await ref
+        .read(authProvider.notifier)
+        .verifyCode(email: email, code: code);
 
     if (!mounted) return;
     if (result == 'authenticated') {
@@ -79,7 +79,7 @@ class _InvitationCodeScreenState extends ConsumerState<InvitationCodeScreen> {
       final state = ref.read(authProvider);
       Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => CreatePasswordScreen(
+          builder: (_) => OnboardingProfileScreen(
             email: state.email ?? email,
             inviteCode: state.inviteCode ?? code,
             fullName: state.fullName ?? '',
@@ -88,12 +88,11 @@ class _InvitationCodeScreenState extends ConsumerState<InvitationCodeScreen> {
         ),
       );
     } else {
-      final message = ref.read(authProvider).errorMessage ?? 'Invalid or expired invitation code';
+      final message =
+          ref.read(authProvider).errorMessage ??
+          'Invalid or expired invitation code';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: AppColors.errorRed,
-        ),
+        SnackBar(content: Text(message), backgroundColor: AppColors.errorRed),
       );
     }
   }
@@ -103,9 +102,7 @@ class _InvitationCodeScreenState extends ConsumerState<InvitationCodeScreen> {
     final auth = ref.watch(authProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Invitation Code'),
-      ),
+      appBar: AppBar(title: const Text('Invitation Code')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
@@ -115,10 +112,7 @@ class _InvitationCodeScreenState extends ConsumerState<InvitationCodeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: AppSpacing.lg),
-                Text(
-                  'Activate Your Account',
-                  style: AppTextStyles.heading1,
-                ),
+                Text('Activate Your Account', style: AppTextStyles.heading1),
                 SizedBox(height: AppSpacing.sm),
                 Text(
                   'Enter the email and 6-digit invitation code provided by your clinic.',
@@ -157,7 +151,9 @@ class _InvitationCodeScreenState extends ConsumerState<InvitationCodeScreen> {
                   autofillHints: const [AutofillHints.oneTimeCode],
                   suffixIcon: GestureDetector(
                     onTap: () async {
-                      final data = await Clipboard.getData(Clipboard.kTextPlain);
+                      final data = await Clipboard.getData(
+                        Clipboard.kTextPlain,
+                      );
                       final text = data?.text?.trim() ?? '';
                       if (text.isNotEmpty && mounted) {
                         setState(() {
@@ -171,11 +167,18 @@ class _InvitationCodeScreenState extends ConsumerState<InvitationCodeScreen> {
                       }
                     },
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 14.w,
+                        vertical: 12.h,
+                      ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(LucideIcons.clipboard, size: 14.sp, color: AppColors.primaryGreen),
+                          Icon(
+                            LucideIcons.clipboard,
+                            size: 14.sp,
+                            color: AppColors.primaryGreen,
+                          ),
                           SizedBox(width: 4.w),
                           Text(
                             'PASTE',

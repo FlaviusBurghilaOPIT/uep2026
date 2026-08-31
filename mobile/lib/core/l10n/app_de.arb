@@ -148,7 +148,7 @@
     }
   },
   "medCardNotesHeader": "Anweisungen des Arztes:",
-  "medCardReadOnlyBadge": "🔒 Verschrieben vom Behandlungsteam — Nur lesen",
+  "medicationsCareTeamNote": "Verschrieben von Ihrem Behandlungsteam — nur lesen",
   "medicationsEmptyState": "Noch keine aktiven Medikamente in Ihrem Behandlungsplan.",
   "frequencyQD": "Einmal täglich",
   "frequencyBID": "Zweimal täglich",

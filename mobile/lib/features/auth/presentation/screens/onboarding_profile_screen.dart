@@ -15,12 +15,11 @@ import '../providers/auth_provider.dart';
 ///
 /// Name and date of birth are PRE-FILLED from the backend (captured at
 /// clinician intake / surfaced by verify-code) and EDITABLE — the patient
-/// confirms or corrects. Phone is patient-provided. `complete-onboarding`
-/// persists the edits, the phone, and the hybrid-auth password.
+/// confirms or corrects. Phone is patient-provided. Patients are fully
+/// passwordless, so `complete-onboarding` persists the edits and phone only.
 class OnboardingProfileScreen extends ConsumerStatefulWidget {
   final String email;
   final String inviteCode;
-  final String password;
   final String fullName;
   final String? dateOfBirth;
 
@@ -28,7 +27,6 @@ class OnboardingProfileScreen extends ConsumerStatefulWidget {
     super.key,
     required this.email,
     required this.inviteCode,
-    required this.password,
     required this.fullName,
     this.dateOfBirth,
   });
@@ -77,7 +75,6 @@ class _OnboardingProfileScreenState
           dateOfBirth: dob.isEmpty ? null : dob,
           fullName: (name.isEmpty || name == widget.fullName) ? null : name,
           phone: _phoneController.text.trim(),
-          password: widget.password,
         );
 
     if (!mounted) return;
@@ -86,9 +83,8 @@ class _OnboardingProfileScreenState
     } else {
       final message = ref.read(authProvider).errorMessage;
       if (message != null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(message)));
       }
     }
   }

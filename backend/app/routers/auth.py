@@ -225,7 +225,7 @@ def verify_patient_code(req: schemas.PatientVerifyCodeRequest, db: Session = Dep
         )
         raise HTTPException(status_code=400, detail="Invalid or expired code")
 
-    if not secrets.compare_digest(stored_code, clean_code) and not (clean_code == "424242" and clean_email == "patient@example.com"):
+    if not secrets.compare_digest(stored_code, clean_code):
         logger.warning(
             f"[/auth/patient/verify-code] Code mismatch for '{user.email}': received='{clean_code}', stored='{stored_code}'"
         )

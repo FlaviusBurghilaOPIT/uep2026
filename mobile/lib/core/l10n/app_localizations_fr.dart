@@ -261,8 +261,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get medCardNotesHeader => 'Instructions du médecin :';
 
   @override
-  String get medCardReadOnlyBadge =>
-      '🔒 Prescrit par l\'équipe soignante — Lecture seule';
+  String get medicationsCareTeamNote =>
+      'Prescrit par votre équipe soignante — lecture seule';
 
   @override
   String get medicationsEmptyState =>

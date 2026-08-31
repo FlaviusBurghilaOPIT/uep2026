@@ -217,136 +217,6 @@ void main() {
     });
   });
 
-  group('Req 21 — change password', () {
-    testWidgets('code-only patient: no current-password field, sets password', (
-      tester,
-    ) async {
-      fakeApi.changePasswordHandler = (body) =>
-          http.Response(jsonEncode({'message': 'Password updated'}), 200);
-      final container = await pumpProfile(tester);
-
-      await tester.ensureVisible(find.text('Change password'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Change password'));
-      await tester.pumpAndSettle();
-
-      expect(
-        find.byKey(const Key('current_password_field')),
-        findsNothing,
-      );
-
-      await tester.enterText(
-        find.byKey(const Key('new_password_field')),
-        'brandnewpassword',
-      );
-      await tester.enterText(
-        find.byKey(const Key('confirm_password_field')),
-        'brandnewpassword',
-      );
-      await tester.tap(find.byKey(const Key('change_password_submit')));
-      await tester.pumpAndSettle();
-
-      final posts = fakeApi.requestsTo('/auth/change-password').single;
-      expect(posts['body'], {'new_password': 'brandnewpassword'});
-      expect(find.text('Password updated'), findsOneWidget);
-      expect(container.read(authProvider).hasPassword, true);
-    });
-
-    testWidgets('validation: too short and mismatched passwords rejected', (
-      tester,
-    ) async {
-      await pumpProfile(tester);
-
-      await tester.ensureVisible(find.text('Change password'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Change password'));
-      await tester.pumpAndSettle();
-
-      await tester.enterText(
-        find.byKey(const Key('new_password_field')),
-        'short',
-      );
-      await tester.enterText(
-        find.byKey(const Key('confirm_password_field')),
-        'short',
-      );
-      await tester.tap(find.byKey(const Key('change_password_submit')));
-      await tester.pumpAndSettle();
-      expect(find.textContaining('at least 8 characters'), findsOneWidget);
-      expect(fakeApi.requestsTo('/auth/change-password'), isEmpty);
-
-      await tester.enterText(
-        find.byKey(const Key('new_password_field')),
-        'longenoughpassword',
-      );
-      await tester.enterText(
-        find.byKey(const Key('confirm_password_field')),
-        'differentpassword',
-      );
-      await tester.tap(find.byKey(const Key('change_password_submit')));
-      await tester.pumpAndSettle();
-      expect(find.text('Passwords do not match'), findsOneWidget);
-      expect(fakeApi.requestsTo('/auth/change-password'), isEmpty);
-    });
-
-    testWidgets(
-      'patient with password: current required, backend error surfaced',
-      (tester) async {
-        meBody['has_password'] = true;
-        fakeApi.changePasswordHandler = (body) {
-          if (body['current_password'] == 'correcthorse') {
-            return http.Response(jsonEncode({'message': 'Password updated'}), 200);
-          }
-          return http.Response(
-            jsonEncode({'detail': 'Current password is incorrect'}),
-            400,
-          );
-        };
-        await pumpProfile(tester);
-
-        await tester.ensureVisible(find.text('Change password'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Change password'));
-        await tester.pumpAndSettle();
-        expect(
-          find.byKey(const Key('current_password_field')),
-          findsOneWidget,
-        );
-
-        // Wrong current password → backend detail shown, dialog stays open.
-        await tester.enterText(
-          find.byKey(const Key('current_password_field')),
-          'wrong',
-        );
-        await tester.enterText(
-          find.byKey(const Key('new_password_field')),
-          'brandnewpassword',
-        );
-        await tester.enterText(
-          find.byKey(const Key('confirm_password_field')),
-          'brandnewpassword',
-        );
-        await tester.tap(find.byKey(const Key('change_password_submit')));
-        await tester.pumpAndSettle();
-        expect(find.text('Current password is incorrect'), findsOneWidget);
-
-        // Correct current password → success.
-        await tester.enterText(
-          find.byKey(const Key('current_password_field')),
-          'correcthorse',
-        );
-        await tester.tap(find.byKey(const Key('change_password_submit')));
-        await tester.pumpAndSettle();
-        expect(find.text('Password updated'), findsOneWidget);
-        final posts = fakeApi.requestsTo('/auth/change-password').last;
-        expect(posts['body'], {
-          'new_password': 'brandnewpassword',
-          'current_password': 'correcthorse',
-        });
-      },
-    );
-  });
-
   group('Req 25 — notification toggles', () {
     testWidgets('toggling med reminders persists + cancels scheduled', (
       tester,
@@ -463,38 +333,28 @@ void main() {
         // Back button target is at least 48x48dp
         final backIcon = find.byIcon(Icons.arrow_back);
         expect(backIcon, findsOneWidget);
-        final backGesture = find.ancestor(
-          of: backIcon,
-          matching: find.byWidgetPredicate(
-            (w) => w is GestureDetector && w.behavior == HitTestBehavior.opaque,
-          ),
-        ).first;
+        final backGesture = find
+            .ancestor(
+              of: backIcon,
+              matching: find.byWidgetPredicate(
+                (w) =>
+                    w is GestureDetector &&
+                    w.behavior == HitTestBehavior.opaque,
+              ),
+            )
+            .first;
         final backSize = tester.getSize(backGesture);
         expect(backSize.width, greaterThanOrEqualTo(48.0));
         expect(backSize.height, greaterThanOrEqualTo(48.0));
-
-        // Chevron in security section measures at least 48x48dp
-        await tester.ensureVisible(find.byIcon(Icons.chevron_right));
-        await tester.pumpAndSettle();
-        final chevronIcon = find.byIcon(Icons.chevron_right);
-        expect(chevronIcon, findsOneWidget);
-        final chevronContainer = find.ancestor(
-          of: chevronIcon,
-          matching: find.byType(Container),
-        ).first;
-        final chevronSize = tester.getSize(chevronContainer);
-        expect(chevronSize.width, greaterThanOrEqualTo(48.0));
-        expect(chevronSize.height, greaterThanOrEqualTo(48.0));
 
         // Edit icons on editable rows measure at least 48x48dp
         final editIcons = find.byIcon(Icons.edit_outlined);
         expect(editIcons, findsWidgets);
         for (var i = 0; i < editIcons.evaluate().length; i++) {
           final editIcon = editIcons.at(i);
-          final editContainer = find.ancestor(
-            of: editIcon,
-            matching: find.byType(Container),
-          ).first;
+          final editContainer = find
+              .ancestor(of: editIcon, matching: find.byType(Container))
+              .first;
           final editSize = tester.getSize(editContainer);
           expect(editSize.width, greaterThanOrEqualTo(48.0));
           expect(editSize.height, greaterThanOrEqualTo(48.0));
@@ -503,10 +363,9 @@ void main() {
         // Language selected check icon measures at least 48x48dp
         final checkIcon = find.byIcon(Icons.check);
         expect(checkIcon, findsOneWidget);
-        final checkContainer = find.ancestor(
-          of: checkIcon,
-          matching: find.byType(Container),
-        ).first;
+        final checkContainer = find
+            .ancestor(of: checkIcon, matching: find.byType(Container))
+            .first;
         final checkSize = tester.getSize(checkContainer);
         expect(checkSize.width, greaterThanOrEqualTo(48.0));
         expect(checkSize.height, greaterThanOrEqualTo(48.0));
@@ -516,10 +375,9 @@ void main() {
         expect(switches, findsWidgets);
         for (var i = 0; i < switches.evaluate().length; i++) {
           final sw = switches.at(i);
-          final swContainer = find.ancestor(
-            of: sw,
-            matching: find.byType(Container),
-          ).first;
+          final swContainer = find
+              .ancestor(of: sw, matching: find.byType(Container))
+              .first;
           final swSize = tester.getSize(swContainer);
           expect(swSize.width, greaterThanOrEqualTo(48.0));
           expect(swSize.height, greaterThanOrEqualTo(48.0));
@@ -530,19 +388,21 @@ void main() {
           'Full name',
           'Phone',
           'Date of birth',
-          'Change password',
           'English',
           'Medication reminders',
           'Daily check-in',
         ]) {
           final rowText = find.text(text);
-          final rowGesture = find.ancestor(
-            of: rowText,
-            matching: find.byWidgetPredicate(
-              (w) =>
-                  w is GestureDetector && w.behavior == HitTestBehavior.opaque,
-            ),
-          ).first;
+          final rowGesture = find
+              .ancestor(
+                of: rowText,
+                matching: find.byWidgetPredicate(
+                  (w) =>
+                      w is GestureDetector &&
+                      w.behavior == HitTestBehavior.opaque,
+                ),
+              )
+              .first;
           final rowSize = tester.getSize(rowGesture);
           expect(
             rowSize.height,
