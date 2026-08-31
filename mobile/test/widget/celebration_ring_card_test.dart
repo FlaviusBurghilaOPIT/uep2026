@@ -47,6 +47,7 @@ void main() {
       final sizeTransitionFinder = find.byType(SizeTransition);
       expect(sizeTransitionFinder, findsOneWidget);
       final sizeTransition = tester.widget<SizeTransition>(sizeTransitionFinder);
+      // ignore: deprecated_member_use
       expect(sizeTransition.axisAlignment, -1.0);
 
       final fadeTransitionFinder = find.descendant(

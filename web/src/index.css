@@ -77,15 +77,49 @@
   /* Measure constraint */
   --measure: 66ch;
 
-  /* Emil Kowalski Motion Tokens (Custom Physics Curves) */
+  /* Emil Kowalski Motion Tokens (Smooth Exponential Physics) */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
-  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.15);
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
   --duration-instant: 100ms;
   --duration-press: 140ms;
   --duration-snappy: 180ms;
   --duration-modal: 220ms;
+}
+
+/* Browser Surface Theming */
+::selection {
+  background-color: var(--primary-100);
+  color: var(--slate-900);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--slate-50);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--slate-300);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--slate-400);
+}
+
+input, textarea, select {
+  caret-color: var(--primary-600);
+}
+
+.tnum,
+.tabular-nums {
+  font-feature-settings: 'tnum';
+  font-variant-numeric: tabular-nums;
 }
 
 * {
@@ -272,7 +306,8 @@ button:not(:disabled):active,
   height: 100%;
   background-color: var(--primary-600);
   border-radius: 9999px;
-  transition: width 240ms var(--ease-out);
+  transform-origin: left center;
+  transition: transform 240ms var(--ease-out), opacity 240ms var(--ease-out);
 }
 
 .progress-fill.success {
@@ -289,9 +324,6 @@ button:not(:disabled):active,
     transform: scale(0.96);
     opacity: 0.8;
   }
-  60% {
-    transform: scale(1.015);
-  }
   100% {
     transform: scale(1);
     opacity: 1;
@@ -299,7 +331,7 @@ button:not(:disabled):active,
 }
 
 .optimistic-feedback {
-  animation: optimistic-pop 180ms var(--ease-spring) forwards;
+  animation: optimistic-pop 180ms var(--ease-out) forwards;
 }
 
 /* 5. Reduced Motion Accessibility */

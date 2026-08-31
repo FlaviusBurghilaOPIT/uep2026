@@ -126,7 +126,7 @@ def seed_database(
     p_email = patient_email or os.getenv("DEMO_PATIENT_EMAIL", "patient@example.com")
     p_otp = patient_otp or os.getenv("DEMO_PATIENT_OTP") or f"{secrets.randbelow(900000) + 100000}"
     ph_admin_email = phoenix_admin_email or os.getenv("PHOENIX_ADMIN_EMAIL", "admin@localhost")
-    ph_admin_pass = phoenix_admin_password or os.getenv("PHOENIX_ADMIN_PASSWORD", "Phoenix#2026!Guard")
+    ph_admin_pass = phoenix_admin_password or os.getenv("PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD", "Phoenix#2026!Guard")
 
     # Ensure pgvector extension exists before table creation
     try:

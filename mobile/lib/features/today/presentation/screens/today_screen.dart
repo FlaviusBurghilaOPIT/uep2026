@@ -962,7 +962,6 @@ class _TodayBanner extends StatelessWidget {
 /// animating group expansion smoothly via [AnimatedSize].
 class _DoseGroupSection extends StatelessWidget {
   const _DoseGroupSection({
-    super.key,
     required this.group,
     required this.slots,
     required this.isExpanded,

@@ -91,6 +91,7 @@ class _CelebrationRingCardState extends State<CelebrationRingCard>
 
     return SizeTransition(
       sizeFactor: _exitSizeAnimation,
+      // ignore: deprecated_member_use
       axisAlignment: -1.0,
       child: FadeTransition(
         opacity: _exitFadeAnimation,

@@ -1,0 +1,314 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-31T15:19:00Z",
+  "title": "Design System: RemoteCare Pro",
+  "extensions": {
+    "colorMeta": {
+      "primary-600": {
+        "role": "primary",
+        "displayName": "Sky Clinical Blue",
+        "canonical": "#0284c7",
+        "tonalRamp": ["#075985", "#0369a1", "#0284c7", "#0ea5e9", "#38bdf8", "#7dd3fc", "#bae6fd", "#e0f2fe"]
+      },
+      "deep-teal": {
+        "role": "primary",
+        "displayName": "Deep Teal",
+        "canonical": "#0D9488",
+        "tonalRamp": ["#0E5C3F", "#0D7466", "#0D9488", "#14B8A6", "#2DD4BF", "#5EEAD4", "#99F6E4", "#CCFBF1"]
+      },
+      "clinical-emerald": {
+        "role": "primary",
+        "displayName": "Clinical Emerald",
+        "canonical": "#059669",
+        "tonalRamp": ["#064E3B", "#065F46", "#047857", "#059669", "#10B981", "#34D399", "#6EE7B7", "#A7F3D0"]
+      },
+      "primary-green": {
+        "role": "primary",
+        "displayName": "Primary Green",
+        "canonical": "#1B7D5A",
+        "tonalRamp": ["#0E5C3F", "#156B4C", "#1B7D5A", "#22906A", "#3DAF8F", "#6FCFB0", "#A3E8D0", "#D1F4E8"]
+      },
+      "slate-900": {
+        "role": "neutral",
+        "displayName": "Midnight Slate",
+        "canonical": "#0f172a",
+        "tonalRamp": ["#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#f1f5f9"]
+      },
+      "critical-accent": {
+        "role": "neutral",
+        "displayName": "Critical Red",
+        "canonical": "#ef4444",
+        "tonalRamp": ["#7f1d1d", "#991b1b", "#b91c1c", "#dc2626", "#ef4444", "#f87171", "#fca5a5", "#fef2f2"]
+      },
+      "moderate-accent": {
+        "role": "neutral",
+        "displayName": "Moderate Amber",
+        "canonical": "#f59e0b",
+        "tonalRamp": ["#78350f", "#92400e", "#b45309", "#d97706", "#f59e0b", "#fbbf24", "#fde68a", "#fffbeb"]
+      },
+      "stable-accent": {
+        "role": "neutral",
+        "displayName": "Stable Emerald",
+        "canonical": "#10b981",
+        "tonalRamp": ["#064E3B", "#065F46", "#047857", "#059669", "#10b981", "#34d399", "#86efac", "#f0fdf4"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Hero headlines on landing page (web) and display titles (mobile). Tracked tight at -0.025em."
+      },
+      "heading1": {
+        "displayName": "Heading 1",
+        "purpose": "Page primary titles and section headers."
+      },
+      "heading2": {
+        "displayName": "Heading 2",
+        "purpose": "Card titles, dialog headers, stat values."
+      },
+      "heading3": {
+        "displayName": "Heading 3",
+        "purpose": "Sub-section headers, metric labels."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Paragraph text, descriptions, input values. Max measure 66ch on web."
+      },
+      "body-small": {
+        "displayName": "Body Small",
+        "purpose": "Table cells, standard buttons, card body text."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Form labels, badge text, uppercase category headers. Often set in ALL CAPS."
+      }
+    },
+    "shadows": [
+      {
+        "name": "ambient-card",
+        "value": "0 1px 2px 0 rgba(15, 23, 42, 0.05)",
+        "purpose": "Default card elevation. Barely visible — just enough to lift white cards from slate-50 backgrounds."
+      },
+      {
+        "name": "standard-elevation",
+        "value": "0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.05)",
+        "purpose": "Form cards, login card, preview cards. Slightly more pronounced but still ambient."
+      },
+      {
+        "name": "hover-lift",
+        "value": "0 6px 16px rgba(15, 23, 42, 0.08)",
+        "purpose": "Cards on hover. Combined with translateY(-2px) for physical lift."
+      },
+      {
+        "name": "modal-float",
+        "value": "0 20px 25px -5px rgba(15, 23, 42, 0.15)",
+        "purpose": "Resolution dialog, modal overlays. Heaviest shadow in the system."
+      },
+      {
+        "name": "brand-glow",
+        "value": "0 2px 4px rgba(2, 132, 199, 0.2)",
+        "purpose": "Primary CTA buttons and brand icon. Tinted blue glow."
+      },
+      {
+        "name": "cta-hover-glow",
+        "value": "0 4px 12px rgba(2, 132, 199, 0.4)",
+        "purpose": "Heavy CTA accent on hover. Intensified brand glow."
+      },
+      {
+        "name": "emergency-alert",
+        "value": "0 0 8px rgba(239, 68, 68, 0.4)",
+        "purpose": "Live triage critical alert pulse. The only shadow that demands attention."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.23, 1, 0.32, 1)",
+        "purpose": "Default deceleration for UI entries, hovers, and state transitions."
+      },
+      {
+        "name": "ease-in-out",
+        "value": "cubic-bezier(0.77, 0, 0.175, 1)",
+        "purpose": "Shimmer loading and pulse cycles."
+      },
+      {
+        "name": "ease-drawer",
+        "value": "cubic-bezier(0.32, 0.72, 0, 1)",
+        "purpose": "Mobile sidebar drawer slide."
+      },
+      {
+        "name": "ease-spring",
+        "value": "cubic-bezier(0.175, 0.885, 0.32, 1.15)",
+        "purpose": "Optimistic feedback overshoot on dose logging and confirmations."
+      },
+      {
+        "name": "duration-instant",
+        "value": "100ms",
+        "purpose": "Micro-feedback: opacity changes, focus ring appearance."
+      },
+      {
+        "name": "duration-press",
+        "value": "140ms",
+        "purpose": "Tactile active press scale (0.97) and button state transitions."
+      },
+      {
+        "name": "duration-snappy",
+        "value": "180ms",
+        "purpose": "Chat bubble arrival, error banner entry, optimistic-pop animation."
+      },
+      {
+        "name": "duration-modal",
+        "value": "220ms",
+        "purpose": "Modal open/close, summary card entry, toast slide-in."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "mobile-design",
+        "value": "375px",
+        "purpose": "Flutter design baseline (iPhone X/11 Pro viewport width)."
+      },
+      {
+        "name": "tablet",
+        "value": "768px",
+        "purpose": "Approximate sidebar collapse point on web."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button (Web)",
+      "kind": "button",
+      "refersTo": "button-primary-web",
+      "description": "The web surface's primary call-to-action button with sky-blue brand glow and tactile press.",
+      "html": "<button class=\"ds-btn-primary-web\">Save Changes</button>",
+      "css": ".ds-btn-primary-web { background-color: #0284c7; color: #ffffff; border: none; border-radius: 8px; padding: 14px 28px; font-size: 16px; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; cursor: pointer; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2); transition: background-color 140ms cubic-bezier(0.23, 1, 0.32, 1), transform 140ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 140ms cubic-bezier(0.23, 1, 0.32, 1); } .ds-btn-primary-web:hover { background-color: #0369a1; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4); } .ds-btn-primary-web:active { transform: scale(0.97); } .ds-btn-primary-web:focus-visible { outline: 2px solid #0284c7; outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button (Web)",
+      "kind": "button",
+      "refersTo": "button-secondary-web",
+      "description": "The web surface's secondary action button with slate fill and subtle border.",
+      "html": "<button class=\"ds-btn-secondary-web\">Cancel</button>",
+      "css": ".ds-btn-secondary-web { background-color: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px 28px; font-size: 16px; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; cursor: pointer; transition: background-color 140ms cubic-bezier(0.23, 1, 0.32, 1), transform 140ms cubic-bezier(0.23, 1, 0.32, 1); } .ds-btn-secondary-web:hover { background-color: #e2e8f0; } .ds-btn-secondary-web:active { transform: scale(0.97); } .ds-btn-secondary-web:focus-visible { outline: 2px solid #0284c7; outline-offset: 2px; }"
+    },
+    {
+      "name": "Triage Card (Critical)",
+      "kind": "card",
+      "refersTo": "badge-critical",
+      "description": "A patient triage card with critical severity left-border stripe, used in the clinician exception queue.",
+      "html": "<div class=\"ds-triage-card ds-triage-critical\"><div class=\"ds-triage-header\"><span class=\"ds-triage-badge ds-badge-critical\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"/><line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"/></svg> Critical</span><span class=\"ds-triage-time\">2 min ago</span></div><div class=\"ds-triage-patient\">Sarah Mitchell</div><div class=\"ds-triage-detail\">Reported acute distress during daily check-in. Emergency dialer triggered.</div></div>",
+      "css": ".ds-triage-card { background-color: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 20px; box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.05); display: flex; flex-direction: column; gap: 10px; transition: box-shadow 140ms cubic-bezier(0.23, 1, 0.32, 1), transform 140ms cubic-bezier(0.23, 1, 0.32, 1); } .ds-triage-card:hover { box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08); transform: translateY(-2px); } .ds-triage-critical { border-left: 4px solid #ef4444; } .ds-triage-header { display: flex; align-items: center; justify-content: space-between; } .ds-triage-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; } .ds-badge-critical { background-color: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; } .ds-triage-time { font-size: 12px; color: #64748b; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; } .ds-triage-patient { font-size: 16px; font-weight: 700; color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; } .ds-triage-detail { font-size: 14px; color: #334155; line-height: 1.5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }"
+    },
+    {
+      "name": "Text Input (Web)",
+      "kind": "input",
+      "refersTo": "input-web",
+      "description": "Standard text input for clinician forms with focus ring and error state.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-field-label\">Patient Email</label><input type=\"email\" class=\"ds-input-web\" placeholder=\"patient@example.com\" /></div>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; } .ds-field-label { font-size: 13px; font-weight: 600; color: #334155; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; } .ds-input-web { background-color: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 12px; font-size: 14px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.5; transition: border-color 140ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 140ms cubic-bezier(0.23, 1, 0.32, 1); } .ds-input-web::placeholder { color: #94a3b8; } .ds-input-web:focus { outline: none; border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); } .ds-input-web:hover:not(:focus) { border-color: #94a3b8; }"
+    },
+    {
+      "name": "Sidebar Navigation",
+      "kind": "nav",
+      "refersTo": "nav-sidebar",
+      "description": "Dark-background lateral navigation with active state indicator and section grouping.",
+      "html": "<nav class=\"ds-sidebar\"><div class=\"ds-sidebar-brand\"><div class=\"ds-sidebar-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z\"/></svg></div><span class=\"ds-sidebar-title\">RemoteCare Pro</span></div><div class=\"ds-sidebar-section\">MAIN</div><a class=\"ds-nav-link ds-nav-active\" href=\"#\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"9\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"5\"/><rect x=\"14\" y=\"12\" width=\"7\" height=\"9\"/><rect x=\"3\" y=\"16\" width=\"7\" height=\"5\"/></svg> Dashboard</a><a class=\"ds-nav-link\" href=\"#\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/></svg> Patients</a></nav>",
+      "css": ".ds-sidebar { width: 260px; background-color: #0f172a; padding: 20px 14px; display: flex; flex-direction: column; gap: 4px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; border-right: 1px solid #1e293b; } .ds-sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 0 8px 16px; } .ds-sidebar-icon { width: 32px; height: 32px; border-radius: 10px; background: linear-gradient(135deg, #0284c7, #0369a1); display: flex; align-items: center; justify-content: center; color: #ffffff; box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35); } .ds-sidebar-title { font-size: 15px; font-weight: 700; color: #ffffff; letter-spacing: -0.01em; } .ds-sidebar-section { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; padding: 12px 8px 6px; } .ds-nav-link { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; color: #94a3b8; text-decoration: none; transition: background-color 140ms cubic-bezier(0.23, 1, 0.32, 1), color 140ms cubic-bezier(0.23, 1, 0.32, 1); border-left: 3px solid transparent; } .ds-nav-link:hover { color: #ffffff; background-color: rgba(255, 255, 255, 0.06); } .ds-nav-active { color: #ffffff; background: linear-gradient(90deg, rgba(2, 132, 199, 0.25) 0%, rgba(2, 132, 199, 0.08) 100%); border-left-color: #38bdf8; font-weight: 600; }"
+    },
+    {
+      "name": "Severity Badge (Critical)",
+      "kind": "chip",
+      "refersTo": "badge-critical",
+      "description": "Critical severity badge for triage priority indicators, missed doses, and error states.",
+      "html": "<span class=\"ds-badge ds-badge-crit\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"11\" height=\"11\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"/><line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"/></svg> Critical</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; white-space: nowrap; } .ds-badge-crit { background-color: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; }"
+    },
+    {
+      "name": "Severity Badge (Moderate)",
+      "kind": "chip",
+      "refersTo": "badge-moderate",
+      "description": "Moderate/warning severity badge for attention-required items and overdue medications.",
+      "html": "<span class=\"ds-badge ds-badge-mod\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"11\" height=\"11\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z\"/><line x1=\"12\" y1=\"9\" x2=\"12\" y2=\"13\"/><line x1=\"12\" y1=\"17\" x2=\"12.01\" y2=\"17\"/></svg> Warning</span>",
+      "css": ".ds-badge-mod { background-color: #fffbeb; color: #92400e; border: 1px solid #fde68a; }"
+    },
+    {
+      "name": "Severity Badge (Stable)",
+      "kind": "chip",
+      "refersTo": "badge-stable",
+      "description": "Stable/success badge for confirmed actions, taken doses, and stable patients.",
+      "html": "<span class=\"ds-badge ds-badge-ok\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"11\" height=\"11\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"20 6 9 17 4 12\"/></svg> Stable</span>",
+      "css": ".ds-badge-ok { background-color: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }"
+    },
+    {
+      "name": "Content Card (Web)",
+      "kind": "card",
+      "refersTo": "card-web",
+      "description": "Standard content container card with ambient shadow and hover lift.",
+      "html": "<div class=\"ds-card-web\"><div class=\"ds-card-title\">Patient Overview</div><div class=\"ds-card-body\">Total Knee Arthroplasty — Day 3 of recovery. Adherence rate: 94%.</div></div>",
+      "css": ".ds-card-web { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.05); transition: box-shadow 140ms cubic-bezier(0.23, 1, 0.32, 1), transform 140ms cubic-bezier(0.23, 1, 0.32, 1); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; } .ds-card-web:hover { box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08); transform: translateY(-2px); } .ds-card-title { font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 8px; } .ds-card-body { font-size: 14px; color: #334155; line-height: 1.5; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Recovery Ward",
+    "overview": "RemoteCare Pro's design system is the digital equivalent of a well-run post-operative floor: warm, monitored, reassuring. Every surface prioritizes clinical clarity and patient confidence. The system is deliberately bifocal — the clinician web portal uses a disciplined operations aesthetic (dark slate navigation, sky-blue primary, severity-striped triage cards), while the patient mobile companion uses a softer recovery palette (teal/emerald gradients, rounded forms, celebration animations). Both share the same information hierarchy principle: normal states recede, exceptions surface.\n\nThe visual density shifts by audience. Clinicians operate in a data-rich environment where scan speed matters — compact typography, tabular data, severity color-coding. Patients operate in a reassurance environment where confidence and simplicity matter — generous spacing, clear medication timelines, one-tap actions, and haptic confirmation. Despite these different densities, the system maintains a unified tonal palette (slate neutrals, clinical severity colors) and a shared commitment to flat-by-default elevation.",
+    "keyCharacteristics": [
+      "Bifocal design language: operations-grade precision for clinicians, recovery-grade warmth for patients",
+      "Exception-driven visual hierarchy: normal states are quiet, severity states are unmissable",
+      "Flat and tonal depth model: background fills and subtle borders create separation, shadows respond to state",
+      "Clinical and steady component feel: components communicate state clearly without competing for attention",
+      "Dual typography pairing: Outfit (display/headings) + Inter (body/labels)",
+      "Three-tier clinical severity palette: red/amber/green severity colors are consistent across both surfaces"
+    ],
+    "rules": [
+      {
+        "name": "The Severity Is Semantic Rule",
+        "body": "Red means clinical danger or error. Amber means warning, moderate risk, or attention required. Green means stable, complete, or confirmed. These three hues are never decorative — they always carry clinical meaning.",
+        "section": "colors"
+      },
+      {
+        "name": "The Surface-Appropriate Primary Rule",
+        "body": "Web surfaces use sky-blue (#0284c7) as their primary interactive color. Mobile surfaces use deep teal (#0D9488) or primary green (#1B7D5A). Neither primary appears on the other's surface except in shared severity contexts.",
+        "section": "colors"
+      },
+      {
+        "name": "The Measure Rule",
+        "body": "Body text on the web never exceeds 66ch (--measure: 66ch). Readable lines prevent the clinical dashboard from feeling like a spreadsheet.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Figures Rule",
+        "body": "All numeric data — OTP codes, countdown timers, adherence percentages, stat values — uses font-feature-settings: 'tnum' so digits align vertically and counters don't shift layout on update.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "Components start at elevation zero. Shadows appear only as a response to state change (hover, focus, modal open) or to separate fixed chrome from scrollable content. A card that looks lifted at rest is overdesigned.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Radius Scales With Permanence Rule",
+        "body": "Ephemeral elements (badges, chips) use small radii. Persistent containers (cards, modals) use large radii. Pill-shaped elements (progress bars, status badges) use 9999px to signal self-contained data.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do use the severity color system (red/amber/green) exclusively for clinical meaning — never for brand expression or visual variety.",
+      "Do maintain the 8-point spacing grid on both surfaces. When in doubt, use the next value up from the scale (4→8→12→16→24→32→48→64).",
+      "Do use tabular figures (font-feature-settings: 'tnum') for all numeric data, countdowns, and aligned columns.",
+      "Do provide a 2px solid primary-color focus ring with 2px offset on every interactive element for keyboard navigation.",
+      "Do gate all motion behind prefers-reduced-motion (web) and MediaQuery.disableAnimations (mobile). Every animation must have a static fallback.",
+      "Do use the tactile scale(0.97) active press on buttons and interactive cards. It's the system's signature micro-interaction.",
+      "Do keep body text under 66ch measure on the web surface."
+    ],
+    "donts": [
+      "Don't mix web-primary (#0284c7) and mobile-primary (#0D9488 / #1B7D5A) on the same surface. Each surface has its own primary.",
+      "Don't use shadows for visual hierarchy at rest. Depth comes from background fill and border contrast. Shadows respond to state.",
+      "Don't add elevation to mobile cards beyond the ambient alpha: 0.03 tier. The mobile surface is deliberately flat.",
+      "Don't introduce new font families. The system uses Outfit + Inter on mobile and the system font stack on web. No decorative typefaces.",
+      "Don't use border-radius values outside the established scale (4/6/8/12/16/24/9999px). No arbitrary radii.",
+      "Don't create triage or severity indicators in colors outside the red/amber/green vocabulary. No blue or purple severity.",
+      "Don't fabricate testimonials, clinical outcomes data, or regulatory certifications that don't exist in the evidence on hand."
+    ]
+  }
+}

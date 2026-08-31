@@ -314,7 +314,7 @@ class _CheckInCardState extends ConsumerState<CheckInCard> {
                   alignment: Alignment.topLeft,
                   children: <Widget>[
                     ...previousChildren,
-                    if (currentChild != null) currentChild,
+                    ?currentChild,
                   ],
                 );
               },
