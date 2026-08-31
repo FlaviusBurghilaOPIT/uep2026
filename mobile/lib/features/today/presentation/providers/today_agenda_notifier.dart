@@ -10,6 +10,7 @@ import '../../../../core/network/api_service.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/telemetry/telemetry_service.dart';
 import '../../../../core/providers/shared_preferences_provider.dart';
+import '../../../recovery/presentation/providers/recovery_notifier.dart';
 import '../../domain/entities/agenda_entities.dart';
 
 // ---------------------------------------------------------------------------
@@ -407,6 +408,7 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
       'status': status.name,
       'was_offline': false,
     });
+    ref.invalidate(recoveryNotifierProvider);
     if (status == DoseLogStatus.skipped) _setC8Prompt(slotId);
   }
 
@@ -432,6 +434,7 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
         'status': statusRaw ?? slot.state.name,
         'was_offline': false,
       });
+      ref.invalidate(recoveryNotifierProvider);
     } catch (e, st) {
       debugPrint('TodayAgendaNotifier: unparseable 409 detail: $e\n$st');
     }
@@ -606,6 +609,7 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
           );
         }
         _track('mobile.today.dose_log_corrected', const {});
+        ref.invalidate(recoveryNotifierProvider);
       } else {
         _setSlot(slot);
         final latest = state.value ?? const AgendaState();
@@ -789,8 +793,13 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
     }
 
     final latest = state.value ?? const AgendaState();
-    final processedKeys = [...creates, ...corrections].map((e) => e.idempotencyKey).toSet();
-    final newEntriesDuringFlush = latest.offlineQueue.where((e) => !processedKeys.contains(e.idempotencyKey));
+    final processedKeys = [
+      ...creates,
+      ...corrections,
+    ].map((e) => e.idempotencyKey).toSet();
+    final newEntriesDuringFlush = latest.offlineQueue.where(
+      (e) => !processedKeys.contains(e.idempotencyKey),
+    );
     final mergedRemaining = [...remaining, ...newEntriesDuringFlush];
 
     state = AsyncValue.data(latest.copyWith(offlineQueue: mergedRemaining));
@@ -883,6 +892,7 @@ class TodayAgendaNotifier extends AsyncNotifier<AgendaState> {
               );
             }
             _track('mobile.today.dose_log_corrected', const {});
+            ref.invalidate(recoveryNotifierProvider);
             _markOfflineCommitted(entry);
             return true;
           }

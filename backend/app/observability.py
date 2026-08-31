@@ -326,5 +326,14 @@ def setup_tracing() -> None:
     from openinference.instrumentation.openai import OpenAIInstrumentor
     from phoenix.otel import register
 
-    tracer_provider = register(project_name=os.getenv("PHOENIX_PROJECT_NAME", "remote-carepro"))
+    # Passing endpoint/protocol explicitly avoids register()'s auto-detect
+    # path, which (as of arize-phoenix-otel in requirements.txt) derives the
+    # gRPC port (4317) for the netloc while still reporting "HTTP + protobuf"
+    # transport and keeping the /v1/traces path — spans silently fail to
+    # export to that dead combination and Phoenix shows zero traces.
+    tracer_provider = register(
+        project_name=os.getenv("PHOENIX_PROJECT_NAME", "remote-carepro"),
+        endpoint=endpoint,
+        protocol="http/protobuf",
+    )
     OpenAIInstrumentor().instrument(tracer_provider=tracer_provider)

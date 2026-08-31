@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
@@ -182,28 +183,46 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
+      isScrollControlled: true,
       builder: (sheetContext) {
         final l10n = AppLocalizations.of(sheetContext);
         return SafeArea(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 24.h),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(warning.source, style: AppTextStyles.label),
-                SizedBox(height: AppSpacing.sm),
-                Text(warning.message, style: AppTextStyles.bodyMedium),
-                if (warning.retrievedAt != null) ...[
-                  SizedBox(height: AppSpacing.md),
-                  Text(
-                    l10n.fdaRetrievedTimestamp(warning.retrievedAt!),
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.greyText,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(sheetContext).size.height * 0.8,
+            ),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 24.h),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(warning.source, style: AppTextStyles.label),
+                  SizedBox(height: AppSpacing.sm),
+                  MarkdownBody(
+                    data: sanitizeLlmMarkdown(warning.message),
+                    styleSheet: MarkdownStyleSheet(
+                      p: AppTextStyles.bodyMedium,
+                      strong: AppTextStyles.bodyMedium.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      em: AppTextStyles.bodyMedium.copyWith(
+                        fontStyle: FontStyle.italic,
+                      ),
+                      listBullet: AppTextStyles.bodyMedium,
                     ),
                   ),
+                  if (warning.retrievedAt != null) ...[
+                    SizedBox(height: AppSpacing.md),
+                    Text(
+                      l10n.fdaRetrievedTimestamp(warning.retrievedAt!),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.greyText,
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         );
@@ -240,7 +259,9 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
           nextRollback != prevState?.rollbackErrorSlotId) {
         final messenger = ScaffoldMessenger.of(context);
         messenger.hideCurrentSnackBar();
-        messenger.showSnackBar(SnackBar(content: Text(l10n.todayLogRollbackError)));
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.todayLogRollbackError)),
+        );
         WidgetsBinding.instance.addPostFrameCallback((_) {
           ref.read(todayAgendaNotifierProvider.notifier).acknowledgeRollback();
         });
@@ -980,8 +1001,9 @@ class _DoseGroupSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final disableAnimations = MediaQuery.of(context).disableAnimations;
-    final visibleSlots =
-        (isExpanded || slots.length <= 3) ? slots : slots.take(3).toList();
+    final visibleSlots = (isExpanded || slots.length <= 3)
+        ? slots
+        : slots.take(3).toList();
     final showToggle = !isExpanded && slots.length > 3;
 
     return AnimatedSize(

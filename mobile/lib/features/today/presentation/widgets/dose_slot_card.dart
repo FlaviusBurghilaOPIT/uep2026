@@ -111,10 +111,7 @@ class DoseSlotCard extends StatelessWidget {
                                     timeText,
                                     style: AppTextStyles.bodySmall,
                                   ),
-                                  Text(
-                                    '·',
-                                    style: AppTextStyles.bodySmall,
-                                  ),
+                                  Text('·', style: AppTextStyles.bodySmall),
                                   DoseFormatBadge(
                                     form: detectDosageForm(
                                       medicationName: slot.medicationName,
@@ -139,9 +136,8 @@ class DoseSlotCard extends StatelessWidget {
                       Text(
                         l10n.todaySlotTimes(
                           timeText,
-                          DateFormat.jm(
-                            locale,
-                          ).format(slot.loggedAt!.toLocal()),
+                          DateFormat.jm(locale)
+                              .format(slot.loggedAt!.toLocal()),
                         ),
                         style: AppTextStyles.bodySmall,
                       ),
@@ -324,7 +320,8 @@ class _StateBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final disableAnimations = MediaQuery.of(context).disableAnimations;
+    final badge = Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
         color: spec.background,
@@ -348,6 +345,24 @@ class _StateBadge extends StatelessWidget {
           ),
         ],
       ),
+    );
+
+    if (disableAnimations) {
+      return KeyedSubtree(key: ValueKey(spec.label), child: badge);
+    }
+
+    // A state change (e.g. Due → Taken) pops the new badge in with a bounce
+    // instead of snapping in place — the previous badge never just sits
+    // there unanimated.
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 320),
+      switchInCurve: Curves.elasticOut,
+      switchOutCurve: Curves.easeOut,
+      transitionBuilder: (child, animation) => ScaleTransition(
+        scale: animation,
+        child: FadeTransition(opacity: animation, child: child),
+      ),
+      child: KeyedSubtree(key: ValueKey(spec.label), child: badge),
     );
   }
 }
@@ -444,4 +459,3 @@ class _SlotActionRowState extends State<_SlotActionRow> {
     );
   }
 }
-

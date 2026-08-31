@@ -88,12 +88,10 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
 
     final caseId = _getCaseId();
 
-    // The typing indicator shows only while awaiting the FIRST chunk. Once the
-    // streaming Assistant bubble appears (last message is no longer the user's)
-    // the growing bubble replaces it — no duplicated "thinking" affordances.
-    final isAwaitingFirstChunk =
-        chatState.isLoading &&
-        (chatState.messages.isEmpty || chatState.messages.last.isFromUser);
+    // The typing indicator stays visible for the whole reply — from the
+    // moment Send is tapped until the last chunk lands (isLoading flips to
+    // false) — so the back-and-forth motion never cuts out mid-stream.
+    final isAssistantResponding = chatState.isLoading;
 
     return Scaffold(
       appBar: AppBar(
@@ -144,8 +142,9 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
                     ),
             ),
 
-            // 3. Typing indicator (only while awaiting the first streamed chunk)
-            if (isAwaitingFirstChunk) const TypingIndicator(),
+            // 3. Typing indicator (visible for the whole reply, not just the
+            // wait for the first chunk)
+            if (isAssistantResponding) const TypingIndicator(),
 
             // 4. Suggestion chips row (visible when messages is empty)
             if (chatState.messages.isEmpty)

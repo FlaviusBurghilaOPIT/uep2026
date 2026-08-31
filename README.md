@@ -116,7 +116,7 @@ docker compose up -d --build
 | **Clinician Web Portal**      | `http://localhost` (or `http://<EC2-IP>`)      | `80` / `3000` | `clinician@example.com` / `CarePro#2026!Secure` | Case authoring, prescribing, and triage roster |
 | **FastAPI Backend & Swagger** | `http://localhost:8000/docs` (or `:8000/docs`) | `8000`        | _None (Public OpenAPI)_                         | Interactive Swagger API documentation          |
 | **Patient Mobile Companion**  | Flutter App                                    | Mobile client | `patient@example.com` / 6-digit OTP             | Passwordless recovery companion application    |
-| **Arize Phoenix LLM Metrics** | `http://localhost:6006`                        | `6006`        | `admin@localhost` / `Phoenix#2026!Guard`        | Live OpenTelemetry traces & token costs        |
+| **Arize Phoenix LLM Metrics** | `http://localhost:6006`                        | `6006`        | _None (No password required)_                   | Live OpenTelemetry traces & token costs        |
 | **PostgreSQL 16 Database**    | `localhost:5432`                               | `5432`        | `caredev` / `caredev`                           | Relational database with `pgvector` extension  |
 
 ---
@@ -153,18 +153,6 @@ flutter run --dart-define=API_BASE_URL=http://<EC2-PUBLIC-IP>:8000
 
 ---
 
-## 2-Minute Demo Walkthrough
-
-| Timestamp       | Scene                                          | Surface            | Key Actions Demonstrated                                                                                                                                                                                                             |
-| --------------- | ---------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **0:00 – 0:25** | **Clinician Prescribing & openFDA Review**     | Web Portal (`:80`) | Log in as Dr. Sarah Connor (`clinician@example.com`), open Sarah Mitchell (Total Knee Arthroplasty), prescribe BID regimen, and review openFDA boxed warnings and adverse reactions.                                                 |
-| **0:25 – 0:55** | **Patient Onboarding & 1-Tap Adherence**       | Flutter App        | Enter `patient@example.com` + 6-digit OTP (clipboard auto-paste); view Today agenda; log morning Ibuprofen in 1 tap (<50ms optimistic update + 5s undo SnackBar); trigger **600ms "Day Complete" Ring Closure** celebration sparkle. |
-| **0:55 – 1:25** | **Guardrailed AI Recovery Assistant**          | Flutter App        | Tap "When can I shower?" for NICE guideline RAG response; test safety guardrail with "Can I double my pain medication?" to demonstrate deterministic refusal copy and clinic hotline escalation.                                     |
-| **1:25 – 1:45** | **Emergency Interception & Triage Resolution** | Mobile ➡️ Web      | Daily check-in: select "Unwell" -> renders Emergency Red-Flag banner (911 / clinic direct); on Web Portal, patient instantly bubbles to **#1 in Critical Red Priority Queue**; submit 1-click inline resolution note.                |
-| **1:45 – 2:00** | **LLM Observability & Cost Tracking**          | Phoenix (`:6006`)  | Open Arize Phoenix to show real-time OpenTelemetry trace waterfalls, latency, token counts, and USD cost attribution per query.                                                                                                      |
-
----
-
 ## Testing & Quality
 
 All three tiers maintain comprehensive automated test coverage with zero regressions:
@@ -193,17 +181,17 @@ cd mobile && flutter test
 
 A clean template is provided in `.env.example`:
 
-| Variable                 | Default (Local)                                   | EC2 / Production                 | Description                                           |
-| ------------------------ | ------------------------------------------------- | -------------------------------- | ----------------------------------------------------- |
-| `DATABASE_URL`           | `postgresql://caredev:caredev@db:5432/remotecare` | AWS RDS or container Postgres    | PostgreSQL connection string                          |
-| `POSTGRES_USER`          | `caredev`                                         | `caredev`                        | Postgres superuser                                    |
-| `POSTGRES_PASSWORD`      | `caredev`                                         | Secure password                  | Postgres password                                     |
-| `POSTGRES_DB`            | `remotecare`                                      | `remotecare`                     | Database name                                         |
-| `JWT_SECRET`             | `dev-secret-change-in-production-...`             | Secure 32+ char secret           | JWT signing key                                       |
-| `OPENROUTER_API_KEY`     | `sk-or-your-key-here`                             | OpenRouter API key               | LLM streaming assistant API key                       |
-| `OPENROUTER_MODEL`       | `meta-llama/llama-3-8b-instruct`                  | `meta-llama/llama-3-8b-instruct` | Active model for RAG assistant & triage               |
-| `FDA_PROVIDER`           | `live`                                            | `live`                           | Live openFDA API (`live`) or fixture mock (`fixture`) |
-| `PHOENIX_ADMIN_PASSWORD` | `Phoenix#2026!Guard`                              | Secure admin password            | Password for `admin@localhost` in Phoenix             |
+| Variable              | Default (Local)                                   | EC2 / Production                 | Description                                           |
+| --------------------- | ------------------------------------------------- | -------------------------------- | ----------------------------------------------------- |
+| `DATABASE_URL`        | `postgresql://caredev:caredev@db:5432/remotecare` | AWS RDS or container Postgres    | PostgreSQL connection string                          |
+| `POSTGRES_USER`       | `caredev`                                         | `caredev`                        | Postgres superuser                                    |
+| `POSTGRES_PASSWORD`   | `caredev`                                         | Secure password                  | Postgres password                                     |
+| `POSTGRES_DB`         | `remotecare`                                      | `remotecare`                     | Database name                                         |
+| `JWT_SECRET`          | `dev-secret-change-in-production-...`             | Secure 32+ char secret           | JWT signing key                                       |
+| `OPENROUTER_API_KEY`  | `sk-or-your-key-here`                             | OpenRouter API key               | LLM streaming assistant API key                       |
+| `OPENROUTER_MODEL`    | `meta-llama/llama-3-8b-instruct`                  | `meta-llama/llama-3-8b-instruct` | Active model for RAG assistant & triage               |
+| `FDA_PROVIDER`        | `live`                                            | `live`                           | Live openFDA API (`live`) or fixture mock (`fixture`) |
+| `PHOENIX_ENABLE_AUTH` | `false`                                           | `false`                          | Arize Phoenix auth toggle (`false` = no password)     |
 
 ---
 
@@ -219,10 +207,3 @@ When deploying to AWS EC2, open the following inbound ports in your Security Gro
 | **`22`**   | TCP / SSH  | Your IP     | **SSH Instance Administration**                           |
 
 ---
-
-## Team CarePro Innovators
-
-- **Flavius Burghila** — Lead Architect & Full-Stack Engineer (`flavius.burghila@opit.edu`)
-- **Engineering Team Member 2** — Mobile & UI/UX Specialist (`carepro.eng2@opit.edu`)
-- **Engineering Team Member 3** — Frontend & Web Engineer (`carepro.eng3@opit.edu`)
-- **Engineering Team Member 4** — QA, DevOps & AI Observability (`carepro.eng4@opit.edu`)

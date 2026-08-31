@@ -11,7 +11,7 @@ import '../../../../core/l10n/app_localizations.dart';
 /// LLM drug-safety summaries sometimes emit stray artifact lines — a lone
 /// "." or an empty bullet — where it meant a paragraph break. Strip those
 /// and collapse repeated blank lines so the rendered markdown reads clean.
-String _sanitizeLlmMarkdown(String text) {
+String sanitizeLlmMarkdown(String text) {
   final lines = text.split('\n');
   final kept = <String>[];
   for (final line in lines) {
@@ -175,7 +175,7 @@ class FdaWarningCard extends StatelessWidget {
                         ),
                         SizedBox(height: 2.h),
                         MarkdownBody(
-                          data: _sanitizeLlmMarkdown(message),
+                          data: sanitizeLlmMarkdown(message),
                           styleSheet: MarkdownStyleSheet(
                             p: AppTextStyles.bodySmall,
                             strong: AppTextStyles.bodySmall.copyWith(
