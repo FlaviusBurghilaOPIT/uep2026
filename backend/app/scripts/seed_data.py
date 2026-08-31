@@ -62,6 +62,10 @@ def clean_demo_data(
 
     users = db.query(models.User).filter(models.User.email.in_(demo_emails)).all()
     for u in users:
+        db.query(models.AnalyticsEvent).filter(models.AnalyticsEvent.actor_id == u.id).delete()
+        db.query(models.TriageResolution).filter(
+            (models.TriageResolution.clinician_id == u.id) | (models.TriageResolution.patient_id == u.id)
+        ).delete()
         cases = db.query(models.Case).filter(
             (models.Case.clinician_id == u.id) | (models.Case.patient_id == u.id)
         ).all()
@@ -303,8 +307,31 @@ def seed_database(
                 db.commit()
                 db.refresh(med)
 
-                # Generate scheduled reminders for today
+                # Generate historical taken dose logs for Day -2 and Day -1
                 if m_data["times"]:
+                    for day_offset in [2, 1]:
+                        past_date = today - timedelta(days=day_offset)
+                        for t_str in m_data["times"]:
+                            hh, mm = map(int, t_str.split(":"))
+                            sched_dt = datetime.combine(past_date, time(hh, mm), tzinfo=timezone.utc)
+                            past_rem = models.ScheduledReminder(
+                                medication_id=med.id,
+                                scheduled_time=sched_dt,
+                                status="taken",
+                            )
+                            db.add(past_rem)
+                            db.commit()
+                            db.refresh(past_rem)
+
+                            past_log = models.DoseLog(
+                                scheduled_reminder_id=past_rem.id,
+                                status=models.DoseStatus.taken,
+                                logged_at=sched_dt + timedelta(minutes=10),
+                            )
+                            db.add(past_log)
+                            db.commit()
+
+                    # Generate scheduled reminders for today (pending for live demo)
                     for t_str in m_data["times"]:
                         hh, mm = map(int, t_str.split(":"))
                         sched_dt = datetime.combine(today, time(hh, mm), tzinfo=timezone.utc)
@@ -315,7 +342,7 @@ def seed_database(
                         )
                         db.add(rem)
                     db.commit()
-                print(f"Created prescription: {med.name} {med.dose}")
+                print(f"Created prescription & history: {med.name} {med.dose}")
 
         # Care Instructions / Recommendations
         recs = [

@@ -203,7 +203,7 @@ const postOpDay = calculatePostOpDay(caseData?.surgery_date)
           <div class="metric-val-row">
             <span class="metric-value">{adherenceRate}%</span>
             <span class={`status-tag ${adherenceRate >= 80 ? 'good' : 'bad'}`}>
-              {takenCount}/{completedLogs.length} Doses Logged
+              {completedLogs.length > 0 ? `${takenCount}/${completedLogs.length} Doses Logged` : 'Scheduled Today'}
             </span>
           </div>
           <div class="progress-track">
