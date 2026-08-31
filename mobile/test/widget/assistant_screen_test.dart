@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -61,43 +62,45 @@ void main() {
     telemetryService = TelemetryService(fakeApi);
   });
 
-  testWidgets('Guardrail banner is always visible and matches typography and styling spec', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(1080, 2400);
-    tester.view.devicePixelRatio = 2.0;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+  testWidgets(
+    'Guardrail banner is always visible and matches typography and styling spec',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(
-      buildTestApp(fakeApi, fakeStream, telemetryService, prefs),
-    );
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        buildTestApp(fakeApi, fakeStream, telemetryService, prefs),
+      );
+      await tester.pumpAndSettle();
 
-    final bannerFinder = find.byType(GuardrailBanner);
-    expect(bannerFinder, findsOneWidget);
+      final bannerFinder = find.byType(GuardrailBanner);
+      expect(bannerFinder, findsOneWidget);
 
-    final textFinder = find.descendant(
-      of: bannerFinder,
-      matching: find.text('Care Team Assistant • Informational only, never diagnostic'),
-    );
-    expect(textFinder, findsOneWidget);
+      final textFinder = find.descendant(
+        of: bannerFinder,
+        matching: find.text(
+          'Care Team Assistant • Informational only, never diagnostic',
+        ),
+      );
+      expect(textFinder, findsOneWidget);
 
-    final textWidget = tester.widget<Text>(textFinder);
-    expect(textWidget.style?.fontWeight, equals(FontWeight.w500));
-    expect(textWidget.style?.color, equals(const Color(0xFF334155)));
-    expect(textWidget.style?.height, equals(1.4));
+      final textWidget = tester.widget<Text>(textFinder);
+      expect(textWidget.style?.fontWeight, equals(FontWeight.w500));
+      expect(textWidget.style?.color, equals(const Color(0xFF334155)));
+      expect(textWidget.style?.height, equals(1.4));
 
-    final containerFinder = find.descendant(
-      of: bannerFinder,
-      matching: find.byType(Container),
-    ).first;
-    final containerWidget = tester.widget<Container>(containerFinder);
-    final decoration = containerWidget.decoration as BoxDecoration;
-    expect(decoration.color, equals(const Color(0xFFF0FDF4)));
-    final border = decoration.border as Border;
-    expect(border.bottom.color, equals(const Color(0xFFDCFCE7)));
-  });
+      final containerFinder = find
+          .descendant(of: bannerFinder, matching: find.byType(Container))
+          .first;
+      final containerWidget = tester.widget<Container>(containerFinder);
+      final decoration = containerWidget.decoration as BoxDecoration;
+      expect(decoration.color, equals(const Color(0xFFF0FDF4)));
+      final border = decoration.border as Border;
+      expect(border.bottom.color, equals(const Color(0xFFDCFCE7)));
+    },
+  );
 
   testWidgets(
     'Empty chat screen renders 3 pre-seeded prompt chips; tapping sends query automatically and hides chips',
@@ -141,7 +144,7 @@ void main() {
   );
 
   testWidgets(
-    'Typing indicator visible while awaiting first chunk; hidden once streaming starts',
+    'Typing indicator visible for the whole reply; hidden once the stream finishes',
     (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
@@ -165,12 +168,14 @@ void main() {
       // Awaiting the first chunk: typing indicator is visible.
       expect(find.byKey(const Key('typing_indicator')), findsOneWidget);
 
-      // First chunk arrives: the streaming bubble replaces the indicator.
+      // First chunk arrives: the bubble grows, but the indicator keeps
+      // animating below it — the reply is still in flight.
       controller.add('Done');
       await tester.pump();
-      expect(find.byKey(const Key('typing_indicator')), findsNothing);
-      expect(find.text('Done'), findsOneWidget);
+      expect(find.byKey(const Key('typing_indicator')), findsOneWidget);
+      expect(find.textContaining('Done'), findsOneWidget);
 
+      // Only once the stream fully finishes does the indicator go away.
       await controller.close();
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('typing_indicator')), findsNothing);
@@ -218,17 +223,18 @@ void main() {
     await tester.tap(find.byIcon(Icons.send_rounded));
     await tester.pump();
 
-    // Partial chunk renders before the full reply exists.
+    // Partial chunk renders before the full reply exists. Markdown
+    // rendering trims trailing whitespace, so match by substring rather
+    // than the exact trailing-space chunk text.
     controller.add('Rest ');
     await tester.pump();
-    expect(find.text('Rest '), findsOneWidget);
-    expect(find.text('Rest and hydrate.'), findsNothing);
+    expect(find.textContaining('Rest'), findsOneWidget);
+    expect(find.textContaining('Rest and hydrate.'), findsNothing);
 
     // The next chunk grows the same bubble in place.
     controller.add('and hydrate.');
     await tester.pump();
-    expect(find.text('Rest and hydrate.'), findsOneWidget);
-    expect(find.text('Rest '), findsNothing);
+    expect(find.textContaining('Rest and hydrate.'), findsOneWidget);
 
     await controller.close();
     await tester.pumpAndSettle();
@@ -382,103 +388,100 @@ void main() {
     },
   );
 
-  testWidgets(
-    'ChatBubble animates in with 180ms fade and slide entrance',
-    (tester) async {
-      final controller = StreamController<String>();
-      fakeStream.handler = (c, m, i) => controller.stream;
+  testWidgets('ChatBubble animates in with 180ms fade and slide entrance', (
+    tester,
+  ) async {
+    final controller = StreamController<String>();
+    fakeStream.handler = (c, m, i) => controller.stream;
 
-      await tester.pumpWidget(
-        buildTestApp(fakeApi, fakeStream, telemetryService, prefs),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      buildTestApp(fakeApi, fakeStream, telemetryService, prefs),
+    );
+    await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), 'Hello');
-      await tester.tap(find.byIcon(Icons.send_rounded));
-      await tester.pump();
+    await tester.enterText(find.byType(TextField), 'Hello');
+    await tester.tap(find.byIcon(Icons.send_rounded));
+    await tester.pump();
 
-      // Emit assistant response chunk
-      controller.add('Hi there');
-      await tester.pump(); // Frame 0 of assistant bubble mount
+    // Emit assistant response chunk
+    controller.add('Hi there');
+    await tester.pump(); // Frame 0 of assistant bubble mount
 
-      final assistantBubbleFinder = find.byType(ChatBubble).last;
-      final fadeFinder = find.descendant(
-        of: assistantBubbleFinder,
-        matching: find.byType(FadeTransition),
-      );
-      expect(fadeFinder, findsOneWidget);
-      final slideFinder = find.descendant(
-        of: assistantBubbleFinder,
-        matching: find.byType(SlideTransition),
-      );
-      expect(slideFinder, findsOneWidget);
+    final assistantBubbleFinder = find.byType(ChatBubble).last;
+    final fadeFinder = find.descendant(
+      of: assistantBubbleFinder,
+      matching: find.byType(FadeTransition),
+    );
+    expect(fadeFinder, findsOneWidget);
+    final slideFinder = find.descendant(
+      of: assistantBubbleFinder,
+      matching: find.byType(SlideTransition),
+    );
+    expect(slideFinder, findsOneWidget);
 
-      final fadeWidget = tester.widget<FadeTransition>(fadeFinder);
-      expect(fadeWidget.opacity.value, equals(0.0));
+    final fadeWidget = tester.widget<FadeTransition>(fadeFinder);
+    expect(fadeWidget.opacity.value, equals(0.0));
 
-      final slideWidget = tester.widget<SlideTransition>(slideFinder);
-      expect(slideWidget.position.value, equals(const Offset(0, 0.05)));
+    final slideWidget = tester.widget<SlideTransition>(slideFinder);
+    expect(slideWidget.position.value, equals(const Offset(0, 0.05)));
 
-      // Advance by 180ms to complete entrance
-      await tester.pump(const Duration(milliseconds: 180));
-      expect(fadeWidget.opacity.value, closeTo(1.0, 0.01));
-      expect(slideWidget.position.value, equals(Offset.zero));
+    // Advance by 180ms to complete entrance
+    await tester.pump(const Duration(milliseconds: 180));
+    expect(fadeWidget.opacity.value, closeTo(1.0, 0.01));
+    expect(slideWidget.position.value, equals(Offset.zero));
 
-      await controller.close();
-      await tester.pumpAndSettle();
-    },
-  );
+    await controller.close();
+    await tester.pumpAndSettle();
+  });
 
-  testWidgets(
-    'ChatBubble bypasses animation when disableAnimations is true',
-    (tester) async {
-      fakeStream.handler = (c, m, i) => Stream.value('Instant reply');
+  testWidgets('ChatBubble bypasses animation when disableAnimations is true', (
+    tester,
+  ) async {
+    fakeStream.handler = (c, m, i) => Stream.value('Instant reply');
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            apiServiceProvider.overrideWithValue(fakeApi),
-            assistantStreamClientProvider.overrideWithValue(fakeStream),
-            telemetryServiceProvider.overrideWithValue(telemetryService),
-            sharedPreferencesProvider.overrideWithValue(prefs),
-          ],
-          child: ScreenUtilInit(
-            designSize: const Size(375, 812),
-            minTextAdapt: true,
-            builder: (context, child) => const MaterialApp(
-              supportedLocales: AppLocalizations.supportedLocales,
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              home: MediaQuery(
-                data: MediaQueryData(disableAnimations: true),
-                child: AssistantScreen(),
-              ),
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          apiServiceProvider.overrideWithValue(fakeApi),
+          assistantStreamClientProvider.overrideWithValue(fakeStream),
+          telemetryServiceProvider.overrideWithValue(telemetryService),
+          sharedPreferencesProvider.overrideWithValue(prefs),
+        ],
+        child: ScreenUtilInit(
+          designSize: const Size(375, 812),
+          minTextAdapt: true,
+          builder: (context, child) => const MaterialApp(
+            supportedLocales: AppLocalizations.supportedLocales,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            home: MediaQuery(
+              data: MediaQueryData(disableAnimations: true),
+              child: AssistantScreen(),
             ),
           ),
         ),
-      );
-      await tester.pumpAndSettle();
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), 'Hello');
-      await tester.tap(find.byIcon(Icons.send_rounded));
-      await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Hello');
+    await tester.tap(find.byIcon(Icons.send_rounded));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Instant reply'), findsOneWidget);
-      // Under disableAnimations, ChatBubble does not wrap with FadeTransition or SlideTransition
-      expect(
-        find.descendant(
-          of: find.byType(ChatBubble),
-          matching: find.byType(FadeTransition),
-        ),
-        findsNothing,
-      );
-      expect(
-        find.descendant(
-          of: find.byType(ChatBubble),
-          matching: find.byType(SlideTransition),
-        ),
-        findsNothing,
-      );
-    },
-  );
+    expect(find.text('Instant reply'), findsOneWidget);
+    // Under disableAnimations, ChatBubble does not wrap with FadeTransition or SlideTransition
+    expect(
+      find.descendant(
+        of: find.byType(ChatBubble),
+        matching: find.byType(FadeTransition),
+      ),
+      findsNothing,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(ChatBubble),
+        matching: find.byType(SlideTransition),
+      ),
+      findsNothing,
+    );
+  });
 }
-
