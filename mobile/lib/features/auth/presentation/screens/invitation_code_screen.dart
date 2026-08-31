@@ -90,7 +90,7 @@ class _InvitationCodeScreenState extends ConsumerState<InvitationCodeScreen> {
     } else {
       final message =
           ref.read(authProvider).errorMessage ??
-          'Invalid or expired invitation code';
+          'Invalid or expired OTP code';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message), backgroundColor: AppColors.errorRed),
       );
@@ -102,7 +102,7 @@ class _InvitationCodeScreenState extends ConsumerState<InvitationCodeScreen> {
     final auth = ref.watch(authProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Invitation Code')),
+      appBar: AppBar(title: const Text('Login with OTP')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPaddingH),
@@ -112,10 +112,10 @@ class _InvitationCodeScreenState extends ConsumerState<InvitationCodeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: AppSpacing.lg),
-                Text('Activate Your Account', style: AppTextStyles.heading1),
+                Text('Login with OTP Code', style: AppTextStyles.heading1),
                 SizedBox(height: AppSpacing.sm),
                 Text(
-                  'Enter the email and 6-digit invitation code provided by your clinic.',
+                  'Enter your email and the 6-digit OTP code to continue.',
                   style: AppTextStyles.subtitle,
                 ),
                 SizedBox(height: AppSpacing.xxl),
@@ -140,8 +140,8 @@ class _InvitationCodeScreenState extends ConsumerState<InvitationCodeScreen> {
                 SizedBox(height: AppSpacing.lg),
 
                 AppTextField(
-                  label: '6-DIGIT INVITATION CODE',
-                  hintText: 'e.g. 849201',
+                  label: '6-DIGIT OTP CODE',
+                  hintText: 'e.g. 424242',
                   prefixIcon: LucideIcons.keyRound,
                   keyboardType: TextInputType.number,
                   controller: _codeController,
@@ -241,7 +241,7 @@ class _InvitationCodeScreenState extends ConsumerState<InvitationCodeScreen> {
                 SizedBox(height: AppSpacing.xl),
 
                 AppButton(
-                  text: 'Verify & Activate Account',
+                  text: 'Verify & Sign In',
                   isLoading: auth.isLoading,
                   onPressed: _verifyInviteCode,
                 ),

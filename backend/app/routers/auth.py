@@ -177,6 +177,12 @@ def request_patient_code(req: schemas.PatientRequestCodeRequest, db: Session = D
         if user.status == "pending_onboarding" and user.invite_code and not _is_expired(user.invite_code_expires_at):
             code = str(user.invite_code).strip()
             logger.info(f"[/auth/patient/request-code] Preserved active onboarding code '{code}' for '{user.email}'")
+        elif clean_email == "patient@example.com":
+            code = "424242"
+            user.invite_code = code
+            user.invite_code_expires_at = datetime.now(timezone.utc) + timedelta(days=365)
+            db.commit()
+            logger.info(f"[/auth/patient/request-code] Preserved demo patient code '{code}' for '{user.email}'")
         else:
             code = f"{secrets.randbelow(900000) + 100000}"
             user.invite_code = code
@@ -210,6 +216,14 @@ def verify_patient_code(req: schemas.PatientVerifyCodeRequest, db: Session = Dep
         raise HTTPException(status_code=400, detail="Invalid or expired code")
 
     stored_code = str(user.invite_code).strip() if user.invite_code else None
+
+    # Allow 424242 demo bypass for patient@example.com if invite_code was not set
+    if clean_email == "patient@example.com" and clean_code == "424242" and not stored_code:
+        stored_code = "424242"
+        user.invite_code = "424242"
+        user.invite_code_expires_at = datetime.now(timezone.utc) + timedelta(days=365)
+        db.commit()
+
     logger.info(
         f"[/auth/patient/verify-code] Found user {user.id} ({user.email}), status='{user.status}', "
         f"stored_code='{stored_code}', expires_at={user.invite_code_expires_at}"
@@ -247,8 +261,13 @@ def verify_patient_code(req: schemas.PatientVerifyCodeRequest, db: Session = Dep
             "physician_name": physician_name or "Dr. Miller",
         }
 
-    user.invite_code = None
-    user.invite_code_expires_at = None
+    # For demo code 424242 on patient@example.com, retain invite_code so subsequent demo logins keep working
+    if user.email == "patient@example.com" and clean_code == "424242":
+        user.invite_code = "424242"
+        user.invite_code_expires_at = datetime.now(timezone.utc) + timedelta(days=365)
+    else:
+        user.invite_code = None
+        user.invite_code_expires_at = None
     db.commit()
 
     token = create_access_token({"sub": user.id, "role": user.role.value, "email": user.email})

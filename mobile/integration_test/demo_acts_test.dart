@@ -141,18 +141,18 @@ void main() {
     // ACT 2: Patient Onboarding & 1-Tap Adherence        [0:25 – 0:55]
     // =========================================================================
 
-    // --- 2.1 Sign in via Invitation Code (email + 6-digit OTP) ---
-    // Welcome → "I have an invitation code" → InvitationCodeScreen
+    // --- 2.1 Sign in via OTP Code (email + 6-digit OTP) ---
+    // Welcome → "Login with OTP code" → InvitationCodeScreen
     // The InvitationCodeScreen features clipboard auto-paste and auto-submit.
     await pumpUntilFound(tester, find.text(AuthStrings.welcomeTitle));
     await beat(tester, 1500); // Showcase Welcome screen
 
-    // Tap "I have an invitation code" to open InvitationCodeScreen
+    // Tap "Login with OTP code" to open InvitationCodeScreen
     await tester.tap(find.text(AuthStrings.clinicInvitationButton));
     await tester.pumpAndSettle();
 
     // InvitationCodeScreen — enter email + 6-digit code
-    await pumpUntilFound(tester, find.text('Activate Your Account'));
+    await pumpUntilFound(tester, find.text('Login with OTP Code'));
     await beat(tester, 800);
 
     // Email field (first TextFormField)
@@ -160,13 +160,13 @@ void main() {
     await tester.enterText(emailField, 'patient@example.com');
     await beat(tester, 600);
 
-    // 6-digit invitation code (second TextFormField) — demo bypass 424242
+    // 6-digit OTP code (second TextFormField) — demo bypass 424242
     final codeField = find.byType(TextFormField).last;
     await tester.enterText(codeField, '424242');
     await beat(tester, 800); // Show the code filled in
 
-    // Tap "Verify & Activate Account"
-    final verifyBtn = find.text('Verify & Activate Account');
+    // Tap "Verify & Sign In"
+    final verifyBtn = find.text('Verify & Sign In');
     if (verifyBtn.evaluate().isNotEmpty) {
       await tester.ensureVisible(verifyBtn);
       await tester.tap(verifyBtn, warnIfMissed: false);

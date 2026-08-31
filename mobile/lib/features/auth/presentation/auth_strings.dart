@@ -18,7 +18,7 @@ class AuthStrings {
   static const String signInButton = 'Sign In';
   static const String clinicianSignInButton = 'Sign In';
   static const String clinicInvitationButton =
-      'I have an invitation code';
+      'Login with OTP code';
   static const String codeSignInLink = 'Sign in with One-Time Code';
   static const String invalidCredentials = 'Invalid email or password';
 

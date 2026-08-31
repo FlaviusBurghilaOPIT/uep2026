@@ -23,6 +23,7 @@ def seed(db: Session) -> dict:
             full_name=full_name,
             role=role,
             password_hash=hash_password(password),
+            invite_code="424242" if role == models.UserRole.patient else None,
         )
         db.add(user)
         db.commit()
