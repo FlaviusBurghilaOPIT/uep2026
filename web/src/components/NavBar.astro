@@ -202,12 +202,16 @@ const navSections = [
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: color 0.15s ease, background-color 0.15s ease;
+    transition: color var(--duration-press) var(--ease-out), background-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
   }
 
   .mobile-menu-btn:hover {
     color: #ffffff;
     background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .mobile-menu-btn:active {
+    transform: scale(0.94);
   }
 
   /* Sidebar Container */
@@ -294,7 +298,7 @@ const navSections = [
     border-radius: 50%;
     background-color: #10b981;
     box-shadow: 0 0 6px #10b981;
-    animation: pulse 2s infinite;
+    animation: pulse 2s var(--ease-in-out) infinite;
   }
 
   @keyframes pulse {
@@ -353,7 +357,7 @@ const navSections = [
     font-weight: 500;
     color: #94a3b8;
     text-decoration: none;
-    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color var(--duration-snappy) var(--ease-out), background-color var(--duration-snappy) var(--ease-out), transform var(--duration-press) var(--ease-out), border-color var(--duration-snappy) var(--ease-out);
     position: relative;
   }
 
@@ -361,6 +365,10 @@ const navSections = [
     color: #ffffff;
     background-color: rgba(255, 255, 255, 0.06);
     transform: translateX(2px);
+  }
+
+  .nav-link:active {
+    transform: translateX(1px) scale(0.98);
   }
 
   .nav-link.active {
@@ -475,13 +483,17 @@ const navSections = [
     border: 1px solid transparent;
     cursor: pointer;
     width: 100%;
-    transition: all 0.15s ease;
+    transition: color var(--duration-press) var(--ease-out), background-color var(--duration-press) var(--ease-out), border-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
   }
 
   .logout-btn:hover {
     color: #f87171;
     background-color: rgba(248, 113, 113, 0.1);
     border-color: rgba(248, 113, 113, 0.2);
+  }
+
+  .logout-btn:active {
+    transform: scale(0.97);
   }
 
   /* Responsive styling */
@@ -492,7 +504,7 @@ const navSections = [
 
     .sidebar {
       transform: translateX(-100%);
-      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 260ms var(--ease-drawer);
       top: 60px;
       height: calc(100vh - 60px);
       z-index: 1040;
@@ -511,6 +523,7 @@ const navSections = [
       background-color: rgba(15, 23, 42, 0.6);
       backdrop-filter: blur(2px);
       z-index: 1030;
+      transition: opacity var(--duration-snappy) var(--ease-out);
     }
   }
 </style>

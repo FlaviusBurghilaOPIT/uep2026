@@ -377,7 +377,7 @@ class _SyncPendingBadge extends StatelessWidget {
   }
 }
 
-class _SlotActionRow extends StatelessWidget {
+class _SlotActionRow extends StatefulWidget {
   const _SlotActionRow({
     super.key,
     required this.icon,
@@ -392,25 +392,51 @@ class _SlotActionRow extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
+  State<_SlotActionRow> createState() => _SlotActionRowState();
+}
+
+class _SlotActionRowState extends State<_SlotActionRow> {
+  bool _isPressed = false;
+
+  @override
   Widget build(BuildContext context) {
+    final disableAnimations = MediaQuery.of(context).disableAnimations;
+
     // M-02: no fixed card/action heights — a minimum keeps the ≥48dp
     // target at default text scale, but the button is free to grow at
     // large text scales instead of clipping its label.
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: 48),
-      child: SizedBox(
-        width: double.infinity,
-        child: OutlinedButton.icon(
-          onPressed: onTap,
-          icon: Icon(icon, color: color, size: AppSpacing.iconMd),
-          label: Text(
-            label,
-            style: TextStyle(fontWeight: FontWeight.w600, color: color),
-          ),
-          style: OutlinedButton.styleFrom(
-            side: BorderSide(color: color.withValues(alpha: 0.4)),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+      child: AnimatedScale(
+        scale: (!disableAnimations && _isPressed) ? 0.97 : 1.0,
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOutCubic,
+        child: Listener(
+          onPointerDown: (_) => setState(() => _isPressed = true),
+          onPointerUp: (_) => setState(() => _isPressed = false),
+          onPointerCancel: (_) => setState(() => _isPressed = false),
+          child: SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: widget.onTap,
+              icon: Icon(
+                widget.icon,
+                color: widget.color,
+                size: AppSpacing.iconMd,
+              ),
+              label: Text(
+                widget.label,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: widget.color,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: widget.color.withValues(alpha: 0.4)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                ),
+              ),
             ),
           ),
         ),

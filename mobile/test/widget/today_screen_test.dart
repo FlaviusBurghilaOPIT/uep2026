@@ -436,4 +436,111 @@ void main() {
       container.dispose();
     });
   });
+
+  group('003 Fluid Group Expansion for Collapsed Dose Slots', () {
+    testWidgets(
+      'groups with >3 slots show +N button and expand smoothly via AnimatedSize',
+      (tester) async {
+        final slots = List.generate(
+          5,
+          (i) => slotJson(
+            slotId: 'slot-$i',
+            medicationName: 'Medication $i',
+            scheduledTime: '2026-07-26T09:00:00Z',
+            state: 'upcoming',
+          ),
+        );
+
+        fakeApi.agendaHandler = (date) => http.Response(
+          agendaBody(slots: slots),
+          200,
+        );
+
+        final container = await pumpToday(tester);
+        await tester.pumpAndSettle();
+
+        // Top 3 slots are visible, slots 3 and 4 are collapsed.
+        expect(find.text('Medication 0'), findsOneWidget);
+        expect(find.text('Medication 1'), findsOneWidget);
+        expect(find.text('Medication 2'), findsOneWidget);
+        expect(find.text('Medication 3'), findsNothing);
+        expect(find.text('Medication 4'), findsNothing);
+
+        // Toggle button shows "+2"
+        final toggleFinder = find.widgetWithText(TextButton, '+2');
+        expect(toggleFinder, findsOneWidget);
+
+        // Verify AnimatedSize configuration on _DoseGroupSection
+        final doseGroupFinder = find.byWidgetPredicate(
+          (w) => w.runtimeType.toString() == '_DoseGroupSection',
+        );
+        expect(doseGroupFinder, findsOneWidget);
+        final animatedSizeFinder = find.descendant(
+          of: doseGroupFinder,
+          matching: find.byType(AnimatedSize),
+        );
+        expect(animatedSizeFinder, findsOneWidget);
+        final animatedSize = tester.widget<AnimatedSize>(animatedSizeFinder);
+        expect(animatedSize.duration, const Duration(milliseconds: 220));
+        expect(animatedSize.curve, Curves.easeOutCubic);
+        expect(animatedSize.alignment, Alignment.topCenter);
+
+        // Scroll toggle into view and tap "+2" to expand
+        await tester.ensureVisible(toggleFinder);
+        await tester.pumpAndSettle();
+
+        await tester.tap(toggleFinder);
+        await tester.pumpAndSettle();
+
+        // Toggle is gone, slots 3 & 4 are visible after expansion
+        expect(find.widgetWithText(TextButton, '+2'), findsNothing);
+        expect(find.text('Medication 3'), findsOneWidget);
+        expect(find.text('Medication 4'), findsOneWidget);
+
+        container.dispose();
+      },
+    );
+
+    testWidgets(
+      'respects disableAnimations with Duration.zero on _DoseGroupSection',
+      (tester) async {
+        final slots = List.generate(
+          4,
+          (i) => slotJson(
+            slotId: 'slot-$i',
+            medicationName: 'Medication $i',
+            scheduledTime: '2026-07-26T09:00:00Z',
+            state: 'upcoming',
+          ),
+        );
+
+        fakeApi.agendaHandler = (date) => http.Response(
+          agendaBody(slots: slots),
+          200,
+        );
+
+        tester.platformDispatcher.accessibilityFeaturesTestValue =
+            FakeAccessibilityFeatures(disableAnimations: true);
+        addTearDown(() {
+          tester.platformDispatcher.clearAccessibilityFeaturesTestValue();
+        });
+
+        final container = await pumpToday(tester);
+        await tester.pumpAndSettle();
+
+        final doseGroupFinder = find.byWidgetPredicate(
+          (w) => w.runtimeType.toString() == '_DoseGroupSection',
+        );
+        final animatedSizeFinder = find.descendant(
+          of: doseGroupFinder,
+          matching: find.byType(AnimatedSize),
+        );
+        final animatedSize = tester.widget<AnimatedSize>(animatedSizeFinder);
+        expect(animatedSize.duration, Duration.zero);
+
+        container.dispose();
+      },
+    );
+  });
 }
+

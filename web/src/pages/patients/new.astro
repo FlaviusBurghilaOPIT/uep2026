@@ -158,10 +158,13 @@ const t = createTranslator(lang)
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.15s ease;
+    transition: background-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
   }
   .submit-btn:hover {
     background-color: #0369a1;
+  }
+  .submit-btn:active {
+    transform: scale(0.97);
   }
   .cancel-btn {
     padding: 10px;
@@ -174,6 +177,13 @@ const t = createTranslator(lang)
     text-align: center;
     text-decoration: none;
     cursor: pointer;
+    transition: background-color var(--duration-press) var(--ease-out), border-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
+  }
+  .cancel-btn:hover {
+    background-color: #f8fafc;
+  }
+  .cancel-btn:active {
+    transform: scale(0.97);
   }
   .center-link {
     text-align: center;
@@ -221,10 +231,13 @@ const t = createTranslator(lang)
     font-weight: 600;
     cursor: pointer;
     margin-top: 6px;
-    transition: background-color 0.15s ease;
+    transition: background-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
   }
   .copy-btn:hover {
     background-color: #166534;
+  }
+  .copy-btn:active {
+    transform: scale(0.96);
   }
 </style>
 

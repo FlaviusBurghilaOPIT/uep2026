@@ -17,6 +17,8 @@ class StepProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final disableAnimations = MediaQuery.of(context).disableAnimations;
+
     return Row(
       children: [
         GestureDetector(
@@ -46,7 +48,11 @@ class StepProgressBar extends StatelessWidget {
             children: List.generate(totalSteps, (index) {
               final isActive = index < currentStep;
               return Expanded(
-                child: Container(
+                child: AnimatedContainer(
+                  duration: disableAnimations
+                      ? Duration.zero
+                      : const Duration(milliseconds: 240),
+                  curve: Curves.easeOutCubic,
                   height: 4.h,
                   margin: EdgeInsets.only(
                     right: index < totalSteps - 1 ? 4.w : 0,

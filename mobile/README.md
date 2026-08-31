@@ -53,7 +53,7 @@ Patients authenticate via a **6-digit email OTP** (no password needed):
 ## 🧪 Testing & Quality
 
 ```bash
-# Run all 273 unit, widget, and feature tests
+# Run all 286 unit, widget, and feature tests
 flutter test
 
 # Run static analysis / linter
@@ -64,6 +64,6 @@ flutter analyze
 
 ## ⚙️ Architecture & Network Resolution
 
-* **State Management:** Riverpod 3.1 (`flutter_riverpod`, `freezed`, `Notifier`).
-* **Local Cache & Offline Sync:** SQLite (`sqflite`) with optimistic UI mutations and 5s undo window.
-* **Network Resolution:** `AppConfig` automatically routes to `http://10.0.2.2:8000` on Android Emulator and `http://localhost:8000` on iOS/macOS, or overrides via `--dart-define=API_BASE_URL=...`.
+* **State Management:** Riverpod 3.1 (`flutter_riverpod`, `riverpod_annotation`, `freezed`, `Notifier`).
+* **Local Cache & Offline Sync:** `SharedPreferences` via `TodayLocalDatasource` with optimistic UI mutations, 5s undo window, and UUIDv4 offline queue synchronization.
+* **Network Resolution:** `AppConfig` automatically routes to `http://10.0.2.2:8000` on Android Emulator and `http://localhost:8000` on iOS/macOS/Desktop, or overrides via `--dart-define=API_BASE_URL=...`.

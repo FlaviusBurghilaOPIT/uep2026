@@ -26,7 +26,10 @@ const isDark = variant === 'dark'
     gap: 6px;
     border-radius: 6px;
     padding: 4px 8px;
-    transition: background-color 0.2s ease;
+    transition: background-color var(--duration-snappy) var(--ease-out), border-color var(--duration-snappy) var(--ease-out), transform var(--duration-press) var(--ease-out);
+  }
+  .language-switcher:active {
+    transform: scale(0.98);
   }
   .language-switcher.dark {
     background-color: #1e293b;

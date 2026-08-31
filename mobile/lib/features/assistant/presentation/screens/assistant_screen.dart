@@ -302,18 +302,51 @@ class SuggestionChips extends ConsumerWidget {
   }
 }
 
-class ChatBubble extends ConsumerWidget {
+class ChatBubble extends StatefulWidget {
   final ChatMessage message;
   final String caseId;
 
   const ChatBubble({super.key, required this.message, required this.caseId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isUser = message.isFromUser;
+  State<ChatBubble> createState() => _ChatBubbleState();
+}
 
-    if (!isUser && !message.inScope) {
-      return RefusalBox(message: message, caseId: caseId);
+class _ChatBubbleState extends State<ChatBubble>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _fadeAnimation;
+  late final Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 180),
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCubic,
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.05),
+      end: Offset.zero,
+    ).animate(_fadeAnimation);
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Widget _buildBubbleBody(BuildContext context) {
+    final isUser = widget.message.isFromUser;
+
+    if (!isUser && !widget.message.inScope) {
+      return RefusalBox(message: widget.message, caseId: widget.caseId);
     }
 
     return Padding(
@@ -342,7 +375,7 @@ class ChatBubble extends ConsumerWidget {
                   ],
           ),
           child: Text(
-            message.text,
+            widget.message.text,
             style: TextStyle(
               color: isUser ? AppColors.white : AppColors.slateDark,
               fontSize: 14.sp,
@@ -350,6 +383,21 @@ class ChatBubble extends ConsumerWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final disableAnimations = MediaQuery.of(context).disableAnimations;
+    if (disableAnimations) {
+      return _buildBubbleBody(context);
+    }
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: _buildBubbleBody(context),
       ),
     );
   }

@@ -491,6 +491,10 @@ const t = createTranslator(lang)
     align-items: center;
     gap: 6px;
     text-decoration: none;
+    transition: background-color var(--duration-press) var(--ease-out), color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
+  }
+  .header-login-btn:active {
+    transform: scale(0.97);
   }
   .header-cta-btn {
     background-color: #0284c7;
@@ -502,6 +506,10 @@ const t = createTranslator(lang)
     font-weight: 600;
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(2,132,199,0.2);
+    transition: background-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out), box-shadow var(--duration-press) var(--ease-out);
+  }
+  .header-cta-btn:active {
+    transform: scale(0.97);
   }
   .hero-section {
     padding: 64px 24px 48px;
@@ -564,10 +572,13 @@ const t = createTranslator(lang)
     font-weight: 600;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(2,132,199,0.3);
-    transition: background-color 0.15s ease;
+    transition: background-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out), box-shadow var(--duration-press) var(--ease-out);
   }
   .primary-cta:hover {
     background-color: #0369a1;
+  }
+  .primary-cta:active {
+    transform: scale(0.97);
   }
   .secondary-cta {
     background-color: #f1f5f9;
@@ -579,10 +590,13 @@ const t = createTranslator(lang)
     font-weight: 600;
     text-decoration: none;
     cursor: pointer;
-    transition: background-color 0.15s ease;
+    transition: background-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
   }
   .secondary-cta:hover {
     background-color: #e2e8f0;
+  }
+  .secondary-cta:active {
+    transform: scale(0.97);
   }
   .trust-bar {
     display: flex;
@@ -645,7 +659,7 @@ const t = createTranslator(lang)
     border: 1px solid #e2e8f0;
     box-shadow: 0 4px 6px -1px rgba(15,23,42,0.08);
     padding: 24px;
-    transition: all 0.3s ease;
+    transition: transform var(--duration-snappy) var(--ease-out), box-shadow var(--duration-snappy) var(--ease-out), border-color var(--duration-snappy) var(--ease-out);
   }
   .preview-card-header {
     display: flex;
@@ -748,10 +762,13 @@ const t = createTranslator(lang)
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.15s ease;
+    transition: background-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
   }
   .preview-action-btn:hover {
     background-color: #991b1b;
+  }
+  .preview-action-btn:active {
+    transform: scale(0.97);
   }
   .resolved-banner {
     display: flex;
@@ -866,7 +883,7 @@ const t = createTranslator(lang)
     padding: 28px;
     display: flex;
     flex-direction: column;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform var(--duration-snappy) var(--ease-out), box-shadow var(--duration-snappy) var(--ease-out);
   }
   .feature-card:hover {
     transform: translateY(-2px);
@@ -938,6 +955,13 @@ const t = createTranslator(lang)
     font-weight: 600;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(2,132,199,0.3);
+    transition: background-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out), box-shadow var(--duration-press) var(--ease-out);
+  }
+  .cta-banner-btn:hover {
+    background-color: #0369a1;
+  }
+  .cta-banner-btn:active {
+    transform: scale(0.97);
   }
   .social-proof-section {
     padding: 64px 24px;
@@ -967,7 +991,7 @@ const t = createTranslator(lang)
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform var(--duration-snappy) var(--ease-out), box-shadow var(--duration-snappy) var(--ease-out);
   }
   .testimonial-card:hover {
     transform: translateY(-2px);
@@ -1091,7 +1115,7 @@ const t = createTranslator(lang)
     border-radius: 12px;
     padding: 24px;
     box-shadow: 0 1px 3px rgba(15,23,42,0.04);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform var(--duration-snappy) var(--ease-out), box-shadow var(--duration-snappy) var(--ease-out);
   }
   .compliance-card:hover {
     transform: translateY(-2px);

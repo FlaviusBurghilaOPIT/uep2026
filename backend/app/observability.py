@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 # Token pricing per 1,000,000 tokens (USD)
 MODEL_PRICING: dict[str, dict[str, float]] = {
+    "deepseek/deepseek-v4-flash-0731": {"prompt": 0.065, "completion": 0.18},
     "meta-llama/llama-3-8b-instruct": {"prompt": 0.055, "completion": 0.055},
     "meta-llama/llama-3.1-8b-instruct": {"prompt": 0.055, "completion": 0.055},
     "meta-llama/llama-3-70b-instruct": {"prompt": 0.59, "completion": 0.79},
@@ -19,6 +20,56 @@ MODEL_PRICING: dict[str, dict[str, float]] = {
     "openai/text-embedding-ada-002": {"prompt": 0.10, "completion": 0.00},
     "default": {"prompt": 0.20, "completion": 0.80},
 }
+
+_LAST_PRICING_SYNC_TIME: float = 0.0
+_SYNC_INTERVAL_SECONDS: float = 3600.0
+
+
+def fetch_openrouter_pricing(target_model: str | None = None) -> dict[str, float] | None:
+    """Fetch real-time model pricing from OpenRouter public API and cache locally."""
+    global _LAST_PRICING_SYNC_TIME
+    now = time.time()
+    if target_model and target_model in MODEL_PRICING and (now - _LAST_PRICING_SYNC_TIME < _SYNC_INTERVAL_SECONDS):
+        return MODEL_PRICING[target_model]
+
+    try:
+        import httpx
+        url = "https://openrouter.ai/api/v1/models"
+        headers = {"User-Agent": "RemoteCarePro/1.0"}
+        api_key = os.getenv("OPENROUTER_API_KEY")
+        if api_key and not api_key.startswith("sk-or-your"):
+            headers["Authorization"] = f"Bearer {api_key}"
+
+        with httpx.Client(timeout=3.0) as client:
+            resp = client.get(url, headers=headers)
+            if resp.status_code == 200:
+                data = resp.json().get("data", [])
+                for item in data:
+                    mid = item.get("id")
+                    pricing = item.get("pricing", {})
+                    if mid and pricing:
+                        prompt_p = float(pricing.get("prompt", 0) or 0) * 1_000_000.0
+                        comp_p = float(pricing.get("completion", 0) or 0) * 1_000_000.0
+                        MODEL_PRICING[mid] = {"prompt": prompt_p, "completion": comp_p}
+                _LAST_PRICING_SYNC_TIME = now
+                if target_model and target_model in MODEL_PRICING:
+                    return MODEL_PRICING[target_model]
+    except Exception as e:
+        logger.debug("Failed to fetch dynamic OpenRouter model pricing: %s", e)
+
+    return MODEL_PRICING.get(target_model) if target_model else None
+
+
+def get_model_pricing(model: str) -> dict[str, float]:
+    """Retrieve USD pricing per million tokens, querying OpenRouter dynamically with static fallback."""
+    if model in MODEL_PRICING:
+        return MODEL_PRICING[model]
+
+    fetched = fetch_openrouter_pricing(target_model=model)
+    if fetched:
+        return fetched
+
+    return MODEL_PRICING.get("default", {"prompt": 0.20, "completion": 0.80})
 
 
 def count_tokens(text: str, model: str = "gpt-4o-mini") -> int:
@@ -43,7 +94,7 @@ def calculate_cost(
     model: str = "meta-llama/llama-3-8b-instruct",
 ) -> dict[str, Any]:
     """Calculate USD costs for prompt, completion, and total token usage."""
-    pricing = MODEL_PRICING.get(model, MODEL_PRICING.get("default", {"prompt": 0.20, "completion": 0.80}))
+    pricing = get_model_pricing(model)
     prompt_cost = (prompt_tokens / 1_000_000.0) * pricing["prompt"]
     completion_cost = (completion_tokens / 1_000_000.0) * pricing["completion"]
     total_cost = prompt_cost + completion_cost

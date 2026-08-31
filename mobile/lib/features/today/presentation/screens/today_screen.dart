@@ -706,14 +706,17 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
       final slots = groups[group];
       if (slots == null || slots.isEmpty) continue;
       widgets.add(_sectionLabel(_groupLabel(group, l10n)));
-      final expanded = _expandedGroups.contains(group) || slots.length <= 3;
-      final visible = expanded ? slots : slots.take(3).toList();
-      for (final slot in visible) {
-        widgets.add(_slotTile(slot, agenda));
-      }
-      if (!expanded) {
-        widgets.add(_collapsedGroupToggle(group, slots.length, l10n));
-      }
+      widgets.add(
+        _DoseGroupSection(
+          group: group,
+          slots: slots,
+          isExpanded: _expandedGroups.contains(group),
+          onExpand: () => setState(() => _expandedGroups.add(group)),
+          slotBuilder: (slot) => _slotTile(slot, agenda),
+          toggleBuilder: (group, total) =>
+              _collapsedGroupToggle(group, total, l10n),
+        ),
+      );
     }
 
     if (agenda.prn.isNotEmpty) {
@@ -949,6 +952,50 @@ class _TodayBanner extends StatelessWidget {
               constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
               onPressed: onDismiss,
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A section representing a group of dose slots for a specific time block,
+/// animating group expansion smoothly via [AnimatedSize].
+class _DoseGroupSection extends StatelessWidget {
+  const _DoseGroupSection({
+    super.key,
+    required this.group,
+    required this.slots,
+    required this.isExpanded,
+    required this.onExpand,
+    required this.slotBuilder,
+    required this.toggleBuilder,
+  });
+
+  final DoseGroup group;
+  final List<AgendaSlot> slots;
+  final bool isExpanded;
+  final VoidCallback onExpand;
+  final Widget Function(AgendaSlot slot) slotBuilder;
+  final Widget Function(DoseGroup group, int total) toggleBuilder;
+
+  @override
+  Widget build(BuildContext context) {
+    final disableAnimations = MediaQuery.of(context).disableAnimations;
+    final visibleSlots =
+        (isExpanded || slots.length <= 3) ? slots : slots.take(3).toList();
+    final showToggle = !isExpanded && slots.length > 3;
+
+    return AnimatedSize(
+      duration: disableAnimations
+          ? Duration.zero
+          : const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.topCenter,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final slot in visibleSlots) slotBuilder(slot),
+          if (showToggle) toggleBuilder(group, slots.length),
         ],
       ),
     );

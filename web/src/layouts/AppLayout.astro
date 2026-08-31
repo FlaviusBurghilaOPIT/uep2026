@@ -33,7 +33,7 @@ const currentPath = Astro.url.pathname
     text-decoration: none;
     font-weight: 600;
     z-index: 1000;
-    transition: top 0.2s;
+    transition: top var(--duration-snappy) var(--ease-out);
   }
   .skip-link:focus {
     top: 0;

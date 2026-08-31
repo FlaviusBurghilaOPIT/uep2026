@@ -204,10 +204,13 @@ const t = createTranslator(lang)
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: background-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
   }
   .ai-toggle-btn:hover {
     background-color: #dbeafe;
+  }
+  .ai-toggle-btn:active {
+    transform: scale(0.96);
   }
   .ai-chat-panel {
     background-color: #f8fafc;
@@ -286,10 +289,13 @@ const t = createTranslator(lang)
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.15s ease;
+    transition: background-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
   }
   .submit-btn:hover {
     background-color: #0369a1;
+  }
+  .submit-btn:active {
+    transform: scale(0.97);
   }
   .view-list-link {
     text-align: center;
@@ -315,6 +321,16 @@ const t = createTranslator(lang)
     border-radius: 8px;
     font-size: 14px;
     font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--duration-press) var(--ease-out), border-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
+  }
+  .cancel-btn:hover {
+    background-color: #f8fafc;
+  }
+  .cancel-btn:active {
+    transform: scale(0.97);
   }
 </style>
 

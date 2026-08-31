@@ -30,14 +30,19 @@ AgendaSlot buildSlot({
   );
 }
 
-Widget wrap(Widget child) {
+Widget wrap(Widget child, {bool disableAnimations = false}) {
   return ScreenUtilInit(
     designSize: const Size(375, 812),
     minTextAdapt: true,
     builder: (context, _) => MaterialApp(
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      home: Scaffold(body: SingleChildScrollView(child: child)),
+      home: Builder(
+        builder: (ctx) => MediaQuery(
+          data: MediaQuery.of(ctx).copyWith(disableAnimations: disableAnimations),
+          child: Scaffold(body: SingleChildScrollView(child: child)),
+        ),
+      ),
     ),
   );
 }
@@ -302,6 +307,78 @@ void main() {
 
         // Pairwise distinct across all 6 states (M-03 grayscale requirement).
         expect(iconsByState.values.toSet().length, SlotState.values.length);
+      },
+    );
+
+    testWidgets(
+      '002 action buttons provide tactile press feedback (scale 0.97, 140ms easeOutCubic)',
+      (tester) async {
+        await tester.pumpWidget(wrap(DoseSlotCard(slot: buildSlot())));
+        await tester.pumpAndSettle();
+
+        final actionFinder = find.byKey(const Key('slot_action_taken_rem-1'));
+        expect(actionFinder, findsOneWidget);
+
+        final animatedScaleFinder = find.descendant(
+          of: actionFinder,
+          matching: find.byType(AnimatedScale),
+        );
+        expect(animatedScaleFinder, findsOneWidget);
+
+        AnimatedScale scaleWidget = tester.widget(animatedScaleFinder);
+        expect(scaleWidget.scale, 1.0);
+        expect(scaleWidget.duration, const Duration(milliseconds: 140));
+        expect(scaleWidget.curve, Curves.easeOutCubic);
+
+        // Press down
+        final gesture = await tester.startGesture(tester.getCenter(actionFinder));
+        await tester.pump();
+
+        scaleWidget = tester.widget(animatedScaleFinder);
+        expect(scaleWidget.scale, 0.97);
+
+        // Pointer up
+        await gesture.up();
+        await tester.pump();
+
+        scaleWidget = tester.widget(animatedScaleFinder);
+        expect(scaleWidget.scale, 1.0);
+
+        // Pointer cancel
+        final cancelGesture = await tester.startGesture(tester.getCenter(actionFinder));
+        await tester.pump();
+        scaleWidget = tester.widget(animatedScaleFinder);
+        expect(scaleWidget.scale, 0.97);
+
+        await cancelGesture.cancel();
+        await tester.pump();
+        scaleWidget = tester.widget(animatedScaleFinder);
+        expect(scaleWidget.scale, 1.0);
+      },
+    );
+
+    testWidgets(
+      '002 disableAnimations disables tactile press feedback scale',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(DoseSlotCard(slot: buildSlot()), disableAnimations: true),
+        );
+        await tester.pumpAndSettle();
+
+        final actionFinder = find.byKey(const Key('slot_action_taken_rem-1'));
+        final animatedScaleFinder = find.descendant(
+          of: actionFinder,
+          matching: find.byType(AnimatedScale),
+        );
+
+        final gesture = await tester.startGesture(tester.getCenter(actionFinder));
+        await tester.pump();
+
+        final scaleWidget = tester.widget<AnimatedScale>(animatedScaleFinder);
+        expect(scaleWidget.scale, 1.0);
+
+        await gesture.up();
+        await tester.pumpAndSettle();
       },
     );
   });

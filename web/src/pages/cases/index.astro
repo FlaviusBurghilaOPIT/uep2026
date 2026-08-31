@@ -212,12 +212,15 @@ function calculatePostOpDay(surgeryDateStr?: string | null): string {
     font-size: 14px;
     font-weight: 600;
     text-decoration: none;
-    transition: background-color 0.15s ease, transform 0.1s ease;
+    transition: background-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
     box-shadow: 0 1px 2px rgba(2, 132, 199, 0.2);
   }
   .new-case-btn:hover {
     background-color: #0369a1;
     transform: translateY(-1px);
+  }
+  .new-case-btn:active {
+    transform: translateY(0) scale(0.97);
   }
 
   .stats-grid {
@@ -235,6 +238,11 @@ function calculatePostOpDay(surgeryDateStr?: string | null): string {
     align-items: center;
     gap: 16px;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    transition: transform var(--duration-snappy) var(--ease-out), box-shadow var(--duration-snappy) var(--ease-out);
+  }
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(15, 23, 42, 0.06);
   }
   .stat-icon-box {
     width: 44px;
@@ -279,7 +287,7 @@ function calculatePostOpDay(surgeryDateStr?: string | null): string {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    transition: transform var(--duration-snappy) var(--ease-out), box-shadow var(--duration-snappy) var(--ease-out), border-color var(--duration-snappy) var(--ease-out);
   }
   .case-card:hover {
     transform: translateY(-2px);
@@ -393,12 +401,15 @@ function calculatePostOpDay(surgeryDateStr?: string | null): string {
     padding: 6px 10px;
     border-radius: 6px;
     text-decoration: none;
-    transition: all 0.15s ease;
+    transition: background-color var(--duration-press) var(--ease-out), color var(--duration-press) var(--ease-out), border-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
   }
   .sub-link:hover {
     background: #f1f5f9;
     color: #0f172a;
     border-color: #cbd5e1;
+  }
+  .sub-link:active {
+    transform: scale(0.96);
   }
   .view-case-btn {
     display: inline-flex;
@@ -410,12 +421,15 @@ function calculatePostOpDay(surgeryDateStr?: string | null): string {
     text-decoration: none;
     padding: 6px 12px;
     border-radius: 6px;
-    transition: all 0.15s ease;
+    transition: background-color var(--duration-press) var(--ease-out), color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
     margin-left: auto;
   }
   .view-case-btn:hover {
     background: #f0f9ff;
     color: #0369a1;
+  }
+  .view-case-btn:active {
+    transform: scale(0.96);
   }
 
   .empty-card {

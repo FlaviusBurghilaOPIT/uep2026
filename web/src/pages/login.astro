@@ -107,10 +107,14 @@ const t = createTranslator(lang)
     font-weight: 600;
     color: #64748b;
     text-decoration: none;
-    transition: color 0.15s ease;
+    transition: color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
   }
   .back-btn:hover {
     color: #0f172a;
+    transform: translateX(-2px);
+  }
+  .back-btn:active {
+    transform: translateX(-2px) scale(0.97);
   }
   .brand-header {
     text-align: center;
@@ -146,6 +150,11 @@ const t = createTranslator(lang)
     border-radius: 8px;
     font-size: 13px;
     margin-bottom: 20px;
+    animation: error-banner-in 180ms var(--ease-out) forwards;
+  }
+  @keyframes error-banner-in {
+    0% { transform: translateY(-4px) scale(0.98); opacity: 0; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
   }
   .form {
     display: flex;
@@ -169,6 +178,7 @@ const t = createTranslator(lang)
     font-size: 14px;
     color: #0f172a;
     outline: none;
+    transition: border-color var(--duration-press) var(--ease-out), box-shadow var(--duration-press) var(--ease-out);
   }
   .input:focus {
     border-color: #0284c7;
@@ -183,10 +193,13 @@ const t = createTranslator(lang)
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.15s ease;
+    transition: background-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
   }
   .submit-btn:hover {
     background-color: #1e293b;
+  }
+  .submit-btn:active {
+    transform: scale(0.98);
   }
   .security-badge-row {
     display: flex;

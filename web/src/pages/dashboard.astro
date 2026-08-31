@@ -595,7 +595,7 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     border-radius: 50%;
     background-color: #16a34a;
     box-shadow: 0 0 6px #16a34a;
-    animation: pulse-dot-anim 2s infinite;
+    animation: pulse-dot-anim 2s var(--ease-in-out) infinite;
   }
 
   @keyframes pulse-dot-anim {
@@ -629,13 +629,17 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     font-weight: 600;
     color: #334155;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: background-color var(--duration-press) var(--ease-out), border-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
     box-shadow: 0 1px 2px rgba(15,23,42,0.05);
   }
 
   .refresh-btn:hover {
     background-color: #f8fafc;
     border-color: #94a3b8;
+  }
+
+  .refresh-btn:active {
+    transform: scale(0.97);
   }
 
   .ai-summary-btn {
@@ -651,13 +655,17 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     font-weight: 700;
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35);
-    transition: all 0.15s ease;
+    transition: background 140ms var(--ease-out), transform var(--duration-press) var(--ease-out), box-shadow var(--duration-press) var(--ease-out);
   }
 
   .ai-summary-btn:hover {
     background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
+  }
+
+  .ai-summary-btn:active {
+    transform: translateY(0) scale(0.97);
   }
 
   .btn-sparkle {
@@ -674,6 +682,12 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     box-shadow: 0 4px 14px rgba(2, 132, 199, 0.08);
     position: relative;
     overflow: hidden;
+    animation: summary-card-enter 220ms var(--ease-out) forwards;
+  }
+
+  @keyframes summary-card-enter {
+    0% { opacity: 0; transform: translateY(-8px) scale(0.99); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
   }
 
   .ai-summary-header {
@@ -1013,7 +1027,11 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     font-size: 12.5px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: background-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
+  }
+
+  :global(.synthesis-btn:active) {
+    transform: scale(0.97);
   }
 
   :global(.btn-copy) {
@@ -1050,7 +1068,7 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     box-shadow: 0 1px 3px rgba(15,23,42,0.05);
     display: flex;
     flex-direction: column;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    transition: transform var(--duration-snappy) var(--ease-out), box-shadow var(--duration-snappy) var(--ease-out);
   }
 
   .stat-card:hover {
@@ -1124,7 +1142,7 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     font-size: 13.5px;
     outline: none;
     background-color: #ffffff;
-    transition: border-color 0.15s ease;
+    transition: border-color var(--duration-snappy) var(--ease-out), box-shadow var(--duration-snappy) var(--ease-out);
   }
 
   .search-input:focus {
@@ -1150,12 +1168,16 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     font-weight: 600;
     color: #475569;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: background-color var(--duration-press) var(--ease-out), border-color var(--duration-press) var(--ease-out), color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
   }
 
   .tab-btn:hover {
     background-color: #f8fafc;
     border-color: #94a3b8;
+  }
+
+  .tab-btn:active {
+    transform: scale(0.96);
   }
 
   .tab-btn.active {
@@ -1516,12 +1538,16 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     padding: 6px 12px;
     border-radius: 6px;
     text-decoration: none;
-    transition: all 0.15s ease;
+    transition: background-color var(--duration-press) var(--ease-out), color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
   }
 
   .action-btn-call:hover {
     background-color: #e0f2fe;
     color: #0369a1;
+  }
+
+  .action-btn-call:active {
+    transform: scale(0.97);
   }
 
   .text-muted-contact {
@@ -1547,11 +1573,15 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     font-size: 12.5px;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.15s ease;
+    transition: background-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
   }
 
   .action-btn-resolve:hover {
     background-color: #15803d;
+  }
+
+  .action-btn-resolve:active {
+    transform: scale(0.97);
   }
 
   .action-btn-review {
@@ -1565,11 +1595,15 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     font-size: 12.5px;
     font-weight: 600;
     text-decoration: none;
-    transition: background-color 0.15s ease;
+    transition: background-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
   }
 
   .action-btn-review:hover {
     background-color: #1e293b;
+  }
+
+  .action-btn-review:active {
+    transform: scale(0.97);
   }
 
   /* Stable Grid */
@@ -1588,6 +1622,12 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     display: flex;
     flex-direction: column;
     gap: 12px;
+    transition: transform var(--duration-snappy) var(--ease-out), box-shadow var(--duration-snappy) var(--ease-out);
+  }
+
+  .roster-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(15,23,42,0.08);
   }
 
   .roster-header {
@@ -1683,6 +1723,11 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     color: #0284c7;
     font-weight: 600;
     text-decoration: none;
+    transition: color var(--duration-press) var(--ease-out);
+  }
+
+  .view-case-link:hover {
+    color: #0369a1;
   }
 
   /* Resolution Modal */
@@ -1699,6 +1744,12 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     justify-content: center;
     z-index: 2000;
     padding: 16px;
+    animation: modal-overlay-fade var(--duration-snappy) var(--ease-out) forwards;
+  }
+
+  @keyframes modal-overlay-fade {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
   }
 
   .modal-card {
@@ -1708,6 +1759,13 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     width: 100%;
     max-width: 520px;
     padding: 24px;
+    transform-origin: center center;
+    animation: modal-card-scale var(--duration-modal) var(--ease-out) forwards;
+  }
+
+  @keyframes modal-card-scale {
+    0% { transform: scale(0.96); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
   }
 
   .modal-header {
@@ -1741,6 +1799,16 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     cursor: pointer;
     padding: 4px;
     border-radius: 6px;
+    transition: color var(--duration-press) var(--ease-out), background-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
+  }
+
+  .modal-close-btn:hover {
+    color: #0f172a;
+    background-color: #f1f5f9;
+  }
+
+  .modal-close-btn:active {
+    transform: scale(0.94);
   }
 
   .modal-patient-name {
@@ -1774,6 +1842,7 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     font-size: 13.5px;
     color: #0f172a;
     outline: none;
+    transition: border-color var(--duration-press) var(--ease-out);
   }
 
   .modal-textarea {
@@ -1784,6 +1853,7 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     color: #0f172a;
     outline: none;
     resize: vertical;
+    transition: border-color var(--duration-press) var(--ease-out);
   }
 
   .note-helper {
@@ -1800,6 +1870,12 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     font-size: 12.5px;
     font-weight: 500;
     margin-top: 10px;
+    animation: modal-error-in 180ms var(--ease-out) forwards;
+  }
+
+  @keyframes modal-error-in {
+    0% { transform: translateY(-4px) scale(0.98); opacity: 0; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
   }
 
   .modal-actions {
@@ -1818,6 +1894,15 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     font-weight: 600;
     color: #475569;
     cursor: pointer;
+    transition: background-color var(--duration-press) var(--ease-out), border-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
+  }
+
+  .btn-cancel:hover {
+    background-color: #f8fafc;
+  }
+
+  .btn-cancel:active {
+    transform: scale(0.97);
   }
 
   .btn-submit-resolve {
@@ -1832,6 +1917,15 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
+    transition: background-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
+  }
+
+  .btn-submit-resolve:hover {
+    background-color: #15803d;
+  }
+
+  .btn-submit-resolve:active {
+    transform: scale(0.97);
   }
 
   /* Toast */
@@ -1847,12 +1941,12 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
     font-weight: 600;
     box-shadow: 0 10px 15px -3px rgba(15,23,42,0.3);
     z-index: 3000;
-    animation: slide-up 0.2s ease forwards;
+    animation: toast-slide-in var(--duration-modal) var(--ease-out) forwards;
   }
 
-  @keyframes slide-up {
-    from { transform: translateY(100%); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+  @keyframes toast-slide-in {
+    0% { transform: translateY(16px) scale(0.98); opacity: 0; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
   }
 
   @media (max-width: 1024px) {

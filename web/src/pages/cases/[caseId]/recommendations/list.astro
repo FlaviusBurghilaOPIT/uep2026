@@ -87,6 +87,14 @@ try {
     font-weight: 600;
     text-decoration: none;
     margin-bottom: 12px;
+    transition: color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
+  }
+  .back-link:hover {
+    color: #0369a1;
+    transform: translateX(-2px);
+  }
+  .back-link:active {
+    transform: translateX(-2px) scale(0.97);
   }
   .title {
     font-size: 24px;
@@ -111,6 +119,13 @@ try {
     font-weight: 600;
     text-decoration: none;
     box-shadow: 0 2px 4px rgba(2,132,199,0.2);
+    transition: background-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
+  }
+  .add-rec-btn:hover {
+    background-color: #0369a1;
+  }
+  .add-rec-btn:active {
+    transform: scale(0.97);
   }
   .recs-list {
     display: flex;
@@ -123,6 +138,11 @@ try {
     border-radius: 12px;
     padding: 24px;
     box-shadow: 0 1px 3px rgba(15,23,42,0.05);
+    transition: transform var(--duration-snappy) var(--ease-out), box-shadow var(--duration-snappy) var(--ease-out);
+  }
+  .rec-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(15,23,42,0.08);
   }
   .rec-card-header {
     display: flex;

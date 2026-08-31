@@ -381,5 +381,104 @@ void main() {
       );
     },
   );
+
+  testWidgets(
+    'ChatBubble animates in with 180ms fade and slide entrance',
+    (tester) async {
+      final controller = StreamController<String>();
+      fakeStream.handler = (c, m, i) => controller.stream;
+
+      await tester.pumpWidget(
+        buildTestApp(fakeApi, fakeStream, telemetryService, prefs),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'Hello');
+      await tester.tap(find.byIcon(Icons.send_rounded));
+      await tester.pump();
+
+      // Emit assistant response chunk
+      controller.add('Hi there');
+      await tester.pump(); // Frame 0 of assistant bubble mount
+
+      final assistantBubbleFinder = find.byType(ChatBubble).last;
+      final fadeFinder = find.descendant(
+        of: assistantBubbleFinder,
+        matching: find.byType(FadeTransition),
+      );
+      expect(fadeFinder, findsOneWidget);
+      final slideFinder = find.descendant(
+        of: assistantBubbleFinder,
+        matching: find.byType(SlideTransition),
+      );
+      expect(slideFinder, findsOneWidget);
+
+      final fadeWidget = tester.widget<FadeTransition>(fadeFinder);
+      expect(fadeWidget.opacity.value, equals(0.0));
+
+      final slideWidget = tester.widget<SlideTransition>(slideFinder);
+      expect(slideWidget.position.value, equals(const Offset(0, 0.05)));
+
+      // Advance by 180ms to complete entrance
+      await tester.pump(const Duration(milliseconds: 180));
+      expect(fadeWidget.opacity.value, closeTo(1.0, 0.01));
+      expect(slideWidget.position.value, equals(Offset.zero));
+
+      await controller.close();
+      await tester.pumpAndSettle();
+    },
+  );
+
+  testWidgets(
+    'ChatBubble bypasses animation when disableAnimations is true',
+    (tester) async {
+      fakeStream.handler = (c, m, i) => Stream.value('Instant reply');
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            apiServiceProvider.overrideWithValue(fakeApi),
+            assistantStreamClientProvider.overrideWithValue(fakeStream),
+            telemetryServiceProvider.overrideWithValue(telemetryService),
+            sharedPreferencesProvider.overrideWithValue(prefs),
+          ],
+          child: ScreenUtilInit(
+            designSize: const Size(375, 812),
+            minTextAdapt: true,
+            builder: (context, child) => const MaterialApp(
+              supportedLocales: AppLocalizations.supportedLocales,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              home: MediaQuery(
+                data: MediaQueryData(disableAnimations: true),
+                child: AssistantScreen(),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'Hello');
+      await tester.tap(find.byIcon(Icons.send_rounded));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Instant reply'), findsOneWidget);
+      // Under disableAnimations, ChatBubble does not wrap with FadeTransition or SlideTransition
+      expect(
+        find.descendant(
+          of: find.byType(ChatBubble),
+          matching: find.byType(FadeTransition),
+        ),
+        findsNothing,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(ChatBubble),
+          matching: find.byType(SlideTransition),
+        ),
+        findsNothing,
+      );
+    },
+  );
 }
 

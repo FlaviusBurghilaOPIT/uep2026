@@ -76,6 +76,16 @@
 
   /* Measure constraint */
   --measure: 66ch;
+
+  /* Emil Kowalski Motion Tokens (Custom Physics Curves) */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.15);
+  --duration-instant: 100ms;
+  --duration-press: 140ms;
+  --duration-snappy: 180ms;
+  --duration-modal: 220ms;
 }
 
 * {
@@ -106,6 +116,23 @@ textarea:focus-visible,
 [tabindex]:focus-visible {
   outline: 2px solid var(--primary-cta) !important;
   outline-offset: 2px;
+}
+
+/* Global button & pressable tactile feedback */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+.btn,
+.primary-cta,
+.secondary-cta {
+  transition: transform var(--duration-press) var(--ease-out), background-color var(--duration-press) var(--ease-out), border-color var(--duration-press) var(--ease-out), box-shadow var(--duration-press) var(--ease-out), opacity var(--duration-press) var(--ease-out);
+}
+
+button:not(:disabled):active,
+[role="button"]:not([aria-disabled="true"]):active,
+.btn:active,
+.primary-cta:active,
+.secondary-cta:active {
+  transform: scale(0.97);
 }
 
 .ui-select-item[data-highlighted] {
@@ -156,7 +183,7 @@ textarea:focus-visible,
     var(--slate-100) 63%
   );
   background-size: 400% 100%;
-  animation: shimmer 1.4s ease infinite;
+  animation: shimmer 1.2s var(--ease-in-out) infinite;
   border-radius: 6px;
 }
 
@@ -194,7 +221,7 @@ textarea:focus-visible,
   border-bottom: 1px solid var(--slate-100);
 }
 
-/* 2. Inline Action Spinners */
+/* 2. Inline Action Spinners (Fast-spinning: 0.6s perceived speed) */
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -205,7 +232,7 @@ textarea:focus-visible,
 }
 
 .animate-spin {
-  animation: spin 0.75s linear infinite;
+  animation: spin 0.6s linear infinite;
 }
 
 .inline-spinner {
@@ -215,7 +242,7 @@ textarea:focus-visible,
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: currentColor;
   border-radius: 50%;
-  animation: spin 0.75s linear infinite;
+  animation: spin 0.6s linear infinite;
   vertical-align: -2px;
   margin-right: 6px;
 }
@@ -245,7 +272,7 @@ textarea:focus-visible,
   height: 100%;
   background-color: var(--primary-600);
   border-radius: 9999px;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 240ms var(--ease-out);
 }
 
 .progress-fill.success {
@@ -262,8 +289,8 @@ textarea:focus-visible,
     transform: scale(0.96);
     opacity: 0.8;
   }
-  50% {
-    transform: scale(1.02);
+  60% {
+    transform: scale(1.015);
   }
   100% {
     transform: scale(1);
@@ -272,5 +299,17 @@ textarea:focus-visible,
 }
 
 .optimistic-feedback {
-  animation: optimistic-pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  animation: optimistic-pop 180ms var(--ease-spring) forwards;
+}
+
+/* 5. Reduced Motion Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

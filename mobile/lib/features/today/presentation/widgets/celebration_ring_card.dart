@@ -24,9 +24,12 @@ class CelebrationRingCard extends StatefulWidget {
 }
 
 class _CelebrationRingCardState extends State<CelebrationRingCard>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _progressAnimation;
+  late final AnimationController _exitController;
+  late final Animation<double> _exitSizeAnimation;
+  late final Animation<double> _exitFadeAnimation;
 
   @override
   void initState() {
@@ -40,6 +43,24 @@ class _CelebrationRingCardState extends State<CelebrationRingCard>
       curve: Curves.easeInOutCubic,
     );
     _controller.forward();
+
+    _exitController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 180),
+    );
+    _exitSizeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _exitController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
+    _exitFadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _exitController,
+        curve: Curves.easeInCubic,
+      ),
+    );
+
     try {
       HapticFeedback.mediumImpact();
     } catch (_) {}
@@ -48,7 +69,19 @@ class _CelebrationRingCardState extends State<CelebrationRingCard>
   @override
   void dispose() {
     _controller.dispose();
+    _exitController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleDismiss() async {
+    if (MediaQuery.of(context).disableAnimations) {
+      widget.onDismiss();
+      return;
+    }
+    await _exitController.forward();
+    if (mounted) {
+      widget.onDismiss();
+    }
   }
 
   @override
@@ -56,86 +89,93 @@ class _CelebrationRingCardState extends State<CelebrationRingCard>
     final l10n = AppLocalizations.of(context);
     final disableAnimations = MediaQuery.of(context).disableAnimations;
 
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: AppSpacing.screenPaddingH,
-        vertical: AppSpacing.sm,
-      ),
-      child: Container(
-        key: const Key('today_celebration'),
-        padding: EdgeInsets.all(16.w),
-        decoration: BoxDecoration(
-          color: AppColors.softCyan,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          border: Border.all(
-            color: AppColors.clinicalEmerald.withValues(alpha: 0.4),
-            width: 1.5,
+    return SizeTransition(
+      sizeFactor: _exitSizeAnimation,
+      axisAlignment: -1.0,
+      child: FadeTransition(
+        opacity: _exitFadeAnimation,
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.screenPaddingH,
+            vertical: AppSpacing.sm,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.clinicalEmerald.withValues(alpha: 0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+          child: Container(
+            key: const Key('today_celebration'),
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: AppColors.softCyan,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              border: Border.all(
+                color: AppColors.clinicalEmerald.withValues(alpha: 0.4),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.clinicalEmerald.withValues(alpha: 0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Row(
-          key: const Key('ring_closure_celebration'),
-          children: [
-            SizedBox(
-              width: 48.w,
-              height: 48.w,
-              child: disableAnimations
-                  ? Center(
-                      child: Icon(
-                        Icons.check_circle_rounded,
-                        color: AppColors.clinicalEmerald,
-                        size: 36.sp,
-                      ),
-                    )
-                  : AnimatedBuilder(
-                      animation: _progressAnimation,
-                      builder: (context, child) {
-                        return CustomPaint(
-                          painter: _RingPainter(progress: _progressAnimation.value),
-                          child: Center(
-                            child: Icon(
-                              _progressAnimation.value >= 0.8
-                                  ? LucideIcons.sparkles
-                                  : Icons.check,
-                              color: AppColors.clinicalEmerald,
-                              size: 20.sp,
-                            ),
+            child: Row(
+              key: const Key('ring_closure_celebration'),
+              children: [
+                SizedBox(
+                  width: 48.w,
+                  height: 48.w,
+                  child: disableAnimations
+                      ? Center(
+                          child: Icon(
+                            Icons.check_circle_rounded,
+                            color: AppColors.clinicalEmerald,
+                            size: 36.sp,
                           ),
-                        );
-                      },
-                    ),
-            ),
-            SizedBox(width: 14.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.todayCelebration,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.slateDark,
-                      fontWeight: FontWeight.w600,
-                    ),
+                        )
+                      : AnimatedBuilder(
+                          animation: _progressAnimation,
+                          builder: (context, child) {
+                            return CustomPaint(
+                              painter: _RingPainter(progress: _progressAnimation.value),
+                              child: Center(
+                                child: Icon(
+                                  _progressAnimation.value >= 0.8
+                                      ? LucideIcons.sparkles
+                                      : Icons.check,
+                                  color: AppColors.clinicalEmerald,
+                                  size: 20.sp,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                ),
+                SizedBox(width: 14.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.todayCelebration,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.slateDark,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                IconButton(
+                  icon: Icon(
+                    Icons.close,
+                    size: 18.sp,
+                    color: AppColors.slateDark.withValues(alpha: 0.6),
+                  ),
+                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                  onPressed: _handleDismiss,
+                ),
+              ],
             ),
-            IconButton(
-              icon: Icon(
-                Icons.close,
-                size: 18.sp,
-                color: AppColors.slateDark.withValues(alpha: 0.6),
-              ),
-              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-              onPressed: widget.onDismiss,
-            ),
-          ],
+          ),
         ),
       ),
     );

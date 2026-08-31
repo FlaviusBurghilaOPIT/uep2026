@@ -440,10 +440,14 @@ const postOpDay = calculatePostOpDay(caseData?.surgery_date)
     font-weight: 600;
     color: #64748b;
     text-decoration: none;
-    transition: color 0.15s ease;
+    transition: color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
   }
   .back-link:hover {
     color: #0f172a;
+    transform: translateX(-2px);
+  }
+  .back-link:active {
+    transform: translateX(-2px) scale(0.97);
   }
   .triage-status-pill {
     display: inline-flex;
@@ -692,13 +696,16 @@ const postOpDay = calculatePostOpDay(caseData?.surgery_date)
     align-items: center;
     gap: 16px;
     text-decoration: none;
-    transition: all 0.15s ease;
+    transition: transform var(--duration-snappy) var(--ease-out), box-shadow var(--duration-snappy) var(--ease-out), border-color var(--duration-snappy) var(--ease-out);
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
   }
   .nav-action-card:hover {
     border-color: #0284c7;
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(2, 132, 199, 0.08);
+  }
+  .nav-action-card:active {
+    transform: translateY(0) scale(0.98);
   }
   .nav-card-icon {
     width: 48px;
@@ -774,11 +781,14 @@ const postOpDay = calculatePostOpDay(caseData?.surgery_date)
     padding: 6px 12px;
     border-radius: 6px;
     background: #f0f9ff;
-    transition: all 0.15s ease;
+    transition: background-color var(--duration-press) var(--ease-out), color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
   }
   .section-action-link:hover {
     background: #e0f2fe;
     color: #0369a1;
+  }
+  .section-action-link:active {
+    transform: scale(0.96);
   }
 
   .table-card {

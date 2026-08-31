@@ -170,10 +170,13 @@ try {
     text-decoration: none;
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(2,132,199,0.2);
-    transition: background-color 0.15s ease;
+    transition: background-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
   }
   .new-patient-btn:hover {
     background-color: #0369a1;
+  }
+  .new-patient-btn:active {
+    transform: scale(0.97);
   }
   .table-card {
     background-color: #ffffff;
@@ -272,6 +275,10 @@ try {
     color: #0284c7;
     text-decoration: none;
     font-weight: 600;
+    transition: color var(--duration-press) var(--ease-out);
+  }
+  .case-link:hover {
+    color: #0369a1;
   }
   .no-cases-text {
     color: #94a3b8;
@@ -289,10 +296,13 @@ try {
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.15s ease;
+    transition: background-color var(--duration-press) var(--ease-out), border-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
   }
   .export-btn:hover {
     background-color: #e2e8f0;
+  }
+  .export-btn:active {
+    transform: scale(0.95);
   }
   .empty-cell {
     text-align: center;

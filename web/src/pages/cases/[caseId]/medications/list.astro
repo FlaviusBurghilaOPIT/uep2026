@@ -121,6 +121,14 @@ try {
     font-weight: 600;
     text-decoration: none;
     margin-bottom: 12px;
+    transition: color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
+  }
+  .back-link:hover {
+    color: #0369a1;
+    transform: translateX(-2px);
+  }
+  .back-link:active {
+    transform: translateX(-2px) scale(0.97);
   }
   .title {
     font-size: 24px;
@@ -145,10 +153,13 @@ try {
     font-weight: 600;
     text-decoration: none;
     box-shadow: 0 2px 4px rgba(2,132,199,0.2);
-    transition: background-color 0.15s ease;
+    transition: background-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
   }
   .add-med-btn:hover {
     background-color: #0369a1;
+  }
+  .add-med-btn:active {
+    transform: scale(0.97);
   }
   .meds-grid {
     display: grid;
@@ -163,7 +174,12 @@ try {
     box-shadow: 0 1px 3px rgba(15,23,42,0.05);
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    transition: transform var(--duration-snappy) var(--ease-out), box-shadow var(--duration-snappy) var(--ease-out);
+  }
+  .med-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(15,23,42,0.06);
+  }  gap: 8px;
   }
   .med-card-header {
     display: flex;
@@ -253,10 +269,13 @@ try {
     font-size: 12px;
     font-weight: 600;
     text-decoration: none;
-    transition: background-color 0.15s ease;
+    transition: background-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
   }
   .fda-link:hover {
     background-color: #fef3c7;
+  }
+  .fda-link:active {
+    transform: scale(0.96);
   }
   .empty-meds-card {
     grid-column: 1 / -1;

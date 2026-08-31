@@ -62,9 +62,12 @@ const t = createTranslator(lang)
     font-weight: 600;
     text-decoration: none;
     box-shadow: 0 2px 4px rgba(2,132,199,0.2);
-    transition: background-color 0.15s ease;
+    transition: background-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
   }
   .dashboard-link:hover {
     background-color: #0369a1;
+  }
+  .dashboard-link:active {
+    transform: scale(0.97);
   }
 </style>
