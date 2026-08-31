@@ -29,7 +29,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingSubtitle =>
-      'Enter your email and the code your clinician sent you.';
+      'Enter your email and the code your care team sent you.';
 
   @override
   String get inviteCodeLabel => 'Invitation code';
@@ -257,7 +257,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get medCardNotesHeader => 'Clinician Instructions:';
+  String get medCardNotesHeader => 'Care Team Instructions:';
 
   @override
   String get medCardReadOnlyBadge => '🔒 Prescribed by Care Team — Read Only';
@@ -312,9 +312,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authSignInWithOneTimeCode => 'Sign in with One-Time Code';
-
-  @override
-  String get authClinicianSignIn => 'Clinician Sign In';
 
   @override
   String get authInvitationCodeSubtitle =>

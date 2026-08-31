@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -221,16 +224,15 @@ class GuardrailBanner extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
       decoration: const BoxDecoration(
         color: AppColors.softCyan,
-        border: Border(
-          bottom: BorderSide(
-            color: AppColors.takenBg,
-            width: 1,
-          ),
-        ),
+        border: Border(bottom: BorderSide(color: AppColors.takenBg, width: 1)),
       ),
       child: Row(
         children: [
-          Icon(LucideIcons.shieldCheck, color: AppColors.takenText, size: 18.sp),
+          Icon(
+            LucideIcons.shieldCheck,
+            color: AppColors.takenText,
+            size: 18.sp,
+          ),
           SizedBox(width: 8.w),
           Expanded(
             child: Text(
@@ -253,11 +255,7 @@ class SuggestionChips extends ConsumerWidget {
   final String caseId;
   final ValueChanged<String>? onChipSelected;
 
-  const SuggestionChips({
-    super.key,
-    required this.caseId,
-    this.onChipSelected,
-  });
+  const SuggestionChips({super.key, required this.caseId, this.onChipSelected});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -374,14 +372,16 @@ class _ChatBubbleState extends State<ChatBubble>
                     ),
                   ],
           ),
-          child: Text(
-            widget.message.text,
-            style: TextStyle(
-              color: isUser ? AppColors.white : AppColors.slateDark,
-              fontSize: 14.sp,
-              height: 1.4,
-            ),
-          ),
+          child: isUser
+              ? Text(
+                  widget.message.text,
+                  style: TextStyle(
+                    color: AppColors.white,
+                    fontSize: 14.sp,
+                    height: 1.4,
+                  ),
+                )
+              : _AssistantMarkdown(text: widget.message.text),
         ),
       ),
     );
@@ -398,6 +398,74 @@ class _ChatBubbleState extends State<ChatBubble>
       child: SlideTransition(
         position: _slideAnimation,
         child: _buildBubbleBody(context),
+      ),
+    );
+  }
+}
+
+/// Renders assistant replies as GitHub-flavored markdown (bold, lists,
+/// headings, code, links, blockquotes) styled to match the chat bubble.
+class _AssistantMarkdown extends StatelessWidget {
+  final String text;
+
+  const _AssistantMarkdown({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final baseStyle = TextStyle(
+      color: AppColors.slateDark,
+      fontSize: 14.sp,
+      height: 1.4,
+    );
+
+    return MarkdownBody(
+      data: text,
+      selectable: true,
+      onTapLink: (text, href, title) {
+        if (href == null) return;
+        final uri = Uri.tryParse(href);
+        if (uri != null) launchUrl(uri, mode: LaunchMode.externalApplication);
+      },
+      styleSheet: MarkdownStyleSheet(
+        p: baseStyle,
+        strong: baseStyle.copyWith(fontWeight: FontWeight.bold),
+        em: baseStyle.copyWith(fontStyle: FontStyle.italic),
+        listBullet: baseStyle,
+        h1: baseStyle.copyWith(fontSize: 20.sp, fontWeight: FontWeight.bold),
+        h2: baseStyle.copyWith(fontSize: 18.sp, fontWeight: FontWeight.bold),
+        h3: baseStyle.copyWith(fontSize: 16.sp, fontWeight: FontWeight.bold),
+        blockquote: baseStyle.copyWith(
+          color: AppColors.greyText,
+          fontStyle: FontStyle.italic,
+        ),
+        blockquoteDecoration: BoxDecoration(
+          border: Border(
+            left: BorderSide(color: AppColors.deepTeal, width: 3.w),
+          ),
+        ),
+        blockquotePadding: EdgeInsets.only(left: 10.w),
+        code: baseStyle.copyWith(
+          fontFamily: 'monospace',
+          fontSize: 13.sp,
+          backgroundColor: AppColors.inputFill,
+          color: AppColors.clinicalEmerald,
+        ),
+        codeblockDecoration: BoxDecoration(
+          color: AppColors.inputFill,
+          borderRadius: BorderRadius.circular(8.r),
+        ),
+        codeblockPadding: EdgeInsets.all(10.w),
+        a: baseStyle.copyWith(
+          color: AppColors.deepTeal,
+          decoration: TextDecoration.underline,
+        ),
+        horizontalRuleDecoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: AppColors.greyDivider)),
+        ),
+        tableBorder: TableBorder.all(color: AppColors.greyDivider, width: 1),
+        tableHead: baseStyle.copyWith(fontWeight: FontWeight.bold),
+        tableBody: baseStyle,
+        tableCellsPadding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       ),
     );
   }
@@ -468,7 +536,11 @@ class RefusalBox extends ConsumerWidget {
                     .read(chatAssistantNotifierProvider.notifier)
                     .onEmergencyCtaTapped(caseId, phone);
               },
-              icon: Icon(LucideIcons.phone, color: AppColors.white, size: 18.sp),
+              icon: Icon(
+                LucideIcons.phone,
+                color: AppColors.white,
+                size: 18.sp,
+              ),
               label: Text(
                 buttonText,
                 style: TextStyle(

@@ -160,16 +160,11 @@
   "authRequiredError": "Required",
   "authInvalidEmailError": "Enter a valid email",
   "authSendOtpButton": "Send OTP",
-  "authErrorSendingOtp": "Error sending OTP: {error}",
-  "@authErrorSendingOtp": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
+  "authErrorSendingOtp": "Bestätigungscode konnte nicht gesendet werden. Bitte Verbindung prüfen und erneut versuchen.",
   "authEnterInvitationCodeTitle": "Enter Invitation Code",
   "authWelcomeTitle": "Welcome!",
+  "authNewPatientClinicInvitation": "Neuer Patient? Klinikeinladung eingeben",
+  "authSignInWithOneTimeCode": "Mit Einmalcode anmelden",
   "authInvitationCodeSubtitle": "Please enter your invitation code to continue.",
   "authInvitationCodeLabel": "Invitation Code",
   "authInvalidInvitationCodeError": "Please enter a valid invitation code",

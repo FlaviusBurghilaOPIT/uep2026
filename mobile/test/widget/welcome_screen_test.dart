@@ -49,7 +49,7 @@ void main() {
   });
 
   testWidgets(
-    'Welcome offers clinician sign-in, clinic invitation, and one-time code sign-in',
+    'Welcome offers patient sign-in and clinic invitation',
     (tester) async {
       await tester.pumpWidget(buildTestApp(prefs, fakeApi));
       await tester.pumpAndSettle();
@@ -57,12 +57,8 @@ void main() {
       expect(find.text(AuthStrings.welcomeTitle), findsOneWidget);
       // Two TextFormFields: email + password.
       expect(find.byType(TextFormField), findsNWidgets(2));
-      expect(find.text('Clinician Sign In'), findsOneWidget);
-      expect(find.text(AuthStrings.clinicianSignInButton), findsOneWidget);
-      expect(find.text('New Patient? Enter Clinic Invitation'), findsOneWidget);
+      expect(find.text(AuthStrings.signInButton), findsOneWidget);
       expect(find.text(AuthStrings.clinicInvitationButton), findsOneWidget);
-      expect(find.text('Sign in with One-Time Code'), findsOneWidget);
-      expect(find.text(AuthStrings.codeSignInLink), findsOneWidget);
     },
   );
 
@@ -134,25 +130,6 @@ void main() {
       expect(find.text(AuthStrings.welcomeTitle), findsOneWidget);
     },
   );
-
-  testWidgets('tapping the code fallback opens the request-code (email) step', (
-    tester,
-  ) async {
-    // Phone-sized surface so the fallback link is tappable (ScreenUtil
-    // scales the 375x812 design up; the default 800x600 surface clips it).
-    tester.view.physicalSize = const Size(1080, 2400);
-    tester.view.devicePixelRatio = 2.0;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-
-    await tester.pumpWidget(buildTestApp(prefs, fakeApi));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text(AuthStrings.codeSignInLink));
-    await tester.pumpAndSettle();
-
-    expect(find.text(AuthStrings.requestCodeTitle), findsOneWidget);
-  });
 
   testWidgets(
     'tapping the clinic invitation option opens InvitationCodeScreen',

@@ -300,7 +300,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get authSendOtpButton => 'Send OTP';
 
   @override
-  String get authErrorSendingOtp => 'Error sending OTP: null';
+  String get authErrorSendingOtp =>
+      'No se pudo enviar el código de verificación. Comprueba tu conexión e inténtalo de nuevo.';
 
   @override
   String get authEnterInvitationCodeTitle => 'Enter Invitation Code';
@@ -310,13 +311,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get authNewPatientClinicInvitation =>
-      'New Patient? Enter Clinic Invitation';
+      '¿Nuevo paciente? Introduce la invitación de la clínica';
 
   @override
-  String get authSignInWithOneTimeCode => 'Sign in with One-Time Code';
-
-  @override
-  String get authClinicianSignIn => 'Clinician Sign In';
+  String get authSignInWithOneTimeCode =>
+      'Iniciar sesión con código de un solo uso';
 
   @override
   String get authInvitationCodeSubtitle =>

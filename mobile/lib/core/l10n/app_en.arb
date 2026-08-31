@@ -6,7 +6,7 @@
   "loginPasswordLabel": "Password",
   "loginButton": "Sign In",
   "onboardingTitle": "You've been invited",
-  "onboardingSubtitle": "Enter your email and the code your clinician sent you.",
+  "onboardingSubtitle": "Enter your email and the code your care team sent you.",
   "inviteCodeLabel": "Invitation code",
   "verifyButton": "Verify Code",
   "completeSetupButton": "Complete Setup",
@@ -147,7 +147,7 @@
       }
     }
   },
-  "medCardNotesHeader": "Clinician Instructions:",
+  "medCardNotesHeader": "Care Team Instructions:",
   "medCardReadOnlyBadge": "🔒 Prescribed by Care Team — Read Only",
   "medicationsEmptyState": "No active medications on your care plan yet.",
   "frequencyQD": "Once daily",
@@ -165,7 +165,6 @@
   "authWelcomeTitle": "Welcome!",
   "authNewPatientClinicInvitation": "New Patient? Enter Clinic Invitation",
   "authSignInWithOneTimeCode": "Sign in with One-Time Code",
-  "authClinicianSignIn": "Clinician Sign In",
   "authInvitationCodeSubtitle": "Please enter your invitation code to continue.",
   "authInvitationCodeLabel": "Invitation Code",
   "authInvalidInvitationCodeError": "Please enter a valid invitation code",

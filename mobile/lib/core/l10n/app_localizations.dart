@@ -143,7 +143,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Enter your email and the code your clinician sent you.'**
+  /// **'Enter your email and the code your care team sent you.'**
   String get onboardingSubtitle;
 
   /// No description provided for @inviteCodeLabel.
@@ -551,7 +551,7 @@ abstract class AppLocalizations {
   /// No description provided for @medCardNotesHeader.
   ///
   /// In en, this message translates to:
-  /// **'Clinician Instructions:'**
+  /// **'Care Team Instructions:'**
   String get medCardNotesHeader;
 
   /// No description provided for @medCardReadOnlyBadge.
@@ -655,12 +655,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sign in with One-Time Code'**
   String get authSignInWithOneTimeCode;
-
-  /// No description provided for @authClinicianSignIn.
-  ///
-  /// In en, this message translates to:
-  /// **'Clinician Sign In'**
-  String get authClinicianSignIn;
 
   /// No description provided for @authInvitationCodeSubtitle.
   ///

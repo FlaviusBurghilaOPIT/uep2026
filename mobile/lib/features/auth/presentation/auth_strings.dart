@@ -7,7 +7,7 @@
 class AuthStrings {
   AuthStrings._();
 
-  // --- Welcome (disambiguated auth methods - COPY-03) ---
+  // --- Welcome (patient-facing auth) ---
   static const String welcomeTitle = 'Welcome back';
   static const String welcomeSubtitle =
       'Sign in to continue your recovery journey';
@@ -15,10 +15,10 @@ class AuthStrings {
   static const String emailHint = 'you@email.com';
   static const String passwordLabel = 'PASSWORD';
   static const String passwordHint = '••••••••';
-  static const String signInButton = 'Clinician Sign In';
-  static const String clinicianSignInButton = 'Clinician Sign In';
+  static const String signInButton = 'Sign In';
+  static const String clinicianSignInButton = 'Sign In';
   static const String clinicInvitationButton =
-      'New Patient? Enter Clinic Invitation';
+      'I have an invitation code';
   static const String codeSignInLink = 'Sign in with One-Time Code';
   static const String invalidCredentials = 'Invalid email or password';
 

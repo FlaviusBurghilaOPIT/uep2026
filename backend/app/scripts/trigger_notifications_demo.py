@@ -127,7 +127,7 @@ def trigger_via_api(
     # 3. Dispatch Notification
     print(f"\n[3/3] Dispatching Test Notification via POST /notifications/send-test...")
     payload = {
-        "target_user_id": target_user_id,
+        "user_id": target_user_id,
         "title": title,
         "body": body,
     }
@@ -179,18 +179,79 @@ def trigger_direct_db(
         return False
 
 
+def trigger_simulator_push(
+    bundle_id: str = "com.example.remotecare",
+    title: str = "Medication Reminder: Ibuprofen 400 mg",
+    body: str = "Scheduled for 08:00 AM. Tap to log as taken.",
+    reminder_id: str = "rem_ibuprofen_morning",
+    medication_name: str = "Ibuprofen 400 mg",
+) -> bool:
+    """Send an interactive APNS push notification directly to the booted iOS simulator."""
+    import shutil
+    import subprocess
+    import tempfile
+
+    if not shutil.which("xcrun"):
+        print("  ⚠️ xcrun not found (not running on macOS or Command Line Tools not installed).")
+        return False
+
+    payload = {
+        "Simulator Target Bundle": bundle_id,
+        "aps": {
+            "alert": {
+                "title": title,
+                "body": body,
+            },
+            "sound": "default",
+            "badge": 1,
+            "category": "medication_reminder",
+        },
+        "reminder_id": reminder_id,
+        "medication_name": medication_name,
+    }
+
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+        json.dump(payload, f, indent=2)
+        tmp_path = f.name
+
+    try:
+        proc = subprocess.run(
+            ["xcrun", "simctl", "push", "booted", bundle_id, tmp_path],
+            capture_output=True,
+            text=True,
+        )
+        if proc.returncode == 0:
+            print(f"  📱 iOS Simulator push delivered to '{bundle_id}': '{title}'")
+            return True
+        else:
+            print(f"  ⚠️ iOS Simulator push note: {proc.stderr.strip() or proc.stdout.strip()}")
+            return False
+    except Exception as e:
+        print(f"  ⚠️ Simulator push error: {e}")
+        return False
+    finally:
+        try:
+            os.unlink(tmp_path)
+        except Exception:
+            pass
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Trigger test notifications for RemoteCare Pro demo")
     parser.add_argument("--api-url", default="http://localhost:8000", help="Base URL of FastAPI backend")
     parser.add_argument("--direct-db", action="store_true", help="Execute directly via DB service (no HTTP)")
+    parser.add_argument("--simulator", action="store_true", help="Send push directly to booted iOS Simulator")
     parser.add_argument("--title", default="Medication Reminder: Ibuprofen 400 mg", help="Notification title")
     parser.add_argument("--body", default="Scheduled for 08:00 AM. Tap to log as taken.", help="Notification body")
     parser.add_argument("--patient-email", default="patient@example.com", help="Patient recipient email")
     args = parser.parse_args()
 
+    # Always dispatch to simulator if on macOS and booted simulator exists
+    trigger_simulator_push(title=args.title, body=args.body)
+
     if args.direct_db:
         trigger_direct_db(patient_email=args.patient_email, title=args.title, body=args.body)
-    else:
+    elif not args.simulator:
         # Try API first, fallback to direct DB if server not currently listening
         success = trigger_via_api(
             api_url=args.api_url,

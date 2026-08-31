@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -12,14 +13,12 @@ import '../../../../core/widgets/app_text_field.dart';
 import '../auth_strings.dart';
 import '../providers/auth_provider.dart';
 import 'invitation_code_screen.dart';
-import 'request_code_screen.dart';
 
-/// Hybrid-auth Welcome screen (WI 04, WI 12 COPY-03).
+/// Patient-facing Welcome & Sign-In screen.
 ///
-/// Offers disambiguated sign-in methods:
-/// 1. "Clinician Sign In" (email + password form),
-/// 2. "New Patient? Enter Clinic Invitation" (for newly enrolled patients),
-/// 3. "Sign in with One-Time Code" (email OTP code request).
+/// Features:
+/// 1. Returning patient email + password sign-in ("Sign In").
+/// 2. New patient account activation with clinic invitation code ("I have an invitation code").
 class WelcomeScreen extends ConsumerStatefulWidget {
   const WelcomeScreen({super.key});
 
@@ -31,6 +30,27 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkClipboard());
+  }
+
+  Future<void> _checkClipboard() async {
+    try {
+      final data = await Clipboard.getData(Clipboard.kTextPlain);
+      final text = data?.text?.trim() ?? '';
+      if (!mounted) return;
+      if (text.contains('@') && RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(text)) {
+        if (_emailController.text.isEmpty) {
+          setState(() {
+            _emailController.text = text;
+          });
+        }
+      }
+    } catch (_) {}
+  }
 
   @override
   void dispose() {
@@ -67,12 +87,6 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
           initialEmail: _emailController.text.trim(),
         ),
       ),
-    );
-  }
-
-  void _openCodeSignIn() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const RequestCodeScreen()),
     );
   }
 
@@ -146,30 +160,18 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 SizedBox(height: AppSpacing.xl),
 
                 AppButton(
-                  text: AuthStrings.clinicianSignInButton,
+                  text: AuthStrings.signInButton,
                   isLoading: auth.isLoading,
                   onPressed: _signInWithPassword,
                 ),
                 SizedBox(height: AppSpacing.md),
 
-                // Primary patient onboarding action: Invitation Code
+                // Patient onboarding action: Invitation Code
                 AppButton(
                   text: AuthStrings.clinicInvitationButton,
                   isOutlined: true,
                   icon: LucideIcons.keyRound,
                   onPressed: _openInviteCodeSignIn,
-                ),
-                SizedBox(height: AppSpacing.lg),
-
-                // Fallback sign-in method: email OTP
-                Center(
-                  child: TextButton(
-                    onPressed: _openCodeSignIn,
-                    child: Text(
-                      AuthStrings.codeSignInLink,
-                      style: AppTextStyles.linkText,
-                    ),
-                  ),
                 ),
                 SizedBox(height: 24.h),
               ],

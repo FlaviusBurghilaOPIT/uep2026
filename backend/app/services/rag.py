@@ -18,6 +18,7 @@ client_async = AsyncOpenAI(
 # Embedding
 # ─────────────────────────────────────────
 
+@track_llm_ops(name="rag.embedding", model="openai/text-embedding-ada-002")
 def get_embedding(text_input: str) -> list[float]:
     """
     Convert text into a vector using OpenAI / OpenRouter text embeddings.

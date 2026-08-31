@@ -12,7 +12,7 @@ class AppStrings {
   static const String and = ' and ';
   static const String privacyPolicy = 'Privacy Policy';
 
-  static const String carousel1Title = 'Clinician-prescribed regimen';
+  static const String carousel1Title = 'Doctor-prescribed regimen';
   static const String carousel1Body =
       'Your medications come directly from your doctor — no manual entry, no guesswork.';
   static const String carousel2Title = 'Smart medication reminders';
@@ -23,7 +23,7 @@ class AppStrings {
       'Ask questions about your recovery anytime. Context-aware, never diagnostic.';
   static const String carousel4Title = 'Progress tracking';
   static const String carousel4Body =
-      'Track your recovery journey day by day. Your clinician monitors your progress remotely.';
+      'Track your recovery journey day by day. Your care team monitors your progress remotely.';
 
   static const String hipaaAware = 'Secure Clinic Account';
   static const String aiCareAssistant = 'Care Team Assistant';

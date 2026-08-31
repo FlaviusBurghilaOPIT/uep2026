@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -33,6 +34,24 @@ class _InvitationCodeScreenState extends ConsumerState<InvitationCodeScreen> {
   void initState() {
     super.initState();
     _emailController = TextEditingController(text: widget.initialEmail ?? '');
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkClipboard());
+  }
+
+  Future<void> _checkClipboard() async {
+    try {
+      final data = await Clipboard.getData(Clipboard.kTextPlain);
+      final text = data?.text?.trim() ?? '';
+      if (text.length == 6 && RegExp(r'^\d{6}$').hasMatch(text) && mounted) {
+        if (_codeController.text.isEmpty) {
+          setState(() {
+            _codeController.text = text;
+          });
+          if (_emailController.text.trim().isNotEmpty) {
+            _verifyInviteCode();
+          }
+        }
+      }
+    } catch (_) {}
   }
 
   @override
@@ -136,6 +155,40 @@ class _InvitationCodeScreenState extends ConsumerState<InvitationCodeScreen> {
                     fontFeatures: [FontFeature.tabularFigures()],
                   ),
                   autofillHints: const [AutofillHints.oneTimeCode],
+                  suffixIcon: GestureDetector(
+                    onTap: () async {
+                      final data = await Clipboard.getData(Clipboard.kTextPlain);
+                      final text = data?.text?.trim() ?? '';
+                      if (text.isNotEmpty && mounted) {
+                        setState(() {
+                          _codeController.text = text;
+                        });
+                        if (text.length == 6 &&
+                            RegExp(r'^\d{6}$').hasMatch(text) &&
+                            _emailController.text.trim().isNotEmpty) {
+                          _verifyInviteCode();
+                        }
+                      }
+                    },
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(LucideIcons.clipboard, size: 14.sp, color: AppColors.primaryGreen),
+                          SizedBox(width: 4.w),
+                          Text(
+                            'PASTE',
+                            style: TextStyle(
+                              color: AppColors.primaryGreen,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12.sp,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                   onChanged: (val) {
                     if (val.trim().length == 6 &&
                         RegExp(r'^\d{6}$').hasMatch(val.trim()) &&

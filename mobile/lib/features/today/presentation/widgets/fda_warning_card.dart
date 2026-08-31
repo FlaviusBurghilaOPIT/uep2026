@@ -1,10 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/l10n/app_localizations.dart';
+
+/// LLM drug-safety summaries sometimes emit stray artifact lines — a lone
+/// "." or an empty bullet — where it meant a paragraph break. Strip those
+/// and collapse repeated blank lines so the rendered markdown reads clean.
+String _sanitizeLlmMarkdown(String text) {
+  final lines = text.split('\n');
+  final kept = <String>[];
+  for (final line in lines) {
+    final trimmed = line.trim();
+    if (trimmed == '.' || trimmed == '-' || trimmed == '*') continue;
+    kept.add(line);
+  }
+  final collapsed = kept
+      .join('\n')
+      .replaceAll(RegExp(r'\n{3,}'), '\n\n')
+      .trim();
+  return collapsed;
+}
 
 class FdaWarningCard extends StatelessWidget {
   final String source;
@@ -102,8 +122,9 @@ class FdaWarningCard extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.white.withValues(alpha: 0.8),
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusRound),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusRound,
+                        ),
                         border: Border.all(
                           color: AppColors.warningAmber.withValues(alpha: 0.5),
                           width: 1,
@@ -153,9 +174,18 @@ class FdaWarningCard extends StatelessWidget {
                           ),
                         ),
                         SizedBox(height: 2.h),
-                        Text(
-                          message,
-                          style: AppTextStyles.bodySmall,
+                        MarkdownBody(
+                          data: _sanitizeLlmMarkdown(message),
+                          styleSheet: MarkdownStyleSheet(
+                            p: AppTextStyles.bodySmall,
+                            strong: AppTextStyles.bodySmall.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            em: AppTextStyles.bodySmall.copyWith(
+                              fontStyle: FontStyle.italic,
+                            ),
+                            listBullet: AppTextStyles.bodySmall,
+                          ),
                         ),
                       ],
                     ),

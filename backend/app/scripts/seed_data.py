@@ -117,16 +117,12 @@ def seed_database(
     clinician_password: str | None = None,
     patient_email: str | None = None,
     patient_otp: str | None = None,
-    phoenix_admin_email: str | None = None,
-    phoenix_admin_password: str | None = None,
 ):
     # Resolve configurable credentials (from args > env vars > secure defaults)
     c_email = clinician_email or os.getenv("CLINICIAN_EMAIL", "clinician@example.com")
     c_password = clinician_password or os.getenv("CLINICIAN_PASSWORD", "CarePro#2026!Secure")
     p_email = patient_email or os.getenv("DEMO_PATIENT_EMAIL", "patient@example.com")
     p_otp = patient_otp or os.getenv("DEMO_PATIENT_OTP") or f"{secrets.randbelow(900000) + 100000}"
-    ph_admin_email = phoenix_admin_email or os.getenv("PHOENIX_ADMIN_EMAIL", "admin@localhost")
-    ph_admin_pass = phoenix_admin_password or os.getenv("PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD", "Phoenix#2026!Guard")
 
     # Ensure pgvector extension exists before table creation
     try:
@@ -193,8 +189,7 @@ def seed_database(
             print("    • Swagger UI:  http://<YOUR_EC2_IP>/docs (or http://<YOUR_EC2_IP>:8000/docs)\n")
             print("  📊 ARIZE PHOENIX (LLM Observability & Cost Tracking):")
             print(f"    • UI URL:      http://<YOUR_EC2_IP>:6006 (or http://localhost:6006)")
-            print(f"    • Admin User:  {ph_admin_email}")
-            print(f"    • Password:    {ph_admin_pass}")
+            print("    • Access:      No password required (Authentication disabled)")
             print("=" * 80)
             print("  Share the Clinician Credentials with your mentor/evaluator to test live!")
             print("=" * 80 + "\n")
@@ -502,8 +497,7 @@ def seed_database(
         print("    • Swagger UI:  http://<YOUR_EC2_IP>/docs (or http://<YOUR_EC2_IP>:8000/docs)\n")
         print("  📊 ARIZE PHOENIX (LLM Observability & Cost Tracking):")
         print(f"    • UI URL:      http://<YOUR_EC2_IP>:6006 (or http://localhost:6006)")
-        print(f"    • Admin User:  {ph_admin_email}")
-        print(f"    • Password:    {ph_admin_pass}")
+        print("    • Access:      No password required (Authentication disabled)")
         print("=" * 80)
         print("  Share the Clinician Credentials with your mentor/evaluator to test live!")
         print("=" * 80 + "\n")

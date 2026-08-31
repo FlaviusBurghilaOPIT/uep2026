@@ -160,16 +160,11 @@
   "authRequiredError": "Required",
   "authInvalidEmailError": "Enter a valid email",
   "authSendOtpButton": "Send OTP",
-  "authErrorSendingOtp": "Error sending OTP: {error}",
-  "@authErrorSendingOtp": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
+  "authErrorSendingOtp": "Impossible d'envoyer le code de vérification. Vérifiez votre connexion et réessayez.",
   "authEnterInvitationCodeTitle": "Enter Invitation Code",
   "authWelcomeTitle": "Welcome!",
+  "authNewPatientClinicInvitation": "Nouveau patient ? Entrez l'invitation de la clinique",
+  "authSignInWithOneTimeCode": "Se connecter avec un code à usage unique",
   "authInvitationCodeSubtitle": "Please enter your invitation code to continue.",
   "authInvitationCodeLabel": "Invitation Code",
   "authInvalidInvitationCodeError": "Please enter a valid invitation code",
