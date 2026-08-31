@@ -109,6 +109,31 @@ async def _save_user_message(case_id: str, content: str, in_scope: bool, escalat
     )
 
 
+def _fetch_recent_messages_sync(case_id: str, limit: int = 20) -> list[dict]:
+    with SessionLocal() as db:
+        rows = (
+            db.query(models.ChatMessage)
+            .filter(models.ChatMessage.case_id == case_id)
+            .order_by(models.ChatMessage.created_at.desc())
+            .limit(limit)
+            .all()
+        )
+    rows.reverse()
+    return [
+        {
+            "role": "user" if row.role == models.ChatRole.user else "assistant",
+            "content": row.content,
+        }
+        for row in rows
+    ]
+
+
+async def _fetch_recent_messages(case_id: str, limit: int = 20) -> list[dict]:
+    """Last `limit` turns for this case, oldest first — called before the
+    current turn is saved so it never includes the in-flight message."""
+    return await anyio.to_thread.run_sync(_fetch_recent_messages_sync, case_id, limit)
+
+
 async def _save_assistant_message_shielded(case_id: str, content: str):
     with anyio.CancelScope(shield=True):
         await anyio.to_thread.run_sync(
@@ -127,6 +152,7 @@ async def chat(
     current_user: models.User = Depends(get_current_user),
 ):
     case, patient_ctx, in_scope, escalate = await _process_chat_request(request, current_user)
+    history = await _fetch_recent_messages(case.id)
 
     await _save_user_message(case.id, request.message, in_scope, escalate)
 
@@ -138,7 +164,13 @@ async def chat(
         )
     else:
         chunks = []
-        async for chunk in generate_recommendation_stream(request.message, case.surgery_type, patient_context=patient_ctx):
+        async for chunk in generate_recommendation_stream(
+            request.message,
+            case.surgery_type,
+            patient_context=patient_ctx,
+            history=history,
+            locale=request.locale,
+        ):
             chunks.append(chunk)
         reply = "".join(chunks)
 
@@ -159,9 +191,10 @@ async def chat_stream(
     current_user: models.User = Depends(get_current_user),
 ):
     case, patient_ctx, in_scope, escalate = await _process_chat_request(request, current_user)
+    history = await _fetch_recent_messages(case.id)
 
     await _save_user_message(case.id, request.message, in_scope, escalate)
-    
+
     if not in_scope:
         async def mock_stream():
             reply = (
@@ -177,7 +210,13 @@ async def chat_stream(
         return StreamingResponse(mock_stream(), media_type="text/plain")
 
     async def stream_and_save():
-        generator = generate_recommendation_stream(request.message, case.surgery_type, patient_context=patient_ctx)
+        generator = generate_recommendation_stream(
+            request.message,
+            case.surgery_type,
+            patient_context=patient_ctx,
+            history=history,
+            locale=request.locale,
+        )
         chunks = []
         try:
             async for chunk in generator:
@@ -192,6 +231,7 @@ async def chat_stream(
 
 @router.get("/patients-summary")
 async def patients_summary(
+    locale: str | None = None,
     db: Session = Depends(get_db_for_user),
     current_user: models.User = Depends(require_clinician),
 ):
@@ -225,5 +265,5 @@ async def patients_summary(
         )
 
     patients_context = "\n\n---\n\n".join(lines)
-    summary = await generate_patients_summary(patients_context)
+    summary = await generate_patients_summary(patients_context, locale=locale)
     return {"summary": summary, "patient_count": len(cases)}

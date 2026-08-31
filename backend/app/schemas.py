@@ -207,6 +207,11 @@ class ChatRequest(BaseModel):
     case_id:         str
     message:         str
     intent_category: IntentCategory = IntentCategory.general_question
+    # BCP-47-ish short code (e.g. "en", "es", "de") from the caller's UI
+    # locale — clinic language setting on web, device OS locale on mobile.
+    # Used only as a fallback hint; the assistant primarily mirrors the
+    # language of the message itself.
+    locale:           str | None = None
 
 
 class ChatResponse(BaseModel):

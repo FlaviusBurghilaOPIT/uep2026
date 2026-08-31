@@ -98,15 +98,27 @@ def retrieve_relevant_chunks(
 # Generation
 # ─────────────────────────────────────────
 
+def _language_directive(locale: str | None) -> str:
+    if not locale:
+        return ""
+    return (
+        f"\nIf the user's message is too short or ambiguous to tell what "
+        f"language they're writing in, default to their app language "
+        f"(locale code: {locale})."
+    )
+
+
 @track_llm_ops(name="rag.generate_recommendation_stream")
 async def generate_recommendation_stream(
     doctor_message: str,
     surgery_type: str | None = None,
     patient_context: dict | None = None,
+    history: list[dict] | None = None,
+    locale: str | None = None,
 ):
     chunks = await anyio.to_thread.run_sync(retrieve_relevant_chunks, doctor_message, surgery_type)
     guidelines_context = "\n\n".join([f"[Source: {chunk['source']}]\n{chunk['content']}" for chunk in chunks])
-    
+
     if patient_context:
         # Patient-facing 24/7 recovery companion mode
         system_prompt = f"""You are RemoteCare Pro Assistant, an empathetic, supportive, and knowledgeable post-operative recovery companion.
@@ -124,14 +136,14 @@ CLINICAL GUIDELINES (RELEVANT REFERENCES):
 SAFETY & INTERACTION RULES:
 1. Strictly Informational: Never diagnose medical conditions and never recommend modifying prescription doses or stopping medications.
 2. Context-Bound: Ground answers in the prescribed medications, doctor's recovery instructions, and clinical guidelines.
-3. Multilingual (i18n): Automatically detect and respond in the language the patient uses (English, Spanish, Italian, etc.).
+3. Multilingual (i18n): Automatically detect and respond in the language the patient uses (English, Spanish, Italian, etc.).{_language_directive(locale)}
 4. Empathy & Tone: Speak warmly, calmly, and clearly. Validate their feelings (e.g. pain, anxiety, tiredness) while providing reassuring, practical care tips.
 5. Emergency Red Flags: If the user describes severe symptoms (uncontrolled bleeding, severe chest pain, shortness of breath, sudden leg swelling, fever > 38.5°C), urge them immediately to call emergency services or reach their emergency contact.
 """
         user_prompt = doctor_message
     else:
         # Clinician authoring assistant mode
-        system_prompt = """You are a clinical assistant helping doctors write post-surgery recovery recommendations.
+        system_prompt = f"""You are a clinical assistant helping doctors write post-surgery recovery recommendations.
 RULES:
 - Base your answer ONLY on the provided context documents
 - Never invent information not in the context
@@ -140,17 +152,20 @@ RULES:
 - Flag any drug interactions or warnings if relevant
 - Never give diagnostic advice
 - If context is insufficient, say so clearly
+- Respond in the language the doctor's request is written in.{_language_directive(locale)}
 Always end with: "Please review and adjust based on your clinical judgment."
 """
         user_prompt = f"Context documents:\n{guidelines_context}\n\nDoctor's request: {doctor_message}\n\nPlease suggest recovery recommendations based on the context above."
 
     try:
+        messages = [{"role": "system", "content": system_prompt}]
+        for turn in (history or []):
+            messages.append({"role": turn["role"], "content": turn["content"]})
+        messages.append({"role": "user", "content": user_prompt})
+
         response = await client_async.chat.completions.create(
             model=os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3-8b-instruct"),
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
+            messages=messages,
             stream=True
         )
         
@@ -166,7 +181,7 @@ Always end with: "Please review and adjust based on your clinical judgment."
 
 
 @track_llm_ops(name="rag.generate_patients_summary", model=os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini"))
-async def generate_patients_summary(patients_context: str) -> str:
+async def generate_patients_summary(patients_context: str, locale: str | None = None) -> str:
     """Summarize a clinician's full patient roster (plain chat completion,
     no retrieval/embeddings involved)."""
     system_prompt = (
@@ -176,6 +191,7 @@ async def generate_patients_summary(patients_context: str) -> str:
         "extra attention (e.g. negative check-in feelings, no recent check-ins, or missing "
         "recovery recommendations). Never give diagnostic advice or suggest medication "
         "changes. Base your answer only on the data provided below."
+        + (f" Respond in the clinician's app language (locale code: {locale})." if locale else "")
     )
     response = await client_async.chat.completions.create(
         model=os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini"),

@@ -43,7 +43,11 @@ def test_setup_tracing_registers_and_instruments(monkeypatch):
 
     setup_tracing()
 
-    register_mock.assert_called_once_with(project_name="test-project")
+    register_mock.assert_called_once_with(
+        project_name="test-project",
+        endpoint="http://localhost:6006",
+        protocol="http/protobuf",
+    )
     instrumentor_cls_mock.return_value.instrument.assert_called_once_with(
         tracer_provider=register_mock.return_value
     )
