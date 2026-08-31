@@ -2085,7 +2085,8 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
 
         try {
           const token = localStorage.getItem('token') || (document.cookie.match(/(^| )carepro_token=([^;]+)/)?.[2])
-          const res = await fetch('/api/ai/patients-summary', {
+          const locale = document.cookie.match(/(?:^|; )carepro_language=([^;]*)/)?.[1] || ''
+          const res = await fetch(`/api/ai/patients-summary?locale=${encodeURIComponent(locale)}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           })
 

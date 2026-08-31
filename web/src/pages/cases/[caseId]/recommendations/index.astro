@@ -391,13 +391,14 @@ const t = createTranslator(lang)
           const token = localStorage.getItem('token')
           const pathParts = window.location.pathname.split('/')
           const caseId = pathParts[2] || 'default'
+          const locale = document.cookie.match(/(?:^|; )carepro_language=([^;]*)/)?.[1]
           const res = await fetch(`/api/ai/chat`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ message: text, case_id: caseId })
+            body: JSON.stringify({ message: text, case_id: caseId, locale })
           })
           const data = res.ok ? await res.json() : null
           loadingMsg.remove()
