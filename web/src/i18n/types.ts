@@ -107,6 +107,7 @@ export interface TriageTranslations {
   acknowledgedLabel?: string
   viewDetails?: string
   toggleStableRoster?: string
+  mostUrgent?: string
 }
 
 export interface PatientCardTranslations {

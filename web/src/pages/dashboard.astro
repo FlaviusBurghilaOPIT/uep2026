@@ -184,6 +184,10 @@ try {
 // Worst patients first within each priority tier, so the doctor doesn't have to read every card to find the sickest one
 const redItems = triageItems.filter((item) => item.priority === 'red').sort((a, b) => urgencyScore(b) - urgencyScore(a))
 const amberItems = triageItems.filter((item) => item.priority === 'amber').sort((a, b) => urgencyScore(b) - urgencyScore(a))
+
+// Every red card looks equally alarming today (alarm fatigue). Mark only the single
+// worst case so the doctor's eye goes there first — everything else stays calm red.
+if (redItems.length > 0) redItems[0].mostUrgent = true
 const attentionItems = [...redItems, ...amberItems]
 const stableItems = triageItems.filter((item) => item.priority === 'green')
 const totalPatients = patients.length
@@ -363,7 +367,7 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
             const isRed = item.priority === 'red'
             return (
               <div
-                class={`triage-card ${isRed ? 'card-priority-red' : 'card-priority-amber'} patient-card`}
+                class={`triage-card ${isRed ? 'card-priority-red' : 'card-priority-amber'} ${item.mostUrgent ? 'card-most-urgent' : ''} patient-card`}
                 data-name={(p.full_name || '').toLowerCase()}
                 data-priority={item.priority}
                 data-patient-id={p.id}
@@ -390,6 +394,9 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
                             </>
                           )}
                         </span>
+                        {item.mostUrgent && (
+                          <span class="most-urgent-tag">{t('triage.mostUrgent', 'Highest Priority Now')}</span>
+                        )}
                         {item.trend === 'worse' && (
                           <span class="trend-badge trend-worse" title={t('triage.trendWorseTitle', 'Condition has worsened since the last check-in')}>
                             <TrendingUp size={12} aria-hidden="true" />
@@ -1495,6 +1502,36 @@ const medianResolutionDisplay = triageStats?.median_seconds ? `${Math.round(tria
 
   .card-priority-amber {
     border-left: 4px solid #F59E0B;
+  }
+
+  /* The single worst case gets the design system's "Emergency Alert Glow" —
+     the only shadow meant to demand attention — so it doesn't get lost among
+     other red cards that are technically critical but less urgent right now. */
+  .card-most-urgent {
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.4), 0 2px 4px rgba(15, 23, 42, 0.06);
+    animation: urgent-pulse 2.4s ease-in-out infinite;
+  }
+
+  @keyframes urgent-pulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.4), 0 2px 4px rgba(15, 23, 42, 0.06); }
+    50% { box-shadow: 0 0 16px rgba(239, 68, 68, 0.6), 0 2px 4px rgba(15, 23, 42, 0.06); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card-most-urgent {
+      animation: none;
+    }
+  }
+
+  .most-urgent-tag {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #ffffff;
+    background-color: #dc2626;
+    padding: 3px 8px;
+    border-radius: 9999px;
   }
 
   .triage-card-header {

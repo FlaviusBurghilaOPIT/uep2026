@@ -397,6 +397,7 @@ export const en: Translations = {
     acknowledgedLabel: 'Seen',
     viewDetails: 'Details',
     toggleStableRoster: 'Show or hide the stable patient roster',
+    mostUrgent: 'Highest Priority Now',
   },
   patientCard: {
     age: 'Age',
