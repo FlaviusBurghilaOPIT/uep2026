@@ -1,0 +1,432 @@
+---
+import AppLayout from '../../../layouts/AppLayout.astro'
+import { apiFetch } from '../../../api/client'
+import { createTranslator, isLanguage } from '../../../i18n'
+import '../../../index.css'
+
+const cookieLang = Astro.cookies.get('carepro_language')?.value
+const lang = isLanguage(cookieLang) ? cookieLang : 'en'
+const t = createTranslator(lang)
+
+const cookieToken = Astro.cookies.get('carepro_token')?.value
+if (!cookieToken) {
+  return Astro.redirect('/login')
+}
+
+const patientId = Astro.params.id as string
+
+let patient: any = null
+let patientCase: any = null
+
+try {
+  patient = await apiFetch<any>(`/patients/${patientId}`, { token: cookieToken })
+  patientCase = await apiFetch<any>(`/patients/${patientId}/case`, { token: cookieToken }).catch(() => null)
+} catch {
+  patient = null
+}
+
+if (!patient) {
+  return Astro.redirect('/patients')
+}
+
+const isInactive = patient.status === 'inactive'
+---
+
+<AppLayout title={`${t('editPatient.title', 'Edit Patient')} — RemoteCare Pro`}>
+  <div class="edit-patient-page">
+    <div class="card">
+      <h1 class="title">{t('editPatient.title', 'Edit Patient')}</h1>
+      <p class="subtitle">{t('editPatient.subtitle', 'Update contact details and case information.')}</p>
+
+      <div class="error-box hidden" id="error-box" role="alert" aria-live="assertive"></div>
+      <div class="success-box hidden" id="success-box" role="status" aria-live="polite"></div>
+
+      <form id="edit-form" class="form">
+        <input type="hidden" id="patient-id" value={patient.id} />
+        <input type="hidden" id="case-id" value={patientCase?.id || ''} />
+
+        <div class="form-group">
+          <label for="patient-email" class="label">{t('editPatient.email', 'Email (read-only)')}</label>
+          <input id="patient-email" class="input" type="email" value={patient.email} disabled />
+        </div>
+
+        <div class="form-group">
+          <label for="full-name" class="label">{t('editPatient.fullName', 'Patient Full Name *')}</label>
+          <input id="full-name" class="input" type="text" value={patient.full_name} required aria-required="true" />
+        </div>
+
+        <div class="form-group">
+          <label for="date-of-birth" class="label">{t('editPatient.dateOfBirth', 'Date of Birth *')}</label>
+          <input id="date-of-birth" class="input" type="date" value={patient.date_of_birth || ''} required aria-required="true" />
+        </div>
+
+        <div class="form-group">
+          <label for="patient-phone" class="label">{t('editPatient.phone', 'Patient Direct Phone')}</label>
+          <input id="patient-phone" class="input" type="tel" value={patient.phone || ''} placeholder={t('editPatient.phonePlaceholder', '+1 (555) 019-2834')} />
+        </div>
+
+        {patientCase && (
+          <>
+            <div class="form-group">
+              <label for="surgery-type" class="label">{t('editPatient.surgeryType', 'Procedure / Surgery Type *')}</label>
+              <input id="surgery-type" class="input" type="text" value={patientCase.surgery_type} required aria-required="true" />
+            </div>
+
+            <div class="form-group">
+              <label for="surgery-date" class="label">{t('editPatient.surgeryDate', 'Surgery Date')}</label>
+              <input id="surgery-date" class="input" type="date" value={patientCase.surgery_date || ''} />
+            </div>
+
+            <div class="form-group">
+              <label for="emergency-phone" class="label">{t('editPatient.emergencyContact', 'Emergency Contact Phone')}</label>
+              <input id="emergency-phone" class="input" type="tel" value={patientCase.emergency_contact_phone || ''} />
+            </div>
+          </>
+        )}
+
+        <button type="submit" class="submit-btn" id="submit-btn">
+          {t('editPatient.save', 'Save Changes')}
+        </button>
+
+        <a href="/patients" class="cancel-btn">
+          {t('editPatient.cancel', 'Cancel')}
+        </a>
+      </form>
+
+      <div class="danger-zone">
+        <h2 class="danger-title">{t('editPatient.dangerZoneTitle', 'Danger Zone')}</h2>
+        {isInactive ? (
+          <>
+            <p class="danger-text">{t('editPatient.inactiveNotice', 'This patient is currently inactive and hidden from the triage queue.')}</p>
+            <button type="button" class="reactivate-btn" id="reactivate-btn">
+              {t('editPatient.reactivate', 'Reactivate Patient')}
+            </button>
+          </>
+        ) : (
+          <>
+            <p class="danger-text">{t('editPatient.deactivateNotice', 'Deactivating removes this patient from the active triage queue. All medical history is kept for audit — this can be undone later.')}</p>
+            <button type="button" class="deactivate-btn" id="deactivate-btn">
+              {t('editPatient.deactivate', 'Deactivate Patient')}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Deactivate Modal -->
+  <div id="confirm-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+    <div class="modal-card">
+      <h3 id="confirm-modal-title" class="modal-title">{t('editPatient.confirmTitle', 'Deactivate this patient?')}</h3>
+      <p class="modal-text">{t('editPatient.confirmText', 'They will disappear from the active triage queue. Their medical history stays intact and this can be reversed at any time.')}</p>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="confirm-cancel-btn">{t('cta.cancel', 'Cancel')}</button>
+        <button type="button" class="btn-confirm-deactivate" id="confirm-deactivate-btn">{t('editPatient.deactivate', 'Deactivate Patient')}</button>
+      </div>
+    </div>
+  </div>
+</AppLayout>
+
+<style>
+  .edit-patient-page {
+    display: flex;
+    justify-content: center;
+    padding: 32px;
+  }
+  .card {
+    background-color: #ffffff;
+    padding: 36px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(15,23,42,0.08);
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .hidden { display: none !important; }
+  .title { font-size: 22px; font-weight: 700; color: #0f172a; margin: 0; }
+  .subtitle { font-size: 13px; color: #64748b; margin: 0; }
+  .error-box {
+    background-color: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+  }
+  .success-box {
+    background-color: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #86efac;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+  }
+  .form { display: flex; flex-direction: column; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .label { font-size: 13px; font-weight: 600; color: #334155; }
+  .input {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-size: 14px;
+    color: #0f172a;
+    background-color: #ffffff;
+    outline: none;
+  }
+  .input:disabled {
+    background-color: #f1f5f9;
+    color: #64748b;
+  }
+  .input:focus {
+    border-color: #0284c7;
+    box-shadow: 0 0 0 3px rgba(2,132,199,0.15);
+  }
+  .submit-btn {
+    padding: 12px;
+    background-color: #0284c7;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color var(--duration-press) var(--ease-out), transform var(--duration-press) var(--ease-out);
+  }
+  .submit-btn:hover { background-color: #0369a1; }
+  .submit-btn:active { transform: scale(0.97); }
+  .cancel-btn {
+    padding: 10px;
+    background-color: #ffffff;
+    color: #64748b;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--duration-press) var(--ease-out);
+  }
+  .cancel-btn:hover { background-color: #f8fafc; }
+
+  .danger-zone {
+    border-top: 1px solid #fecaca;
+    padding-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .danger-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #991b1b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0;
+  }
+  .danger-text {
+    font-size: 13px;
+    color: #64748b;
+    margin: 0;
+  }
+  .deactivate-btn {
+    align-self: flex-start;
+    padding: 9px 16px;
+    background-color: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .deactivate-btn:hover { background-color: #fee2e2; }
+  .reactivate-btn {
+    align-self: flex-start;
+    padding: 9px 16px;
+    background-color: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .reactivate-btn:hover { background-color: #dcfce7; }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(15,23,42,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  .modal-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 25px -5px rgba(15,23,42,0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .modal-title { font-size: 17px; font-weight: 700; color: #0f172a; margin: 0; }
+  .modal-text { font-size: 13.5px; color: #64748b; margin: 0; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+  .btn-cancel {
+    padding: 9px 16px;
+    background-color: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-confirm-deactivate {
+    padding: 9px 16px;
+    background-color: #dc2626;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-confirm-deactivate:hover { background-color: #b91c1c; }
+</style>
+
+<script>
+  function initEditPatient() {
+    function getToken(): string {
+      const cookieToken = document.cookie.split('; ').find((row) => row.startsWith('carepro_token='))?.split('=')[1]
+      return localStorage.getItem('token') || cookieToken || ''
+    }
+
+    const form = document.getElementById('edit-form')
+    const errorBox = document.getElementById('error-box')
+    const successBox = document.getElementById('success-box')
+    const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement
+
+    const patientId = (document.getElementById('patient-id') as HTMLInputElement)?.value
+    const caseId = (document.getElementById('case-id') as HTMLInputElement)?.value
+
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault()
+        errorBox?.classList.add('hidden')
+        successBox?.classList.add('hidden')
+        if (submitBtn) {
+          submitBtn.disabled = true
+          submitBtn.textContent = 'Saving...'
+        }
+
+        const fullName = (document.getElementById('full-name') as HTMLInputElement).value.trim()
+        const dob = (document.getElementById('date-of-birth') as HTMLInputElement).value.trim()
+        const phone = (document.getElementById('patient-phone') as HTMLInputElement).value.trim()
+        const surgeryTypeEl = document.getElementById('surgery-type') as HTMLInputElement | null
+        const surgeryDateEl = document.getElementById('surgery-date') as HTMLInputElement | null
+        const emergencyPhoneEl = document.getElementById('emergency-phone') as HTMLInputElement | null
+
+        const token = getToken()
+
+        try {
+          const patientRes = await fetch(`/api/patients/${patientId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ full_name: fullName, date_of_birth: dob, phone: phone || null }),
+          })
+          if (!patientRes.ok) {
+            const errData = await patientRes.json().catch(() => null)
+            throw new Error(errData?.detail || 'Failed to update patient details.')
+          }
+
+          if (caseId && surgeryTypeEl) {
+            const caseRes = await fetch(`/api/cases/${caseId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+              body: JSON.stringify({
+                surgery_type: surgeryTypeEl.value.trim(),
+                surgery_date: surgeryDateEl?.value.trim() || null,
+                emergency_contact_phone: emergencyPhoneEl?.value.trim() || null,
+              }),
+            })
+            if (!caseRes.ok) {
+              const errData = await caseRes.json().catch(() => null)
+              throw new Error(errData?.detail || 'Patient details saved, but the case update failed.')
+            }
+          }
+
+          window.location.href = '/patients?msg=updated'
+        } catch (err: any) {
+          if (errorBox) {
+            errorBox.textContent = err?.message || 'Network error while saving changes.'
+            errorBox.classList.remove('hidden')
+          }
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false
+            submitBtn.textContent = 'Save Changes'
+          }
+        }
+      })
+    }
+
+    const deactivateBtn = document.getElementById('deactivate-btn')
+    const confirmModal = document.getElementById('confirm-modal')
+    const confirmCancelBtn = document.getElementById('confirm-cancel-btn')
+    const confirmDeactivateBtn = document.getElementById('confirm-deactivate-btn')
+
+    deactivateBtn?.addEventListener('click', () => confirmModal?.classList.remove('hidden'))
+    confirmCancelBtn?.addEventListener('click', () => confirmModal?.classList.add('hidden'))
+    confirmModal?.addEventListener('click', (e) => {
+      if (e.target === confirmModal) confirmModal.classList.add('hidden')
+    })
+
+    confirmDeactivateBtn?.addEventListener('click', async () => {
+      const token = getToken()
+      try {
+        const res = await fetch(`/api/patients/${patientId}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok) throw new Error('Failed to deactivate patient.')
+        window.location.href = '/patients?msg=deactivated'
+      } catch (err: any) {
+        confirmModal?.classList.add('hidden')
+        if (errorBox) {
+          errorBox.textContent = err?.message || 'Failed to deactivate patient.'
+          errorBox.classList.remove('hidden')
+        }
+      }
+    })
+
+    const reactivateBtn = document.getElementById('reactivate-btn')
+    reactivateBtn?.addEventListener('click', async () => {
+      const token = getToken()
+      try {
+        const res = await fetch(`/api/patients/${patientId}/reactivate`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok) throw new Error('Failed to reactivate patient.')
+        window.location.href = '/patients?msg=reactivated'
+      } catch (err: any) {
+        if (errorBox) {
+          errorBox.textContent = err?.message || 'Failed to reactivate patient.'
+          errorBox.classList.remove('hidden')
+        }
+      }
+    })
+  }
+
+  initEditPatient()
+  document.addEventListener('astro:page-load', initEditPatient)
+</script>

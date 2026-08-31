@@ -427,6 +427,37 @@ export interface PatientsTranslations {
   noCases: string
   emptyTitle: string
   emptyBody: string
+  colActions?: string
+  edit?: string
+  deactivate?: string
+  reactivate?: string
+  inactiveBadge?: string
+  activeBadge?: string
+  savedBanner?: string
+  deactivatedBanner?: string
+  reactivatedBanner?: string
+}
+
+export interface EditPatientTranslations {
+  title?: string
+  subtitle?: string
+  email?: string
+  fullName?: string
+  dateOfBirth?: string
+  phone?: string
+  phonePlaceholder?: string
+  surgeryType?: string
+  surgeryDate?: string
+  emergencyContact?: string
+  save?: string
+  cancel?: string
+  dangerZoneTitle?: string
+  inactiveNotice?: string
+  deactivateNotice?: string
+  deactivate?: string
+  reactivate?: string
+  confirmTitle?: string
+  confirmText?: string
 }
 
 export interface MedicationsListTranslations {
@@ -516,6 +547,7 @@ export interface Translations {
   auth: AuthTranslations
   createCase: CreateCaseTranslations
   createPatient: CreatePatientTranslations
+  editPatient?: EditPatientTranslations
   fda: FdaTranslations
   patients: PatientsTranslations
   medicationsList: MedicationsListTranslations

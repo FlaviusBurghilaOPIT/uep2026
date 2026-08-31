@@ -149,6 +149,16 @@ class CaseCreate(BaseModel):
     emergency_contact_phone: str | None = None
 
 
+class CaseUpdate(BaseModel):
+    """PATCH /cases/{case_id} — all fields optional; only supplied fields update."""
+
+    surgery_type: str | None = None
+    surgery_date: str | None = None
+    emergency_contact_name: str | None = None
+    emergency_contact_phone: str | None = None
+    status: str | None = None
+
+
 class CaseResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

@@ -69,6 +69,38 @@ def get_case(
     return case
 
 
+@router.patch("/{case_id}", response_model=schemas.CaseResponse)
+def update_case(
+    case_id: str,
+    req: schemas.CaseUpdate,
+    db: Session = Depends(get_db_for_user),
+    current_user: models.User = Depends(get_current_user),
+):
+    case = (
+        db.query(models.Case)
+        .filter(models.Case.id == case_id, models.Case.clinician_id == current_user.id)
+        .first()
+    )
+
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+
+    if req.surgery_type is not None:
+        case.surgery_type = req.surgery_type
+    if req.surgery_date is not None:
+        case.surgery_date = req.surgery_date
+    if req.emergency_contact_name is not None:
+        case.emergency_contact_name = req.emergency_contact_name
+    if req.emergency_contact_phone is not None:
+        case.emergency_contact_phone = req.emergency_contact_phone
+    if req.status is not None:
+        case.status = req.status
+
+    db.commit()
+    db.refresh(case)
+    return case
+
+
 @router.delete("/{case_id}")
 def delete_case(
     case_id: str,

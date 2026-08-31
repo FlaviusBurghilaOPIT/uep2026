@@ -84,7 +84,8 @@ try {
     apiFetch<any>('/analytics/triage-response', { token: cookieToken }).catch(() => null),
     apiFetch<any>('/analytics/triage-acknowledgements', { token: cookieToken }).catch(() => null)
   ])
-  patients = pRes || []
+  // Deactivated/discharged patients are no longer monitored — keep them off the triage board.
+  patients = (pRes || []).filter((p: any) => p.status !== 'inactive')
   cases = cRes || []
   triageStats = statRes
   ackByPatientId = Object.fromEntries(

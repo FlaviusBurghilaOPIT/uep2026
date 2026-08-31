@@ -1,6 +1,6 @@
 ---
 import AppLayout from '../../layouts/AppLayout.astro'
-import { Users, FilePlus2, Printer } from '@lucide/astro'
+import { Users, FilePlus2, Printer, Pencil, UserX, UserCheck } from '@lucide/astro'
 import { apiFetch } from '../../api/client'
 import { createTranslator, isLanguage } from '../../i18n'
 import '../../index.css'
@@ -13,6 +13,16 @@ const cookieToken = Astro.cookies.get('carepro_token')?.value
 if (!cookieToken) {
   return Astro.redirect('/login')
 }
+
+const successMsg = Astro.url.searchParams.get('msg')
+const successText =
+  successMsg === 'updated'
+    ? t('patients.savedBanner', 'Patient details saved.')
+    : successMsg === 'deactivated'
+      ? t('patients.deactivatedBanner', 'Patient deactivated. They no longer appear in the triage queue.')
+      : successMsg === 'reactivated'
+        ? t('patients.reactivatedBanner', 'Patient reactivated.')
+        : null
 
 let patients: any[] = []
 let cases: any[] = []
@@ -32,6 +42,10 @@ try {
 
 <AppLayout title={`${t('patients.title', 'Patients Cohort')} — RemoteCare Pro`}>
   <div class="patients-page">
+    {successText && (
+      <div class="success-banner" role="status">{successText}</div>
+    )}
+
     <div class="header">
       <div>
         <h1 class="title">{t('patients.title', 'Patient Cohort Management')}</h1>
@@ -68,35 +82,41 @@ try {
               <th>{t('patients.colStatus', 'Status / Invite Code')}</th>
               <th>{t('patients.colCases', 'Associated Cases')}</th>
               <th>{t('patients.colExports', 'Clinical Exports')}</th>
+              <th>{t('patients.colActions', 'Actions')}</th>
             </tr>
           </thead>
           <tbody id="patients-tbody">
             {patients.length === 0 ? (
               <tr>
-                <td colspan="5" class="empty-cell">
+                <td colspan="6" class="empty-cell">
                   {t('patients.noPatients', 'No enrolled patients found. Click "+ Add New Patient" to enroll.')}
                 </td>
               </tr>
             ) : (
               patients.map((p) => {
                 const pCases = cases.filter((c) => c.patient_id === p.id)
+                const isInactive = p.status === 'inactive'
                 return (
-                  <tr class="patient-row" data-name={(p.full_name || '').toLowerCase()} data-email={(p.email || '').toLowerCase()}>
+                  <tr class="patient-row" data-name={(p.full_name || '').toLowerCase()} data-email={(p.email || '').toLowerCase()} data-patient-id={p.id}>
                     <td>
                       <div class="patient-cell-name">{p.full_name}</div>
                       <div class="patient-cell-sub">{p.email || p.phone || t('patients.noContact', 'No direct contact')}</div>
                     </td>
                     <td>{p.date_of_birth || 'N/A'}</td>
                     <td>
-                      {p.invite_code ? (
+                      {isInactive ? (
+                        <span class="invite-badge inactive-badge" id={`status-badge-${p.id}`}>
+                          {t('patients.inactiveBadge', 'INACTIVE')}
+                        </span>
+                      ) : p.invite_code ? (
                         <div class="otp-cell">
-                          <span class="invite-badge otp-badge" title="Enter this 6-digit OTP code in the Flutter mobile companion">
+                          <span class="invite-badge otp-badge" id={`status-badge-${p.id}`} title="Enter this 6-digit OTP code in the Flutter mobile companion">
                             OTP: <strong>{p.invite_code}</strong>
                           </span>
                         </div>
                       ) : (
-                        <span class="invite-badge active-badge">
-                          ACTIVE
+                        <span class="invite-badge active-badge" id={`status-badge-${p.id}`}>
+                          {t('patients.activeBadge', 'ACTIVE')}
                         </span>
                       )}
                     </td>
@@ -122,12 +142,54 @@ try {
                         <span>{t('patients.printPdf', 'Export PDF')}</span>
                       </button>
                     </td>
+                    <td>
+                      <div class="row-actions">
+                        <a href={`/patients/${p.id}/edit`} class="row-action-btn edit-row-btn" aria-label={`Edit ${p.full_name}`}>
+                          <Pencil size={13} aria-hidden="true" />
+                          <span>{t('patients.edit', 'Edit')}</span>
+                        </a>
+                        {isInactive ? (
+                          <button
+                            type="button"
+                            class="row-action-btn reactivate-row-btn"
+                            data-reactivate-id={p.id}
+                            aria-label={`Reactivate ${p.full_name}`}
+                          >
+                            <UserCheck size={13} aria-hidden="true" />
+                            <span>{t('patients.reactivate', 'Reactivate')}</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            class="row-action-btn deactivate-row-btn"
+                            data-deactivate-id={p.id}
+                            data-deactivate-name={p.full_name}
+                            aria-label={`Deactivate ${p.full_name}`}
+                          >
+                            <UserX size={13} aria-hidden="true" />
+                            <span>{t('patients.deactivate', 'Deactivate')}</span>
+                          </button>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 )
               })
             )}
           </tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Deactivate Modal -->
+  <div id="confirm-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+    <div class="modal-card">
+      <h3 id="confirm-modal-title" class="modal-title">{t('editPatient.confirmTitle', 'Deactivate this patient?')}</h3>
+      <p class="modal-text" id="confirm-modal-text"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="confirm-cancel-btn">{t('cta.cancel', 'Cancel')}</button>
+        <button type="button" class="btn-confirm-deactivate" id="confirm-deactivate-btn">{t('editPatient.deactivate', 'Deactivate Patient')}</button>
       </div>
     </div>
   </div>
@@ -309,6 +371,113 @@ try {
     color: #64748b;
     padding: 32px;
   }
+
+  .hidden {
+    display: none !important;
+  }
+
+  .success-banner {
+    background-color: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #86efac;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+
+  .inactive-badge {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #cbd5e1;
+  }
+
+  .row-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .row-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color var(--duration-press) var(--ease-out);
+  }
+
+  .edit-row-btn {
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+  }
+  .edit-row-btn:hover { background-color: #e2e8f0; }
+
+  .deactivate-row-btn {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+  .deactivate-row-btn:hover { background-color: #fee2e2; }
+
+  .reactivate-row-btn {
+    background: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+  }
+  .reactivate-row-btn:hover { background-color: #dcfce7; }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(15,23,42,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  .modal-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 25px -5px rgba(15,23,42,0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .modal-title { font-size: 17px; font-weight: 700; color: #0f172a; margin: 0; }
+  .modal-text { font-size: 13.5px; color: #64748b; margin: 0; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+  .btn-cancel {
+    padding: 9px 16px;
+    background-color: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-confirm-deactivate {
+    padding: 9px 16px;
+    background-color: #dc2626;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-confirm-deactivate:hover { background-color: #b91c1c; }
 </style>
 
 <script>
@@ -334,6 +503,73 @@ try {
     printBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         window.print()
+      })
+    })
+
+    function getToken(): string {
+      const cookieToken = document.cookie.split('; ').find((row) => row.startsWith('carepro_token='))?.split('=')[1]
+      return localStorage.getItem('token') || cookieToken || ''
+    }
+
+    const confirmModal = document.getElementById('confirm-modal')
+    const confirmModalText = document.getElementById('confirm-modal-text')
+    const confirmCancelBtn = document.getElementById('confirm-cancel-btn')
+    const confirmDeactivateBtn = document.getElementById('confirm-deactivate-btn') as HTMLButtonElement
+    let pendingDeactivateId: string | null = null
+
+    document.querySelectorAll<HTMLButtonElement>('.deactivate-row-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        pendingDeactivateId = btn.getAttribute('data-deactivate-id')
+        const name = btn.getAttribute('data-deactivate-name') || 'This patient'
+        if (confirmModalText) {
+          confirmModalText.textContent = `${name} will disappear from the active triage queue. Their medical history stays intact and this can be reversed at any time.`
+        }
+        confirmModal?.classList.remove('hidden')
+      })
+    })
+
+    confirmCancelBtn?.addEventListener('click', () => {
+      confirmModal?.classList.add('hidden')
+      pendingDeactivateId = null
+    })
+    confirmModal?.addEventListener('click', (e) => {
+      if (e.target === confirmModal) {
+        confirmModal.classList.add('hidden')
+        pendingDeactivateId = null
+      }
+    })
+
+    confirmDeactivateBtn?.addEventListener('click', async () => {
+      if (!pendingDeactivateId) return
+      confirmDeactivateBtn.disabled = true
+      try {
+        const res = await fetch(`/api/patients/${pendingDeactivateId}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${getToken()}` },
+        })
+        if (!res.ok) throw new Error('Failed to deactivate patient.')
+        window.location.href = '/patients?msg=deactivated'
+      } catch {
+        confirmDeactivateBtn.disabled = false
+        confirmModal?.classList.add('hidden')
+      }
+    })
+
+    document.querySelectorAll<HTMLButtonElement>('.reactivate-row-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const patientId = btn.getAttribute('data-reactivate-id')
+        if (!patientId) return
+        btn.disabled = true
+        try {
+          const res = await fetch(`/api/patients/${patientId}/reactivate`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${getToken()}` },
+          })
+          if (!res.ok) throw new Error('Failed to reactivate patient.')
+          window.location.href = '/patients?msg=reactivated'
+        } catch {
+          btn.disabled = false
+        }
       })
     })
   }

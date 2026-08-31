@@ -191,6 +191,76 @@ def get_patient(
     return patient
 
 
+@router.patch("/{patient_id}", response_model=schemas.UserResponse)
+def update_patient(
+    patient_id: str,
+    req: schemas.UserUpdateRequest,
+    db: Session = Depends(get_db_for_user),
+    current_user: models.User = Depends(require_clinician),
+):
+    patient = (
+        db.query(models.User)
+        .filter(models.User.id == patient_id, models.User.role == models.UserRole.patient)
+        .first()
+    )
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+
+    if req.full_name is not None:
+        patient.full_name = req.full_name
+    if req.phone is not None:
+        patient.phone = req.phone
+    if req.date_of_birth is not None:
+        patient.date_of_birth = req.date_of_birth
+
+    db.commit()
+    db.refresh(patient)
+    return patient
+
+
+@router.delete("/{patient_id}", response_model=schemas.UserResponse)
+def deactivate_patient(
+    patient_id: str,
+    db: Session = Depends(get_db_for_user),
+    current_user: models.User = Depends(require_clinician),
+):
+    """Soft-delete: marks the patient inactive so they drop off the active
+    triage roster, without erasing their clinical history (medications, dose
+    logs, symptoms, triage resolutions all remain for audit)."""
+    patient = (
+        db.query(models.User)
+        .filter(models.User.id == patient_id, models.User.role == models.UserRole.patient)
+        .first()
+    )
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+
+    patient.status = "inactive"
+    db.commit()
+    db.refresh(patient)
+    return patient
+
+
+@router.post("/{patient_id}/reactivate", response_model=schemas.UserResponse)
+def reactivate_patient(
+    patient_id: str,
+    db: Session = Depends(get_db_for_user),
+    current_user: models.User = Depends(require_clinician),
+):
+    patient = (
+        db.query(models.User)
+        .filter(models.User.id == patient_id, models.User.role == models.UserRole.patient)
+        .first()
+    )
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+
+    patient.status = "active"
+    db.commit()
+    db.refresh(patient)
+    return patient
+
+
 @router.get("/{patient_id}/case", response_model=schemas.CaseResponse)
 def get_patient_case(
     patient_id: str,
