@@ -47,10 +47,10 @@ final fdaWarningProvider = FutureProvider<FdaWarning?>((ref) async {
         message: summary,
         retrievedAt: (data['retrieved_at'] ?? data['timestamp'])?.toString(),
       );
-    } catch (e, st) {
+    } catch (e) {
       // Silent omission by design — logged for diagnosability, never
       // surfaced as a fabricated warning.
-      debugPrint('fdaWarningProvider: query failed for $name: $e\n$st');
+      debugPrint('fdaWarningProvider: query failed for $name: $e');
     }
   }
   return null;

@@ -56,13 +56,17 @@ client_async = AsyncOpenAI(
 
 @track_llm_ops(name="fda.summarize")
 async def _summarize_drug_label(raw: dict) -> str:
+    api_key = os.getenv("OPENROUTER_API_KEY")
+    if not api_key or api_key == "dummy-openrouter-key" or api_key.startswith("sk-or-your") or os.getenv("LLM_PROVIDER") == "mock":
+        return _raw_warnings_text(raw)
+
     response = await client_async.chat.completions.create(
         model=CHAT_MODEL,
         messages=[
             {"role": "system", "content": FDA_SUMMARY_SYSTEM_PROMPT},
             {"role": "user", "content": json.dumps(raw)[:4000]}
         ],
-        timeout=float(os.getenv("OPENROUTER_TIMEOUT", "20")),
+        timeout=float(os.getenv("OPENROUTER_TIMEOUT", "6")),
     )
     return response.choices[0].message.content
 

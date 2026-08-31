@@ -24,7 +24,7 @@ class LiveFDAProvider(FDAProvider):
             "limit": "1",
         }
 
-        timeout = httpx.Timeout(float(os.getenv("FDA_TIMEOUT", "8")))
+        timeout = httpx.Timeout(float(os.getenv("FDA_TIMEOUT", "5")), connect=3.0)
         async with httpx.AsyncClient(timeout=timeout) as client:
             response = await client.get("https://api.fda.gov/drug/label.json", params=params)
             if response.status_code == 404:
