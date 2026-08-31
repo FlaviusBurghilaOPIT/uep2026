@@ -66,13 +66,13 @@ def test_full_e2e():
     # In full simulation mode, test verify with the known invite code 922363 or 685413 or query db
     # We can use direct verify or verify-invite
     # Let's verify with 685413 (or fetch from db in test)
-    import subprocess
-    db_code = subprocess.check_output(
-        ["docker", "compose", "exec", "db", "psql", "-U", "caredev", "-d", "remotecare", "-t", "-A", "-c",
-         "SELECT invite_code FROM users WHERE email='patient@example.com';"]
-    ).decode().strip()
+    from app.core.database import SessionLocal
+    from app.models import User
+    with SessionLocal() as db:
+        patient_user = db.query(User).filter(User.email == "patient@example.com").first()
+        db_code = patient_user.invite_code if patient_user else "123456"
     
-    print(f"  ℹ️ OTP Code generated for patient: {db_code}")
+    print(f"  ℹ️ OTP Code retrieved for patient: {db_code}")
     otp_payload = {
         "email": "patient@example.com",
         "code": db_code

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'agenda_entities.dart';
@@ -9,6 +9,7 @@ part of 'agenda_entities.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $AgendaSlotCopyWith<AgendaSlot> get copyWith => _$AgendaSlotCopyWithImpl<AgendaS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AgendaSlot&&(identical(other.slotId, slotId) || other.slotId == slotId)&&(identical(other.medicationId, medicationId) || other.medicationId == medicationId)&&(identical(other.medicationName, medicationName) || other.medicationName == medicationName)&&(identical(other.dose, dose) || other.dose == dose)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.scheduledTime, scheduledTime) || other.scheduledTime == scheduledTime)&&(identical(other.state, state) || other.state == state)&&(identical(other.loggedAt, loggedAt) || other.loggedAt == loggedAt)&&(identical(other.doseLogId, doseLogId) || other.doseLogId == doseLogId)&&(identical(other.previousStatus, previousStatus) || other.previousStatus == previousStatus));
+  final _this = this as AgendaSlot;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AgendaSlot&&(identical(other.slotId, _this.slotId) || other.slotId == _this.slotId)&&(identical(other.medicationId, _this.medicationId) || other.medicationId == _this.medicationId)&&(identical(other.medicationName, _this.medicationName) || other.medicationName == _this.medicationName)&&(identical(other.dose, _this.dose) || other.dose == _this.dose)&&(identical(other.notes, _this.notes) || other.notes == _this.notes)&&(identical(other.scheduledTime, _this.scheduledTime) || other.scheduledTime == _this.scheduledTime)&&(identical(other.state, _this.state) || other.state == _this.state)&&(identical(other.loggedAt, _this.loggedAt) || other.loggedAt == _this.loggedAt)&&(identical(other.doseLogId, _this.doseLogId) || other.doseLogId == _this.doseLogId)&&(identical(other.previousStatus, _this.previousStatus) || other.previousStatus == _this.previousStatus));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,slotId,medicationId,medicationName,dose,notes,scheduledTime,state,loggedAt,doseLogId,previousStatus);
+int get hashCode {
+  final _this = this as AgendaSlot;
+  return Object.hash(runtimeType,_this.slotId,_this.medicationId,_this.medicationName,_this.dose,_this.notes,_this.scheduledTime,_this.state,_this.loggedAt,_this.doseLogId,_this.previousStatus);
+}
 
 @override
 String toString() {
-  return 'AgendaSlot(slotId: $slotId, medicationId: $medicationId, medicationName: $medicationName, dose: $dose, notes: $notes, scheduledTime: $scheduledTime, state: $state, loggedAt: $loggedAt, doseLogId: $doseLogId, previousStatus: $previousStatus)';
+  final _this = this as AgendaSlot;
+  return 'AgendaSlot(slotId: ${_this.slotId}, medicationId: ${_this.medicationId}, medicationName: ${_this.medicationName}, dose: ${_this.dose}, notes: ${_this.notes}, scheduledTime: ${_this.scheduledTime}, state: ${_this.state}, loggedAt: ${_this.loggedAt}, doseLogId: ${_this.doseLogId}, previousStatus: ${_this.previousStatus})';
 }
 
 
@@ -63,7 +69,7 @@ class _$AgendaSlotCopyWithImpl<$Res>
 /// Create a copy of AgendaSlot
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? slotId = null,Object? medicationId = null,Object? medicationName = null,Object? dose = null,Object? notes = freezed,Object? scheduledTime = null,Object? state = null,Object? loggedAt = freezed,Object? doseLogId = freezed,Object? previousStatus = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(AgendaSlot(
 slotId: null == slotId ? _self.slotId : slotId // ignore: cast_nullable_to_non_nullable
 as String,medicationId: null == medicationId ? _self.medicationId : medicationId // ignore: cast_nullable_to_non_nullable
 as String,medicationName: null == medicationName ? _self.medicationName : medicationName // ignore: cast_nullable_to_non_nullable
@@ -239,16 +245,18 @@ _$AgendaSlotCopyWith<_AgendaSlot> get copyWith => __$AgendaSlotCopyWithImpl<_Age
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AgendaSlot&&(identical(other.slotId, slotId) || other.slotId == slotId)&&(identical(other.medicationId, medicationId) || other.medicationId == medicationId)&&(identical(other.medicationName, medicationName) || other.medicationName == medicationName)&&(identical(other.dose, dose) || other.dose == dose)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.scheduledTime, scheduledTime) || other.scheduledTime == scheduledTime)&&(identical(other.state, state) || other.state == state)&&(identical(other.loggedAt, loggedAt) || other.loggedAt == loggedAt)&&(identical(other.doseLogId, doseLogId) || other.doseLogId == doseLogId)&&(identical(other.previousStatus, previousStatus) || other.previousStatus == previousStatus));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AgendaSlot&&(identical(other.slotId, slotId) || other.slotId == slotId)&&(identical(other.medicationId, medicationId) || other.medicationId == medicationId)&&(identical(other.medicationName, medicationName) || other.medicationName == medicationName)&&(identical(other.dose, dose) || other.dose == dose)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.scheduledTime, scheduledTime) || other.scheduledTime == scheduledTime)&&(identical(other.state, state) || other.state == state)&&(identical(other.loggedAt, loggedAt) || other.loggedAt == loggedAt)&&(identical(other.doseLogId, doseLogId) || other.doseLogId == doseLogId)&&(identical(other.previousStatus, previousStatus) || other.previousStatus == previousStatus));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,slotId,medicationId,medicationName,dose,notes,scheduledTime,state,loggedAt,doseLogId,previousStatus);
+int get hashCode {
+    return Object.hash(runtimeType,slotId,medicationId,medicationName,dose,notes,scheduledTime,state,loggedAt,doseLogId,previousStatus);
+}
 
 @override
 String toString() {
-  return 'AgendaSlot(slotId: $slotId, medicationId: $medicationId, medicationName: $medicationName, dose: $dose, notes: $notes, scheduledTime: $scheduledTime, state: $state, loggedAt: $loggedAt, doseLogId: $doseLogId, previousStatus: $previousStatus)';
+    return 'AgendaSlot(slotId: $slotId, medicationId: $medicationId, medicationName: $medicationName, dose: $dose, notes: $notes, scheduledTime: $scheduledTime, state: $state, loggedAt: $loggedAt, doseLogId: $doseLogId, previousStatus: $previousStatus)';
 }
 
 
@@ -309,16 +317,21 @@ $PrnMedicationCopyWith<PrnMedication> get copyWith => _$PrnMedicationCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PrnMedication&&(identical(other.medicationId, medicationId) || other.medicationId == medicationId)&&(identical(other.medicationName, medicationName) || other.medicationName == medicationName)&&(identical(other.dose, dose) || other.dose == dose)&&(identical(other.notes, notes) || other.notes == notes));
+  final _this = this as PrnMedication;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PrnMedication&&(identical(other.medicationId, _this.medicationId) || other.medicationId == _this.medicationId)&&(identical(other.medicationName, _this.medicationName) || other.medicationName == _this.medicationName)&&(identical(other.dose, _this.dose) || other.dose == _this.dose)&&(identical(other.notes, _this.notes) || other.notes == _this.notes));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,medicationId,medicationName,dose,notes);
+int get hashCode {
+  final _this = this as PrnMedication;
+  return Object.hash(runtimeType,_this.medicationId,_this.medicationName,_this.dose,_this.notes);
+}
 
 @override
 String toString() {
-  return 'PrnMedication(medicationId: $medicationId, medicationName: $medicationName, dose: $dose, notes: $notes)';
+  final _this = this as PrnMedication;
+  return 'PrnMedication(medicationId: ${_this.medicationId}, medicationName: ${_this.medicationName}, dose: ${_this.dose}, notes: ${_this.notes})';
 }
 
 
@@ -347,7 +360,7 @@ class _$PrnMedicationCopyWithImpl<$Res>
 /// Create a copy of PrnMedication
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? medicationId = null,Object? medicationName = null,Object? dose = null,Object? notes = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(PrnMedication(
 medicationId: null == medicationId ? _self.medicationId : medicationId // ignore: cast_nullable_to_non_nullable
 as String,medicationName: null == medicationName ? _self.medicationName : medicationName // ignore: cast_nullable_to_non_nullable
 as String,dose: null == dose ? _self.dose : dose // ignore: cast_nullable_to_non_nullable
@@ -511,16 +524,18 @@ _$PrnMedicationCopyWith<_PrnMedication> get copyWith => __$PrnMedicationCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PrnMedication&&(identical(other.medicationId, medicationId) || other.medicationId == medicationId)&&(identical(other.medicationName, medicationName) || other.medicationName == medicationName)&&(identical(other.dose, dose) || other.dose == dose)&&(identical(other.notes, notes) || other.notes == notes));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PrnMedication&&(identical(other.medicationId, medicationId) || other.medicationId == medicationId)&&(identical(other.medicationName, medicationName) || other.medicationName == medicationName)&&(identical(other.dose, dose) || other.dose == dose)&&(identical(other.notes, notes) || other.notes == notes));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,medicationId,medicationName,dose,notes);
+int get hashCode {
+    return Object.hash(runtimeType,medicationId,medicationName,dose,notes);
+}
 
 @override
 String toString() {
-  return 'PrnMedication(medicationId: $medicationId, medicationName: $medicationName, dose: $dose, notes: $notes)';
+    return 'PrnMedication(medicationId: $medicationId, medicationName: $medicationName, dose: $dose, notes: $notes)';
 }
 
 
@@ -575,16 +590,21 @@ $OfflineQueueEntryCopyWith<OfflineQueueEntry> get copyWith => _$OfflineQueueEntr
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is OfflineQueueEntry&&(identical(other.idempotencyKey, idempotencyKey) || other.idempotencyKey == idempotencyKey)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.status, status) || other.status == status)&&(identical(other.enqueuedAt, enqueuedAt) || other.enqueuedAt == enqueuedAt)&&(identical(other.slotId, slotId) || other.slotId == slotId)&&(identical(other.doseLogId, doseLogId) || other.doseLogId == doseLogId)&&(identical(other.medicationId, medicationId) || other.medicationId == medicationId));
+  final _this = this as OfflineQueueEntry;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OfflineQueueEntry&&(identical(other.idempotencyKey, _this.idempotencyKey) || other.idempotencyKey == _this.idempotencyKey)&&(identical(other.kind, _this.kind) || other.kind == _this.kind)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.enqueuedAt, _this.enqueuedAt) || other.enqueuedAt == _this.enqueuedAt)&&(identical(other.slotId, _this.slotId) || other.slotId == _this.slotId)&&(identical(other.doseLogId, _this.doseLogId) || other.doseLogId == _this.doseLogId)&&(identical(other.medicationId, _this.medicationId) || other.medicationId == _this.medicationId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,idempotencyKey,kind,status,enqueuedAt,slotId,doseLogId,medicationId);
+int get hashCode {
+  final _this = this as OfflineQueueEntry;
+  return Object.hash(runtimeType,_this.idempotencyKey,_this.kind,_this.status,_this.enqueuedAt,_this.slotId,_this.doseLogId,_this.medicationId);
+}
 
 @override
 String toString() {
-  return 'OfflineQueueEntry(idempotencyKey: $idempotencyKey, kind: $kind, status: $status, enqueuedAt: $enqueuedAt, slotId: $slotId, doseLogId: $doseLogId, medicationId: $medicationId)';
+  final _this = this as OfflineQueueEntry;
+  return 'OfflineQueueEntry(idempotencyKey: ${_this.idempotencyKey}, kind: ${_this.kind}, status: ${_this.status}, enqueuedAt: ${_this.enqueuedAt}, slotId: ${_this.slotId}, doseLogId: ${_this.doseLogId}, medicationId: ${_this.medicationId})';
 }
 
 
@@ -613,7 +633,7 @@ class _$OfflineQueueEntryCopyWithImpl<$Res>
 /// Create a copy of OfflineQueueEntry
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? idempotencyKey = null,Object? kind = null,Object? status = null,Object? enqueuedAt = null,Object? slotId = freezed,Object? doseLogId = freezed,Object? medicationId = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(OfflineQueueEntry(
 idempotencyKey: null == idempotencyKey ? _self.idempotencyKey : idempotencyKey // ignore: cast_nullable_to_non_nullable
 as String,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
 as OfflineQueueKind,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
@@ -783,16 +803,18 @@ _$OfflineQueueEntryCopyWith<_OfflineQueueEntry> get copyWith => __$OfflineQueueE
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OfflineQueueEntry&&(identical(other.idempotencyKey, idempotencyKey) || other.idempotencyKey == idempotencyKey)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.status, status) || other.status == status)&&(identical(other.enqueuedAt, enqueuedAt) || other.enqueuedAt == enqueuedAt)&&(identical(other.slotId, slotId) || other.slotId == slotId)&&(identical(other.doseLogId, doseLogId) || other.doseLogId == doseLogId)&&(identical(other.medicationId, medicationId) || other.medicationId == medicationId));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _OfflineQueueEntry&&(identical(other.idempotencyKey, idempotencyKey) || other.idempotencyKey == idempotencyKey)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.status, status) || other.status == status)&&(identical(other.enqueuedAt, enqueuedAt) || other.enqueuedAt == enqueuedAt)&&(identical(other.slotId, slotId) || other.slotId == slotId)&&(identical(other.doseLogId, doseLogId) || other.doseLogId == doseLogId)&&(identical(other.medicationId, medicationId) || other.medicationId == medicationId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,idempotencyKey,kind,status,enqueuedAt,slotId,doseLogId,medicationId);
+int get hashCode {
+    return Object.hash(runtimeType,idempotencyKey,kind,status,enqueuedAt,slotId,doseLogId,medicationId);
+}
 
 @override
 String toString() {
-  return 'OfflineQueueEntry(idempotencyKey: $idempotencyKey, kind: $kind, status: $status, enqueuedAt: $enqueuedAt, slotId: $slotId, doseLogId: $doseLogId, medicationId: $medicationId)';
+    return 'OfflineQueueEntry(idempotencyKey: $idempotencyKey, kind: $kind, status: $status, enqueuedAt: $enqueuedAt, slotId: $slotId, doseLogId: $doseLogId, medicationId: $medicationId)';
 }
 
 
@@ -850,16 +872,21 @@ $AgendaStateCopyWith<AgendaState> get copyWith => _$AgendaStateCopyWithImpl<Agen
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AgendaState&&const DeepCollectionEquality().equals(other.slots, slots)&&const DeepCollectionEquality().equals(other.prn, prn)&&(identical(other.sourceState, sourceState) || other.sourceState == sourceState)&&(identical(other.lastSyncedAt, lastSyncedAt) || other.lastSyncedAt == lastSyncedAt)&&const DeepCollectionEquality().equals(other.offlineQueue, offlineQueue)&&const DeepCollectionEquality().equals(other.writeInFlightSlotIds, writeInFlightSlotIds)&&const DeepCollectionEquality().equals(other.writeInFlightPrnIds, writeInFlightPrnIds)&&(identical(other.c8PromptSlotId, c8PromptSlotId) || other.c8PromptSlotId == c8PromptSlotId)&&(identical(other.rollbackErrorSlotId, rollbackErrorSlotId) || other.rollbackErrorSlotId == rollbackErrorSlotId)&&(identical(other.planUpdated, planUpdated) || other.planUpdated == planUpdated)&&(identical(other.timezoneAdjusted, timezoneAdjusted) || other.timezoneAdjusted == timezoneAdjusted)&&(identical(other.remindersOff, remindersOff) || other.remindersOff == remindersOff));
+  final _this = this as AgendaState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AgendaState&&const DeepCollectionEquality().equals(other.slots, _this.slots)&&const DeepCollectionEquality().equals(other.prn, _this.prn)&&(identical(other.sourceState, _this.sourceState) || other.sourceState == _this.sourceState)&&(identical(other.lastSyncedAt, _this.lastSyncedAt) || other.lastSyncedAt == _this.lastSyncedAt)&&const DeepCollectionEquality().equals(other.offlineQueue, _this.offlineQueue)&&const DeepCollectionEquality().equals(other.writeInFlightSlotIds, _this.writeInFlightSlotIds)&&const DeepCollectionEquality().equals(other.writeInFlightPrnIds, _this.writeInFlightPrnIds)&&(identical(other.c8PromptSlotId, _this.c8PromptSlotId) || other.c8PromptSlotId == _this.c8PromptSlotId)&&(identical(other.rollbackErrorSlotId, _this.rollbackErrorSlotId) || other.rollbackErrorSlotId == _this.rollbackErrorSlotId)&&(identical(other.planUpdated, _this.planUpdated) || other.planUpdated == _this.planUpdated)&&(identical(other.timezoneAdjusted, _this.timezoneAdjusted) || other.timezoneAdjusted == _this.timezoneAdjusted)&&(identical(other.remindersOff, _this.remindersOff) || other.remindersOff == _this.remindersOff));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(slots),const DeepCollectionEquality().hash(prn),sourceState,lastSyncedAt,const DeepCollectionEquality().hash(offlineQueue),const DeepCollectionEquality().hash(writeInFlightSlotIds),const DeepCollectionEquality().hash(writeInFlightPrnIds),c8PromptSlotId,rollbackErrorSlotId,planUpdated,timezoneAdjusted,remindersOff);
+int get hashCode {
+  final _this = this as AgendaState;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.slots),const DeepCollectionEquality().hash(_this.prn),_this.sourceState,_this.lastSyncedAt,const DeepCollectionEquality().hash(_this.offlineQueue),const DeepCollectionEquality().hash(_this.writeInFlightSlotIds),const DeepCollectionEquality().hash(_this.writeInFlightPrnIds),_this.c8PromptSlotId,_this.rollbackErrorSlotId,_this.planUpdated,_this.timezoneAdjusted,_this.remindersOff);
+}
 
 @override
 String toString() {
-  return 'AgendaState(slots: $slots, prn: $prn, sourceState: $sourceState, lastSyncedAt: $lastSyncedAt, offlineQueue: $offlineQueue, writeInFlightSlotIds: $writeInFlightSlotIds, writeInFlightPrnIds: $writeInFlightPrnIds, c8PromptSlotId: $c8PromptSlotId, rollbackErrorSlotId: $rollbackErrorSlotId, planUpdated: $planUpdated, timezoneAdjusted: $timezoneAdjusted, remindersOff: $remindersOff)';
+  final _this = this as AgendaState;
+  return 'AgendaState(slots: ${_this.slots}, prn: ${_this.prn}, sourceState: ${_this.sourceState}, lastSyncedAt: ${_this.lastSyncedAt}, offlineQueue: ${_this.offlineQueue}, writeInFlightSlotIds: ${_this.writeInFlightSlotIds}, writeInFlightPrnIds: ${_this.writeInFlightPrnIds}, c8PromptSlotId: ${_this.c8PromptSlotId}, rollbackErrorSlotId: ${_this.rollbackErrorSlotId}, planUpdated: ${_this.planUpdated}, timezoneAdjusted: ${_this.timezoneAdjusted}, remindersOff: ${_this.remindersOff})';
 }
 
 
@@ -888,7 +915,7 @@ class _$AgendaStateCopyWithImpl<$Res>
 /// Create a copy of AgendaState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? slots = null,Object? prn = null,Object? sourceState = null,Object? lastSyncedAt = freezed,Object? offlineQueue = null,Object? writeInFlightSlotIds = null,Object? writeInFlightPrnIds = null,Object? c8PromptSlotId = freezed,Object? rollbackErrorSlotId = freezed,Object? planUpdated = null,Object? timezoneAdjusted = null,Object? remindersOff = null,}) {
-  return _then(_self.copyWith(
+  return _then(AgendaState(
 slots: null == slots ? _self.slots : slots // ignore: cast_nullable_to_non_nullable
 as List<AgendaSlot>,prn: null == prn ? _self.prn : prn // ignore: cast_nullable_to_non_nullable
 as List<PrnMedication>,sourceState: null == sourceState ? _self.sourceState : sourceState // ignore: cast_nullable_to_non_nullable
@@ -1042,7 +1069,7 @@ return $default(_that.slots,_that.prn,_that.sourceState,_that.lastSyncedAt,_that
 
 
 class _AgendaState implements AgendaState {
-  const _AgendaState({final  List<AgendaSlot> slots = const [], final  List<PrnMedication> prn = const [], this.sourceState = AgendaSourceState.loading, this.lastSyncedAt, final  List<OfflineQueueEntry> offlineQueue = const [], final  Set<String> writeInFlightSlotIds = const {}, final  Set<String> writeInFlightPrnIds = const {}, this.c8PromptSlotId, this.rollbackErrorSlotId, this.planUpdated = false, this.timezoneAdjusted = false, this.remindersOff = false}): _slots = slots,_prn = prn,_offlineQueue = offlineQueue,_writeInFlightSlotIds = writeInFlightSlotIds,_writeInFlightPrnIds = writeInFlightPrnIds;
+  const _AgendaState({ List<AgendaSlot> slots = const [],  List<PrnMedication> prn = const [], this.sourceState = AgendaSourceState.loading, this.lastSyncedAt,  List<OfflineQueueEntry> offlineQueue = const [],  Set<String> writeInFlightSlotIds = const {},  Set<String> writeInFlightPrnIds = const {}, this.c8PromptSlotId, this.rollbackErrorSlotId, this.planUpdated = false, this.timezoneAdjusted = false, this.remindersOff = false}): _slots = slots,_prn = prn,_offlineQueue = offlineQueue,_writeInFlightSlotIds = writeInFlightSlotIds,_writeInFlightPrnIds = writeInFlightPrnIds;
   
 
  final  List<AgendaSlot> _slots;
@@ -1098,16 +1125,18 @@ _$AgendaStateCopyWith<_AgendaState> get copyWith => __$AgendaStateCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AgendaState&&const DeepCollectionEquality().equals(other._slots, _slots)&&const DeepCollectionEquality().equals(other._prn, _prn)&&(identical(other.sourceState, sourceState) || other.sourceState == sourceState)&&(identical(other.lastSyncedAt, lastSyncedAt) || other.lastSyncedAt == lastSyncedAt)&&const DeepCollectionEquality().equals(other._offlineQueue, _offlineQueue)&&const DeepCollectionEquality().equals(other._writeInFlightSlotIds, _writeInFlightSlotIds)&&const DeepCollectionEquality().equals(other._writeInFlightPrnIds, _writeInFlightPrnIds)&&(identical(other.c8PromptSlotId, c8PromptSlotId) || other.c8PromptSlotId == c8PromptSlotId)&&(identical(other.rollbackErrorSlotId, rollbackErrorSlotId) || other.rollbackErrorSlotId == rollbackErrorSlotId)&&(identical(other.planUpdated, planUpdated) || other.planUpdated == planUpdated)&&(identical(other.timezoneAdjusted, timezoneAdjusted) || other.timezoneAdjusted == timezoneAdjusted)&&(identical(other.remindersOff, remindersOff) || other.remindersOff == remindersOff));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AgendaState&&const DeepCollectionEquality().equals(other.slots, _slots)&&const DeepCollectionEquality().equals(other.prn, _prn)&&(identical(other.sourceState, sourceState) || other.sourceState == sourceState)&&(identical(other.lastSyncedAt, lastSyncedAt) || other.lastSyncedAt == lastSyncedAt)&&const DeepCollectionEquality().equals(other.offlineQueue, _offlineQueue)&&const DeepCollectionEquality().equals(other.writeInFlightSlotIds, _writeInFlightSlotIds)&&const DeepCollectionEquality().equals(other.writeInFlightPrnIds, _writeInFlightPrnIds)&&(identical(other.c8PromptSlotId, c8PromptSlotId) || other.c8PromptSlotId == c8PromptSlotId)&&(identical(other.rollbackErrorSlotId, rollbackErrorSlotId) || other.rollbackErrorSlotId == rollbackErrorSlotId)&&(identical(other.planUpdated, planUpdated) || other.planUpdated == planUpdated)&&(identical(other.timezoneAdjusted, timezoneAdjusted) || other.timezoneAdjusted == timezoneAdjusted)&&(identical(other.remindersOff, remindersOff) || other.remindersOff == remindersOff));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_slots),const DeepCollectionEquality().hash(_prn),sourceState,lastSyncedAt,const DeepCollectionEquality().hash(_offlineQueue),const DeepCollectionEquality().hash(_writeInFlightSlotIds),const DeepCollectionEquality().hash(_writeInFlightPrnIds),c8PromptSlotId,rollbackErrorSlotId,planUpdated,timezoneAdjusted,remindersOff);
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_slots),const DeepCollectionEquality().hash(_prn),sourceState,lastSyncedAt,const DeepCollectionEquality().hash(_offlineQueue),const DeepCollectionEquality().hash(_writeInFlightSlotIds),const DeepCollectionEquality().hash(_writeInFlightPrnIds),c8PromptSlotId,rollbackErrorSlotId,planUpdated,timezoneAdjusted,remindersOff);
+}
 
 @override
 String toString() {
-  return 'AgendaState(slots: $slots, prn: $prn, sourceState: $sourceState, lastSyncedAt: $lastSyncedAt, offlineQueue: $offlineQueue, writeInFlightSlotIds: $writeInFlightSlotIds, writeInFlightPrnIds: $writeInFlightPrnIds, c8PromptSlotId: $c8PromptSlotId, rollbackErrorSlotId: $rollbackErrorSlotId, planUpdated: $planUpdated, timezoneAdjusted: $timezoneAdjusted, remindersOff: $remindersOff)';
+    return 'AgendaState(slots: $slots, prn: $prn, sourceState: $sourceState, lastSyncedAt: $lastSyncedAt, offlineQueue: $offlineQueue, writeInFlightSlotIds: $writeInFlightSlotIds, writeInFlightPrnIds: $writeInFlightPrnIds, c8PromptSlotId: $c8PromptSlotId, rollbackErrorSlotId: $rollbackErrorSlotId, planUpdated: $planUpdated, timezoneAdjusted: $timezoneAdjusted, remindersOff: $remindersOff)';
 }
 
 

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'chat_assistant_notifier.dart';
@@ -9,6 +9,7 @@ part of 'chat_assistant_notifier.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $ChatMessageCopyWith<ChatMessage> get copyWith => _$ChatMessageCopyWithImpl<Chat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatMessage&&(identical(other.id, id) || other.id == id)&&(identical(other.text, text) || other.text == text)&&(identical(other.isFromUser, isFromUser) || other.isFromUser == isFromUser)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.inScope, inScope) || other.inScope == inScope)&&(identical(other.escalate, escalate) || other.escalate == escalate)&&(identical(other.emergencyPhone, emergencyPhone) || other.emergencyPhone == emergencyPhone));
+  final _this = this as ChatMessage;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatMessage&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.text, _this.text) || other.text == _this.text)&&(identical(other.isFromUser, _this.isFromUser) || other.isFromUser == _this.isFromUser)&&(identical(other.timestamp, _this.timestamp) || other.timestamp == _this.timestamp)&&(identical(other.inScope, _this.inScope) || other.inScope == _this.inScope)&&(identical(other.escalate, _this.escalate) || other.escalate == _this.escalate)&&(identical(other.emergencyPhone, _this.emergencyPhone) || other.emergencyPhone == _this.emergencyPhone));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,text,isFromUser,timestamp,inScope,escalate,emergencyPhone);
+int get hashCode {
+  final _this = this as ChatMessage;
+  return Object.hash(runtimeType,_this.id,_this.text,_this.isFromUser,_this.timestamp,_this.inScope,_this.escalate,_this.emergencyPhone);
+}
 
 @override
 String toString() {
-  return 'ChatMessage(id: $id, text: $text, isFromUser: $isFromUser, timestamp: $timestamp, inScope: $inScope, escalate: $escalate, emergencyPhone: $emergencyPhone)';
+  final _this = this as ChatMessage;
+  return 'ChatMessage(id: ${_this.id}, text: ${_this.text}, isFromUser: ${_this.isFromUser}, timestamp: ${_this.timestamp}, inScope: ${_this.inScope}, escalate: ${_this.escalate}, emergencyPhone: ${_this.emergencyPhone})';
 }
 
 
@@ -63,7 +69,7 @@ class _$ChatMessageCopyWithImpl<$Res>
 /// Create a copy of ChatMessage
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? text = null,Object? isFromUser = null,Object? timestamp = null,Object? inScope = null,Object? escalate = null,Object? emergencyPhone = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(ChatMessage(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
 as String,isFromUser: null == isFromUser ? _self.isFromUser : isFromUser // ignore: cast_nullable_to_non_nullable
@@ -233,16 +239,18 @@ _$ChatMessageCopyWith<_ChatMessage> get copyWith => __$ChatMessageCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatMessage&&(identical(other.id, id) || other.id == id)&&(identical(other.text, text) || other.text == text)&&(identical(other.isFromUser, isFromUser) || other.isFromUser == isFromUser)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.inScope, inScope) || other.inScope == inScope)&&(identical(other.escalate, escalate) || other.escalate == escalate)&&(identical(other.emergencyPhone, emergencyPhone) || other.emergencyPhone == emergencyPhone));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatMessage&&(identical(other.id, id) || other.id == id)&&(identical(other.text, text) || other.text == text)&&(identical(other.isFromUser, isFromUser) || other.isFromUser == isFromUser)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.inScope, inScope) || other.inScope == inScope)&&(identical(other.escalate, escalate) || other.escalate == escalate)&&(identical(other.emergencyPhone, emergencyPhone) || other.emergencyPhone == emergencyPhone));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,text,isFromUser,timestamp,inScope,escalate,emergencyPhone);
+int get hashCode {
+    return Object.hash(runtimeType,id,text,isFromUser,timestamp,inScope,escalate,emergencyPhone);
+}
 
 @override
 String toString() {
-  return 'ChatMessage(id: $id, text: $text, isFromUser: $isFromUser, timestamp: $timestamp, inScope: $inScope, escalate: $escalate, emergencyPhone: $emergencyPhone)';
+    return 'ChatMessage(id: $id, text: $text, isFromUser: $isFromUser, timestamp: $timestamp, inScope: $inScope, escalate: $escalate, emergencyPhone: $emergencyPhone)';
 }
 
 
@@ -300,16 +308,21 @@ $ChatStateCopyWith<ChatState> get copyWith => _$ChatStateCopyWithImpl<ChatState>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatState&&const DeepCollectionEquality().equals(other.messages, messages)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
+  final _this = this as ChatState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatState&&const DeepCollectionEquality().equals(other.messages, _this.messages)&&(identical(other.isLoading, _this.isLoading) || other.isLoading == _this.isLoading)&&(identical(other.errorMessage, _this.errorMessage) || other.errorMessage == _this.errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(messages),isLoading,errorMessage);
+int get hashCode {
+  final _this = this as ChatState;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.messages),_this.isLoading,_this.errorMessage);
+}
 
 @override
 String toString() {
-  return 'ChatState(messages: $messages, isLoading: $isLoading, errorMessage: $errorMessage)';
+  final _this = this as ChatState;
+  return 'ChatState(messages: ${_this.messages}, isLoading: ${_this.isLoading}, errorMessage: ${_this.errorMessage})';
 }
 
 
@@ -338,7 +351,7 @@ class _$ChatStateCopyWithImpl<$Res>
 /// Create a copy of ChatState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? messages = null,Object? isLoading = null,Object? errorMessage = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(ChatState(
 messages: null == messages ? _self.messages : messages // ignore: cast_nullable_to_non_nullable
 as List<ChatMessage>,isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
 as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
@@ -483,7 +496,7 @@ return $default(_that.messages,_that.isLoading,_that.errorMessage);case _:
 
 
 class _ChatState implements ChatState {
-  const _ChatState({final  List<ChatMessage> messages = const [], this.isLoading = false, this.errorMessage}): _messages = messages;
+  const _ChatState({ List<ChatMessage> messages = const [], this.isLoading = false, this.errorMessage}): _messages = messages;
   
 
  final  List<ChatMessage> _messages;
@@ -506,16 +519,18 @@ _$ChatStateCopyWith<_ChatState> get copyWith => __$ChatStateCopyWithImpl<_ChatSt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatState&&const DeepCollectionEquality().equals(other._messages, _messages)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatState&&const DeepCollectionEquality().equals(other.messages, _messages)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_messages),isLoading,errorMessage);
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_messages),isLoading,errorMessage);
+}
 
 @override
 String toString() {
-  return 'ChatState(messages: $messages, isLoading: $isLoading, errorMessage: $errorMessage)';
+    return 'ChatState(messages: $messages, isLoading: $isLoading, errorMessage: $errorMessage)';
 }
 
 

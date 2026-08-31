@@ -42,7 +42,7 @@ dev_dependencies:
   # custom_lint / riverpod_lint removed: they pin analyzer ^8.0.0, which blocks
   # freezed >=3.2.5 (requires analyzer >=9 for Dart 3.12-compatible codegen).
   # Neither was enabled in analysis_options.yaml, so this changes no active linting.
-  freezed: ^3.2.5
+  freezed: ^4.0.1
   json_serializable: ^6.14.1
 
 flutter:

@@ -184,6 +184,7 @@ class ChatAssistantNotifier extends Notifier<ChatState> {
           } catch (_) {}
         }
 
+        if (!ref.mounted) return;
         final aiMsg = ChatMessage(
           id: (DateTime.now().microsecondsSinceEpoch + 1).toString(),
           text: replyText,
@@ -199,9 +200,11 @@ class ChatAssistantNotifier extends Notifier<ChatState> {
           isLoading: false,
         );
       } else {
+        if (!ref.mounted) return;
         state = state.copyWith(errorMessage: _errorMessage, isLoading: false);
       }
     } catch (_) {
+      if (!ref.mounted) return;
       state = state.copyWith(errorMessage: _errorMessage, isLoading: false);
     }
   }
@@ -227,6 +230,7 @@ class ChatAssistantNotifier extends Notifier<ChatState> {
       );
 
       await for (final chunk in stream) {
+        if (!ref.mounted) return;
         buffer.write(chunk);
         if (!created) {
           final aiMsg = ChatMessage(
@@ -242,10 +246,12 @@ class ChatAssistantNotifier extends Notifier<ChatState> {
         }
       }
 
+      if (!ref.mounted) return;
       state = state.copyWith(isLoading: false);
     } catch (_) {
       // Honest error: stop loading and surface the message. If nothing was
       // streamed yet, only the user's message remains (no empty AI bubble).
+      if (!ref.mounted) return;
       state = state.copyWith(errorMessage: _errorMessage, isLoading: false);
     }
   }

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'auth_state.dart';
@@ -9,6 +9,7 @@ part of 'auth_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -33,16 +34,21 @@ $AuthStateCopyWith<AuthState> get copyWith => _$AuthStateCopyWithImpl<AuthState>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthState&&(identical(other.isSignedIn, isSignedIn) || other.isSignedIn == isSignedIn)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.isInitializing, isInitializing) || other.isInitializing == isInitializing)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.patientId, patientId) || other.patientId == patientId)&&(identical(other.caseId, caseId) || other.caseId == caseId)&&(identical(other.fullName, fullName) || other.fullName == fullName)&&(identical(other.email, email) || other.email == email)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.dateOfBirth, dateOfBirth) || other.dateOfBirth == dateOfBirth)&&(identical(other.primaryCondition, primaryCondition) || other.primaryCondition == primaryCondition)&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode)&&(identical(other.physicianName, physicianName) || other.physicianName == physicianName)&&(identical(other.clinicName, clinicName) || other.clinicName == clinicName)&&(identical(other.hasPassword, hasPassword) || other.hasPassword == hasPassword));
+  final _this = this as AuthState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthState&&(identical(other.isSignedIn, _this.isSignedIn) || other.isSignedIn == _this.isSignedIn)&&(identical(other.isLoading, _this.isLoading) || other.isLoading == _this.isLoading)&&(identical(other.isInitializing, _this.isInitializing) || other.isInitializing == _this.isInitializing)&&(identical(other.errorMessage, _this.errorMessage) || other.errorMessage == _this.errorMessage)&&(identical(other.patientId, _this.patientId) || other.patientId == _this.patientId)&&(identical(other.caseId, _this.caseId) || other.caseId == _this.caseId)&&(identical(other.fullName, _this.fullName) || other.fullName == _this.fullName)&&(identical(other.email, _this.email) || other.email == _this.email)&&(identical(other.phone, _this.phone) || other.phone == _this.phone)&&(identical(other.dateOfBirth, _this.dateOfBirth) || other.dateOfBirth == _this.dateOfBirth)&&(identical(other.primaryCondition, _this.primaryCondition) || other.primaryCondition == _this.primaryCondition)&&(identical(other.inviteCode, _this.inviteCode) || other.inviteCode == _this.inviteCode)&&(identical(other.physicianName, _this.physicianName) || other.physicianName == _this.physicianName)&&(identical(other.clinicName, _this.clinicName) || other.clinicName == _this.clinicName)&&(identical(other.hasPassword, _this.hasPassword) || other.hasPassword == _this.hasPassword));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,isSignedIn,isLoading,isInitializing,errorMessage,patientId,caseId,fullName,email,phone,dateOfBirth,primaryCondition,inviteCode,physicianName,clinicName,hasPassword);
+int get hashCode {
+  final _this = this as AuthState;
+  return Object.hash(runtimeType,_this.isSignedIn,_this.isLoading,_this.isInitializing,_this.errorMessage,_this.patientId,_this.caseId,_this.fullName,_this.email,_this.phone,_this.dateOfBirth,_this.primaryCondition,_this.inviteCode,_this.physicianName,_this.clinicName,_this.hasPassword);
+}
 
 @override
 String toString() {
-  return 'AuthState(isSignedIn: $isSignedIn, isLoading: $isLoading, isInitializing: $isInitializing, errorMessage: $errorMessage, patientId: $patientId, caseId: $caseId, fullName: $fullName, email: $email, phone: $phone, dateOfBirth: $dateOfBirth, primaryCondition: $primaryCondition, inviteCode: $inviteCode, physicianName: $physicianName, clinicName: $clinicName, hasPassword: $hasPassword)';
+  final _this = this as AuthState;
+  return 'AuthState(isSignedIn: ${_this.isSignedIn}, isLoading: ${_this.isLoading}, isInitializing: ${_this.isInitializing}, errorMessage: ${_this.errorMessage}, patientId: ${_this.patientId}, caseId: ${_this.caseId}, fullName: ${_this.fullName}, email: ${_this.email}, phone: ${_this.phone}, dateOfBirth: ${_this.dateOfBirth}, primaryCondition: ${_this.primaryCondition}, inviteCode: ${_this.inviteCode}, physicianName: ${_this.physicianName}, clinicName: ${_this.clinicName}, hasPassword: ${_this.hasPassword})';
 }
 
 
@@ -71,7 +77,7 @@ class _$AuthStateCopyWithImpl<$Res>
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? isSignedIn = null,Object? isLoading = null,Object? isInitializing = null,Object? errorMessage = freezed,Object? patientId = freezed,Object? caseId = freezed,Object? fullName = freezed,Object? email = freezed,Object? phone = freezed,Object? dateOfBirth = freezed,Object? primaryCondition = freezed,Object? inviteCode = freezed,Object? physicianName = freezed,Object? clinicName = freezed,Object? hasPassword = null,}) {
-  return _then(_self.copyWith(
+  return _then(AuthState(
 isSignedIn: null == isSignedIn ? _self.isSignedIn : isSignedIn // ignore: cast_nullable_to_non_nullable
 as bool,isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
 as bool,isInitializing: null == isInitializing ? _self.isInitializing : isInitializing // ignore: cast_nullable_to_non_nullable
@@ -265,16 +271,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthState&&(identical(other.isSignedIn, isSignedIn) || other.isSignedIn == isSignedIn)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.isInitializing, isInitializing) || other.isInitializing == isInitializing)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.patientId, patientId) || other.patientId == patientId)&&(identical(other.caseId, caseId) || other.caseId == caseId)&&(identical(other.fullName, fullName) || other.fullName == fullName)&&(identical(other.email, email) || other.email == email)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.dateOfBirth, dateOfBirth) || other.dateOfBirth == dateOfBirth)&&(identical(other.primaryCondition, primaryCondition) || other.primaryCondition == primaryCondition)&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode)&&(identical(other.physicianName, physicianName) || other.physicianName == physicianName)&&(identical(other.clinicName, clinicName) || other.clinicName == clinicName)&&(identical(other.hasPassword, hasPassword) || other.hasPassword == hasPassword));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthState&&(identical(other.isSignedIn, isSignedIn) || other.isSignedIn == isSignedIn)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.isInitializing, isInitializing) || other.isInitializing == isInitializing)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.patientId, patientId) || other.patientId == patientId)&&(identical(other.caseId, caseId) || other.caseId == caseId)&&(identical(other.fullName, fullName) || other.fullName == fullName)&&(identical(other.email, email) || other.email == email)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.dateOfBirth, dateOfBirth) || other.dateOfBirth == dateOfBirth)&&(identical(other.primaryCondition, primaryCondition) || other.primaryCondition == primaryCondition)&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode)&&(identical(other.physicianName, physicianName) || other.physicianName == physicianName)&&(identical(other.clinicName, clinicName) || other.clinicName == clinicName)&&(identical(other.hasPassword, hasPassword) || other.hasPassword == hasPassword));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,isSignedIn,isLoading,isInitializing,errorMessage,patientId,caseId,fullName,email,phone,dateOfBirth,primaryCondition,inviteCode,physicianName,clinicName,hasPassword);
+int get hashCode {
+    return Object.hash(runtimeType,isSignedIn,isLoading,isInitializing,errorMessage,patientId,caseId,fullName,email,phone,dateOfBirth,primaryCondition,inviteCode,physicianName,clinicName,hasPassword);
+}
 
 @override
 String toString() {
-  return 'AuthState(isSignedIn: $isSignedIn, isLoading: $isLoading, isInitializing: $isInitializing, errorMessage: $errorMessage, patientId: $patientId, caseId: $caseId, fullName: $fullName, email: $email, phone: $phone, dateOfBirth: $dateOfBirth, primaryCondition: $primaryCondition, inviteCode: $inviteCode, physicianName: $physicianName, clinicName: $clinicName, hasPassword: $hasPassword)';
+    return 'AuthState(isSignedIn: $isSignedIn, isLoading: $isLoading, isInitializing: $isInitializing, errorMessage: $errorMessage, patientId: $patientId, caseId: $caseId, fullName: $fullName, email: $email, phone: $phone, dateOfBirth: $dateOfBirth, primaryCondition: $primaryCondition, inviteCode: $inviteCode, physicianName: $physicianName, clinicName: $clinicName, hasPassword: $hasPassword)';
 }
 
 
